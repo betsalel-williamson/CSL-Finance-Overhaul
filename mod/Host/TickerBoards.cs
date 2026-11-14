@@ -87,7 +87,8 @@ namespace FinanceOverhaul
         internal const float PaddingY = 0.24f;
         internal const float MaxRowWidth = BoardWidth - 2f * PaddingX; // 14.5 m
         internal const float RowSpacing = (BoardHeight - 2f * PaddingY) / 3f; // ≈ 0.97 m
-        internal const float RowHeight = 0.85f; // metres per row of text
+        internal const float RowHeight = 0.8f; // metres per row of text
+        internal const float InnerHeight = BoardHeight - 2f * PaddingY; // 2.92 m
         internal const int FontSize = 64;
         internal const float RefreshSeconds = 1f;
 
@@ -542,6 +543,61 @@ namespace FinanceOverhaul
                     }
 
                     FitWidth(text);
+                }
+
+                FitHeight(board);
+            }
+        }
+
+        /// <summary>
+        /// Centres the board's rows on their visible glyph extent (TextMesh centres the
+        /// line box, so descenders and parentheses pushed the block low) and shrinks
+        /// them if taller than the padded board. Uses current world bounds, so the
+        /// correction converges in one step.
+        /// </summary>
+        private static void FitHeight(Transform board)
+        {
+            float min = float.MaxValue;
+            float max = float.MinValue;
+            int counted = 0;
+            for (int r = 0; r < board.childCount; r++)
+            {
+                Transform row = board.GetChild(r);
+                TextMesh text = row.GetComponent<TextMesh>();
+                Renderer renderer = row.GetComponent<Renderer>();
+                if (renderer == null || text == null || string.IsNullOrEmpty(text.text))
+                {
+                    continue;
+                }
+
+                Bounds b = renderer.bounds;
+                min = Mathf.Min(min, b.min.y);
+                max = Mathf.Max(max, b.max.y);
+                counted++;
+            }
+
+            if (counted == 0)
+            {
+                return;
+            }
+
+            float height = max - min;
+            if (height > InnerHeight && height > 0f)
+            {
+                float shrink = InnerHeight / height;
+                for (int r = 0; r < board.childCount; r++)
+                {
+                    board.GetChild(r).GetComponent<TextMesh>().characterSize *= shrink;
+                }
+            }
+
+            float delta = board.position.y - (min + max) * 0.5f;
+            if (Mathf.Abs(delta) > 0.01f)
+            {
+                for (int r = 0; r < board.childCount; r++)
+                {
+                    Transform row = board.GetChild(r);
+                    row.position += new Vector3(0f, delta, 0f);
                 }
             }
         }
