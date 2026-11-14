@@ -247,10 +247,49 @@ namespace FinanceOverhaul
                 OnIndexStockChanged
             );
 
-            // Dev footers are plain labels inside the one group: nested AddGroup calls would
-            // each draw another separator rule.
-            AddFooterLabel(group, GetBuildInfoFooterDisplay());
-            AddFooterLabel(group, GetBuildInfoLocalDisplay());
+            // Build info goes on the Options page itself after the group, as plain labels (not
+            // nested groups, which each draw a rule): the group's own separator rule then sits
+            // between the toggles and the build info.
+            AddFooterLabel(helper, GetBuildInfoFooterDisplay());
+            AddFooterLabel(helper, GetBuildInfoLocalDisplay());
+
+            // Always available (dev and release): one click puts version, assembly identity
+            // and build time on the clipboard for bug reports.
+            copyBuildInfoButton =
+                helper.AddButton(CopyBuildInfoLabel, OnCopyBuildInfo)
+                as ColossalFramework.UI.UIButton;
+        }
+
+        private const string CopyBuildInfoLabel = "Copy build info";
+
+        private static ColossalFramework.UI.UIButton copyBuildInfoButton;
+
+        internal static string GetBuildInfoText()
+        {
+            return BuildInfoText.Format(
+                GetProductVersionDisplay(),
+                GetAssemblyIdentityDisplay(),
+                GetAssemblyBuildTimestampUtcDisplay(),
+                BuildInfo.ShowDevBuildIdentity
+            );
+        }
+
+        private static void OnCopyBuildInfo()
+        {
+            try
+            {
+                string text = GetBuildInfoText();
+                UnityEngine.GUIUtility.systemCopyBuffer = text;
+                ModLog.Info("build info copied: " + text.Replace("\n", " | "));
+                if (copyBuildInfoButton != null)
+                {
+                    copyBuildInfoButton.text = "Copied build info";
+                }
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("build info copy failed: " + ex.Message);
+            }
         }
 
         private static void AddFooterLabel(UIHelperBase group, string text)
