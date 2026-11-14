@@ -136,6 +136,7 @@ namespace FinanceOverhaul
             new Color32(0x4E, 0xF4, 0x65, 0xFF), // LedText.Gain
             new Color32(0xE9, 0x42, 0x4F, 0xFF), // LedText.Loss
             new Color32(0x9F, 0xB0, 0xC0, 0xFF), // LedText.Unknown
+            new Color32(0x9F, 0xB0, 0xC0, 0xFF), // LedText.Flat (color/ticker/flat)
         };
 
         private readonly Dictionary<ushort, GameObject> boards =

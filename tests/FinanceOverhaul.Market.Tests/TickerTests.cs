@@ -159,6 +159,17 @@ namespace FinanceOverhaul.Market.Tests
 
 namespace FinanceOverhaul.Market.Tests
 {
+    public class TickerFlatColourTests
+    {
+        [Fact]
+        public void ZeroChangeUsesTheFlatColourInRichRows()
+        {
+            string[] rows = TickerLine.FormatRichRows(new[] { "TVLC" }, new[] { 0.001f }, 1);
+            Assert.Contains("<color=" + TickerLine.FlatHex + ">( 0.00 )", rows[0]);
+            Assert.DoesNotContain(TickerLine.GainHex, rows[0]);
+        }
+    }
+
     public class TickerSortTests
     {
         [Fact]

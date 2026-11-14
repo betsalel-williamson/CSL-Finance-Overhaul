@@ -155,6 +155,9 @@ namespace FinanceOverhaul.Market
         public const string LossHex = "#E9424F";
         public const string UnknownHex = "#9FB0C0";
 
+        // Figma token color/ticker/flat: unchanged (0.00) is neutral, not green.
+        public const string FlatHex = "#9FB0C0";
+
         /// <summary>
         /// Splits entries into <paramref name="rows"/> board rows (as even as possible,
         /// earlier rows fuller) using Unity rich-text color tags from the ticker tokens.
@@ -197,9 +200,11 @@ namespace FinanceOverhaul.Market
                     }
 
                     float rate = changeRates[i];
+                    byte tone = LedText.RateColour(rate);
                     string color =
-                        float.IsNaN(rate) || float.IsInfinity(rate) ? UnknownHex
-                        : rate < 0f ? LossHex
+                        tone == LedText.Unknown ? UnknownHex
+                        : tone == LedText.Flat ? FlatHex
+                        : tone == LedText.Loss ? LossHex
                         : GainHex;
                     sb.Append("<color=")
                         .Append(SymbolHex)

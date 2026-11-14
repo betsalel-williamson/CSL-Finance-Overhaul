@@ -199,14 +199,25 @@ namespace FinanceOverhaul.Market
         public const byte Gain = 2;
         public const byte Loss = 3;
         public const byte Unknown = 4;
+        public const byte Flat = 5;
 
         /// <summary>Dark columns after each entry.</summary>
         public const int EntryGap = 10;
 
+        /// <summary>
+        /// Colour for a change rate, decided on the printed (rounded) value like real
+        /// tickers: up green, down red, unchanged (<c>0.00</c>) and unknown neutral.
+        /// </summary>
         public static byte RateColour(float rate)
         {
-            return float.IsNaN(rate) || float.IsInfinity(rate) ? Unknown
-                : rate < 0f ? Loss
+            if (float.IsNaN(rate) || float.IsInfinity(rate))
+            {
+                return Unknown;
+            }
+
+            double rounded = Math.Round(rate, 2, MidpointRounding.AwayFromZero);
+            return rounded == 0d ? Flat
+                : rounded < 0d ? Loss
                 : Gain;
         }
 
@@ -248,10 +259,7 @@ namespace FinanceOverhaul.Market
             for (int i = start; i < end; i++)
             {
                 float rate = changeRates[i];
-                byte rateColour =
-                    float.IsNaN(rate) || float.IsInfinity(rate) ? Unknown
-                    : rate < 0f ? Loss
-                    : Gain;
+                byte rateColour = RateColour(rate);
                 x = Draw(strip, x, symbols[i], Symbol);
                 x += LedFont.Spacing;
                 x = Draw(strip, x, RatePart(rate), rateColour);

@@ -106,6 +106,24 @@ namespace FinanceOverhaul.Market.Tests
             Assert.Contains(LedText.Unknown, nan.Cells);
         }
 
+        [Theory]
+        [InlineData(0f)]
+        [InlineData(0.004f)]
+        [InlineData(-0.004f)]
+        public void RatesThatPrintAsZeroAreFlat(float rate)
+        {
+            Assert.Equal("0.00", TickerLine.FormatRate(rate));
+            Assert.Equal(LedText.Flat, LedText.RateColour(rate));
+        }
+
+        [Fact]
+        public void SmallestPrintedMovesKeepTheirColour()
+        {
+            Assert.Equal(LedText.Gain, LedText.RateColour(0.006f)); // +0.01
+            Assert.Equal(LedText.Loss, LedText.RateColour(-0.006f)); // -0.01
+            Assert.Equal(LedText.Unknown, LedText.RateColour(float.NaN));
+        }
+
         [Fact]
         public void RowIsEntriesSideBySide()
         {
