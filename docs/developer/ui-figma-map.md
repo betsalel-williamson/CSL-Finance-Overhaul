@@ -16,11 +16,12 @@ Agent editing heuristics: `.agents/skills/figma-fo-ui/SKILL.md` and `.cursor/rul
 
 ## What a pin is
 
-A **pin** is a red circular marker with a **number unique inside its frame**. The number ties to a
-legend entry with a **title** and **description** (docs path, code evidence, and status live in the
-legend — not as oversized cards on the screenshot). Thin spider lines from pin to legend are
-optional when they stay readable. Pins must not overlap each other or cover important UI text.
-Different frames may reuse the same numbers (Options `1` and Investments `1` are independent).
+A **pin** is a red circular marker (`FO/AnnotationPin`) with a **number unique inside its band**.
+Pins are **attached to the screenshot and to the new UI** for that band (parented on those
+surfaces). The number ties to a **legend** entry with title + description (docs / code / status) —
+the legend is copy only, not the pin. Thin connectors pin→legend are optional when they stay
+readable. Pins must not overlap each other or cover important UI text. Different bands may reuse
+the same numbers (Options `1` and Investments `1` are independent).
 
 ## Status legend
 
