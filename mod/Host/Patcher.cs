@@ -479,7 +479,7 @@ namespace FinanceOverhaul
             }
 
             __result =
-                "Equal-weight city index of every listed sector stock. One sector crash hurts less than holding it alone.";
+                "Equal-weight city index of every unlocked sector stock. It moves by their average daily change, so one sector crash hurts less than holding it alone.";
             return false;
         }
 

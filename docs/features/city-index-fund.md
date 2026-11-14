@@ -68,8 +68,10 @@ sector basket.
   `TrafficJelly`, the only share stock with no unlock milestone; money-stack icon), bought 100
   shares, Your Portfolio row and **Sell: Index** dialog correct. Bug found and fixed: the cloned AI
   lost its `m_info` back-link and threw in `InvestmentAI.IsAvailable` every tick.
-- **Open:** Index swings more than expected (for example -11.91% in one update, chart range
-  ₡1,100–₡1,800). See [Known issues](./known-issues.md).
+- **2026-11-13 volatility fix verified:** before, Index moved up to −11.91% per update (chart
+  ₡1,100–₡1,800, average of prices plus vanilla variance). After the chain-linked equal-weight
+  return mark, updates moved −0.30% to +2.51% over 7 unlocked members, and the chart tail held
+  ~₡1,320–₡1,370.
 
 ## Acceptance
 
