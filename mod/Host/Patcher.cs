@@ -53,6 +53,15 @@ namespace FinanceOverhaul
 
             try
             {
+                ShareAmountField.Detach();
+            }
+            catch
+            {
+                // fail soft
+            }
+
+            try
+            {
                 Harmony harmony = new Harmony(HarmonyId);
                 harmony.UnpatchAll(HarmonyId);
             }
@@ -274,6 +283,14 @@ namespace FinanceOverhaul
                 null,
                 nameof(ShareFieldAwakePostfix)
             );
+            // Hot reload / mid-game enable: the panel's Awake already ran, so also attach
+            // the first time the dialog is shown.
+            applied += TryPatch(
+                harmony,
+                AccessTools.Method(typeof(BuySellInvestmentPanel), "ShowPanel"),
+                null,
+                nameof(ShareFieldShowPanelPostfix)
+            );
             applied += TryPatch(
                 harmony,
                 AccessTools.Method(typeof(BuySellInvestmentPanel), "SetSliderValue"),
@@ -298,6 +315,19 @@ namespace FinanceOverhaul
             catch
             {
                 // fail soft — vanilla slider still works
+            }
+        }
+
+        private static void ShareFieldShowPanelPostfix(BuySellInvestmentPanel __result)
+        {
+            try
+            {
+                ShareAmountField.Attach(__result);
+                ShareAmountField.MirrorFromLabel();
+            }
+            catch
+            {
+                // fail soft
             }
         }
 

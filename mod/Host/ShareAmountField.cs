@@ -14,6 +14,8 @@ namespace FinanceOverhaul
     /// driven by the slider. We overlay a numeric UITextField on that label;
     /// submitting it feeds the vanilla private SetSliderValue, so price, limits
     /// and Buy/Sell stay vanilla. UI-only — nothing is written to the save.
+    /// Hot-reload safe: attach is idempotent (Awake or first ShowPanel), stale fields
+    /// left by an older assembly are removed by name, and Detach restores vanilla.
     /// </summary>
     public static class ShareAmountField
     {
@@ -33,6 +35,8 @@ namespace FinanceOverhaul
             typeof(BuySellInvestmentPanel),
             "GetMaximumShareCount"
         );
+
+        public const string FieldName = "FinanceOverhaulShareAmountField";
 
         private static UITextField field;
         private static UILabel label;
@@ -63,6 +67,11 @@ namespace FinanceOverhaul
                 return;
             }
 
+            if (field != null && owner == panel)
+            {
+                return;
+            }
+
             try
             {
                 label = LabelField.GetValue(panel) as UILabel;
@@ -72,9 +81,10 @@ namespace FinanceOverhaul
                     return;
                 }
 
+                RemoveStaleFields(label.parent);
                 owner = panel;
                 field = label.parent.AddUIComponent<UITextField>();
-                field.name = "FinanceOverhaulShareAmountField";
+                field.name = FieldName;
                 field.size = new Vector2(Mathf.Max(label.width + 16f, 64f), label.height + 4f);
                 field.relativePosition = new Vector3(
                     label.relativePosition.x + label.width - field.width,
@@ -157,7 +167,25 @@ namespace FinanceOverhaul
             }
         }
 
-        private static void Detach()
+        /// <summary>
+        /// Removes fields created by any loaded copy of this mod (hot reload keeps the
+        /// old assembly's UI objects alive), matching by name, not by type.
+        /// </summary>
+        private static void RemoveStaleFields(UIComponent parent)
+        {
+            UIComponent[] children = parent.GetComponentsInChildren<UIComponent>(true);
+            for (int i = 0; i < children.Length; i++)
+            {
+                UIComponent c = children[i];
+                if (c != null && c != field && c.name == FieldName)
+                {
+                    UnityEngine.Object.Destroy(c.gameObject);
+                }
+            }
+        }
+
+        /// <summary>Called from Mod.OnDisabled / Patcher.UnpatchAll (hot reload, disable).</summary>
+        public static void Detach()
         {
             if (label != null)
             {

@@ -19,7 +19,10 @@ first proof that Finance Overhaul can edit native Financial Districts UI safely.
 5. **Slider and ± stay in sync.** Moving the slider or the ± steppers updates the field.
 6. **Fail soft.** If the vanilla members are missing, the mod logs once and leaves the slider-only
    dialog untouched.
-7. **Save-neutral.** UI only; nothing is written to the save
+7. **Hot-reload safe.** Replacing the DLL while the game runs never stacks fields: the old copy
+   detaches on disable (restoring the vanilla label), the new copy attaches on the next
+   **Invest in** open, and any stale field is removed by name.
+8. **Save-neutral.** UI only; nothing is written to the save
    ([Save compatibility](./save-compatibility.md)).
 
 ## Code
@@ -31,5 +34,7 @@ first proof that Finance Overhaul can edit native Financial Districts UI safely.
 ## Acceptance
 
 - Unit tests cover parsing, separators, clamping, and rejection.
+- In game (hot reload): with a city loaded, run `./scripts/install-mod-local.sh --dev`, reopen
+  **Invest in** → exactly one field.
 - In game: type `250` + Enter → slider and Price update; type more than the maximum → clamps; Enter
   does not buy while typing; slider drag updates the field.
