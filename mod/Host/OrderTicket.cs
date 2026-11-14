@@ -96,7 +96,14 @@ namespace FinanceOverhaul
                 Key = "StopLoss",
                 Kind = OrderKind.StopLossSell,
                 Buy = false,
-                Label = "Stop-loss",
+                Label = OrderText.TabLabel(OrderKind.StopLossSell),
+            },
+            new Tab
+            {
+                Key = "TakeProfit",
+                Kind = OrderKind.TakeProfitSell,
+                Buy = false,
+                Label = OrderText.TabLabel(OrderKind.TakeProfitSell),
             },
         };
 
@@ -191,9 +198,9 @@ namespace FinanceOverhaul
             }
 
             TradeOrder order =
-                active.Value == OrderKind.StopLossSell
-                    ? OrderDesk.PlaceStopLoss(id, shares, price)
-                    : OrderDesk.PlaceLimitBuy(id, shares, price);
+                active.Value == OrderKind.LimitBuy
+                    ? OrderDesk.PlaceLimitBuy(id, shares, price)
+                    : OrderDesk.PlaceSell(active.Value, id, shares, price);
             if (order == null)
             {
                 ShowError("The order could not be placed.");
@@ -213,14 +220,7 @@ namespace FinanceOverhaul
                 return "The city can't afford this many shares at your limit.";
             }
 
-            if (kind == OrderKind.StopLossSell && mark > 0f && price >= mark)
-            {
-                return "Set the stop below today's price (₡"
-                    + Mathf.FloorToInt(mark).ToString("N0")
-                    + ").";
-            }
-
-            return null;
+            return OrderText.PriceSideProblem(kind, price, mark);
         }
 
         /// <summary>Postfix target: SetSliderValue — keeps the rule and estimate current.</summary>
@@ -247,19 +247,8 @@ namespace FinanceOverhaul
             refreshing = true;
             try
             {
-                bool stop = active.Value == OrderKind.StopLossSell;
                 hint.textColor = HintColor;
-                hint.text = stop
-                    ? "Sells when the daily price is at or below ₡"
-                        + price.ToString("N0")
-                        + ". After a sharp drop it can sell for less. Good for "
-                        + TradeOrder.LifetimeDays
-                        + " days."
-                    : "Buys when the daily price is at or below ₡"
-                        + price.ToString("N0")
-                        + ". Good for "
-                        + TradeOrder.LifetimeDays
-                        + " days.";
+                hint.text = OrderText.Hint(active.Value, price);
                 ShowEstimate(active.Value, price, shares);
                 FitPricePanel();
             }
@@ -284,11 +273,7 @@ namespace FinanceOverhaul
             string problem = Problem(kind, price, shares, Mark((byte)IdField.GetValue(owner)));
             estimate.textColor = problem == null ? EstimateColor : ErrorColor;
             estimate.text =
-                (
-                    kind == OrderKind.StopLossSell
-                        ? "Est. proceeds (at stop): ₡"
-                        : "Est. cost (at limit): ₡"
-                )
+                OrderText.EstimateLabel(kind)
                 + amount.ToString("N0")
                 + (problem == null ? string.Empty : " — " + problem);
             UIButton button = ButtonField.GetValue(owner) as UIButton;
@@ -616,8 +601,7 @@ namespace FinanceOverhaul
             UIButton button = owner == null ? null : ButtonField.GetValue(owner) as UIButton;
             if (button != null && kind.HasValue)
             {
-                button.text =
-                    kind.Value == OrderKind.StopLossSell ? "Place stop-loss" : "Place limit order";
+                button.text = OrderText.ButtonLabel(kind.Value);
             }
             else if (!kind.HasValue && was.HasValue)
             {
@@ -631,18 +615,14 @@ namespace FinanceOverhaul
 
             if (kind.HasValue && caption != null)
             {
-                caption.text =
-                    kind.Value == OrderKind.StopLossSell
-                        ? "Stop price (₡ per share)"
-                        : "Limit price (₡ per share)";
+                caption.text = OrderText.PriceCaption(kind.Value);
             }
 
             if (kind.HasValue && priceField != null && owner != null && kind != was)
             {
-                // Limit: today's price; stop-loss: 10% below it (a sell stop must be below).
+                // Limit: today's price; stop 10% below it; target 10% above it.
                 float mark = Mark((byte)IdField.GetValue(owner));
-                float suggested = kind.Value == OrderKind.StopLossSell ? mark * 0.9f : mark;
-                priceField.text = Mathf.Max(1, Mathf.FloorToInt(suggested)).ToString();
+                priceField.text = OrderText.SuggestedPrice(kind.Value, mark).ToString();
             }
 
             Relayout();

@@ -74,8 +74,16 @@ namespace FinanceOverhaul
             }
         }
 
-        /// <summary>Places a stop-loss sell for the investment with this id. Returns the order or null.</summary>
-        public static TradeOrder PlaceStopLoss(byte investmentId, uint shares, int stopPrice)
+        /// <summary>
+        /// Places a sell order (stop-loss or take-profit) for the investment with this id.
+        /// Returns the order or null.
+        /// </summary>
+        public static TradeOrder PlaceSell(
+            OrderKind kind,
+            byte investmentId,
+            uint shares,
+            int triggerPrice
+        )
         {
             try
             {
@@ -92,19 +100,28 @@ namespace FinanceOverhaul
                 lock (Sync)
                 {
                     OrderBook b = Book();
-                    TradeOrder order = b.AddStopLoss(info.name, shares, stopPrice, Today);
+                    TradeOrder order =
+                        kind == OrderKind.TakeProfitSell
+                            ? b.AddTakeProfit(info.name, shares, triggerPrice, Today)
+                            : b.AddStopLoss(info.name, shares, triggerPrice, Today);
                     if (order != null)
                     {
                         Save(b);
                         ModLog.Info(
                             "orders: placed #"
                                 + order.Id
-                                + " stop-loss sell "
+                                + " "
+                                + OrderText.LogName(kind)
+                                + " "
                                 + shares
                                 + " "
                                 + info.name
-                                + " at or below "
-                                + stopPrice
+                                + (
+                                    kind == OrderKind.TakeProfitSell
+                                        ? " at or above "
+                                        : " at or below "
+                                )
+                                + triggerPrice
                                 + " (expires day "
                                 + order.ExpiresDay
                                 + ")"
@@ -232,7 +249,9 @@ namespace FinanceOverhaul
                             + order.InvestmentKey
                             + " at "
                             + mark.ToString("0.##")
-                            + " (stop "
+                            + " ("
+                            + OrderText.TriggerWord(order.Kind)
+                            + " "
                             + order.TriggerPrice
                             + ") for "
                             + proceeds
@@ -270,7 +289,9 @@ namespace FinanceOverhaul
                     ModLog.Info(
                         "orders: cancelled #"
                             + order.Id
-                            + (order.IsSell ? " stop-loss sell " : " limit buy ")
+                            + " "
+                            + OrderText.LogName(order.Kind)
+                            + " "
                             + order.Shares
                             + " "
                             + order.InvestmentKey

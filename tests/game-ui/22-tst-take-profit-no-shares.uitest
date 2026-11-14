@@ -1,0 +1,24 @@
+# Needs the dev test stock (TST) in a test save.
+name a take-profit whose shares were already sold cancels instead of selling
+set-price TST 100
+run-days 1
+show-buy TST
+type FinanceOverhaulShareAmountField 5
+click Button
+wait 1
+show-sell TST
+click FinanceOverhaulOrderTab-TakeProfitSell
+type FinanceOverhaulShareAmountField 5
+type FinanceOverhaulLimitPriceField 110
+click Button
+expect-orders-delta 1
+close-dialog
+sell-back TST 5
+set-price TST 120
+run-days 1
+expect-log no shares left to sell
+expect-orders-delta 0
+cleanup:
+cancel-new-orders
+set-price TST 100
+close-dialog

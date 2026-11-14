@@ -3,7 +3,8 @@
 ## Value
 
 Mayors set a buy price once and keep building, like a limit order at Schwab or E*Trade, instead of
-watching the Investments panel for a dip. Step 1 is the **limit buy**; step 2 the **stop-loss**.
+watching the Investments panel for a dip. Step 1 is the **limit buy**; step 2 the **stop-loss**;
+step 3 the **take-profit**.
 
 ## Contract (step 1: limit buy)
 
@@ -53,6 +54,22 @@ stop-loss**.
   60 game days like every order.
 - **Saved** as a `stop-sell` line in the same versioned order book; older builds skip it.
 
+## Take-profit (shipped)
+
+A third Sell tab, **Take-profit** (a sell limit), shows **Target price (₡ per share)**, pre-filled
+10% above today's price (rounded up), and **Est. proceeds (at target)**; the button reads **Place
+take-profit**.
+
+- **Place.** The target must be above today's price (a broker would fill a sell limit at or below
+  the market right away); otherwise the estimate row says why and the button is disabled.
+- **Fill.** Once the daily price is at or above the target, it sells at that day's price, so after a
+  sharp rise it sells for more than the target. Capped by the shares still held, same bookkeeping
+  and cancel rules as the stop-loss, 60-day expiry.
+- **Saved** as a `profit-sell` line; older builds skip it.
+
+Wording for every order kind (tabs, captions, hints, cards, log names) lives in `OrderText` in the
+Market library and is unit tested.
+
 ## Open orders in Your Portfolio (shipped)
 
 Each open order is an entry of **Economy → Investments → Your Portfolio**: a card right under its
@@ -69,14 +86,15 @@ order card was once reported not visible for under a second; not reproduced in n
 
 `npm run test:game` drives the running game's UI (dev build, city with a Stock Exchange) through the
 scenarios in `tests/game-ui/`: ticket layout and labels, nothing overflowing the window, Buy now
-still a vanilla buy, invalid prices never buying, place and cancel, a fill on the next day, and Sell
-unchanged. See [Testing](../developer/testing.md).
+still a vanilla buy, invalid prices never buying, place and cancel, a fill on the next day, Sell now
+still a vanilla sell, and stop-loss and take-profit placing, filling after a gap, and cancelling
+with no shares left. See [Testing](../developer/testing.md).
 
 ## Later steps
 
-Take-profit sells, trailing stop, recurring monthly investment, an open-orders panel
-in the Investments view, fill notifications in Chirper, and Figma ticket designs. Dividend
-reinvestment waits for dividend shares ([Market analogs](./market-analogs.md)).
+Trailing stop, recurring monthly investment, an open-orders panel in the Investments view, fill
+notifications in Chirper, and Figma ticket designs. Dividend reinvestment waits for dividend shares
+([Market analogs](./market-analogs.md)).
 
 ## Code
 

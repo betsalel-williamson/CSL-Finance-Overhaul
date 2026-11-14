@@ -238,7 +238,7 @@ namespace FinanceOverhaul
             UILabel side = card.AddUIComponent<UILabel>();
             Style(side, bodyStyle, 1f);
             side.textColor = order.IsSell ? SellColor : BuyColor;
-            side.text = order.IsSell ? "Open order · SELL (stop-loss)" : "Open order · BUY";
+            side.text = OrderText.CardSide(order.Kind);
             side.relativePosition = new Vector3(24f, 38f);
 
             UILabel detail = card.AddUIComponent<UILabel>();
@@ -249,14 +249,12 @@ namespace FinanceOverhaul
             detail.height = 18f;
             detail.relativePosition = new Vector3(24f, 60f);
             detail.textColor = MutedColor;
-            int left = Math.Max(0, order.ExpiresDay - today);
-            detail.text =
-                order.Shares.ToString("N0")
-                + (order.IsSell ? " shares if the price drops to ₡" : " shares at or below ₡")
-                + order.TriggerPrice.ToString("N0")
-                + " · "
-                + left
-                + (left == 1 ? " day left" : " days left");
+            detail.text = OrderText.CardDetail(
+                order.Kind,
+                order.Shares,
+                order.TriggerPrice,
+                order.ExpiresDay - today
+            );
 
             UIButton cancel = card.AddUIComponent<UIButton>();
             cancel.name = CancelPrefix + order.Id;

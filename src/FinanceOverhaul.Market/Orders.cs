@@ -12,6 +12,9 @@ namespace FinanceOverhaul.Market
 
         /// <summary>Sell when the daily price is at or below the trigger (stop-loss).</summary>
         StopLossSell,
+
+        /// <summary>Sell when the daily price is at or above the trigger (take-profit).</summary>
+        TakeProfitSell,
     }
 
     /// <summary>
@@ -34,12 +37,12 @@ namespace FinanceOverhaul.Market
 
         public uint Shares { get; private set; }
 
-        /// <summary>The limit (buys) or stop (sells), whole ₡ per share.</summary>
+        /// <summary>The limit (buys), stop or target (sells), whole ₡ per share.</summary>
         public int TriggerPrice { get; private set; }
 
         public bool IsSell
         {
-            get { return Kind == OrderKind.StopLossSell; }
+            get { return Kind != OrderKind.LimitBuy; }
         }
 
         public int PlacedDay { get; private set; }
@@ -79,6 +82,25 @@ namespace FinanceOverhaul.Market
                 investmentKey,
                 shares,
                 stopPrice,
+                placedDay,
+                placedDay + LifetimeDays
+            );
+        }
+
+        public static TradeOrder TakeProfitSell(
+            int id,
+            string investmentKey,
+            uint shares,
+            int targetPrice,
+            int placedDay
+        )
+        {
+            return Create(
+                OrderKind.TakeProfitSell,
+                id,
+                investmentKey,
+                shares,
+                targetPrice,
                 placedDay,
                 placedDay + LifetimeDays
             );
@@ -159,6 +181,11 @@ namespace FinanceOverhaul.Market
                 return EvaluateStopLoss(order, mark, owned);
             }
 
+            if (order.Kind == OrderKind.TakeProfitSell)
+            {
+                return EvaluateTakeProfit(order, mark, owned);
+            }
+
             if (
                 float.IsNaN(mark)
                 || float.IsInfinity(mark)
@@ -205,6 +232,31 @@ namespace FinanceOverhaul.Market
                 return new OrderDecision { Action = OrderAction.Wait };
             }
 
+            return SellOwned(order, mark, owned);
+        }
+
+        /// <summary>
+        /// Take-profit (a sell limit): once the daily price is at or above the target, sell
+        /// at that day's price (higher than the target after a gap up), never more than is
+        /// owned.
+        /// </summary>
+        private static OrderDecision EvaluateTakeProfit(TradeOrder order, float mark, uint owned)
+        {
+            if (
+                float.IsNaN(mark)
+                || float.IsInfinity(mark)
+                || mark <= 0f
+                || mark < order.TriggerPrice
+            )
+            {
+                return new OrderDecision { Action = OrderAction.Wait };
+            }
+
+            return SellOwned(order, mark, owned);
+        }
+
+        private static OrderDecision SellOwned(TradeOrder order, float mark, uint owned)
+        {
             uint shares = Math.Min(order.Shares, owned);
             if (shares == 0)
             {
@@ -265,17 +317,41 @@ namespace FinanceOverhaul.Market
         /// <summary>Stop-loss sell; null when it would be meaningless.</summary>
         public TradeOrder AddStopLoss(string investmentKey, uint shares, int stopPrice, int today)
         {
-            if (string.IsNullOrEmpty(investmentKey) || shares == 0 || stopPrice <= 0)
+            return AddSell(OrderKind.StopLossSell, investmentKey, shares, stopPrice, today);
+        }
+
+        /// <summary>Take-profit sell; null when it would be meaningless.</summary>
+        public TradeOrder AddTakeProfit(
+            string investmentKey,
+            uint shares,
+            int targetPrice,
+            int today
+        )
+        {
+            return AddSell(OrderKind.TakeProfitSell, investmentKey, shares, targetPrice, today);
+        }
+
+        private TradeOrder AddSell(
+            OrderKind kind,
+            string investmentKey,
+            uint shares,
+            int trigger,
+            int today
+        )
+        {
+            if (string.IsNullOrEmpty(investmentKey) || shares == 0 || trigger <= 0)
             {
                 return null;
             }
 
-            TradeOrder order = TradeOrder.StopLossSell(
+            TradeOrder order = TradeOrder.Create(
+                kind,
                 NextId++,
                 investmentKey,
                 shares,
-                stopPrice,
-                today
+                trigger,
+                today,
+                today + TradeOrder.LifetimeDays
             );
             orders.Add(order);
             return order;
@@ -311,10 +387,19 @@ namespace FinanceOverhaul.Market
         private const string Version = "v1";
         private const string LimitBuyTag = "limit-buy";
         private const string StopLossTag = "stop-sell";
+        private const string TakeProfitTag = "profit-sell";
 
         private static string Tag(OrderKind kind)
         {
-            return kind == OrderKind.StopLossSell ? StopLossTag : LimitBuyTag;
+            switch (kind)
+            {
+                case OrderKind.StopLossSell:
+                    return StopLossTag;
+                case OrderKind.TakeProfitSell:
+                    return TakeProfitTag;
+                default:
+                    return LimitBuyTag;
+            }
         }
 
         public static string Format(OrderBook book)
@@ -386,6 +471,10 @@ namespace FinanceOverhaul.Market
                 else if (f[0] == StopLossTag)
                 {
                     kind = OrderKind.StopLossSell;
+                }
+                else if (f[0] == TakeProfitTag)
+                {
+                    kind = OrderKind.TakeProfitSell;
                 }
                 else
                 {

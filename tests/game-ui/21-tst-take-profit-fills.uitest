@@ -1,0 +1,28 @@
+# Needs the dev test stock (TST) in a test save.
+name a take-profit waits below the target, then sells at the higher daily price after a gap up
+set-price TST 100
+run-days 1
+remember TST
+show-buy TST
+type FinanceOverhaulShareAmountField 10
+click Button
+wait 1
+show-sell TST
+click FinanceOverhaulOrderTab-TakeProfitSell
+type FinanceOverhaulShareAmountField 10
+type FinanceOverhaulLimitPriceField 110
+click Button
+expect-orders-delta 1
+set-price TST 105
+run-days 1
+expect-orders-delta 1
+expect-owned-delta TST 10
+set-price TST 125
+run-days 1
+expect-log sold 10 FinanceOverhaul Test Stock at 125 (target 110) for 1250
+expect-orders-delta 0
+expect-owned-delta TST 0
+cleanup:
+cancel-new-orders
+set-price TST 100
+close-dialog

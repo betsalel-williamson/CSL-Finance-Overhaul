@@ -259,3 +259,119 @@ namespace FinanceOverhaul.Market.Tests
         }
     }
 }
+
+namespace FinanceOverhaul.Market.Tests
+{
+    public class TakeProfitRulesTests
+    {
+        private static TradeOrder Target(uint shares = 50, int target = 110, int placed = 10) =>
+            TradeOrder.TakeProfitSell(8, "Oil Industry", shares, target, placed);
+
+        [Fact]
+        public void WaitsWhileThePriceStaysBelowTheTarget()
+        {
+            OrderDecision d = OrderRules.Evaluate(Target(), 11, 109f, 0, 0, owned: 100);
+            Assert.Equal(OrderAction.Wait, d.Action);
+        }
+
+        [Fact]
+        public void SellsAtTheDailyPriceOnceAtOrAboveTheTarget()
+        {
+            OrderDecision d = OrderRules.Evaluate(Target(), 11, 110f, 0, 0, owned: 100);
+            Assert.Equal(OrderAction.Fill, d.Action);
+            Assert.Equal(50u, d.Shares);
+            Assert.Equal(5500, d.Cost);
+        }
+
+        [Fact]
+        public void AfterAGapUpItSellsHigherThanTheTarget()
+        {
+            OrderDecision d = OrderRules.Evaluate(Target(), 11, 130f, 0, 0, owned: 100);
+            Assert.Equal(OrderAction.Fill, d.Action);
+            Assert.Equal(6500, d.Cost);
+        }
+
+        [Fact]
+        public void NeverSellsMoreThanIsOwned()
+        {
+            OrderDecision d = OrderRules.Evaluate(Target(shares: 50), 11, 120f, 0, 0, owned: 20);
+            Assert.Equal(20u, d.Shares);
+        }
+
+        [Fact]
+        public void CancelsWhenNothingIsLeftToSell()
+        {
+            OrderDecision d = OrderRules.Evaluate(Target(), 11, 120f, 0, 0, owned: 0);
+            Assert.Equal(OrderAction.Cancel, d.Action);
+            Assert.Equal(OrderRules.ReasonNoShares, d.Reason);
+        }
+
+        [Fact]
+        public void WaitsOnABadPrice()
+        {
+            Assert.Equal(
+                OrderAction.Wait,
+                OrderRules.Evaluate(Target(), 11, float.NaN, 0, 0, owned: 100).Action
+            );
+            Assert.Equal(
+                OrderAction.Wait,
+                OrderRules.Evaluate(Target(), 11, float.PositiveInfinity, 0, 0, owned: 100).Action
+            );
+        }
+
+        [Fact]
+        public void ExpiresLikeEveryOrder()
+        {
+            OrderDecision d = OrderRules.Evaluate(Target(placed: 10), 71, 120f, 0, 0, owned: 100);
+            Assert.Equal(OrderAction.Cancel, d.Action);
+            Assert.Equal(OrderRules.ReasonExpired, d.Reason);
+        }
+
+        [Fact]
+        public void IsASell()
+        {
+            Assert.True(Target().IsSell);
+        }
+    }
+
+    public class TakeProfitBookTests
+    {
+        [Fact]
+        public void BookAddsAndRoundTripsTakeProfits()
+        {
+            var book = new OrderBook();
+            book.AddStopLoss("Oil Industry", 10, 80, 5);
+            TradeOrder target = book.AddTakeProfit("Index", 25, 23000, 6);
+            Assert.Equal(OrderKind.TakeProfitSell, target.Kind);
+            OrderBook back = OrderBookCodec.Parse(OrderBookCodec.Format(book));
+            Assert.Equal(2, back.Orders.Count);
+            Assert.Equal(OrderKind.StopLossSell, back.Orders[0].Kind);
+            TradeOrder t = back.Orders[1];
+            Assert.Equal(OrderKind.TakeProfitSell, t.Kind);
+            Assert.Equal(25u, t.Shares);
+            Assert.Equal(23000, t.TriggerPrice);
+            Assert.Equal(66, t.ExpiresDay);
+        }
+
+        [Fact]
+        public void SavesAsItsOwnLineThatOlderBuildsSkip()
+        {
+            var book = new OrderBook();
+            book.AddTakeProfit("Oil Industry", 5, 120, 1);
+            Assert.Contains(
+                "\nprofit-sell|1|Oil Industry|5|120|1|61\n",
+                OrderBookCodec.Format(book)
+            );
+        }
+
+        [Fact]
+        public void RejectsMeaninglessTargets()
+        {
+            var book = new OrderBook();
+            Assert.Null(book.AddTakeProfit("Oil Industry", 0, 90, 1));
+            Assert.Null(book.AddTakeProfit("Oil Industry", 5, 0, 1));
+            Assert.Null(book.AddTakeProfit("", 5, 90, 1));
+            Assert.Empty(book.Orders);
+        }
+    }
+}
