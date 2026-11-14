@@ -24,6 +24,7 @@ namespace FinanceOverhaul
         public const string LimitTabName = "FinanceOverhaulOrderTabLimit";
         public const string PriceFieldName = "FinanceOverhaulLimitPriceField";
         public const string HintName = "FinanceOverhaulLimitHint";
+        public const string EstimateName = "FinanceOverhaulLimitEstimate";
         public const string PlaceLabel = "Place limit order";
 
         private static readonly FieldInfo ModeField = AccessTools.Field(
@@ -53,6 +54,7 @@ namespace FinanceOverhaul
 
         private static readonly Color32 HintColor = new Color32(160, 172, 182, 255);
         private static readonly Color32 ErrorColor = new Color32(233, 66, 79, 255);
+        private static readonly Color32 EstimateColor = new Color32(78, 205, 96, 255);
 
         private static BuySellInvestmentPanel owner;
         private static UIPanel dark;
@@ -62,10 +64,9 @@ namespace FinanceOverhaul
         private static UIButton limitTab;
         private static UITextField priceField;
         private static UILabel hint;
-        private static UILabel priceText;
-        private static UILabel priceValue;
-        private static string vanillaPriceText;
-        private static Vector3 vanillaPriceTextPosition;
+        private static UILabel priceText; // vanilla, only ever repaired (never rewritten)
+        private static UIComponent buyStats; // vanilla Price row + "can't afford"
+        private static UILabel estimate;
         private static bool limitActive;
         private static float addedHeight;
         private static bool failureLogged;
@@ -136,6 +137,12 @@ namespace FinanceOverhaul
                 return true; // never fall through to a market buy
             }
 
+            if ((long)price * shares > EconomyManager.playerMoney)
+            {
+                ShowError("The city can't afford this many shares at your limit.");
+                return true;
+            }
+
             byte id = (byte)IdField.GetValue(panel);
             TradeOrder order = OrderDesk.PlaceLimitBuy(id, shares, price);
             if (order == null)
@@ -189,33 +196,77 @@ namespace FinanceOverhaul
             }
         }
 
-        /// <summary>Limit mode: the vanilla Price row shows the cost at the limit instead.</summary>
+        /// <summary>
+        /// Limit mode: our own estimate row replaces the vanilla Price row (hidden), and the
+        /// button follows affordability at the limit. Vanilla labels are never rewritten.
+        /// </summary>
         private static void ShowEstimate(long cost)
         {
-            if (priceText == null || priceValue == null)
+            if (estimate == null)
             {
                 return;
             }
 
-            priceText.text = "Est. cost (at limit)";
-            priceValue.text = "₡" + cost.ToString("N0");
-            priceText.relativePosition = new Vector3(
-                priceValue.relativePosition.x - priceText.width - 8f,
-                vanillaPriceTextPosition.y
-            );
+            long cash = EconomyManager.playerMoney;
+            bool affordable = cost <= cash;
+            estimate.textColor = affordable ? EstimateColor : ErrorColor;
+            estimate.text =
+                "Est. cost (at limit): ₡"
+                + cost.ToString("N0")
+                + (affordable ? string.Empty : " — more than the city's ₡" + cash.ToString("N0"));
+            UIButton button = owner == null ? null : ButtonField.GetValue(owner) as UIButton;
+            if (button != null)
+            {
+                button.isEnabled = affordable;
+            }
         }
 
+        /// <summary>Back to vanilla: show its Price row and let it recompute price and Buy state.</summary>
         private static void RestorePriceRow()
         {
-            if (priceText != null && vanillaPriceText != null)
+            if (buyStats != null && owner != null && IsBuyMode(owner))
             {
-                priceText.text = vanillaPriceText;
-                priceText.relativePosition = vanillaPriceTextPosition;
+                buyStats.isVisible = true;
             }
 
             if (owner != null && UpdatePriceMethod != null)
             {
                 UpdatePriceMethod.Invoke(owner, null);
+            }
+        }
+
+        /// <summary>
+        /// The Price label is localized with a ":" suffix, and reading its text includes the
+        /// suffix, so older builds that saved and re-wrote it stacked colons ("Price:::").
+        /// Re-apply the game's own string to repair it.
+        /// </summary>
+        private static void RepairPriceLabel()
+        {
+            if (
+                priceText == null
+                || !priceText.isLocalized
+                || string.IsNullOrEmpty(priceText.localeID)
+            )
+            {
+                return;
+            }
+
+            try
+            {
+                priceText.text = ColossalFramework.Globalization.Locale.Get(priceText.localeID);
+                // Vanilla right-aligns the label 8 px before the value; older builds moved it.
+                UILabel value = dark == null ? null : dark.Find<UILabel>("LabelPriceValue");
+                if (value != null)
+                {
+                    priceText.relativePosition = new Vector3(
+                        value.relativePosition.x - priceText.width - 8f,
+                        value.relativePosition.y
+                    );
+                }
+            }
+            catch
+            {
+                // fail soft
             }
         }
 
@@ -226,7 +277,20 @@ namespace FinanceOverhaul
                 return;
             }
 
-            float wanted = hint.relativePosition.y + hint.height + 8f;
+            if (estimate != null)
+            {
+                estimate.relativePosition = new Vector3(
+                    26f,
+                    hint.relativePosition.y + hint.height + 6f
+                );
+            }
+
+            float wanted =
+                (
+                    estimate != null
+                        ? estimate.relativePosition.y + estimate.height
+                        : hint.relativePosition.y + hint.height
+                ) + 8f;
             if (Mathf.Abs(pricePanel.height - wanted) > 0.5f)
             {
                 pricePanel.height = wanted;
@@ -296,6 +360,9 @@ namespace FinanceOverhaul
             limitTab = null;
             priceField = null;
             hint = null;
+            estimate = null;
+            buyStats = null;
+            priceText = null;
             dark = null;
             owner = null;
             addedHeight = 0f;
@@ -320,12 +387,7 @@ namespace FinanceOverhaul
             RemoveStale(dark);
             owner = panel;
             priceText = dark.Find<UILabel>("LabelPriceText");
-            priceValue = dark.Find<UILabel>("LabelPriceValue");
-            if (priceText != null)
-            {
-                vanillaPriceText = priceText.text;
-                vanillaPriceTextPosition = priceText.relativePosition;
-            }
+            buyStats = dark.Find("PanelBuyStats");
 
             // Tabs row above the share amount.
             tabs = dark.AddUIComponent<UIPanel>();
@@ -383,6 +445,16 @@ namespace FinanceOverhaul
             hint.wordWrap = true;
             hint.autoHeight = true;
             hint.width = dark.width - 52f;
+            estimate = pricePanel.AddUIComponent<UILabel>();
+            estimate.name = EstimateName;
+            estimate.autoSize = false;
+            estimate.wordWrap = true;
+            estimate.autoHeight = true;
+            estimate.width = dark.width - 52f;
+            estimate.textAlignment = UIHorizontalAlignment.Center;
+            CopyLabelStyle(shareLabel, estimate);
+            estimate.textScale = 0.875f;
+            estimate.textColor = EstimateColor;
 
             // Place both just around the slider block (autoLayout follows zOrder).
             tabs.zOrder = slider.zOrder;
@@ -430,11 +502,7 @@ namespace FinanceOverhaul
                 StyleTab(limitTab, false);
             }
 
-            if (priceText != null && vanillaPriceText != null)
-            {
-                priceText.text = vanillaPriceText;
-                priceText.relativePosition = vanillaPriceTextPosition;
-            }
+            RepairPriceLabel();
 
             if (priceField != null)
             {
@@ -528,7 +596,17 @@ namespace FinanceOverhaul
             bool buy = IsBuyMode(owner);
             tabs.isVisible = buy;
             pricePanel.isVisible = buy && limitActive;
-            float wanted = (buy ? tabs.height : 0f) + (buy && limitActive ? pricePanel.height : 0f);
+            float wanted = buy ? tabs.height : 0f;
+            if (buy && limitActive)
+            {
+                // Our estimate row stands in for the vanilla Price row.
+                wanted += pricePanel.height;
+                if (buyStats != null)
+                {
+                    buyStats.isVisible = false;
+                    wanted -= buyStats.height;
+                }
+            }
             Grow(wanted - addedHeight);
             addedHeight = wanted;
         }

@@ -4,16 +4,17 @@ expect-visible FinanceOverhaulOrderTabBuyNow
 expect-visible FinanceOverhaulOrderTabLimit
 expect-hidden FinanceOverhaulLimitPrice
 expect-text Button Buy
-expect-text LabelPriceText Price:
+expect-text-is LabelPriceText Price:
 click FinanceOverhaulOrderTabLimit
 expect-visible FinanceOverhaulLimitPriceField
 expect-text Button Place limit order
 type FinanceOverhaulLimitPriceField 95
 expect-text FinanceOverhaulLimitHint at or below ₡95
-expect-text LabelPriceText Est. cost (at limit)
+expect-hidden PanelBuyStats
+expect-text FinanceOverhaulLimitEstimate Est. cost (at limit): ₡
 type FinanceOverhaulShareAmountField 2
 type FinanceOverhaulLimitPriceField 50
-expect-text LabelPriceValue ₡100
+expect-text FinanceOverhaulLimitEstimate ₡100
 expect-no-overflow
 # Long numbers must still fit inside the window.
 type FinanceOverhaulShareAmountField 99999
@@ -24,7 +25,9 @@ capture limit-ticket
 click FinanceOverhaulOrderTabBuyNow
 expect-hidden FinanceOverhaulLimitPrice
 expect-text Button Buy
-expect-text LabelPriceText Price
+expect-visible PanelBuyStats
+expect-text-is LabelPriceText Price:
+expect-no-overlap LabelPriceText LabelPriceValue
 capture buy-now-after-limit
 expect-no-overflow
 cleanup:

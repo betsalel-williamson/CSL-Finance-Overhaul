@@ -1,0 +1,13 @@
+# Needs the dev test stock (TST) in a test save.
+name the share chart ends on today's price, not between yesterday and today
+set-price TST 70
+run-days 1
+set-price TST 100
+run-days 1
+expect-price TST 100
+expect-graph-last TST 100
+show-buy TST
+capture tst-chart
+cleanup:
+set-price TST 100
+close-dialog

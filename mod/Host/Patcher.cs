@@ -155,6 +155,14 @@ namespace FinanceOverhaul
                 nameof(IndexLocalizedDescriptionPrefix),
                 null
             );
+            // Display only: vanilla resamples history so the chart's last point lands
+            // between yesterday and today; end it on today's actual price.
+            applied += TryPatch(
+                harmony,
+                AccessTools.Method(typeof(Investment), "FillGraphValues"),
+                null,
+                nameof(GraphEndsAtTodayPostfix)
+            );
             return applied;
         }
 
@@ -442,6 +450,26 @@ namespace FinanceOverhaul
             catch
             {
                 // fail soft — never break simulation ticks
+            }
+        }
+
+        private static void GraphEndsAtTodayPostfix(ref Investment __instance, float[] graphValues)
+        {
+            try
+            {
+                if (
+                    graphValues != null
+                    && graphValues.Length > 0
+                    && __instance.allValues != null
+                    && __instance.allValues.Count > 0
+                )
+                {
+                    graphValues[graphValues.Length - 1] = __instance.value;
+                }
+            }
+            catch
+            {
+                // fail soft — vanilla chart kept
             }
         }
 

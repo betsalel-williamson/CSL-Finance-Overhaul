@@ -1,0 +1,18 @@
+name the vanilla Price label is never rewritten, and stacked colons are repaired
+show-buy Oil
+expect-text-is LabelPriceText Price:
+expect-no-overlap LabelPriceText LabelPriceValue
+# Older builds stacked the label's ":" suffix:
+set-text LabelPriceText Price::::
+close-dialog
+show-buy Oil
+expect-text-is LabelPriceText Price:
+click FinanceOverhaulOrderTabLimit
+click FinanceOverhaulOrderTabBuyNow
+click FinanceOverhaulOrderTabLimit
+click FinanceOverhaulOrderTabBuyNow
+expect-text-is LabelPriceText Price:
+expect-no-overlap LabelPriceText LabelPriceValue
+expect-no-overflow
+cleanup:
+close-dialog
