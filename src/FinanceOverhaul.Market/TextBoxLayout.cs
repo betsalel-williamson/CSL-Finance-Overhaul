@@ -22,6 +22,10 @@ namespace FinanceOverhaul.Market
         /// <param name="textWidth">Measured width of the current text.</param>
         /// <param name="glyphTop">Distance from the line top to the top of the digits.</param>
         /// <param name="glyphHeight">Height of the digits.</param>
+        /// <param name="descent">
+        /// Extra room below the digits for the caret and selection highlight, which
+        /// Colossal draws from padding.top with height (box - vertical padding).
+        /// </param>
         /// <param name="minSide">Smallest left padding allowed.</param>
         public static Padding Center(
             float boxWidth,
@@ -29,6 +33,7 @@ namespace FinanceOverhaul.Market
             float textWidth,
             float glyphTop,
             float glyphHeight,
+            float descent,
             int minSide
         )
         {
@@ -40,11 +45,16 @@ namespace FinanceOverhaul.Market
                     MidpointRounding.AwayFromZero
                 );
             top = Math.Max(0, top);
+            int bottom = (int)
+                Math.Round(
+                    boxHeight - top - glyphTop - glyphHeight - descent,
+                    MidpointRounding.AwayFromZero
+                );
             return new Padding
             {
                 Left = Math.Max(minSide, left),
                 Top = top,
-                Bottom = top,
+                Bottom = Math.Max(0, bottom),
             };
         }
     }

@@ -54,6 +54,9 @@ namespace FinanceOverhaul
         private const float DigitHeightEm = 0.87f;
         private const float DigitTopEm = 0f;
 
+        // Caret/selection reach this far below the digits, like a text descender.
+        private const float CaretDescentEm = 0.25f;
+
         public const string FieldName = "FinanceOverhaulShareAmountField";
 
         private static readonly ShareAmountEditor Editor = new ShareAmountEditor();
@@ -309,6 +312,7 @@ namespace FinanceOverhaul
                     textWidth,
                     glyphTop,
                     glyphHeight,
+                    size * CaretDescentEm,
                     4
                 );
                 field.padding = new RectOffset(p.Left, 4, p.Top, p.Bottom);
