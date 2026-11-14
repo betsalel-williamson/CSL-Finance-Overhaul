@@ -337,3 +337,84 @@ namespace FinanceOverhaul.Market.Tests
         }
     }
 }
+
+namespace FinanceOverhaul.Market.Tests
+{
+    public class StockMonitorPopoverTests
+    {
+        [Fact]
+        public void NewSettingsDefaultAndRoundTrip()
+        {
+            var d = new StockMonitorSettings();
+            Assert.False(d.CompactRows);
+            Assert.True(d.ShowSparklines);
+            Assert.False(d.ChangeAsCurrency);
+            Assert.Empty(d.Hidden);
+
+            var s = new ModSettings();
+            s.Monitor.CompactRows = true;
+            s.Monitor.ShowSparklines = false;
+            s.Monitor.ChangeAsCurrency = true;
+            s.Monitor.Hidden.Add("Oil Industry Investment");
+            s.Monitor.Hidden.Add("Odd;Name%");
+            StockMonitorSettings back = SettingsFile.Parse(SettingsFile.Format(s)).Monitor;
+            Assert.True(back.CompactRows);
+            Assert.False(back.ShowSparklines);
+            Assert.True(back.ChangeAsCurrency);
+            Assert.Equal(2, back.Hidden.Count);
+            Assert.Contains("Odd;Name%", back.Hidden);
+            Assert.Contains("oil industry investment", back.Hidden); // case-insensitive
+        }
+
+        [Fact]
+        public void HiddenStocksAreLeftOut()
+        {
+            var quotes = new[]
+            {
+                new MonitorQuote
+                {
+                    Symbol = "Oil",
+                    Prefab = "Oil Industry Investment",
+                    ChangeRate = 1f,
+                },
+                new MonitorQuote
+                {
+                    Symbol = "HS",
+                    Prefab = "Health Care Sector Investment",
+                    ChangeRate = 2f,
+                },
+            };
+            var hidden = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "oil industry investment",
+            };
+            var rows = StockMonitor.Rows(quotes, MonitorFilter.All, MonitorSort.Change, hidden);
+            Assert.Single(rows);
+            Assert.Equal("HS", rows[0].Symbol);
+        }
+
+        [Fact]
+        public void ChangeInCurrency()
+        {
+            Assert.Equal("+₡10", StockMonitor.ChangeAmountText(942f, 932f));
+            Assert.Equal("−₡12", StockMonitor.ChangeAmountText(932f, 944f));
+            Assert.Equal("₡0", StockMonitor.ChangeAmountText(932.2f, 931.9f));
+            Assert.Equal("+₡1,250", StockMonitor.ChangeAmountText(55441f, 54191f));
+            Assert.Equal("--", StockMonitor.ChangeAmountText(932f, null));
+            Assert.Equal(LedText.Gain, StockMonitor.ChangeAmountColour(942f, 932f));
+            Assert.Equal(LedText.Flat, StockMonitor.ChangeAmountColour(932.2f, 931.9f));
+        }
+
+        [Fact]
+        public void OpacitySliderSnapsToFivePercent()
+        {
+            Assert.Equal(0f, StockMonitor.OpacityAt(0f));
+            Assert.Equal(0.9f, StockMonitor.OpacityAt(1f), 3);
+            Assert.Equal(0.45f, StockMonitor.OpacityAt(0.5f), 3);
+            Assert.Equal(0.35f, StockMonitor.OpacityAt(0.39f), 3);
+            Assert.Equal(0f, StockMonitor.OpacityAt(-3f));
+            Assert.Equal(0.9f, StockMonitor.OpacityAt(7f), 3);
+            Assert.Equal("35%", StockMonitor.PercentText(0.35f));
+        }
+    }
+}

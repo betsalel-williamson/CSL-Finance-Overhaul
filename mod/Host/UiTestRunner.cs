@@ -540,6 +540,46 @@ namespace FinanceOverhaul
                 }
                 case "monitor":
                 {
+                    // monitor remember|restore — snapshot the player's monitor settings so a
+                    // scenario can change them and put them back exactly.
+                    if (a == "remember" || a == "restore")
+                    {
+                        if (Mod.Settings == null)
+                        {
+                            r.Error = "no settings loaded";
+                            break;
+                        }
+
+                        if (a == "remember")
+                        {
+                            var sb = new System.Text.StringBuilder();
+                            Mod.Settings.Monitor.Write(sb);
+                            rememberedMonitor = sb.ToString();
+                        }
+                        else if (rememberedMonitor != null)
+                        {
+                            foreach (string kv in rememberedMonitor.Split('\n'))
+                            {
+                                int eq = kv.IndexOf('=');
+                                if (eq > 0)
+                                {
+                                    Mod.Settings.Monitor.TryRead(
+                                        kv.Substring(0, eq),
+                                        kv.Substring(eq + 1)
+                                    );
+                                }
+                            }
+
+                            Mod.SaveSettings();
+                            if (StockMonitorHost.Current != null)
+                            {
+                                StockMonitorHost.Current.ApplyFlag();
+                            }
+                        }
+
+                        break;
+                    }
+
                     // monitor open|close — sets the Stock Monitor window outright.
                     if (StockMonitorHost.Current == null || (a != "open" && a != "close"))
                     {
@@ -957,6 +997,8 @@ namespace FinanceOverhaul
                     break;
             }
         }
+
+        private static string rememberedMonitor;
 
         private static UIComponent FindControl(string name, bool includeHidden = false)
         {

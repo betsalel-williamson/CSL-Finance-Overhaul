@@ -49,6 +49,22 @@ Hit-testing runs only while the mouse is over the window.
 Like City Vitals' "Transparent Unhovered": the background sits at the chosen opacity and fades to a
 solid 90% while the mouse is over the window (`monitor.transparentUnhovered`, on by default).
 
+## Settings popover (shipped)
+
+The gear opens a popover beside the window (it follows the window, and flips to the left near the
+screen edge):
+
+- **Background opacity** slider, 0% (see-through, like City Vitals) to 90%, in 5% steps.
+- **Solid while the mouse is over it** (City Vitals' "Transparent Unhovered").
+- **Compact rows (hide names):** one line per stock — symbol, sparkline, price, pill.
+- **Show sparklines.**
+- **Change as ₡ instead of %:** the pill shows today's price minus yesterday's. Clicking any row's
+  pill flips this too.
+- **Stocks shown:** a checkbox per listed stock, kept by prefab name (the same in every language).
+
+All of it is kept per player in the settings file (`monitor.compact`, `monitor.sparklines`,
+`monitor.change`, `monitor.hidden`, …), never in the city save.
+
 ## History limit
 
 The game keeps exactly 30 daily prices per stock (`Investment.kPastValueCount`), so the monitor's
@@ -68,7 +84,7 @@ is removed by name. Prices move once per game day, so rows are rebuilt only when
 
 ## Later steps
 
-The settings popover (opacity slider, compact rows, which stocks show, ₡ or % change), Esc to close.
+Esc to close.
 
 ## Code
 

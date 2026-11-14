@@ -148,7 +148,7 @@ Your Portfolio with an open order card right under its holding
 | 8   | `orders.recurring`  | Recurring buy    | Planned                                                 |
 | 9   | `orders.notice`     | Fill notice      | Log only today (`OrderDesk`)                            |
 
-### Stock Monitor frame (list, detail, hover `shipped`; settings `planned`)
+### Stock Monitor frame (`shipped`; Esc to close planned)
 
 Band 10: the floating Stock Monitor — in place over a real screenshot (50%) and at 1:1: list window,
 detail view, settings popover, Options flag ([Stock Monitor](../features/stock-monitor.md)).
@@ -156,11 +156,11 @@ detail view, settings popover, Options flag ([Stock Monitor](../features/stock-m
 | #   | Catalog id          | Title          | Code evidence / status                             |
 | --- | ------------------- | -------------- | -------------------------------------------------- |
 | 1   | `monitor.window`    | Window         | Shipped; solid on hover (City Vitals); Esc planned |
-| 2   | `monitor.settings`  | Settings (⚙)   | Gear cycles opacity today; popover planned         |
+| 2   | `monitor.settings`  | Settings (⚙)   | Shipped: popover (`StockMonitorPopover`)           |
 | 3   | `monitor.filter`    | Filter + sort  | Shipped                                            |
 | 4   | `monitor.row`       | Row            | Shipped; click → detail                            |
 | 5   | `monitor.sparkline` | Sparkline      | Shipped (`Sparkline`, 30 game days)                |
-| 6   | `monitor.change`    | Change pill    | Shipped (black text); % ↔ ₡ toggle planned         |
+| 6   | `monitor.change`    | Change pill    | Shipped (black text; click flips ₡ / %)            |
 | 7   | `monitor.hover`     | Hover          | Shipped (`StockMonitorHover`)                      |
 | 8   | `monitor.detail`    | Detail         | Shipped (7D / 30D, `StockMonitorDetail`)           |
 | 9   | `monitor.stats`     | Stats          | Shipped (`StockDetail`)                            |

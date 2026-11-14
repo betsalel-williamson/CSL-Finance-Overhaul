@@ -26,6 +26,12 @@ namespace FinanceOverhaul
         private const float TitleHeight = 38f;
         private const float BarHeight = 34f;
         private const float RowHeight = 52f;
+        private const float CompactRowHeight = 34f;
+
+        private static float RowH
+        {
+            get { return Settings.CompactRows ? CompactRowHeight : RowHeight; }
+        }
         private const float FooterHeight = 28f;
         private const int VisibleRows = 10;
         private const int SparkW = 72,
@@ -72,6 +78,7 @@ namespace FinanceOverhaul
             public Texture2D Texture;
             public UILabel Price;
             public UILabel Change;
+            public UIPanel Line;
             public int Id = -1;
             public string Sym;
             public float[] History;
@@ -101,6 +108,7 @@ namespace FinanceOverhaul
                         BuildButton();
                     }
 
+                    ApplyOpacity();
                     SetOpen(Settings.Open, false);
                 }
                 else
@@ -124,6 +132,7 @@ namespace FinanceOverhaul
 
             DragButton();
             FadeBackground();
+            FollowWindow();
             UpdateHover();
             if (window == null || !window.isVisible || Time.unscaledTime < nextCheck)
             {
@@ -182,6 +191,11 @@ namespace FinanceOverhaul
             if (window != null)
             {
                 window.isVisible = open;
+            }
+
+            if (!open)
+            {
+                HidePopover();
             }
 
             if (open)
@@ -352,8 +366,8 @@ namespace FinanceOverhaul
             settings.pressedBgSprite = "RoundBackBigPressed";
             settings.normalFgSprite = "Options";
             settings.relativePosition = new Vector3(Width - 72f, 4f);
-            settings.tooltip = "Background opacity (click to change)";
-            settings.eventClick += (c, p) => CycleOpacity();
+            settings.tooltip = "Stock Monitor settings";
+            settings.eventClick += (c, p) => TogglePopover();
 
             UIButton close = window.AddUIComponent<UIButton>();
             close.name = Prefix + "Close";
@@ -423,7 +437,7 @@ namespace FinanceOverhaul
 
         private static float Height(int visibleRows)
         {
-            return TitleHeight + BarHeight + RowHeight * visibleRows + FooterHeight;
+            return TitleHeight + BarHeight + RowH * visibleRows + FooterHeight;
         }
 
         private void SaveWindowPosition()
@@ -451,19 +465,6 @@ namespace FinanceOverhaul
             Settings.Sort = StockMonitor.NextSort(Settings.Sort);
             Mod.SaveSettings();
             Refresh(true);
-        }
-
-        private void CycleOpacity()
-        {
-            // Interim until the ⚙ settings popover: 35% → 60% → 90% → 0% → 35%.
-            float o = Settings.Opacity;
-            Settings.Opacity =
-                o < 0.3f ? 0.35f
-                : o < 0.5f ? 0.6f
-                : o < 0.8f ? 0.9f
-                : 0f;
-            Mod.SaveSettings();
-            ApplyOpacity();
         }
 
         private void ApplyOpacity()
@@ -527,7 +528,12 @@ namespace FinanceOverhaul
             }
 
             shownSignature = signature;
-            List<MonitorQuote> shown = StockMonitor.Rows(quotes, Settings.Filter, Settings.Sort);
+            List<MonitorQuote> shown = StockMonitor.Rows(
+                quotes,
+                Settings.Filter,
+                Settings.Sort,
+                Settings.Hidden
+            );
             while (rows.Count < shown.Count)
             {
                 rows.Add(BuildRow());
@@ -544,7 +550,7 @@ namespace FinanceOverhaul
             }
 
             int visible = Mathf.Clamp(shown.Count, 1, VisibleRows);
-            list.height = RowHeight * visible;
+            list.height = RowH * visible;
             window.height = Height(visible);
             background.size = window.size;
             footer.relativePosition = new Vector3(12f, TitleHeight + BarHeight + list.height + 7f);
@@ -558,6 +564,11 @@ namespace FinanceOverhaul
         {
             var sb = new System.Text.StringBuilder();
             sb.Append(today).Append('|').Append(Settings.Filter).Append('|').Append(Settings.Sort);
+            sb.Append('|')
+                .Append(Settings.CompactRows)
+                .Append(Settings.ShowSparklines)
+                .Append(Settings.ChangeAsCurrency)
+                .Append(Settings.Hidden.Count);
             foreach (MonitorQuote q in quotes)
             {
                 sb.Append('|')
@@ -608,6 +619,7 @@ namespace FinanceOverhaul
                     new MonitorQuote
                     {
                         Id = i,
+                        Prefab = info.name,
                         Symbol = StockSymbols.For(info),
                         Name = name,
                         Price = buffer[i].value,
@@ -641,7 +653,7 @@ namespace FinanceOverhaul
                 }
             };
 
-            UIPanel line = r.Panel.AddUIComponent<UIPanel>();
+            UIPanel line = r.Line = r.Panel.AddUIComponent<UIPanel>();
             line.backgroundSprite = "EmptySprite"; // borderless: a true 1 px line
             line.color = Divider;
             line.size = new Vector2(Width - 24f, 1f);
@@ -699,6 +711,17 @@ namespace FinanceOverhaul
                 child.isInteractive = false; // the whole row is one click target
             }
 
+            // ...except the pill, which flips ₡ / % (Figma pin 6).
+            r.Change.isInteractive = true;
+            r.Change.tooltip = "Click: show the change in ₡ or %";
+            r.Change.eventClick += (c, p) =>
+            {
+                p.Use();
+                Settings.ChangeAsCurrency = !Settings.ChangeAsCurrency;
+                Mod.SaveSettings();
+                Refresh(true);
+                RefreshPopover();
+            };
             return r;
         }
 
@@ -715,9 +738,32 @@ namespace FinanceOverhaul
             r.Price.name = Prefix + "Price-" + q.Symbol;
             r.Price.text = StockMonitor.PriceText(q.Price);
             r.Change.name = Prefix + "Change-" + q.Symbol;
-            r.Change.text = StockMonitor.ChangeText(q.ChangeRate);
+            float? yesterday = StockDetail.Yesterday(q.History);
+            r.Change.text = Settings.ChangeAsCurrency
+                ? StockMonitor.ChangeAmountText(q.Price, yesterday)
+                : StockMonitor.ChangeText(q.ChangeRate);
+            // The line follows the game's change rate either way; the pill follows its own text.
             Color32 colour = ColourOf(StockMonitor.ChangeColour(q.ChangeRate));
-            r.Change.color = colour;
+            r.Change.color = Settings.ChangeAsCurrency
+                ? ColourOf(StockMonitor.ChangeAmountColour(q.Price, yesterday))
+                : colour;
+
+            // Layout: full rows (name under the symbol, price over the pill) or compact
+            // (one line, names hidden).
+            bool compact = Settings.CompactRows;
+            float h = compact ? CompactRowHeight : RowHeight;
+            r.Panel.height = h;
+            r.Line.relativePosition = new Vector3(12f, h - 1f);
+            r.Name.isVisible = !compact;
+            r.Symbol.relativePosition = new Vector3(12f, compact ? 7f : 7f);
+            r.Spark.isVisible = Settings.ShowSparklines;
+            r.Spark.relativePosition = new Vector3(compact ? 150f : 186f, (h - SparkH) / 2f);
+            r.Price.relativePosition = compact
+                ? new Vector3(Width - 178f, 8f)
+                : new Vector3(Width - 102f, 6f);
+            r.Change.relativePosition = compact
+                ? new Vector3(Width - 82f, 7f)
+                : new Vector3(Width - 82f, 27f);
 
             float x = 12f + r.Symbol.width + 6f;
             r.Owned.isVisible = q.Owned > 0;
@@ -817,6 +863,7 @@ namespace FinanceOverhaul
                 Destroy(buttonIcon.texture);
             }
 
+            DestroyPopover();
             if (window != null)
             {
                 Destroy(window.gameObject);
@@ -839,7 +886,10 @@ namespace FinanceOverhaul
             var stale = new List<GameObject>();
             foreach (UIComponent c in FindObjectsOfType<UIComponent>())
             {
-                if (c != null && (c.name == ButtonName || c.name == WindowName))
+                if (
+                    c != null
+                    && (c.name == ButtonName || c.name == WindowName || c.name == PopoverName)
+                )
                 {
                     stale.Add(c.gameObject);
                 }

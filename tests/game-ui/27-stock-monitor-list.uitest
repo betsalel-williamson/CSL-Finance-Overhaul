@@ -1,5 +1,6 @@
 # UI only: no days advanced, no trades. Works in any city with a Stock Exchange.
 name the Stock Monitor button opens a see-through list of every listed stock; filters and sort work; nothing spills out
+monitor remember
 monitor close
 click FinanceOverhaulStockMonitorButton
 wait 1
@@ -25,3 +26,4 @@ click FinanceOverhaulStockMonitorSort
 click FinanceOverhaulStockMonitorSort
 click FinanceOverhaulStockMonitorFilter-All
 click FinanceOverhaulStockMonitorClose
+monitor restore

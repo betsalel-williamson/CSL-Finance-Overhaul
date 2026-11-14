@@ -1,0 +1,35 @@
+# Needs the dev test stock (TST). UI only: changes the player's monitor settings and puts them back.
+name the Stock Monitor gear opens its settings: opacity slider, compact rows, sparklines, change in currency, hide a stock
+monitor remember
+monitor close
+monitor open
+click FinanceOverhaulStockMonitorSettings
+wait 1
+expect-visible FinanceOverhaulStockMonitorSettingsPanel
+expect-text FinanceOverhaulStockMonitorSettingsTitle Stock Monitor settings
+expect-visible FinanceOverhaulStockMonitorShow-TST
+expect-no-overflow FinanceOverhaulStockMonitorSettingsPanel
+hover FinanceOverhaulStockMonitorOpacityTrack 0.5 0.5
+click FinanceOverhaulStockMonitorOpacityTrack
+expect-text-is FinanceOverhaulStockMonitorOpacityValue 45%
+capture stock-monitor-settings
+click FinanceOverhaulStockMonitorOpt-Compact
+click FinanceOverhaulStockMonitorOpt-ChangeCurrency
+wait 1
+expect-text FinanceOverhaulStockMonitorChange-TST ₡
+expect-no-overflow FinanceOverhaulStockMonitor
+capture stock-monitor-compact
+click FinanceOverhaulStockMonitorShow-TST
+wait 1
+expect-hidden FinanceOverhaulStockMonitorRow-TST
+click FinanceOverhaulStockMonitorShow-TST
+wait 1
+expect-visible FinanceOverhaulStockMonitorRow-TST
+click FinanceOverhaulStockMonitorChange-TST
+wait 1
+expect-text FinanceOverhaulStockMonitorChange-TST %
+cleanup:
+hover off
+click FinanceOverhaulStockMonitorSettings
+monitor close
+monitor restore

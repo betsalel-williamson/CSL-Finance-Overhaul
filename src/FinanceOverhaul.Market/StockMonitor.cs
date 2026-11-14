@@ -36,6 +36,9 @@ namespace FinanceOverhaul.Market
         public string Symbol;
         public string Name;
 
+        /// <summary>Prefab name: stable key for the player's "stocks shown" choice.</summary>
+        public string Prefab;
+
         /// <summary>Today's value per share.</summary>
         public float Price;
 
@@ -73,6 +76,17 @@ namespace FinanceOverhaul.Market
             MonitorSort sort
         )
         {
+            return Rows(quotes, filter, sort, null);
+        }
+
+        /// <param name="hidden">Prefab names the player chose not to show (may be null).</param>
+        public static List<MonitorQuote> Rows(
+            IEnumerable<MonitorQuote> quotes,
+            MonitorFilter filter,
+            MonitorSort sort,
+            ICollection<string> hidden
+        )
+        {
             var rows = new List<MonitorQuote>();
             if (quotes == null)
             {
@@ -81,7 +95,7 @@ namespace FinanceOverhaul.Market
 
             foreach (MonitorQuote q in quotes)
             {
-                if (q == null)
+                if (q == null || (hidden != null && q.Prefab != null && hidden.Contains(q.Prefab)))
                 {
                     continue;
                 }
@@ -180,6 +194,52 @@ namespace FinanceOverhaul.Market
         {
             string s = TickerLine.FormatRate(rate);
             return s == "--" ? s : s + "%";
+        }
+
+        /// <summary>
+        /// The pill in ₡ mode: today's price minus yesterday's, whole ₡ ("+₡10", "−₡12", "₡0");
+        /// "--" without yesterday.
+        /// </summary>
+        public static string ChangeAmountText(float price, float? yesterday)
+        {
+            if (!yesterday.HasValue || float.IsNaN(price) || float.IsInfinity(price))
+            {
+                return "--";
+            }
+
+            long d = (long)Math.Round(price) - (long)Math.Round(yesterday.Value);
+            return (
+                    d > 0 ? "+₡"
+                    : d < 0 ? "−₡"
+                    : "₡"
+                ) + Math.Abs(d).ToString("N0", CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>Colour of the ₡ change (flat when it rounds to ₡0).</summary>
+        public static byte ChangeAmountColour(float price, float? yesterday)
+        {
+            if (!yesterday.HasValue || float.IsNaN(price))
+            {
+                return LedText.Flat;
+            }
+
+            long d = (long)Math.Round(price) - (long)Math.Round(yesterday.Value);
+            return d > 0 ? LedText.Gain
+                : d < 0 ? LedText.Loss
+                : LedText.Flat;
+        }
+
+        /// <summary>Opacity as the popover shows it, e.g. "35%".</summary>
+        public static string PercentText(float fraction)
+        {
+            return Math.Round(fraction * 100).ToString(CultureInfo.InvariantCulture) + "%";
+        }
+
+        /// <summary>Slider value from a position along the track: 0–90% in 5% steps.</summary>
+        public static float OpacityAt(float fraction)
+        {
+            float f = Math.Max(0f, Math.Min(1f, float.IsNaN(fraction) ? 0f : fraction));
+            return (float)(Math.Round(f * StockMonitorSettings.MaxOpacity * 20) / 20.0);
         }
 
         /// <summary>Pill colour, decided on the rounded value like the LED (0.00 is flat grey).</summary>

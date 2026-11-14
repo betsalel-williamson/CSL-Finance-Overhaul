@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
@@ -30,6 +31,20 @@ namespace FinanceOverhaul.Market
         public bool TransparentUnhovered = true;
 
         public const float HoverOpacity = 0.9f;
+
+        /// <summary>Compact rows: one line per stock, names hidden.</summary>
+        public bool CompactRows;
+
+        public bool ShowSparklines = true;
+
+        /// <summary>The change pill shows ₡ vs yesterday instead of the game's % change rate.</summary>
+        public bool ChangeAsCurrency;
+
+        /// <summary>Prefab names of stocks the player chose not to show.</summary>
+        public readonly HashSet<string> Hidden = new HashSet<string>(
+            StringComparer.OrdinalIgnoreCase
+        );
+
         public MonitorFilter Filter = MonitorFilter.All;
         public MonitorSort Sort = MonitorSort.Change;
         private float opacity = DefaultOpacity;
@@ -87,6 +102,31 @@ namespace FinanceOverhaul.Market
                 case "buttony":
                     ButtonY = ReadFloat(value);
                     break;
+                case "compact":
+                    ReadBool(value, ref CompactRows);
+                    break;
+                case "sparklines":
+                    ReadBool(value, ref ShowSparklines);
+                    break;
+                case "change":
+                    ChangeAsCurrency = string.Equals(
+                        value,
+                        "currency",
+                        StringComparison.OrdinalIgnoreCase
+                    );
+                    break;
+                case "hidden":
+                    Hidden.Clear();
+                    foreach (string part in (value ?? "").Split(';'))
+                    {
+                        string name = Unescape(part.Trim());
+                        if (name.Length > 0)
+                        {
+                            Hidden.Add(name);
+                        }
+                    }
+
+                    break;
                 case "transparentunhovered":
                     ReadBool(value, ref TransparentUnhovered);
                     break;
@@ -114,8 +154,36 @@ namespace FinanceOverhaul.Market
             Line(sb, "buttonY", Num(ButtonY));
             Line(sb, "opacity", Num(Opacity));
             Line(sb, "transparentUnhovered", TransparentUnhovered ? "true" : "false");
+            Line(sb, "compact", CompactRows ? "true" : "false");
+            Line(sb, "sparklines", ShowSparklines ? "true" : "false");
+            Line(sb, "change", ChangeAsCurrency ? "currency" : "percent");
+            var hidden = new List<string>(Hidden);
+            hidden.Sort(StringComparer.OrdinalIgnoreCase);
+            var parts = new string[hidden.Count];
+            for (int i = 0; i < parts.Length; i++)
+            {
+                parts[i] = Escape(hidden[i]);
+            }
+
+            Line(sb, "hidden", string.Join(";", parts));
             Line(sb, "filter", Filter.ToString());
             Line(sb, "sort", Sort.ToString());
+        }
+
+        private static string Escape(string s)
+        {
+            return s.Replace("%", "%25")
+                .Replace(";", "%3B")
+                .Replace("\n", "%0A")
+                .Replace("\r", "%0D");
+        }
+
+        private static string Unescape(string s)
+        {
+            return s.Replace("%0D", "\r")
+                .Replace("%0A", "\n")
+                .Replace("%3B", ";")
+                .Replace("%25", "%");
         }
 
         private static void Line(StringBuilder sb, string key, string value)
