@@ -7,10 +7,19 @@ expect-text FinanceOverhaulShareChartFrom days ago
 expect-text FinanceOverhaulShareChartTo today
 expect-text FinanceOverhaulShareChartAxis-0 ₡
 expect-no-overflow
+wait 1
+hover FinanceOverhaulShareChartPlot 0.99 0.5
+wait 0.2
+expect-text FinanceOverhaulShareChartHoverTip TST · today · ₡
+hover FinanceOverhaulShareChartPlot 0.01 0.5
+wait 0.2
+expect-text FinanceOverhaulShareChartHoverTip TST · 29 days ago
 capture share-chart-dialog
+hover off
 show-buy IDX
 wait 1
 expect-visible FinanceOverhaulShareChart
 capture share-chart-dialog-idx
 cleanup:
+hover off
 close-dialog

@@ -28,7 +28,9 @@ window outright, never toggling a player's window), `monitor remember|restore` (
 back the player's monitor settings), `log-symbols` (logs every stock prefab with its ticker symbol
 and any clash), `hover CONTROL FX FY` / `hover off` (a simulated mouse at that fraction of a
 control, for the Stock Monitor hover), `log-basket` (every investment's daily history, for auditing
-the Index math offline) — and checks `expect-visible`, `expect-text`, `expect-no-overflow` (every
+the Index math offline), `inspect-parents CONTROL` (a control and every parent: absolute box,
+background, clipping — for measuring vanilla UI), `share-charts on|off` (the share chart flag, for
+before/after captures) — and checks `expect-visible`, `expect-text`, `expect-no-overflow` (every
 visible part inside the dialog or the named control, and none of our fixed-width labels cutting its
 text off; inside a clipping, scrolling list only the width is checked, against the list),
 `expect-owned-delta`, `expect-orders-delta` (orders this scenario created) and `expect-log`. Lines

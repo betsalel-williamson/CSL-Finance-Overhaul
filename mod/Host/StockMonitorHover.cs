@@ -114,7 +114,7 @@ namespace FinanceOverhaul
             return y >= top - 1f && y + spark.height <= top + list.height + 1f;
         }
 
-        private static Vector2 MouseInUi()
+        internal static Vector2 MouseInUi()
         {
             // Screen pixels (y up) → UI units (y down), same scale as the button drag.
             float scale = UIView.GetAView().GetScreenResolution().y / Mathf.Max(1f, Screen.height);

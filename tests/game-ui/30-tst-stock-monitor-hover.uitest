@@ -9,16 +9,16 @@ hover FinanceOverhaulStockMonitorRow-TST 0.03 0.5
 expect-hidden FinanceOverhaulStockMonitorHoverTip
 click FinanceOverhaulStockMonitorRow-TST
 wait 1
-hover FinanceOverhaulStockMonitorDetailChart 1 0.5
+hover FinanceOverhaulStockMonitorDetailChart 0.99 0.5
 expect-text FinanceOverhaulStockMonitorHoverTip TST · today · ₡
 expect-visible FinanceOverhaulStockMonitorHoverLine
-hover FinanceOverhaulStockMonitorDetailChart 0 0.5
+hover FinanceOverhaulStockMonitorDetailChart 0.01 0.5
 expect-text FinanceOverhaulStockMonitorHoverTip TST · 29 days ago
 expect-no-overflow FinanceOverhaulStockMonitor
 capture stock-monitor-hover
 click FinanceOverhaulStockMonitorRange-7
 wait 1
-hover FinanceOverhaulStockMonitorDetailChart 0 0.5
+hover FinanceOverhaulStockMonitorDetailChart 0.01 0.5
 expect-text FinanceOverhaulStockMonitorHoverTip TST · 6 days ago
 cleanup:
 hover off

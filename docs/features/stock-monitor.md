@@ -69,13 +69,19 @@ All of it is kept per player in the settings file (`monitor.compact`, `monitor.s
 
 The game's own "Share value" charts — in the Invest dialog and in the Economy panel's hover tooltip
 — are drawn in the same style as the detail view (`ShareChartView`): line and shaded area coloured
-by today's change, dashed line at yesterday's price, ₡ grid on the right, "30 days ago … today". The
-vanilla `UIGraph` stays in place (layouts do not move); the mod draws inside it and clears the curve
-the game just added, after each vanilla update (`BuySellInvestmentPanel.UpdateBindings`,
-`InvestmentTooltip.Update`). The tooltip updates every frame, so the chart redraws only when its
-stock or prices change. Options flag **Share value charts in the Stock Monitor style (testing)**
-(`shareChartsEnabled`, on by default): off — and on mod disable or hot reload — the overlay is
-removed and the game redraws its own chart on its next update.
+by today's change, dashed line at yesterday's price, ₡ grid on the right, "30 days ago … today", and
+the same hover (crosshair, dot, "Oil · 8 days ago · ₡925").
+
+- **Fit:** the vanilla `UIGraph` stays in place (layouts do not move), and so does the game's dark
+  chart panel. Its `GraphParent` sliced sprite draws about 9 UI units wider than the graph on each
+  side and stops about 21 short of its bottom (measured in game at 1920×1200), so the chart is drawn
+  inside that panel with no background of its own.
+- **Updates:** after each vanilla update (`BuySellInvestmentPanel.UpdateBindings`,
+  `InvestmentTooltip.Update`) the mod draws its chart and clears the curve the game just added. The
+  tooltip updates every frame, so the chart redraws only when its stock or prices change.
+- **Flag:** **Share value charts in the Stock Monitor style (testing)** (`shareChartsEnabled`, on by
+  default). Off — and on mod disable or hot reload — the overlay is removed and the game redraws its
+  own chart on its next update.
 
 ## History limit
 

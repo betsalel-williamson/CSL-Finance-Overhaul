@@ -28,6 +28,10 @@ namespace FinanceOverhaul
         private UILabel from,
             to;
         private string drawn;
+        private string symbol;
+        private UIPanel hoverLine,
+            hoverDot;
+        private UILabel hoverTip;
 
         /// <summary>Builds the chart filling <paramref name="size"/> inside <paramref name="parent"/>.</summary>
         /// <param name="opaque">Draw our own background (false inside the game's chart panel,
@@ -108,8 +112,9 @@ namespace FinanceOverhaul
         }
 
         /// <summary>Draws these daily prices (oldest first); skipped when nothing changed.</summary>
-        public void Draw(float[] values, Color32 colour)
+        public void Draw(float[] values, Color32 colour, string symbol = null)
         {
+            this.symbol = symbol;
             string key = Key(values, colour);
             if (key == drawn || texture == null)
             {
@@ -170,6 +175,93 @@ namespace FinanceOverhaul
 
             texture.SetPixels32(px);
             texture.Apply();
+        }
+
+        /// <summary>
+        /// Crosshair, dot and that day's price when <paramref name="mouse"/> (UI units) is over
+        /// the plot, like the Stock Monitor. Returns false (and hides it) otherwise.
+        /// </summary>
+        public bool Hover(Vector2 mouse)
+        {
+            if (
+                Root == null
+                || Sprite == null
+                || Values == null
+                || Values.Length == 0
+                || !Root.isVisible
+            )
+            {
+                HideHover();
+                return false;
+            }
+
+            Vector3 p = Sprite.absolutePosition;
+            float lx = mouse.x - p.x,
+                ly = mouse.y - p.y;
+            if (lx < 0f || ly < 0f || lx > Sprite.width || ly > Sprite.height)
+            {
+                HideHover();
+                return false;
+            }
+
+            int w = texture.width,
+                h = texture.height;
+            int i = Sparkline.IndexAt(lx * Scale, w, Values.Length);
+            float x = Sparkline.ColumnOf(i, w, Values.Length) / Scale;
+            float y =
+                Sparkline.RowOf(
+                    Values[i],
+                    StockDetail.Low(Values),
+                    StockDetail.High(Values),
+                    h,
+                    Thickness
+                ) / (float)Scale;
+            if (hoverTip == null)
+            {
+                hoverLine = Box(new Color32(255, 255, 255, 150));
+                hoverDot = Box(Color.white);
+                hoverDot.size = new Vector2(6f, 6f);
+                hoverTip = StockMonitorHost.Label(
+                    Root,
+                    Root.name + "HoverTip",
+                    "",
+                    0.7f,
+                    Color.white
+                );
+                hoverTip.backgroundSprite = "GenericPanelWhite";
+                hoverTip.color = new Color32(9, 14, 17, 235);
+                hoverTip.padding = new RectOffset(6, 6, 3, 2);
+                hoverTip.isInteractive = false;
+            }
+
+            Vector3 at = Sprite.relativePosition;
+            hoverLine.size = new Vector2(1f, Sprite.height);
+            hoverLine.relativePosition = new Vector3(at.x + x, at.y);
+            hoverDot.relativePosition = new Vector3(at.x + x - 3f, at.y + y - 3f);
+            hoverTip.text = StockMonitor.HoverText(symbol, i, Values.Length, Values[i]);
+            hoverTip.relativePosition = new Vector3(
+                Mathf.Clamp(at.x + x - hoverTip.width / 2f, 2f, Root.width - hoverTip.width - 2f),
+                at.y + 2f
+            );
+            hoverLine.isVisible = hoverDot.isVisible = hoverTip.isVisible = true;
+            return true;
+        }
+
+        public void HideHover()
+        {
+            if (hoverTip != null && hoverTip.isVisible)
+            {
+                hoverLine.isVisible = hoverDot.isVisible = hoverTip.isVisible = false;
+            }
+        }
+
+        private UIPanel Box(Color32 colour)
+        {
+            UIPanel b = Root.AddUIComponent<UIPanel>();
+            b.backgroundSprite = "EmptySprite";
+            b.color = colour;
+            b.isInteractive = false;
+            return b;
         }
 
         public void Destroy()
@@ -236,6 +328,7 @@ namespace FinanceOverhaul
         private static readonly Dictionary<UIGraph, ShareChartView> Views =
             new Dictionary<UIGraph, ShareChartView>();
         private static bool failureLogged;
+        private static bool hoverFailureLogged;
 
         public static bool IsReady
         {
@@ -323,7 +416,7 @@ namespace FinanceOverhaul
                 Color32 colour = StockMonitorHost.ColourOf(
                     StockDetail.ChangeColourVsYesterday(buffer[id].value, yesterday)
                 );
-                view.Draw(range, colour);
+                view.Draw(range, colour, StockSymbols.For(buffer[id].Info));
 
                 // UIGraph draws its curves and labels above its children, so the overlay can't
                 // cover them: clear the curve vanilla just added (it re-adds it on its next
@@ -339,6 +432,38 @@ namespace FinanceOverhaul
                 }
 
                 Remove(graph);
+            }
+        }
+
+        /// <summary>Per frame (Stock Monitor host): hover on whichever share chart is under the mouse.</summary>
+        public static void UpdateHover()
+        {
+            if (Views.Count == 0)
+            {
+                return;
+            }
+
+            try
+            {
+                Vector2 mouse = StockMonitorHost.TestMouse ?? StockMonitorHost.MouseInUi();
+                foreach (KeyValuePair<UIGraph, ShareChartView> kv in Views)
+                {
+                    if (kv.Key == null || !kv.Key.isVisible)
+                    {
+                        kv.Value.HideHover();
+                        continue;
+                    }
+
+                    kv.Value.Hover(mouse);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (!hoverFailureLogged)
+                {
+                    hoverFailureLogged = true;
+                    ModLog.Warn("share chart: hover failed: " + ex);
+                }
             }
         }
 

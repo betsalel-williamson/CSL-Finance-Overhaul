@@ -125,6 +125,7 @@ namespace FinanceOverhaul
 
         private void Update()
         {
+            ShareChartOverlay.UpdateHover(); // the Invest dialog / tooltip charts
             if (button == null)
             {
                 return;
