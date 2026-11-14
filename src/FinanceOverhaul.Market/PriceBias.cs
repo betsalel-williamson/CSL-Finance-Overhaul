@@ -1,0 +1,85 @@
+namespace FinanceOverhaul.Market
+{
+    /// <summary>
+    /// Pure price helpers for the MVP probe and future index/ETF marks.
+    /// Cities-free — unit and performance tests own this surface.
+    /// </summary>
+    public static class PriceBias
+    {
+        public const float DefaultProbeFactor = 1.01f;
+
+        /// <summary>Vanilla Financial Districts lists thirteen sector stocks.</summary>
+        public const int VanillaSectorCount = 13;
+
+        public static float Apply(float price, float factor)
+        {
+            if (float.IsNaN(price) || float.IsInfinity(price))
+            {
+                return price;
+            }
+
+            if (float.IsNaN(factor) || float.IsInfinity(factor) || factor <= 0f)
+            {
+                return price;
+            }
+
+            return price * factor;
+        }
+
+        public static float WeightedAverage(float[] prices, float[] weights)
+        {
+            if (prices == null || weights == null || prices.Length == 0)
+            {
+                return 0f;
+            }
+
+            int n = prices.Length < weights.Length ? prices.Length : weights.Length;
+            float sumW = 0f;
+            float sum = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float w = weights[i];
+                if (w <= 0f || float.IsNaN(w) || float.IsInfinity(w))
+                {
+                    continue;
+                }
+
+                float p = prices[i];
+                if (float.IsNaN(p) || float.IsInfinity(p))
+                {
+                    continue;
+                }
+
+                sumW += w;
+                sum += p * w;
+            }
+
+            if (sumW <= 0f)
+            {
+                return 0f;
+            }
+
+            return sum / sumW;
+        }
+
+        /// <summary>
+        /// Equal-weight city index over the given sector prices (padded/truncated to
+        /// <see cref="VanillaSectorCount"/> when building fixtures).
+        /// </summary>
+        public static float EqualWeightIndex(float[] sectorPrices)
+        {
+            if (sectorPrices == null || sectorPrices.Length == 0)
+            {
+                return 0f;
+            }
+
+            float[] weights = new float[sectorPrices.Length];
+            for (int i = 0; i < weights.Length; i++)
+            {
+                weights[i] = 1f;
+            }
+
+            return WeightedAverage(sectorPrices, weights);
+        }
+    }
+}

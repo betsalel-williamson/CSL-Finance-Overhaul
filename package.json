@@ -1,0 +1,64 @@
+{
+  "name": "csl-finance-overhaul",
+  "version": "0.1.0",
+  "description": "Cities: Skylines I mod — Financial Districts market overhaul (index funds, ETFs, bonds, automation, IPOs)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/betsalel-williamson/CSL-Finance-Overhaul.git"
+  },
+  "bugs": {
+    "url": "https://github.com/betsalel-williamson/CSL-Finance-Overhaul/issues"
+  },
+  "homepage": "https://github.com/betsalel-williamson/CSL-Finance-Overhaul#readme",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "docs:compile": "merlon compile --config docs/merlon.config.json --docs-root docs",
+    "docs:check": "merlon check --config docs/merlon.config.json --docs-root docs --skip-vale --require-lint",
+    "docs:fix": "merlon fix --config docs/merlon.config.json --docs-root docs",
+    "docs": "npm run docs:compile && npm run docs:check",
+    "format:csharp": "dotnet tool restore && dotnet tool run csharpier format mod/ src/ tests/",
+    "format:csharp:check": "dotnet tool restore && dotnet tool run csharpier check mod/ src/ tests/",
+    "format": "npm run docs:fix && npm run format:csharp",
+    "format:check": "npm run format:csharp:check",
+    "layer:lint": "python3 scripts/layer-import-lint.py",
+    "test:unit": "dotnet test tests/FinanceOverhaul.Market.Tests/FinanceOverhaul.Market.Tests.csproj --nologo --verbosity minimal",
+    "test:mod": "dotnet test tests/FinanceOverhaul.Mod.Tests/FinanceOverhaul.Mod.Tests.csproj --nologo --verbosity minimal -p:EnableCitiesRefs=false -p:SkipModDeploy=true",
+    "test": "npm run test:unit && npm run test:mod",
+    "hooks:pre-commit": "bash scripts/hooks-pre-commit.sh",
+    "hooks:pre-push": "bash scripts/hooks-pre-push.sh",
+    "hooks:agent-validate": "bash scripts/hooks-agent-validate.sh",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "commitlint": "commitlint --from HEAD~1 --to HEAD --verbose"
+  },
+  "lint-staged": {
+    "*.{json,jsonc,yml,yaml,md}": [
+      "prettier --write"
+    ],
+    "mod/**/*.cs": [
+      "bash scripts/lint-staged-csharpier.sh"
+    ],
+    "src/**/*.cs": [
+      "bash scripts/lint-staged-csharpier.sh"
+    ],
+    "tests/**/*.cs": [
+      "bash scripts/lint-staged-csharpier.sh"
+    ]
+  },
+  "devDependencies": {
+    "@changesets/cli": "^3.0.1",
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.0.2",
+    "@merlon-docs/merlon-docs-cli": "^1.1.0",
+    "@merlon-docs/merlon-docs-presets": "^1.1.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.4.1",
+    "markdownlint-cli2": "^0.18.1",
+    "prettier": "^3.6.2"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}
