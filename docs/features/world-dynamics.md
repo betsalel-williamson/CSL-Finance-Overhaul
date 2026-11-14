@@ -5,13 +5,14 @@ Broader market weather layered on Financial Districts prices after the MVP hook 
 ## Ordinary cycle
 
 Booms and mild corrections follow city-wide production, cargo throughput, and service coverage.
-Sector ETFs amplify focused investment; the city index stays smoother.
+Sector ETFs and commodities amplify focused industry investment; the city index stays smoother. Bond
+yields stay comparatively steady so surplus parks safely between cycles.
 
 ## Black swan events
 
 Rare, high-impact shocks (cascading industry shutdowns, city-wide disasters, liquidity freezes)
-depress correlated sectors together. Stop-loss and bond cash buffers are the intended hedges — not
-tip-timing.
+depress correlated equities and commodities together. Stop-loss rules and bond cash buffers are the
+intended hedges — not tip-timing.
 
 ## External world analogs
 

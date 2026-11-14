@@ -1,7 +1,8 @@
 # Finance Overhaul
 
 **Cities: Skylines I** mod that turns the Financial Districts Stock Exchange into city treasury
-management — index funds, sector ETFs, dividend funds, municipal bonds, automated orders, and IPOs.
+management — index funds, sector ETFs, dividend funds, municipal bonds, commodities, automated
+orders, and IPOs.
 
 > Status: **MVP** — reflective stock hooks, optional +1% probe bias, and live reload. Broader
 > instruments are documented under `docs/features/` and not shipped yet.
