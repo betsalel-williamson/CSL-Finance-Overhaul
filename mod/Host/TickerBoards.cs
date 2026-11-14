@@ -410,20 +410,31 @@ namespace FinanceOverhaul
         }
 
         /// <summary>
-        /// Opaque, lit board panel (first available of Legacy Diffuse / Standard /
-        /// Unlit Color), so it sits in the scene like vanilla geometry.
+        /// Unlit board panel in the ticker/board color, so it stays dark day and night like
+        /// the vanilla (self-lit) boards instead of washing out in sunlight. Unlit/Transparent
+        /// has no tint, so it samples a 1×1 board-colored texture; it is drawn in the
+        /// geometry queue, where depth testing works in Cities' render setup. Falls back to
+        /// the lit Legacy Diffuse panel if the shader is missing.
         /// </summary>
         private static Material CreatePanelMaterial()
         {
-            foreach (
-                string name in new[]
-                {
-                    "Legacy Shaders/Diffuse",
-                    "Diffuse",
-                    "Standard",
-                    "Unlit/Color",
-                }
-            )
+            // color/ticker/board (#1E303E) from the Figma tokens.
+            var board = new Color32(0x1E, 0x30, 0x3E, 0xFF);
+            Shader unlit = Shader.Find("Unlit/Transparent");
+            if (unlit != null)
+            {
+                var texture = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+                texture.SetPixel(0, 0, board);
+                texture.Apply();
+                var material = new Material(unlit);
+                material.name = "FinanceOverhaulTickerPanel";
+                material.mainTexture = texture;
+                material.renderQueue = 2000;
+                ModLog.Info("ticker: panel material=Unlit/Transparent (unlit, geometry queue)");
+                return material;
+            }
+
+            foreach (string name in new[] { "Legacy Shaders/Diffuse", "Diffuse" })
             {
                 Shader shader = Shader.Find(name);
                 if (shader == null)
@@ -433,9 +444,8 @@ namespace FinanceOverhaul
 
                 var material = new Material(shader);
                 material.name = "FinanceOverhaulTickerPanel";
-                // color/ticker/board (#1E303E) from the Figma tokens.
-                material.color = new Color32(0x1E, 0x30, 0x3E, 0xFF);
-                ModLog.Info("ticker: panel material=" + name);
+                material.color = board;
+                ModLog.Info("ticker: panel material=" + name + " (lit fallback)");
                 return material;
             }
 
