@@ -45,6 +45,7 @@ namespace FinanceOverhaul
                 lock (Sync)
                 {
                     OrderBook b = Book();
+                    b.LifetimeDays = Mod.OrderLifetimeDays; // Options; open orders keep theirs
                     TradeOrder order = b.AddLimitBuy(info.name, shares, limitPrice, Today);
                     if (order != null)
                     {
@@ -102,6 +103,7 @@ namespace FinanceOverhaul
                 lock (Sync)
                 {
                     OrderBook b = Book();
+                    b.LifetimeDays = Mod.OrderLifetimeDays; // Options; open orders keep theirs
                     float mark = EconomyManager.instance.m_investments.m_buffer[investmentId].value;
                     TradeOrder order;
                     switch (kind)

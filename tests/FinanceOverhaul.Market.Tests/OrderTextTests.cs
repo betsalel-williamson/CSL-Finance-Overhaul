@@ -64,7 +64,7 @@ namespace FinanceOverhaul.Market.Tests
                 OrderText.PriceCaption(OrderKind.TakeProfitSell)
             );
             Assert.Equal(
-                "Sells when the daily price is at or above ₡1,200. After a sharp rise it can sell for more. Good for 60 days.",
+                "Sells when the daily price is at or above ₡1,200. After a sharp rise it can sell for more. Good for 90 days.",
                 OrderText.Hint(OrderKind.TakeProfitSell, 1200)
             );
             Assert.Equal(
@@ -89,7 +89,7 @@ namespace FinanceOverhaul.Market.Tests
                 OrderText.CardDetail(OrderKind.LimitBuy, 5, 80, -3)
             );
             Assert.Equal(
-                "Buys when the daily price is at or below ₡80. Good for 60 days.",
+                "Buys when the daily price is at or below ₡80. Good for 90 days.",
                 OrderText.Hint(OrderKind.LimitBuy, 80)
             );
             Assert.Equal(
@@ -109,7 +109,7 @@ namespace FinanceOverhaul.Market.Tests
             );
             Assert.Equal(10, OrderText.SuggestedPrice(OrderKind.TrailingStopSell, 250f));
             Assert.Equal(
-                "Sells if the daily price falls 10% below its highest since you place it (stop now ₡90). The stop only moves up. Good for 60 days.",
+                "Sells if the daily price falls 10% below its highest since you place it (stop now ₡90). The stop only moves up. Good for 90 days.",
                 OrderText.Hint(OrderKind.TrailingStopSell, 10, 100f)
             );
             Assert.Equal(90, OrderText.EstimatePerShare(OrderKind.TrailingStopSell, 10, 100f));
@@ -120,7 +120,7 @@ namespace FinanceOverhaul.Market.Tests
             );
             TradeOrder o = TradeOrder.TrailingStopSell(1, "Index", 20, 10, 120f, 10);
             Assert.Equal(
-                "20 shares, 10% trail, stop ₡108 · 33 days left",
+                "20 shares, 10% trail, stop ₡108 · 63 days left",
                 OrderText.CardDetail(o, 37)
             );
         }
@@ -142,7 +142,7 @@ namespace FinanceOverhaul.Market.Tests
         {
             TradeOrder stop = TradeOrder.StopLossSell(1, "Index", 10, 95, 0);
             Assert.Equal(
-                "10 shares if the price drops to ₡95 · 60 days left",
+                "10 shares if the price drops to ₡95 · 90 days left",
                 OrderText.CardDetail(stop, 0)
             );
         }

@@ -19,7 +19,11 @@ step 3 the **take-profit**; step 4 the **trailing stop**.
 4. **Cash check.** Vanilla `BuyShares` does not check cash (the dialog does). If the city cannot
    afford the fill, the order is **cancelled** ("insufficient funds"), as a broker rejects it.
 5. **Share limit.** If no shares are available to buy, the order is cancelled ("share limit").
-6. **Expiry.** Orders are good for 60 game days, then expire (like Schwab's GTC cap).
+6. **Expiry.** Orders are good for 90 game days by default, then expire (like Schwab's GTC cap). The
+   player picks the lifetime in Options — **Orders stay open for (new orders)**: 30, 60, 90, 120,
+   180 or 365 days (`ordersLifetimeDays`). It applies to orders placed from then on; each order
+   keeps the expiry it was placed with (saved in the order book), so changing it never cancels or
+   extends an open order.
 7. **Notify.** Every fill, cancel and expiry is logged with the share count, price and reason.
 8. **Save-safe.** Orders live in the mod's own save data (`FinanceOverhaul.Orders`, versioned text).
    Without the mod the game keeps the blob and ignores it: the city loads, holdings are untouched,
@@ -51,7 +55,7 @@ stop-loss**.
   when nothing is left). The gain or loss is booked against the average cost
   ([Cost basis](./cost-basis.md)).
 - **Cancel.** If the shares were already sold, it cancels ("no shares left to sell"). Expires after
-  60 game days like every order.
+  the order lifetime (Options, 90 days by default) like every order.
 - **Saved** as a `stop-sell` line in the same versioned order book; older builds skip it.
 
 ## Take-profit (shipped)
@@ -64,7 +68,7 @@ take-profit**.
   the market right away); otherwise the estimate row says why and the button is disabled.
 - **Fill.** Once the daily price is at or above the target, it sells at that day's price, so after a
   sharp rise it sells for more than the target. Capped by the shares still held, same bookkeeping
-  and cancel rules as the stop-loss, 60-day expiry.
+  and cancel rules as the stop-loss, the same expiry.
 - **Saved** as a `profit-sell` line; older builds skip it.
 
 Wording for every order kind (tabs, captions, hints, cards, log names) lives in `OrderText` in the
@@ -80,7 +84,7 @@ today's stop)** uses it; the button reads **Place trailing stop**.
   high (logged as "trailing stop follows a new high"), so the stop only moves up.
 - **Fill.** Once the daily price is at or below the stop (the trail below the peak, rounded down to
   whole ₡), it sells at that day's price; after a sharp drop that is less than the stop. Capped by
-  the shares still held, same cancel rules and 60-day expiry as the other sells.
+  the shares still held, same cancel rules and the same expiry as the other sells.
 - **Card.** "Open order · SELL (trailing stop)" with "N shares, 10% trail, stop ₡X · days left"; the
   stop shown follows the peak.
 - **Saved** as a `trail-sell` line with an eighth column, the peak (invariant float). Older builds

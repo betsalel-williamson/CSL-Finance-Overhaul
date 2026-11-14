@@ -72,10 +72,15 @@ namespace FinanceOverhaul.Market
 
         /// <param name="price">The field's value: ₡ per share, or the trail percent.</param>
         /// <param name="mark">Today's price (trailing stop: shows today's stop).</param>
-        public static string Hint(OrderKind kind, int price, float mark = 0f)
+        public static string Hint(
+            OrderKind kind,
+            int price,
+            float mark = 0f,
+            int lifetimeDays = TradeOrder.DefaultLifetimeDays
+        )
         {
             string p = Money(price);
-            string good = " Good for " + TradeOrder.LifetimeDays + " days.";
+            string good = " Good for " + TradeOrder.ClampLifetime(lifetimeDays) + " days.";
             switch (kind)
             {
                 case OrderKind.TrailingStopSell:
@@ -173,6 +178,12 @@ namespace FinanceOverhaul.Market
             }
 
             return null;
+        }
+
+        /// <summary>Options dropdown entry for an order lifetime, e.g. "90 days".</summary>
+        public static string LifetimeLabel(int days)
+        {
+            return days.ToString(CultureInfo.InvariantCulture) + " days";
         }
 
         /// <summary>Options toggle label for an order type's feature flag.</summary>

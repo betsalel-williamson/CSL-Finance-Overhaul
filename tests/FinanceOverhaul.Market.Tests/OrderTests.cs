@@ -64,9 +64,9 @@ namespace FinanceOverhaul.Market.Tests
         public void ExpiresAfterSixtyGameDays()
         {
             TradeOrder o = Limit(placed: 10);
-            Assert.Equal(70, o.ExpiresDay);
+            Assert.Equal(100, o.ExpiresDay);
             Assert.Equal(OrderAction.Wait, OrderRules.Evaluate(o, 70, 900f, 1000, 1).Action);
-            OrderDecision d = OrderRules.Evaluate(o, 71, 700f, 1000, 100_000);
+            OrderDecision d = OrderRules.Evaluate(o, 101, 700f, 1000, 100_000);
             Assert.Equal(OrderAction.Cancel, d.Action);
             Assert.Equal(OrderRules.ReasonExpired, d.Reason);
         }
@@ -129,7 +129,7 @@ namespace FinanceOverhaul.Market.Tests
             Assert.Equal(25u, o.Shares);
             Assert.Equal(2400, o.TriggerPrice);
             Assert.Equal(12, o.PlacedDay);
-            Assert.Equal(72, o.ExpiresDay);
+            Assert.Equal(102, o.ExpiresDay);
             Assert.Equal(3, back.AddLimitBuy("Y", 1, 1, 1).Id); // next id survives
         }
 
@@ -216,7 +216,7 @@ namespace FinanceOverhaul.Market.Tests
         [Fact]
         public void ExpiresLikeEveryOrder()
         {
-            OrderDecision d = OrderRules.Evaluate(Stop(placed: 10), 71, 80f, 0, 0, owned: 100);
+            OrderDecision d = OrderRules.Evaluate(Stop(placed: 10), 101, 80f, 0, 0, owned: 100);
             Assert.Equal(OrderAction.Cancel, d.Action);
             Assert.Equal(OrderRules.ReasonExpired, d.Reason);
         }
@@ -246,7 +246,7 @@ namespace FinanceOverhaul.Market.Tests
             Assert.Equal("Index", s.InvestmentKey);
             Assert.Equal(25u, s.Shares);
             Assert.Equal(21000, s.TriggerPrice);
-            Assert.Equal(66, s.ExpiresDay);
+            Assert.Equal(96, s.ExpiresDay);
         }
 
         [Fact]
@@ -322,7 +322,7 @@ namespace FinanceOverhaul.Market.Tests
         [Fact]
         public void ExpiresLikeEveryOrder()
         {
-            OrderDecision d = OrderRules.Evaluate(Target(placed: 10), 71, 120f, 0, 0, owned: 100);
+            OrderDecision d = OrderRules.Evaluate(Target(placed: 10), 101, 120f, 0, 0, owned: 100);
             Assert.Equal(OrderAction.Cancel, d.Action);
             Assert.Equal(OrderRules.ReasonExpired, d.Reason);
         }
@@ -350,7 +350,7 @@ namespace FinanceOverhaul.Market.Tests
             Assert.Equal(OrderKind.TakeProfitSell, t.Kind);
             Assert.Equal(25u, t.Shares);
             Assert.Equal(23000, t.TriggerPrice);
-            Assert.Equal(66, t.ExpiresDay);
+            Assert.Equal(96, t.ExpiresDay);
         }
 
         [Fact]
@@ -359,7 +359,7 @@ namespace FinanceOverhaul.Market.Tests
             var book = new OrderBook();
             book.AddTakeProfit("Oil Industry", 5, 120, 1);
             Assert.Contains(
-                "\nprofit-sell|1|Oil Industry|5|120|1|61\n",
+                "\nprofit-sell|1|Oil Industry|5|120|1|91\n",
                 OrderBookCodec.Format(book)
             );
         }
@@ -468,7 +468,7 @@ namespace FinanceOverhaul.Market.Tests
         [Fact]
         public void ExpiresLikeEveryOrder()
         {
-            OrderDecision d = OrderRules.Evaluate(Trail(placed: 10), 71, 80f, 0, 0, owned: 100);
+            OrderDecision d = OrderRules.Evaluate(Trail(placed: 10), 101, 80f, 0, 0, owned: 100);
             Assert.Equal(OrderRules.ReasonExpired, d.Reason);
         }
 
@@ -499,7 +499,7 @@ namespace FinanceOverhaul.Market.Tests
             Assert.Equal(10, t.TrailPercent);
             Assert.Equal(230.25f, t.Peak);
             Assert.Equal(207, t.TriggerPrice);
-            Assert.Equal(66, t.ExpiresDay);
+            Assert.Equal(96, t.ExpiresDay);
         }
 
         [Fact]
@@ -508,7 +508,7 @@ namespace FinanceOverhaul.Market.Tests
             var book = new OrderBook();
             book.AddTrailingStop("Index", 5, 10, 100f, 1);
             string text = OrderBookCodec.Format(book);
-            Assert.Contains("\ntrail-sell|1|Index|5|10|1|61|100\n", text);
+            Assert.Contains("\ntrail-sell|1|Index|5|10|1|91|100\n", text);
         }
 
         [Fact]
@@ -536,6 +536,71 @@ namespace FinanceOverhaul.Market.Tests
             Assert.Null(book.AddTrailingStop("Index", 5, 10, 0f, 1));
             Assert.Null(book.AddTrailingStop("Index", 5, 10, float.NaN, 1));
             Assert.Empty(book.Orders);
+        }
+    }
+}
+
+namespace FinanceOverhaul.Market.Tests
+{
+    public class OrderLifetimeTests
+    {
+        [Fact]
+        public void NewOrdersLastNinetyDaysByDefault()
+        {
+            Assert.Equal(90, TradeOrder.DefaultLifetimeDays);
+            var book = new OrderBook();
+            Assert.Equal(110, book.AddLimitBuy("Oil", 5, 80, 20).ExpiresDay);
+        }
+
+        [Fact]
+        public void TheBookStampsTheChosenLifetimeOnEveryKind()
+        {
+            var book = new OrderBook { LifetimeDays = 365 };
+            Assert.Equal(375, book.AddLimitBuy("Oil", 5, 80, 10).ExpiresDay);
+            Assert.Equal(375, book.AddStopLoss("Oil", 5, 80, 10).ExpiresDay);
+            Assert.Equal(375, book.AddTakeProfit("Oil", 5, 120, 10).ExpiresDay);
+            Assert.Equal(375, book.AddTrailingStop("Oil", 5, 10, 100f, 10).ExpiresDay);
+        }
+
+        [Fact]
+        public void ChangingTheLifetimeKeepsOpenOrdersAsPlaced()
+        {
+            var book = new OrderBook { LifetimeDays = 30 };
+            TradeOrder early = book.AddLimitBuy("Oil", 5, 80, 0);
+            book.LifetimeDays = 180;
+            TradeOrder late = book.AddLimitBuy("Oil", 5, 80, 0);
+            Assert.Equal(30, early.ExpiresDay);
+            Assert.Equal(180, late.ExpiresDay);
+            OrderBook back = OrderBookCodec.Parse(OrderBookCodec.Format(book));
+            Assert.Equal(30, back.Orders[0].ExpiresDay); // saved expiry wins over any setting
+        }
+
+        [Fact]
+        public void UnusableLifetimesFallBackToTheDefault()
+        {
+            Assert.Equal(90, new OrderBook { LifetimeDays = 0 }.LifetimeDays);
+            Assert.Equal(90, new OrderBook { LifetimeDays = -5 }.LifetimeDays);
+            Assert.Equal(90, new OrderBook { LifetimeDays = 99999 }.LifetimeDays);
+            Assert.Equal(120, new OrderBook { LifetimeDays = 120 }.LifetimeDays);
+        }
+
+        [Fact]
+        public void SettingDefaultsRoundTripsAndRejectsJunk()
+        {
+            Assert.Equal(90, SettingsFile.Parse("").OrderLifetimeDays);
+            var s = new ModSettings { OrderLifetimeDays = 180 };
+            Assert.Equal(180, SettingsFile.Parse(SettingsFile.Format(s)).OrderLifetimeDays);
+            Assert.Equal(90, SettingsFile.Parse("ordersLifetimeDays=forever\n").OrderLifetimeDays);
+            Assert.Equal(90, SettingsFile.Parse("ordersLifetimeDays=0\n").OrderLifetimeDays);
+            Assert.Contains(90, TradeOrder.LifetimeChoices);
+        }
+
+        [Fact]
+        public void HintsSayTheChosenLifetime()
+        {
+            Assert.EndsWith("Good for 90 days.", OrderText.Hint(OrderKind.LimitBuy, 80));
+            Assert.EndsWith("Good for 365 days.", OrderText.Hint(OrderKind.LimitBuy, 80, 0f, 365));
+            Assert.Equal("120 days", OrderText.LifetimeLabel(120));
         }
     }
 }

@@ -43,6 +43,15 @@ namespace FinanceOverhaul.Market
 
         public bool TrailingStopEnabled { get; set; } = true;
 
+        private int orderLifetimeDays = TradeOrder.DefaultLifetimeDays;
+
+        /// <summary>How long new orders stay open, in game days (Options; default 90).</summary>
+        public int OrderLifetimeDays
+        {
+            get { return orderLifetimeDays; }
+            set { orderLifetimeDays = TradeOrder.ClampLifetime(value); }
+        }
+
         public bool IsEnabled(OrderKind kind)
         {
             switch (kind)

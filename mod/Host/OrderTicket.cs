@@ -300,7 +300,8 @@ namespace FinanceOverhaul
                 hint.text = OrderText.Hint(
                     active.Value,
                     price,
-                    owner == null ? 0f : Mark((byte)IdField.GetValue(owner))
+                    owner == null ? 0f : Mark((byte)IdField.GetValue(owner)),
+                    Mod.OrderLifetimeDays
                 );
                 ShowEstimate(active.Value, price, shares);
                 FitPricePanel();

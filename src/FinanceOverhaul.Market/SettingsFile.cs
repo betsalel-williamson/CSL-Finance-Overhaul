@@ -17,6 +17,7 @@ namespace FinanceOverhaul.Market
         private const string LiveTickerKey = "liveTickerEnabled";
         private const string DevTestStockKey = "devTestStockEnabled";
         private const string ShareChartsKey = "shareChartsEnabled";
+        private const string OrderLifetimeKey = "ordersLifetimeDays";
 
         /// <summary>Settings key of an order type's flag, e.g. <c>ordersStopLossEnabled</c>.</summary>
         public static string OrderKey(OrderKind kind)
@@ -51,6 +52,24 @@ namespace FinanceOverhaul.Market
                 string value = line.Substring(eq + 1).Trim();
                 if (settings.Monitor.TryRead(key, value))
                 {
+                    continue;
+                }
+
+                if (string.Equals(key, OrderLifetimeKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    int days;
+                    if (
+                        int.TryParse(
+                            value,
+                            System.Globalization.NumberStyles.Integer,
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            out days
+                        )
+                    )
+                    {
+                        settings.OrderLifetimeDays = days;
+                    }
+
                     continue;
                 }
 
@@ -107,6 +126,14 @@ namespace FinanceOverhaul.Market
             sb.Append(DevTestStockKey)
                 .Append('=')
                 .Append(settings.DevTestStockEnabled ? "true" : "false")
+                .Append('\n');
+            sb.Append(OrderLifetimeKey)
+                .Append('=')
+                .Append(
+                    settings.OrderLifetimeDays.ToString(
+                        System.Globalization.CultureInfo.InvariantCulture
+                    )
+                )
                 .Append('\n');
             sb.Append(ShareChartsKey)
                 .Append('=')

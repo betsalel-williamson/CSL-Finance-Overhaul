@@ -30,7 +30,7 @@ show-economy
 wait 1
 scroll-into-view FinanceOverhaulOpenOrderRow-$order
 expect-in-view FinanceOverhaulOpenOrderRow-$order OwnedInvestmentsPanel
-expect-text FinanceOverhaulOpenOrderDetail-$order 10 shares, 10% trail, stop ₡90 · 60 days left
+expect-text FinanceOverhaulOpenOrderDetail-$order 10 shares, 10% trail, stop ₡90 · 90 days left
 expect-no-overflow FinanceOverhaulOpenOrderDetail-$order
 capture trailing-stop-card
 cleanup:

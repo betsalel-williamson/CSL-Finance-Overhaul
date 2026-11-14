@@ -258,6 +258,25 @@ namespace FinanceOverhaul
                 );
             }
 
+            // How long new orders stay open (a game, so the player chooses; default 90 days).
+            int[] lifetimes = TradeOrder.LifetimeChoices;
+            var lifetimeLabels = new string[lifetimes.Length];
+            int selected = Array.IndexOf(lifetimes, TradeOrder.DefaultLifetimeDays);
+            for (int i = 0; i < lifetimes.Length; i++)
+            {
+                lifetimeLabels[i] = OrderText.LifetimeLabel(lifetimes[i]);
+                if (lifetimes[i] == Settings.OrderLifetimeDays)
+                {
+                    selected = i;
+                }
+            }
+
+            group.AddDropdown(
+                "Orders stay open for (new orders)",
+                lifetimeLabels,
+                selected,
+                OnOrderLifetimeChanged
+            );
             group.AddCheckbox(
                 "Share value charts in the Stock Monitor style (testing)",
                 Settings.ShareChartsEnabled,
@@ -404,6 +423,35 @@ namespace FinanceOverhaul
             SaveSettings();
             ModLog.Info("orders: " + SettingsFile.OrderKey(kind) + "=" + enabled);
             OrderTicket.OnFlagsChanged();
+        }
+
+        /// <summary>Lifetime for orders placed from now on (open orders keep theirs).</summary>
+        internal static int OrderLifetimeDays
+        {
+            get
+            {
+                return Settings == null
+                    ? TradeOrder.DefaultLifetimeDays
+                    : Settings.OrderLifetimeDays;
+            }
+        }
+
+        private static void OnOrderLifetimeChanged(int index)
+        {
+            if (Settings == null)
+            {
+                Settings = new ModSettings();
+            }
+
+            int[] lifetimes = TradeOrder.LifetimeChoices;
+            if (index < 0 || index >= lifetimes.Length)
+            {
+                return;
+            }
+
+            Settings.OrderLifetimeDays = lifetimes[index];
+            SaveSettings();
+            ModLog.Info("orders: new orders stay open " + Settings.OrderLifetimeDays + " days");
         }
 
         private static void OnShareChartsChanged(bool enabled)

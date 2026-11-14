@@ -11,7 +11,7 @@ scroll-into-view FinanceOverhaulOpenOrderRow-$order
 expect-in-view FinanceOverhaulOpenOrderRow-$order OwnedInvestmentsPanel
 expect-prev-has FinanceOverhaulOpenOrderRow-$order Oil Industry
 expect-text FinanceOverhaulOpenOrderText-$order Oil Industry
-expect-text FinanceOverhaulOpenOrderDetail-$order 3 shares at or below ₡1 · 60 days left
+expect-text FinanceOverhaulOpenOrderDetail-$order 3 shares at or below ₡1 · 90 days left
 expect-no-overflow FinanceOverhaulOpenOrderRow-$order
 capture portfolio-orders
 # Vanilla re-sorts the list periodically; the card must stay under its holding.

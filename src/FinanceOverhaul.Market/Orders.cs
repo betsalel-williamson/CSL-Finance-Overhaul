@@ -30,8 +30,21 @@ namespace FinanceOverhaul.Market
     /// </summary>
     public sealed class TradeOrder
     {
-        /// <summary>Good-'til-cancelled cap, like Schwab's: orders expire after this many game days.</summary>
-        public const int LifetimeDays = 60;
+        /// <summary>
+        /// Good-'til-cancelled cap, like Schwab's: by default orders expire after this many game
+        /// days. The player picks the lifetime in Options (<see cref="LifetimeChoices"/>); each
+        /// order keeps the expiry it was placed with.
+        /// </summary>
+        public const int DefaultLifetimeDays = 90;
+
+        /// <summary>The Options choices, in game days.</summary>
+        public static readonly int[] LifetimeChoices = { 30, 60, 90, 120, 180, 365 };
+
+        /// <summary>A usable lifetime: 1–3650 days, else the default.</summary>
+        public static int ClampLifetime(int days)
+        {
+            return days >= 1 && days <= 3650 ? days : DefaultLifetimeDays;
+        }
 
         private TradeOrder() { }
 
@@ -108,7 +121,8 @@ namespace FinanceOverhaul.Market
             string investmentKey,
             uint shares,
             int limitPrice,
-            int placedDay
+            int placedDay,
+            int lifetimeDays = DefaultLifetimeDays
         )
         {
             return Create(
@@ -118,7 +132,7 @@ namespace FinanceOverhaul.Market
                 shares,
                 limitPrice,
                 placedDay,
-                placedDay + LifetimeDays
+                placedDay + ClampLifetime(lifetimeDays)
             );
         }
 
@@ -127,7 +141,8 @@ namespace FinanceOverhaul.Market
             string investmentKey,
             uint shares,
             int stopPrice,
-            int placedDay
+            int placedDay,
+            int lifetimeDays = DefaultLifetimeDays
         )
         {
             return Create(
@@ -137,7 +152,7 @@ namespace FinanceOverhaul.Market
                 shares,
                 stopPrice,
                 placedDay,
-                placedDay + LifetimeDays
+                placedDay + ClampLifetime(lifetimeDays)
             );
         }
 
@@ -146,7 +161,8 @@ namespace FinanceOverhaul.Market
             string investmentKey,
             uint shares,
             int targetPrice,
-            int placedDay
+            int placedDay,
+            int lifetimeDays = DefaultLifetimeDays
         )
         {
             return Create(
@@ -156,7 +172,7 @@ namespace FinanceOverhaul.Market
                 shares,
                 targetPrice,
                 placedDay,
-                placedDay + LifetimeDays
+                placedDay + ClampLifetime(lifetimeDays)
             );
         }
 
@@ -166,7 +182,8 @@ namespace FinanceOverhaul.Market
             uint shares,
             int trailPercent,
             float peak,
-            int placedDay
+            int placedDay,
+            int lifetimeDays = DefaultLifetimeDays
         )
         {
             TradeOrder order = Create(
@@ -176,7 +193,7 @@ namespace FinanceOverhaul.Market
                 shares,
                 0,
                 placedDay,
-                placedDay + LifetimeDays
+                placedDay + ClampLifetime(lifetimeDays)
             );
             order.TrailPercent = trailPercent;
             order.Peak = peak;
@@ -428,6 +445,15 @@ namespace FinanceOverhaul.Market
 
         public int NextId { get; internal set; } = 1;
 
+        private int lifetimeDays = TradeOrder.DefaultLifetimeDays;
+
+        /// <summary>Lifetime given to orders placed from now on (Options); existing orders keep theirs.</summary>
+        public int LifetimeDays
+        {
+            get { return lifetimeDays; }
+            set { lifetimeDays = TradeOrder.ClampLifetime(value); }
+        }
+
         public IList<TradeOrder> Orders
         {
             get { return orders.AsReadOnly(); }
@@ -446,7 +472,8 @@ namespace FinanceOverhaul.Market
                 investmentKey,
                 shares,
                 limitPrice,
-                today
+                today,
+                LifetimeDays
             );
             orders.Add(order);
             return order;
@@ -500,7 +527,8 @@ namespace FinanceOverhaul.Market
                 shares,
                 trailPercent,
                 mark,
-                today
+                today,
+                LifetimeDays
             );
             orders.Add(order);
             return order;
@@ -526,7 +554,7 @@ namespace FinanceOverhaul.Market
                 shares,
                 trigger,
                 today,
-                today + TradeOrder.LifetimeDays
+                today + LifetimeDays
             );
             orders.Add(order);
             return order;

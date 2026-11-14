@@ -1,0 +1,20 @@
+# Needs the dev test stock (TST). Places one limit buy (no days advanced) and cancels it.
+name new orders stay open for the Options lifetime (90 days by default): the ticket says so and the Your Portfolio card counts down from it
+set-price TST 100
+show-buy TST
+click FinanceOverhaulOrderTab-Limit
+type FinanceOverhaulShareAmountField 5
+type FinanceOverhaulLimitPriceField 90
+expect-text FinanceOverhaulLimitHint Good for 90 days
+capture order-lifetime-ticket
+click Button
+expect-orders-delta 1
+show-economy
+wait 1
+scroll-into-view FinanceOverhaulOpenOrderRow-$order
+expect-text FinanceOverhaulOpenOrderDetail-$order 90 days left
+capture order-lifetime-card
+cleanup:
+cancel-new-orders
+set-price TST 100
+close-dialog
