@@ -1,0 +1,27 @@
+# Needs the dev test stock (TST) in a test save.
+name holding cards show the average cost per share across buys at different prices
+set-price TST 100
+run-days 1
+remember TST
+show-buy TST
+type FinanceOverhaulShareAmountField 4
+click Button
+wait 1
+set-price TST 80
+run-days 1
+show-buy TST
+type FinanceOverhaulShareAmountField 4
+click Button
+wait 1
+expect-owned-delta TST 8
+show-economy
+wait 2
+scroll-into-view FinanceOverhaulAvgCost-TST
+expect-in-view FinanceOverhaulAvgCost-TST OwnedInvestmentsPanel
+expect-text FinanceOverhaulAvgCostValue-TST ₡90.00
+expect-no-overflow FinanceOverhaulAvgCost-TST
+capture avg-cost
+cleanup:
+sell-back TST 8
+set-price TST 100
+close-dialog

@@ -29,16 +29,18 @@ Title chrome (`Finance Overhaul {version}`) is Content Manager / Options identit
 
 ## Vanilla Investments regions (host)
 
-| Region id                 | Label                   | Notes                            |
-| ------------------------- | ----------------------- | -------------------------------- |
-| `economy-investments-tab` | Investments             | Economy modal tab                |
-| `purchasable-list`        | Purchasable Investments | Left column                      |
-| `row-value`               | Value                   | Vanilla mark                     |
-| `row-change-rate`         | Change rate             | Vanilla display                  |
-| `buy` / `sell`            | Buy / Sell              | Vanilla trade — untouched by MVP |
-| `portfolio-list`          | Your Portfolio          | Right column                     |
-| `portfolio-current-value` | Current value           | Vanilla mark                     |
-| `portfolio-total`         | Total value             | Aggregate                        |
+| Region id                 | Label                   | Notes                                       |
+| ------------------------- | ----------------------- | ------------------------------------------- |
+| `economy-investments-tab` | Investments             | Economy modal tab                           |
+| `purchasable-list`        | Purchasable Investments | Left column                                 |
+| `row-value`               | Value                   | Vanilla mark                                |
+| `row-change-rate`         | Change rate             | Vanilla display                             |
+| `buy` / `sell`            | Buy / Sell              | Vanilla trade — untouched by MVP            |
+| `portfolio-list`          | Your Portfolio          | Right column                                |
+| `portfolio-current-value` | Current value           | Vanilla mark                                |
+| `portfolio-total`         | Total value             | Aggregate                                   |
+| `portfolio-avg-cost`      | Avg cost / share        | Mod row: average cost basis (cost-basis.md) |
+| `portfolio-open-order`    | Open order card         | Mod entry under its holding, with Cancel    |
 
 ### Hover tooltip (host)
 

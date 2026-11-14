@@ -6,6 +6,7 @@ Product and architecture contracts for Finance Overhaul.
 - [City index fund](./city-index-fund.md)
 - [Typed share amount](./share-amount-input.md)
 - [Automated orders](./automated-orders.md)
+- [Cost basis](./cost-basis.md)
 - [Save compatibility](./save-compatibility.md)
 - [Known issues](./known-issues.md)
 - [Brokerage mechanics map](./brokerage-mechanics-map.md)

@@ -566,27 +566,35 @@ namespace FinanceOverhaul
                 }
                 case "scroll-into-view":
                 {
-                    // Like a player scrolling Your Portfolio until CONTROL shows.
+                    // Like a player scrolling until CONTROL shows (CONTROL may sit inside a
+                    // list entry): find the scrolling list above it and scroll by the offset.
                     UIComponent c = FindControl(a);
-                    UIScrollablePanel scroll = c == null ? null : c.parent as UIScrollablePanel;
+                    UIScrollablePanel scroll = null;
+                    for (
+                        UIComponent p = c == null ? null : c.parent;
+                        p != null && scroll == null;
+                        p = p.parent
+                    )
+                    {
+                        scroll = p as UIScrollablePanel;
+                    }
+
                     if (scroll == null)
                     {
-                        r.Error = a + " is not an entry of a scrolling list";
+                        r.Error = a + " is not inside a scrolling list";
                         break;
                     }
 
-                    // Scroll by exactly what is needed (the game's ScrollIntoView did not
-                    // move this list): bring the entry's bottom, or top, inside the view.
-                    float below = c.relativePosition.y + c.height - scroll.height;
-                    float above = c.relativePosition.y;
+                    float top = c.absolutePosition.y - scroll.absolutePosition.y;
+                    float below = top + c.height - scroll.height;
                     Vector2 pos = scroll.scrollPosition;
                     if (below > 0f)
                     {
                         pos.y += below;
                     }
-                    else if (above < 0f)
+                    else if (top < 0f)
                     {
-                        pos.y += above;
+                        pos.y += top;
                     }
 
                     scroll.scrollPosition = pos;

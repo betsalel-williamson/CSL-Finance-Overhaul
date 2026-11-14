@@ -410,6 +410,8 @@ namespace FinanceOverhaul
                     UiCleanup.RemoveChildrenWhere(list, IsCard);
                     RestoreLegacyLayout(list);
                 }
+
+                PortfolioAvgCost.Remove(economy);
             }
             catch
             {

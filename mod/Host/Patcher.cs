@@ -304,6 +304,7 @@ namespace FinanceOverhaul
             try
             {
                 PortfolioOrders.Arrange(__instance);
+                PortfolioAvgCost.Apply(__instance);
             }
             catch
             {
