@@ -299,6 +299,12 @@ namespace FinanceOverhaul
             );
             applied += TryPatch(
                 harmony,
+                AccessTools.Method(typeof(BuySellInvestmentPanel), "Update"),
+                null,
+                nameof(ShareFieldUpdatePostfix)
+            );
+            applied += TryPatch(
+                harmony,
                 AccessTools.Method(typeof(BuySellInvestmentPanel), "OnKeyDown"),
                 nameof(ShareFieldOnKeyDownPrefix),
                 null
@@ -328,6 +334,18 @@ namespace FinanceOverhaul
             catch
             {
                 // fail soft
+            }
+        }
+
+        private static void ShareFieldUpdatePostfix()
+        {
+            try
+            {
+                ShareAmountField.UnfocusOnOutsideClick();
+            }
+            catch
+            {
+                // fail soft — never break the dialog's frame update
             }
         }
 

@@ -16,11 +16,11 @@ Follow the Trackpad Camera Control pattern:
   installing with `--dev`.
 
 - The same `AssemblyVersion` rule applies to **every assembly the mod ships**
-  (`FinanceOverhaul.Market.dll` too). A dependency that keeps a fixed version reloads under the
-  same identity, and Mono keeps resolving the first-loaded copy, so the reloaded host calls stale
-  code. Guarded by `AssemblyIdentityTests`.
-- Host features attach UI lazily and idempotently (for example on first dialog show), remove
-  stale objects from older assemblies by name, and undo everything in `OnDisabled`.
+  (`FinanceOverhaul.Market.dll` too). A dependency that keeps a fixed version reloads under the same
+  identity, and Mono keeps resolving the first-loaded copy, so the reloaded host calls stale code.
+  Guarded by `AssemblyIdentityTests`.
+- Host features attach UI lazily and idempotently (for example on first dialog show), remove stale
+  objects from older assemblies by name, and undo everything in `OnDisabled`.
 
 ## Consequences
 

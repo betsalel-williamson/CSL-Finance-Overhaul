@@ -11,9 +11,15 @@ namespace FinanceOverhaul
     /// <summary>
     /// First native-UI edit: makes the Invest dialog's share count typeable.
     /// Vanilla shows the count in a read-only UILabel (LabelShareSliderNumber)
-    /// driven by the slider. We overlay a numeric UITextField on that label;
-    /// submitting it feeds the vanilla private SetSliderValue, so price, limits
-    /// and Buy/Sell stay vanilla. UI-only — nothing is written to the save.
+    /// driven by the slider. We overlay a numeric UITextField on that label and
+    /// drive the vanilla private SetSliderValue, so price, limits and Buy/Sell stay
+    /// vanilla. UI-only — nothing is written to the save.
+    /// <para>
+    /// Editing (rules in <see cref="ShareAmountEditor"/>): typing moves the slider
+    /// live; Enter, Tab, or clicking outside applies; Escape restores the value the
+    /// field had when it gained focus. Those keys are consumed so the dialog does
+    /// not also Buy (Enter) or close (Escape).
+    /// </para>
     /// Hot-reload safe: attach is idempotent (Awake or first ShowPanel), stale fields
     /// left by an older assembly are removed by name, and Detach restores vanilla.
     /// </summary>
@@ -27,6 +33,10 @@ namespace FinanceOverhaul
             typeof(BuySellInvestmentPanel),
             "m_slider"
         );
+        private static readonly FieldInfo SliderValueField = AccessTools.Field(
+            typeof(BuySellInvestmentPanel),
+            "m_sliderValue"
+        );
         private static readonly MethodInfo SetSliderValueMethod = AccessTools.Method(
             typeof(BuySellInvestmentPanel),
             "SetSliderValue"
@@ -37,6 +47,8 @@ namespace FinanceOverhaul
         );
 
         public const string FieldName = "FinanceOverhaulShareAmountField";
+
+        private static readonly ShareAmountEditor Editor = new ShareAmountEditor();
 
         private static UITextField field;
         private static UILabel label;
@@ -49,6 +61,7 @@ namespace FinanceOverhaul
             {
                 return LabelField != null
                     && SliderField != null
+                    && SliderValueField != null
                     && SetSliderValueMethod != null
                     && GetMaximumMethod != null;
             }
@@ -59,7 +72,7 @@ namespace FinanceOverhaul
             get { return field != null && field.hasFocus; }
         }
 
-        /// <summary>Postfix target: BuySellInvestmentPanel.Awake.</summary>
+        /// <summary>Postfix targets: BuySellInvestmentPanel.Awake and ShowPanel.</summary>
         public static void Attach(BuySellInvestmentPanel panel)
         {
             if (panel == null || !IsReady)
@@ -96,6 +109,7 @@ namespace FinanceOverhaul
                 field.maxLength = 9;
                 field.selectOnFocus = true;
                 field.submitOnFocusLost = true;
+                // Raises eventKeyDown before the field's own Enter/Escape handling.
                 field.builtinKeyNavigation = true;
                 field.readOnly = false;
                 field.horizontalAlignment = UIHorizontalAlignment.Center;
@@ -108,10 +122,14 @@ namespace FinanceOverhaul
                 field.focusedBgSprite = "TextFieldPanel";
                 field.selectionSprite = "EmptySprite";
                 field.color = new Color32(28, 28, 28, 255);
-                field.tooltip = "Type a share amount, then press Enter";
+                field.tooltip = "Type a share amount · Enter/Tab apply · Esc reverts";
                 field.text = label.text;
-                field.eventTextSubmitted += OnSubmitted;
-                field.eventTextCancelled += (c, v) => Mirror(label.text);
+                field.eventGotFocus += OnGotFocus;
+                field.eventTextChanged += OnTextChanged;
+                field.eventKeyDown += OnKeyDown;
+                field.eventTextSubmitted += (c, text) => CommitAndShow(text);
+                field.eventTextCancelled += (c, text) => Revert();
+                field.eventLostFocus += (c, p) => CommitAndShow(field.text);
                 label.isVisible = false;
                 ModLog.Info("share field: attached typed share amount to Invest dialog");
             }
@@ -123,48 +141,136 @@ namespace FinanceOverhaul
         }
 
         /// <summary>Postfix target: BuySellInvestmentPanel.SetSliderValue (slider / ± moved).</summary>
-        public static void Mirror(string text)
+        public static void MirrorFromLabel()
         {
-            if (field == null || field.hasFocus)
+            if (field == null || label == null || field.hasFocus)
             {
                 return;
             }
 
-            field.text = text ?? string.Empty;
+            field.text = label.text ?? string.Empty;
         }
 
-        public static void MirrorFromLabel()
+        /// <summary>
+        /// Postfix target: BuySellInvestmentPanel.Update. Clicking anywhere outside
+        /// the focused field unfocuses it, which applies the typed value.
+        /// </summary>
+        public static void UnfocusOnOutsideClick()
         {
-            if (label != null)
+            if (field == null || !field.hasFocus)
             {
-                Mirror(label.text);
+                return;
+            }
+
+            if (Input.GetMouseButtonDown(0) && !field.containsMouse)
+            {
+                field.Unfocus();
             }
         }
 
-        private static void OnSubmitted(UIComponent component, string text)
+        private static void OnGotFocus(UIComponent component, UIFocusEventParameter p)
+        {
+            if (owner == null)
+            {
+                return;
+            }
+
+            Editor.Begin((uint)SliderValueField.GetValue(owner));
+        }
+
+        private static void OnTextChanged(UIComponent component, string text)
         {
             try
             {
-                if (owner == null)
+                if (owner == null || !field.hasFocus)
                 {
                     return;
                 }
 
-                UISlider slider = SliderField.GetValue(owner) as UISlider;
-                uint max = (uint)GetMaximumMethod.Invoke(owner, null);
-                uint min = slider == null ? 0u : (uint)Mathf.Max(0f, slider.minValue);
-                if (ShareAmountInput.TryParse(text, min, max, out uint shares))
+                GetRange(out uint min, out uint max);
+                if (Editor.TryLiveValue(text, min, max, out uint live))
                 {
-                    SetSliderValueMethod.Invoke(owner, new object[] { shares });
+                    SetSlider(live);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogOnce("share field: live update failed: " + ex.Message);
+            }
+        }
+
+        private static void OnKeyDown(UIComponent component, UIKeyEventParameter p)
+        {
+            if (p == null || p.used)
+            {
+                return;
+            }
+
+            switch (p.keycode)
+            {
+                case KeyCode.Return:
+                case KeyCode.KeypadEnter:
+                case KeyCode.Tab:
+                    p.Use();
+                    CommitAndShow(field.text);
+                    field.Unfocus();
+                    break;
+                case KeyCode.Escape:
+                    p.Use();
+                    Revert();
+                    field.Unfocus();
+                    break;
+            }
+        }
+
+        private static void CommitAndShow(string text)
+        {
+            try
+            {
+                if (owner == null || field == null)
+                {
+                    return;
                 }
 
-                // Always show what vanilla actually holds (clamped or unchanged).
+                GetRange(out uint min, out uint max);
+                SetSlider(Editor.Commit(text, min, max));
+                // Show what vanilla actually holds (clamped, or unchanged if invalid).
                 field.text = label.text;
             }
             catch (Exception ex)
             {
-                LogOnce("share field: submit failed: " + ex.Message);
+                LogOnce("share field: apply failed: " + ex.Message);
             }
+        }
+
+        private static void Revert()
+        {
+            try
+            {
+                if (owner == null || field == null || !Editor.IsEditing)
+                {
+                    return;
+                }
+
+                SetSlider(Editor.Cancel());
+                field.text = label.text;
+            }
+            catch (Exception ex)
+            {
+                LogOnce("share field: revert failed: " + ex.Message);
+            }
+        }
+
+        private static void GetRange(out uint min, out uint max)
+        {
+            UISlider slider = SliderField.GetValue(owner) as UISlider;
+            max = (uint)GetMaximumMethod.Invoke(owner, null);
+            min = slider == null ? 0u : (uint)Mathf.Max(0f, slider.minValue);
+        }
+
+        private static void SetSlider(uint shares)
+        {
+            SetSliderValueMethod.Invoke(owner, new object[] { shares });
         }
 
         /// <summary>
@@ -184,7 +290,7 @@ namespace FinanceOverhaul
             }
         }
 
-        /// <summary>Called from Mod.OnDisabled / Patcher.UnpatchAll (hot reload, disable).</summary>
+        /// <summary>Called from Patcher.UnpatchAll (hot reload, disable).</summary>
         public static void Detach()
         {
             if (label != null)

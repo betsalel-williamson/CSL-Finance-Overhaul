@@ -14,22 +14,30 @@ first proof that Finance Overhaul can edit native Financial Districts UI safely.
 3. **Whole shares only.** Digits and thousands separators are accepted; anything else is ignored and
    the field shows the current count again. Values clamp to the slider minimum and the vanilla
    maximum (`GetMaximumShareCount`: affordable/available for Buy, owned for Sell).
-4. **Enter submits, never buys.** While the field has focus, Enter applies the number; press Buy (or
-   Enter again after the field loses focus) to trade.
-5. **Slider and ± stay in sync.** Moving the slider or the ± steppers updates the field.
+4. **Typing moves the slider live.** Each valid number updates the slider and Price immediately
+   (clamped); empty or partial input leaves the slider where it is.
+5. **Apply or revert like a normal field** (rules in `ShareAmountEditor`):
+
+   | Action                       | Field                               | Slider         |
+   | ---------------------------- | ----------------------------------- | -------------- |
+   | Enter, Tab, or click outside | Unfocuses; shows the applied value  | Typed value    |
+   | Escape                       | Unfocuses; shows the original value | Original value |
+
+   Enter and Escape are consumed while typing, so the dialog never buys or closes from them.
+
 6. **Fail soft.** If the vanilla members are missing, the mod logs once and leaves the slider-only
    dialog untouched.
 7. **Hot-reload safe.** Replacing the DLL while the game runs never stacks fields: the old copy
-   detaches on disable (restoring the vanilla label), the new copy attaches on the next
-   **Invest in** open, and any stale field is removed by name.
+   detaches on disable (restoring the vanilla label), the new copy attaches on the next **Invest
+   in** open, and any stale field is removed by name.
 8. **Save-neutral.** UI only; nothing is written to the save
    ([Save compatibility](./save-compatibility.md)).
 
 ## Code
 
-- Rules: `ShareAmountInput.TryParse` in the Market library (unit tested).
-- Host: `mod/Host/ShareAmountField.cs` plus `Patcher` postfixes on `BuySellInvestmentPanel.Awake` /
-  `SetSliderValue` and a prefix on `OnKeyDown`.
+- Rules: `ShareAmountInput.TryParse` and `ShareAmountEditor` in the Market library (unit tested).
+- Host: `mod/Host/ShareAmountField.cs` plus `Patcher` postfixes on `BuySellInvestmentPanel.Awake`,
+  `ShowPanel`, `SetSliderValue`, `Update` (click outside), and a prefix on `OnKeyDown`.
 
 ## Acceptance
 
