@@ -50,6 +50,16 @@ Until the matrix passes, the Index toggle stays off by default.
 
 Record results (and `Player.log` excerpts) in this shard when run.
 
+## Results
+
+| #   | Date       | Result          | Evidence                                                                                                                                                                                                                                                                                          |
+| --- | ---------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2   | 2026-11-13 | Pass            | `Westdale.crp` (mod on, Index listed, no shares) loaded with the mod disabled in the same session: `Unknown prefab: Index [Serialization]` logged, no exceptions from investments, Index absent. Only exceptions were vanilla `HotelChainPanel.Update` on the main menu.                          |
+| 6   | 2026-11-13 | Pass (expected) | Extra case: case-2 city **saved without the mod** (`Westdale-no-mod-loaded-from-save.crp`), then loaded with the mod and Index on. Vanilla had dropped Index from that save, so the mod created a fresh Index (`mode=seed`, one history point: flat chart, 0% change until the next in-game day). |
+
+Still to run: cases 1, 3 (shares held), 4, 5. Case 3 is the one that loses money (Index shares are
+not refunded without the mod).
+
 ## Acceptance
 
 - Every feature PR states whether it writes save data, and if so links a passing matrix run.
