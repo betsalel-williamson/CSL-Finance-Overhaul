@@ -197,36 +197,38 @@ namespace FinanceOverhaul.Market
         }
 
         /// <summary>
-        /// The pill in ₡ mode: today's price minus yesterday's, whole ₡ ("+₡10", "−₡12", "₡0");
-        /// "--" without yesterday.
+        /// The pill in ₡ mode: the same change as the % pill (the game's change rate), in ₡ —
+        /// <c>price × r / (1 + r)</c>, i.e. today's price minus the price the rate compares it
+        /// with. Always the same sign as the % pill; under ₡10 it shows cents so a small move is
+        /// never rounded to ₡0 ("−₡0.20"). "--" when unknown.
         /// </summary>
-        public static string ChangeAmountText(float price, float? yesterday)
+        public static string ChangeAmountFromRate(float price, float rate)
         {
-            if (!yesterday.HasValue || float.IsNaN(price) || float.IsInfinity(price))
+            if (
+                float.IsNaN(price)
+                || float.IsInfinity(price)
+                || float.IsNaN(rate)
+                || float.IsInfinity(rate)
+                || rate <= -100f
+            )
             {
                 return "--";
             }
 
-            long d = (long)Math.Round(price) - (long)Math.Round(yesterday.Value);
-            return (
-                    d > 0 ? "+₡"
-                    : d < 0 ? "−₡"
-                    : "₡"
-                ) + Math.Abs(d).ToString("N0", CultureInfo.InvariantCulture);
-        }
-
-        /// <summary>Colour of the ₡ change (flat when it rounds to ₡0).</summary>
-        public static byte ChangeAmountColour(float price, float? yesterday)
-        {
-            if (!yesterday.HasValue || float.IsNaN(price))
+            if (ChangeColour(rate) == LedText.Flat)
             {
-                return LedText.Flat;
+                return "₡0"; // the % pill shows 0.00%: same here
             }
 
-            long d = (long)Math.Round(price) - (long)Math.Round(yesterday.Value);
-            return d > 0 ? LedText.Gain
-                : d < 0 ? LedText.Loss
-                : LedText.Flat;
+            double r = rate / 100.0;
+            double amount = price * r / (1.0 + r);
+            double abs = Math.Abs(amount);
+            string digits =
+                abs < 10.0
+                    ? Math.Max(0.01, Math.Round(abs, 2))
+                        .ToString("0.00", CultureInfo.InvariantCulture)
+                    : Math.Round(abs).ToString("N0", CultureInfo.InvariantCulture);
+            return (rate > 0 ? "+₡" : "−₡") + digits;
         }
 
         /// <summary>Opacity as the popover shows it, e.g. "35%".</summary>

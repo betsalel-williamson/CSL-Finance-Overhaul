@@ -739,15 +739,13 @@ namespace FinanceOverhaul
             r.Price.name = Prefix + "Price-" + q.Symbol;
             r.Price.text = StockMonitor.PriceText(q.Price);
             r.Change.name = Prefix + "Change-" + q.Symbol;
-            float? yesterday = StockDetail.Yesterday(q.History);
+            // One measure for both pill modes and the line: the game's change rate (as the
+            // Economy panel and the LED show it); ₡ mode is the same change in ₡.
             r.Change.text = Settings.ChangeAsCurrency
-                ? StockMonitor.ChangeAmountText(q.Price, yesterday)
+                ? StockMonitor.ChangeAmountFromRate(q.Price, q.ChangeRate)
                 : StockMonitor.ChangeText(q.ChangeRate);
-            // The line follows the game's change rate either way; the pill follows its own text.
             Color32 colour = ColourOf(StockMonitor.ChangeColour(q.ChangeRate));
-            r.Change.color = Settings.ChangeAsCurrency
-                ? ColourOf(StockMonitor.ChangeAmountColour(q.Price, yesterday))
-                : colour;
+            r.Change.color = colour;
 
             // Layout: full rows (name under the symbol, price over the pill) or compact
             // (one line, names hidden).

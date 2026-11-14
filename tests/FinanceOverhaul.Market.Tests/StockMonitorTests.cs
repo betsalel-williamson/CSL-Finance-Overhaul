@@ -394,18 +394,6 @@ namespace FinanceOverhaul.Market.Tests
         }
 
         [Fact]
-        public void ChangeInCurrency()
-        {
-            Assert.Equal("+₡10", StockMonitor.ChangeAmountText(942f, 932f));
-            Assert.Equal("−₡12", StockMonitor.ChangeAmountText(932f, 944f));
-            Assert.Equal("₡0", StockMonitor.ChangeAmountText(932.2f, 931.9f));
-            Assert.Equal("+₡1,250", StockMonitor.ChangeAmountText(55441f, 54191f));
-            Assert.Equal("--", StockMonitor.ChangeAmountText(932f, null));
-            Assert.Equal(LedText.Gain, StockMonitor.ChangeAmountColour(942f, 932f));
-            Assert.Equal(LedText.Flat, StockMonitor.ChangeAmountColour(932.2f, 931.9f));
-        }
-
-        [Fact]
         public void OpacitySliderSnapsToFivePercent()
         {
             Assert.Equal(0f, StockMonitor.OpacityAt(0f));
@@ -415,6 +403,54 @@ namespace FinanceOverhaul.Market.Tests
             Assert.Equal(0f, StockMonitor.OpacityAt(-3f));
             Assert.Equal(0.9f, StockMonitor.OpacityAt(7f), 3);
             Assert.Equal("35%", StockMonitor.PercentText(0.35f));
+        }
+    }
+}
+
+namespace FinanceOverhaul.Market.Tests
+{
+    public class ChangePillAgreementTests
+    {
+        [Fact]
+        public void CurrencyPillIsTheSameChangeAsThePercentPill()
+        {
+            // The player's report: IDX +0.29% but −₡48; TJL −0.45% but ₡0.
+            Assert.Equal("+₡4.03", StockMonitor.ChangeAmountFromRate(1394f, 0.29f));
+            Assert.Equal("−₡8.03", StockMonitor.ChangeAmountFromRate(1776f, -0.45f));
+            Assert.Equal("−₡0.20", StockMonitor.ChangeAmountFromRate(71f, -0.28f));
+            Assert.Equal("+₡40", StockMonitor.ChangeAmountFromRate(911f, 4.59f));
+            Assert.Equal("₡0", StockMonitor.ChangeAmountFromRate(100f, 0.004f));
+            Assert.Equal("--", StockMonitor.ChangeAmountFromRate(100f, float.NaN));
+            Assert.Equal("--", StockMonitor.ChangeAmountFromRate(100f, -100f));
+        }
+
+        [Fact]
+        public void BothPillsAlwaysAgreeOnSignAndColour()
+        {
+            var rng = new Random(29052079);
+            for (int k = 0; k < 5000; k++)
+            {
+                float price = (float)Math.Exp(rng.NextDouble() * Math.Log(100000));
+                float rate = (float)(rng.NextDouble() * 40 - 20) * (rng.Next(4) == 0 ? 0.01f : 1f);
+                string pct = StockMonitor.ChangeText(rate);
+                string cur = StockMonitor.ChangeAmountFromRate(price, rate);
+                byte colour = StockMonitor.ChangeColour(rate);
+                if (colour == LedText.Gain)
+                {
+                    Assert.StartsWith("+", pct);
+                    Assert.StartsWith("+₡", cur);
+                }
+                else if (colour == LedText.Loss)
+                {
+                    Assert.StartsWith("-", pct);
+                    Assert.StartsWith("−₡", cur);
+                }
+                else
+                {
+                    Assert.Equal("0.00%", pct);
+                    Assert.Equal("₡0", cur);
+                }
+            }
         }
     }
 }

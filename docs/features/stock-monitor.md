@@ -58,8 +58,9 @@ screen edge):
 - **Solid while the mouse is over it** (City Vitals' "Transparent Unhovered").
 - **Compact rows (hide names):** one line per stock — symbol, sparkline, price, pill.
 - **Show sparklines.**
-- **Change as ₡ instead of %:** the pill shows today's price minus yesterday's. Clicking any row's
-  pill flips this too.
+- **Change as ₡ instead of %:** the pill shows the same change as the % pill (the game's change
+  rate) in ₡ — `price × r ÷ (1 + r)`, cents under ₡10 — so both modes always agree in sign and
+  colour (unit tested over 5,000 random cases). Clicking any row's pill flips this too.
 - **Stocks shown:** a checkbox per listed stock, kept by prefab name (the same in every language).
 
 All of it is kept per player in the settings file (`monitor.compact`, `monitor.sparklines`,
