@@ -54,10 +54,25 @@ namespace FinanceOverhaul
         private const float DigitHeightEm = 0.87f;
         private const float DigitTopEm = 0f;
 
-        // Caret/selection reach this far below the digits, like a text descender.
-        private const float CaretDescentEm = 0.25f;
-
         public const string FieldName = "FinanceOverhaulShareAmountField";
+        public const string CaretName = "FinanceOverhaulShareAmountCaret";
+
+        private static readonly FieldInfo CursorIndexField = AccessTools.Field(
+            typeof(UITextField),
+            "m_CursorIndex"
+        );
+        private static readonly FieldInfo SelectionStartField = AccessTools.Field(
+            typeof(UITextField),
+            "m_SelectionStart"
+        );
+        private static readonly FieldInfo SelectionEndField = AccessTools.Field(
+            typeof(UITextField),
+            "m_SelectionEnd"
+        );
+        private static readonly FieldInfo ScrollIndexField = AccessTools.Field(
+            typeof(UITextField),
+            "m_ScrollIndex"
+        );
 
         private static readonly ShareAmountEditor Editor = new ShareAmountEditor();
 
@@ -65,6 +80,15 @@ namespace FinanceOverhaul
         private static UILabel label;
         private static BuySellInvestmentPanel owner;
         private static bool failureLogged;
+
+        // Custom caret (vanilla draws its caret from the digit tops, so it cannot
+        // reach above the text). Null when the private cursor fields are missing;
+        // the vanilla caret is kept in that case.
+        private static UISprite caret;
+        private static CaretLayout.Bar caretBar;
+        private static int lastCursor = -1;
+        private static string lastText;
+        private static float lastChange;
 
         public static bool IsReady
         {
@@ -147,6 +171,7 @@ namespace FinanceOverhaul
                 field.eventTextSubmitted += (c, text) => CommitAndShow(text);
                 field.eventTextCancelled += (c, text) => Revert();
                 field.eventLostFocus += (c, p) => CommitAndShow(field.text);
+                AttachCaret();
                 label.isVisible = false;
                 ModLog.Info("share field: attached typed share amount to Invest dialog");
             }
@@ -171,18 +196,102 @@ namespace FinanceOverhaul
 
         /// <summary>
         /// Postfix target: BuySellInvestmentPanel.Update. Clicking anywhere outside
-        /// the focused field unfocuses it, which applies the typed value.
+        /// the focused field unfocuses it (which applies the typed value), and the
+        /// custom caret follows the cursor and blinks.
         /// </summary>
-        public static void UnfocusOnOutsideClick()
+        public static void Tick()
         {
-            if (field == null || !field.hasFocus)
+            if (field == null)
             {
                 return;
             }
 
-            if (Input.GetMouseButtonDown(0) && !field.containsMouse)
+            if (field.hasFocus && Input.GetMouseButtonDown(0) && !field.containsMouse)
             {
                 field.Unfocus();
+            }
+
+            UpdateCaret();
+        }
+
+        private static void AttachCaret()
+        {
+            if (
+                CursorIndexField == null
+                || SelectionStartField == null
+                || SelectionEndField == null
+                || ScrollIndexField == null
+            )
+            {
+                LogOnce("share field: cursor fields not found; keeping vanilla caret");
+                return;
+            }
+
+            caret = field.AddUIComponent<UISprite>();
+            caret.name = CaretName;
+            // Same atlas + sprite the field uses for its selection highlight.
+            caret.atlas = field.atlas;
+            caret.spriteName = field.selectionSprite;
+            caret.color = field.textColor;
+            caret.isInteractive = false;
+            caret.size = new Vector2(1.5f, caretBar.Height > 0f ? caretBar.Height : 14f);
+            caret.isVisible = false;
+            field.cursorWidth = 0;
+        }
+
+        private static void UpdateCaret()
+        {
+            if (caret == null)
+            {
+                return;
+            }
+
+            try
+            {
+                if (!field.hasFocus)
+                {
+                    caret.isVisible = false;
+                    lastCursor = -1;
+                    return;
+                }
+
+                string text = field.text ?? string.Empty;
+                int cursor = (int)CursorIndexField.GetValue(field);
+                int selStart = (int)SelectionStartField.GetValue(field);
+                int selEnd = (int)SelectionEndField.GetValue(field);
+                int scroll = (int)ScrollIndexField.GetValue(field);
+                float now = Time.realtimeSinceStartup;
+                if (cursor != lastCursor || text != lastText)
+                {
+                    lastCursor = cursor;
+                    lastText = text;
+                    lastChange = now;
+                }
+
+                bool selecting = selStart != selEnd;
+                if (selecting || !CaretLayout.IsVisible(now - lastChange, field.cursorBlinkTime))
+                {
+                    caret.isVisible = false;
+                    return;
+                }
+
+                int from = Mathf.Clamp(scroll, 0, text.Length);
+                int to = Mathf.Clamp(cursor, from, text.Length);
+                float x = field.padding.left + MeasureWidth(text.Substring(from, to - from));
+                caret.relativePosition = new Vector3(
+                    Mathf.Min(x, field.width - caret.width),
+                    caretBar.Top
+                );
+                caret.height = caretBar.Height;
+                caret.isVisible = true;
+            }
+            catch (Exception ex)
+            {
+                // Fall back to the vanilla caret for the rest of the session.
+                LogOnce("share field: custom caret failed, using vanilla caret: " + ex.Message);
+                UnityEngine.Object.Destroy(caret.gameObject);
+                caret = null;
+                field.cursorWidth = 1;
             }
         }
 
@@ -312,10 +421,11 @@ namespace FinanceOverhaul
                     textWidth,
                     glyphTop,
                     glyphHeight,
-                    size * CaretDescentEm,
+                    0f,
                     4
                 );
                 field.padding = new RectOffset(p.Left, 4, p.Top, p.Bottom);
+                caretBar = CaretLayout.Measure(p.Top, glyphTop, glyphHeight, size);
                 if (logMetrics)
                 {
                     ModLog.Info(
@@ -423,6 +533,8 @@ namespace FinanceOverhaul
                 }
             }
 
+            caret = null;
+            lastCursor = -1;
             field = null;
             owner = null;
         }

@@ -341,7 +341,7 @@ namespace FinanceOverhaul
         {
             try
             {
-                ShareAmountField.UnfocusOnOutsideClick();
+                ShareAmountField.Tick();
             }
             catch
             {
