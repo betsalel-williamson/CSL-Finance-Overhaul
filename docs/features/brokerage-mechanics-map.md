@@ -68,10 +68,11 @@ two fit passes). Stock Exchange scan every 5 s, placement set once per building.
 
 **Step 3 (shipped):** the baked boards are hidden by requiring `Building.Flags.Deleted` on the three
 `AnimUV` sub-meshes (`MeshInfo.m_flagsRequired`, honoured by `BuildingAI.RenderMeshes`): runtime
-only, restored on toggle-off, unload, disable and hot reload. Opaque lit panels
-(`Legacy Shaders/Diffuse`, `ticker/board` color) replace them; level-of-detail culls only the text.
-Verified 2026-11-13 with the dev in-game capture (`FinanceOverhaul.capture` trigger, `--dev`
-builds).
+only, restored on toggle-off, unload, disable and hot reload. Unlit panels (`Unlit/Transparent` with
+a 1×1 `ticker/board` texture, geometry queue) replace them and stay dark in daylight like the
+self-lit vanilla boards; text shares the panel plane (no parallax at steep angles); level-of-detail
+culls only the text. Verified 2026-11-13 with the dev in-game capture (`FinanceOverhaul.capture`
+trigger, `--dev` builds).
 
 **Known limit:** text can still draw over a building that stands between the camera and the facade
 (it is culled by distance and facing, not by depth).
