@@ -57,6 +57,15 @@ sector basket.
 - **Readout** — after a level loads, `finance-overhaul.log` shows a line like
   `index: listed=True value=… basket=… sectors=13`.
 
+## In-game verification
+
+- **2026-11-13 (hot reload, city loaded):** Index listed under Purchasable Investments (cloned from
+  `TrafficJelly`, the only share stock with no unlock milestone; money-stack icon), bought 100
+  shares, Your Portfolio row and **Sell: Index** dialog correct. Bug found and fixed: the cloned AI
+  lost its `m_info` back-link and threw in `InvestmentAI.IsAvailable` every tick.
+- **Open:** Index swings more than expected (for example -11.91% in one update, chart range
+  ₡1,100–₡1,800). See [Known issues](./known-issues.md).
+
 ## Acceptance
 
 - Market unit tests cover equal-weight Index marks (empty basket, NaNs skipped, Index excluded from
