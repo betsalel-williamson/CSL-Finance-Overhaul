@@ -247,6 +247,15 @@ namespace FinanceOverhaul
                 OnIndexStockChanged
             );
 
+            if (BuildInfo.ShowDevBuildIdentity)
+            {
+                group.AddCheckbox(
+                    "Dev: Test Stock (TST) for game UI tests (adds a listing; use a test save)",
+                    Settings.DevTestStockEnabled,
+                    OnDevTestStockChanged
+                );
+            }
+
             // Build info goes on the Options page itself after the group, as plain labels (not
             // nested groups, which each draw a rule): the group's own separator rule then sits
             // between the toggles and the build info.
@@ -331,6 +340,22 @@ namespace FinanceOverhaul
             else
             {
                 ModLog.Info("index: disabling keeps an existing listing until the next city load");
+            }
+        }
+
+        private static void OnDevTestStockChanged(bool enabled)
+        {
+            if (Settings == null)
+            {
+                Settings = new ModSettings();
+            }
+
+            Settings.DevTestStockEnabled = enabled;
+            SaveSettings();
+            ModLog.Info("dev test stock enabled=" + enabled);
+            if (enabled)
+            {
+                TestStockListing.EnsureInLoadedCity();
             }
         }
 

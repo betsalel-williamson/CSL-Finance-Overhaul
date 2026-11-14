@@ -53,6 +53,14 @@ namespace FinanceOverhaul.Market.Tests
         }
 
         [Fact]
+        public void DevTestStock_IsOffByDefaultAndRoundTrips()
+        {
+            Assert.False(SettingsFile.Parse("").DevTestStockEnabled);
+            var on = new ModSettings { DevTestStockEnabled = true };
+            Assert.True(SettingsFile.Parse(SettingsFile.Format(on)).DevTestStockEnabled);
+        }
+
+        [Fact]
         public void Parse_InvalidBooleanKeepsDefault()
         {
             ModSettings s = SettingsFile.Parse("indexStockEnabled=maybe");

@@ -656,7 +656,19 @@ namespace FinanceOverhaul
         private static bool IsSectorStock(InvestmentInfo info)
         {
             return info.m_investmentAI != null
-                && info.m_investmentAI.m_unit == InvestmentAI.Unit.Share;
+                && info.m_investmentAI.m_unit == InvestmentAI.Unit.Share
+                && !TestStock.IsTestName(info.m_name); // the dev test listing never counts
+        }
+
+        /// <summary>A share-priced prefab to clone (also used by the dev test listing).</summary>
+        internal static InvestmentInfo FindShareSource(InvestmentInfo[] prefabs)
+        {
+            return FindSectorSource(prefabs);
+        }
+
+        internal static InvestmentInfo FindLoadedShareSource()
+        {
+            return FindLoadedSectorSource();
         }
 
         /// <summary>
@@ -685,7 +697,7 @@ namespace FinanceOverhaul
                         + " milestone="
                         + (p.m_unlockingMilestone == null ? "none" : p.m_unlockingMilestone.name)
                 );
-                if (CityIndexBasket.IsIndexName(p.name))
+                if (CityIndexBasket.IsIndexName(p.name) || TestStock.IsTestName(p.name))
                 {
                     continue;
                 }

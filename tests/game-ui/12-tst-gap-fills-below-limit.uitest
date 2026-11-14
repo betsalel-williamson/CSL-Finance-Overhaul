@@ -1,0 +1,19 @@
+# Needs the dev test stock (TST) in a test save.
+name after a gap down the order fills at the lower daily price, not the limit
+set-price TST 100
+run-days 1
+remember TST
+show-buy TST
+click FinanceOverhaulOrderTabLimit
+type FinanceOverhaulShareAmountField 4
+type FinanceOverhaulLimitPriceField 90
+click Button
+set-price TST 70
+run-days 1
+expect-log at 70 (limit 90) for 280
+expect-owned-delta TST 4
+cleanup:
+cancel-new-orders
+sell-back TST 4
+set-price TST 100
+close-dialog

@@ -8,7 +8,15 @@ DATA="${FO_GAME_DATA:-$HOME/Library/Application Support/Colossal Order/Cities_Sk
 LOG="${TMPDIR:-/tmp}/finance-overhaul.log"
 TIMEOUT="${FO_UITEST_TIMEOUT:-180}"
 cd "$(dirname "$0")/.."
-if [ "$#" -eq 0 ]; then set -- tests/game-ui/*.uitest; fi
+# Scenarios named *-tst-* need the dev test stock (TST, test save only); skip them unless
+# FO_TST=1 or they are passed explicitly.
+if [ "$#" -eq 0 ]; then
+  set --
+  for f in tests/game-ui/*.uitest; do
+    case "$f" in *-tst-*) [ "${FO_TST:-0}" = "1" ] || continue ;; esac
+    set -- "$@" "$f"
+  done
+fi
 [ -f "$LOG" ] || { echo "No mod log at $LOG — is the game running with the --dev build?"; exit 2; }
 
 failed=0

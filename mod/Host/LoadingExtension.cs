@@ -26,6 +26,7 @@ namespace FinanceOverhaul
                 OrderDesk.Reset();
                 IndexListing.EnsureInLoadedCity();
                 IndexListing.LogStatus();
+                TestStockListing.EnsureInLoadedCity();
                 TickerBoards.Ensure();
             }
             catch

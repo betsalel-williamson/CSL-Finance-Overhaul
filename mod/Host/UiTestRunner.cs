@@ -240,6 +240,36 @@ namespace FinanceOverhaul
                     yield return null;
                     break;
                 }
+                case "set-price":
+                {
+                    // TST only: the price from the next daily update on.
+                    if (!string.Equals(a, "TST", StringComparison.OrdinalIgnoreCase))
+                    {
+                        r.Error = "set-price only drives the dev test stock TST";
+                        break;
+                    }
+
+                    TestStockListing.SetPrice(ParseFloat(b, 0f));
+                    break;
+                }
+                case "expect-price":
+                {
+                    int id = Find(a);
+                    if (id < 0)
+                    {
+                        r.Error = "no investment " + a + " (is the dev test stock on?)";
+                        break;
+                    }
+
+                    float mark = EconomyManager.instance.m_investments.m_buffer[id].value;
+                    float want = ParseFloat(b, -1f);
+                    if (Mathf.Abs(mark - want) > 0.01f)
+                    {
+                        r.Error = a + " price is " + mark + ", expected " + want;
+                    }
+
+                    break;
+                }
                 case "wait":
                     yield return new WaitForSeconds(ParseFloat(a, 1f));
                     break;

@@ -16,5 +16,11 @@ namespace FinanceOverhaul.Market
         /// Live Stock Exchange ticker overlay. Visual only and save-neutral, so on by default.
         /// </summary>
         public bool LiveTickerEnabled { get; set; } = true;
+
+        /// <summary>
+        /// Dev builds only: lists "Test Stock (dev)" (TST) for game UI tests. Adds an
+        /// investment to the save, so off by default and meant for a test save.
+        /// </summary>
+        public bool DevTestStockEnabled { get; set; }
     }
 }

@@ -1,0 +1,13 @@
+# Needs the dev test stock: Options > Finance Overhaul > Dev: Test Stock (TST), in a test save.
+name TST follows pinned prices and otherwise stays flat
+set-price TST 80
+run-days 1
+expect-price TST 80
+set-price TST 0
+run-days 1
+expect-price TST 80
+set-price TST 120
+run-days 1
+expect-price TST 120
+cleanup:
+set-price TST 100

@@ -30,6 +30,7 @@ namespace FinanceOverhaul.Market
             { "Generic Industry", "GeI" },
             { "Greasy Gasoline Inc.", "GGI" },
             { CityIndexBasket.IndexName, "IDX" },
+            { TestStock.DisplayName, "TST" },
         };
 
         /// <summary>

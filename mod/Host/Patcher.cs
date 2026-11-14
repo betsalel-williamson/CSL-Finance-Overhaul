@@ -42,6 +42,7 @@ namespace FinanceOverhaul
                 );
                 // Hot reload / mid-game enable: list Index in the running city if enabled.
                 IndexListing.EnsureInLoadedCity();
+                TestStockListing.EnsureInLoadedCity();
                 // Hot reload: re-attach the live ticker overlay in a loaded city.
                 TickerBoards.Ensure();
             }
@@ -367,6 +368,7 @@ namespace FinanceOverhaul
             try
             {
                 IndexListing.Register(__instance);
+                TestStockListing.Register(__instance);
             }
             catch
             {
@@ -379,6 +381,7 @@ namespace FinanceOverhaul
             try
             {
                 IndexListing.Unregister();
+                TestStockListing.Unregister();
             }
             catch
             {
@@ -434,6 +437,7 @@ namespace FinanceOverhaul
             try
             {
                 IndexListing.ApplyMark(__instance, ref data, ref __result);
+                TestStockListing.ApplyMark(__instance, ref data, ref __result);
             }
             catch
             {
@@ -443,6 +447,12 @@ namespace FinanceOverhaul
 
         private static bool IndexLocalizedNamePrefix(InvestmentAI __instance, ref string __result)
         {
+            if (TestStockListing.IsTest(__instance))
+            {
+                __result = TestStock.DisplayName;
+                return false;
+            }
+
             if (!IndexListing.IsIndex(__instance))
             {
                 return true;
@@ -457,6 +467,13 @@ namespace FinanceOverhaul
             ref string __result
         )
         {
+            if (TestStockListing.IsTest(__instance))
+            {
+                __result =
+                    "Dev-only test listing for automated game UI scenarios. Its price only moves when a test sets it. Not a real company.";
+                return false;
+            }
+
             if (!IndexListing.IsIndex(__instance))
             {
                 return true;

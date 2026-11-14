@@ -15,6 +15,7 @@ namespace FinanceOverhaul.Market
 
         private const string IndexStockKey = "indexStockEnabled";
         private const string LiveTickerKey = "liveTickerEnabled";
+        private const string DevTestStockKey = "devTestStockEnabled";
 
         public static ModSettings Parse(string text)
         {
@@ -55,6 +56,10 @@ namespace FinanceOverhaul.Market
                 {
                     settings.LiveTickerEnabled = flag;
                 }
+                else if (string.Equals(key, DevTestStockKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.DevTestStockEnabled = flag;
+                }
             }
 
             return settings;
@@ -72,6 +77,10 @@ namespace FinanceOverhaul.Market
             sb.Append(LiveTickerKey)
                 .Append('=')
                 .Append(settings.LiveTickerEnabled ? "true" : "false")
+                .Append('\n');
+            sb.Append(DevTestStockKey)
+                .Append('=')
+                .Append(settings.DevTestStockEnabled ? "true" : "false")
                 .Append('\n');
             return sb.ToString();
         }
