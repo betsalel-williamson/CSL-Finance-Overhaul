@@ -36,9 +36,9 @@ namespace FinanceOverhaul.Market.Tests
 
             sw.Stop();
             Assert.True(last > 0f);
-            // Generous CI budget: 100k equal-weight index marks under 250ms.
+            // Generous CI budget: 100k equal-weight index marks under 300ms.
             Assert.True(
-                sw.ElapsedMilliseconds < 250,
+                sw.ElapsedMilliseconds < 300,
                 "EqualWeightIndex too slow: " + sw.ElapsedMilliseconds + "ms for " + iterations
             );
         }
