@@ -79,14 +79,15 @@ namespace FinanceOverhaul
         // centre x −7.7..7.7, y 15.2..18.6; sides x ±(5.5..20.8), y 10.8..14.1; face z 23.6.
         internal static readonly Vector3[] BoardCentres =
         {
-            // 0.5 m in front of the board face (z 23.6): Cities' huge far plane leaves little
-            // depth precision at a few hundred metres, and 0.1 m lost the depth test.
-            new Vector3(0f, 16.9f, 24.1f), // centre (Submesh01)
-            new Vector3(-13.15f, 12.45f, 24.1f), // left (Submesh02)
-            new Vector3(13.15f, 12.45f, 24.1f), // right (Submesh03)
+            // Text and panel share one plane just in front of the old board face (z 23.6), so
+            // there is no parallax between them at steep camera angles. The text ignores
+            // depth (GUI/Text Shader), so being coplanar with the panel cannot hide it.
+            new Vector3(0f, 16.9f, 23.65f), // centre (Submesh01)
+            new Vector3(-13.15f, 12.45f, 23.65f), // left (Submesh02)
+            new Vector3(13.15f, 12.45f, 23.65f), // right (Submesh03)
         };
         internal const float BoardWidth = 15.3f;
-        internal const float PanelBehindText = 0.35f;
+        internal const float PanelBehindText = 0f; // coplanar: no parallax
         internal const float BoardHeight = 3.4f;
 
         // Padding from the Figma FO/TickerBoard design (600 px board: 14 px sides ≈ 2.5%,
@@ -517,7 +518,7 @@ namespace FinanceOverhaul
                 group.transform.GetChild(i).localPosition = new Vector3(-c.x, c.y, -c.z);
                 if (group.transform.childCount > BoardCentres.Length + i)
                 {
-                    // Panel 0.35 m behind the text, still in front of the board frame.
+                    // Panel in the text plane (PanelBehindText = 0), in front of the old board face.
                     group.transform.GetChild(BoardCentres.Length + i).localPosition = new Vector3(
                         -c.x,
                         c.y,
