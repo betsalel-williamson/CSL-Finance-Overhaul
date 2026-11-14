@@ -1,0 +1,16 @@
+# Needs the dev test stock (TST). UI only: opens the Invest dialog, no trade.
+name the Invest dialog's Share value chart is drawn in the Stock Monitor style over the vanilla graph
+show-buy TST
+wait 1
+expect-visible FinanceOverhaulShareChart
+expect-text FinanceOverhaulShareChartFrom days ago
+expect-text FinanceOverhaulShareChartTo today
+expect-text FinanceOverhaulShareChartAxis-0 ₡
+expect-no-overflow
+capture share-chart-dialog
+show-buy IDX
+wait 1
+expect-visible FinanceOverhaulShareChart
+capture share-chart-dialog-idx
+cleanup:
+close-dialog

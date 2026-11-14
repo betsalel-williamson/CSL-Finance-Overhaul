@@ -135,3 +135,18 @@ namespace FinanceOverhaul.Market.Tests
         }
     }
 }
+
+namespace FinanceOverhaul.Market.Tests
+{
+    public class ShareChartsFlagTests
+    {
+        [Fact]
+        public void OnByDefaultAndRoundTrips()
+        {
+            Assert.True(SettingsFile.Parse("").ShareChartsEnabled);
+            var off = new ModSettings { ShareChartsEnabled = false };
+            Assert.False(SettingsFile.Parse(SettingsFile.Format(off)).ShareChartsEnabled);
+            Assert.False(SettingsFile.Parse("shareChartsEnabled=false\n").ShareChartsEnabled);
+        }
+    }
+}

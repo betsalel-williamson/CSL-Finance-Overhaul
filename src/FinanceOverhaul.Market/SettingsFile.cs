@@ -16,6 +16,7 @@ namespace FinanceOverhaul.Market
         private const string IndexStockKey = "indexStockEnabled";
         private const string LiveTickerKey = "liveTickerEnabled";
         private const string DevTestStockKey = "devTestStockEnabled";
+        private const string ShareChartsKey = "shareChartsEnabled";
 
         /// <summary>Settings key of an order type's flag, e.g. <c>ordersStopLossEnabled</c>.</summary>
         public static string OrderKey(OrderKind kind)
@@ -71,6 +72,10 @@ namespace FinanceOverhaul.Market
                 {
                     settings.DevTestStockEnabled = flag;
                 }
+                else if (string.Equals(key, ShareChartsKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.ShareChartsEnabled = flag;
+                }
                 else
                 {
                     foreach (OrderKind kind in ModSettings.OrderKinds)
@@ -102,6 +107,10 @@ namespace FinanceOverhaul.Market
             sb.Append(DevTestStockKey)
                 .Append('=')
                 .Append(settings.DevTestStockEnabled ? "true" : "false")
+                .Append('\n');
+            sb.Append(ShareChartsKey)
+                .Append('=')
+                .Append(settings.ShareChartsEnabled ? "true" : "false")
                 .Append('\n');
             foreach (OrderKind kind in ModSettings.OrderKinds)
             {

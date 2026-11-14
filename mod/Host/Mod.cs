@@ -259,6 +259,11 @@ namespace FinanceOverhaul
             }
 
             group.AddCheckbox(
+                "Share value charts in the Stock Monitor style (testing)",
+                Settings.ShareChartsEnabled,
+                OnShareChartsChanged
+            );
+            group.AddCheckbox(
                 "Stock Monitor window (testing)",
                 Settings.Monitor.Enabled,
                 OnStockMonitorChanged
@@ -399,6 +404,22 @@ namespace FinanceOverhaul
             SaveSettings();
             ModLog.Info("orders: " + SettingsFile.OrderKey(kind) + "=" + enabled);
             OrderTicket.OnFlagsChanged();
+        }
+
+        private static void OnShareChartsChanged(bool enabled)
+        {
+            if (Settings == null)
+            {
+                Settings = new ModSettings();
+            }
+
+            Settings.ShareChartsEnabled = enabled;
+            SaveSettings();
+            ModLog.Info("share charts enabled=" + enabled);
+            if (!enabled)
+            {
+                ShareChartOverlay.RemoveAll();
+            }
         }
 
         private static void OnStockMonitorChanged(bool enabled)

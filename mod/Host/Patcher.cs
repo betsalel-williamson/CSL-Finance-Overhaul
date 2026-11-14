@@ -62,6 +62,7 @@ namespace FinanceOverhaul
             try
             {
                 TickerBoards.DestroyAll();
+                ShareChartOverlay.RemoveAll();
             }
             catch
             {
@@ -163,6 +164,21 @@ namespace FinanceOverhaul
                 null,
                 nameof(GraphEndsAtTodayPostfix)
             );
+            if (ShareChartOverlay.IsReady)
+            {
+                applied += TryPatch(
+                    harmony,
+                    AccessTools.Method(typeof(BuySellInvestmentPanel), "UpdateBindings"),
+                    null,
+                    nameof(ShareChartDialogPostfix)
+                );
+                applied += TryPatch(
+                    harmony,
+                    AccessTools.Method(typeof(InvestmentTooltip), "Update"),
+                    null,
+                    nameof(ShareChartTooltipPostfix)
+                );
+            }
             return applied;
         }
 
@@ -473,6 +489,16 @@ namespace FinanceOverhaul
             }
         }
 
+        private static void ShareChartDialogPostfix(BuySellInvestmentPanel __instance)
+        {
+            ShareChartOverlay.OnDialogBindings(__instance);
+        }
+
+        private static void ShareChartTooltipPostfix(InvestmentTooltip __instance)
+        {
+            ShareChartOverlay.OnTooltipUpdate(__instance);
+        }
+
         private static void GraphEndsAtTodayPostfix(ref Investment __instance, float[] graphValues)
         {
             try
@@ -528,7 +554,7 @@ namespace FinanceOverhaul
             }
 
             __result =
-                "Equal-weight city index of every unlocked sector stock. It moves by their average daily change, so one sector crash hurts less than holding it alone.";
+                "Equal-weight city index of every unlocked sector stock. Each day it moves by the geometric average of their price changes, so one sector crash hurts less than holding it alone.";
             return false;
         }
     }

@@ -323,6 +323,61 @@ namespace FinanceOverhaul
                     DevCapture.DumpTree(c, 0);
                     break;
                 }
+                case "share-charts":
+                {
+                    // share-charts on|off — the Options flag, for before/after captures.
+                    if (Mod.Settings == null || (a != "on" && a != "off"))
+                    {
+                        r.Error = "share-charts needs on or off";
+                        break;
+                    }
+
+                    Mod.Settings.ShareChartsEnabled = a == "on";
+                    if (a == "off")
+                    {
+                        ShareChartOverlay.RemoveAll();
+                    }
+
+                    yield return null;
+                    break;
+                }
+                case "inspect-parents":
+                {
+                    // Dev: the control and every parent — absolute box, background, clipping.
+                    UIComponent c = FindControl(a, includeHidden: true);
+                    if (c == null)
+                    {
+                        r.Error = "no control " + a;
+                        break;
+                    }
+
+                    for (UIComponent p = c; p != null; p = p.parent)
+                    {
+                        var panel = p as UIPanel;
+                        ModLog.Info(
+                            "uitest: parent "
+                                + p.name
+                                + " <"
+                                + p.GetType().Name
+                                + "> abs="
+                                + p.absolutePosition
+                                + " size="
+                                + p.size
+                                + " bg='"
+                                + (panel == null ? "" : panel.backgroundSprite)
+                                + "' clip="
+                                + p.clipChildren
+                                + " padding="
+                                + (
+                                    panel == null || panel.autoLayoutPadding == null
+                                        ? ""
+                                        : panel.autoLayoutPadding.ToString()
+                                )
+                        );
+                    }
+
+                    break;
+                }
                 case "inspect":
                 {
                     UIComponent c = FindControl(a, includeHidden: true);

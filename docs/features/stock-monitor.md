@@ -65,6 +65,18 @@ screen edge):
 All of it is kept per player in the settings file (`monitor.compact`, `monitor.sparklines`,
 `monitor.change`, `monitor.hidden`, …), never in the city save.
 
+## Share value charts (shipped)
+
+The game's own "Share value" charts — in the Invest dialog and in the Economy panel's hover tooltip
+— are drawn in the same style as the detail view (`ShareChartView`): line and shaded area coloured
+by today's change, dashed line at yesterday's price, ₡ grid on the right, "30 days ago … today". The
+vanilla `UIGraph` stays in place (layouts do not move); the mod draws inside it and clears the curve
+the game just added, after each vanilla update (`BuySellInvestmentPanel.UpdateBindings`,
+`InvestmentTooltip.Update`). The tooltip updates every frame, so the chart redraws only when its
+stock or prices change. Options flag **Share value charts in the Stock Monitor style (testing)**
+(`shareChartsEnabled`, on by default): off — and on mod disable or hot reload — the overlay is
+removed and the game redraws its own chart on its next update.
+
 ## History limit
 
 The game keeps exactly 30 daily prices per stock (`Investment.kPastValueCount`), so the monitor's
@@ -93,4 +105,5 @@ Esc to close.
 - Game UI scenarios `27-stock-monitor-list` and `29-tst-stock-monitor-detail` (UI only: no days
   advanced, no trades).
 - Detail numbers and wording: `StockDetail` (Market, unit tested); host `StockMonitorDetail.cs`.
-- Figma: UI Map band 10.
+- Share charts: `mod/Host/ShareChart.cs`; scenario `32-tst-share-chart-dialog`.
+- Figma: UI Map band 10; component `FO/ShareChart` restyled to match.

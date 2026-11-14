@@ -810,14 +810,14 @@ namespace FinanceOverhaul
             tex.Apply();
         }
 
-        private static Color32 ColourOf(byte rate)
+        internal static Color32 ColourOf(byte rate)
         {
             return rate == LedText.Gain ? Gain
                 : rate == LedText.Loss ? Loss
                 : Flat;
         }
 
-        private static UILabel Label(
+        internal static UILabel Label(
             UIComponent parent,
             string name,
             string text,

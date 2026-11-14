@@ -23,6 +23,12 @@ namespace FinanceOverhaul.Market
         /// </summary>
         public bool DevTestStockEnabled { get; set; }
 
+        /// <summary>
+        /// Temporary feature flag: the game's "Share value" charts (Invest dialog, Economy
+        /// tooltip) drawn in the Stock Monitor style. UI only; off shows the vanilla chart.
+        /// </summary>
+        public bool ShareChartsEnabled { get; set; } = true;
+
         /// <summary>Stock Monitor flag and per-player window state (UI only, never in saves).</summary>
         public StockMonitorSettings Monitor { get; } = new StockMonitorSettings();
 
