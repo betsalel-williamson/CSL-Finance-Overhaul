@@ -1,0 +1,19 @@
+name the Price label and value never overlap, whatever the path
+show-sell IDX
+close-dialog
+show-buy HS
+type FinanceOverhaulShareAmountField 900
+expect-no-overlap LabelPriceText LabelPriceValue
+click FinanceOverhaulOrderTabLimit
+close-dialog
+show-buy HS
+expect-no-overlap LabelPriceText LabelPriceValue
+# A label left on top of the value (e.g. by an older build) heals on the next update:
+show-buy Oil
+type FinanceOverhaulShareAmountField 3
+expect-no-overlap LabelPriceText LabelPriceValue
+type FinanceOverhaulShareAmountField 7
+expect-no-overlap LabelPriceText LabelPriceValue
+expect-text-is LabelPriceText Price:
+cleanup:
+close-dialog

@@ -254,15 +254,7 @@ namespace FinanceOverhaul
             try
             {
                 priceText.text = ColossalFramework.Globalization.Locale.Get(priceText.localeID);
-                // Vanilla right-aligns the label 8 px before the value; older builds moved it.
-                UILabel value = dark == null ? null : dark.Find<UILabel>("LabelPriceValue");
-                if (value != null)
-                {
-                    priceText.relativePosition = new Vector3(
-                        value.relativePosition.x - priceText.width - 8f,
-                        value.relativePosition.y
-                    );
-                }
+                PlacePriceLabel();
             }
             catch
             {
@@ -298,12 +290,44 @@ namespace FinanceOverhaul
             }
         }
 
-        /// <summary>Postfix target: UpdatePriceNumbers — vanilla rewrites the Price row; keep the estimate.</summary>
+        /// <summary>
+        /// Postfix target: UpdatePriceNumbers (open, slider moves). Limit keeps our estimate;
+        /// otherwise the vanilla Price label is put back in its place if anything moved it.
+        /// </summary>
         public static void AfterVanillaPrice()
         {
             if (limitActive)
             {
                 Refresh();
+            }
+            else
+            {
+                PlacePriceLabel();
+            }
+        }
+
+        /// <summary>
+        /// Vanilla right-aligns the Price label 8 px before the value. Only placed while the
+        /// row is shown and measured: a hidden label reports no width and would land on the value.
+        /// </summary>
+        private static void PlacePriceLabel()
+        {
+            UILabel value = dark == null ? null : dark.Find<UILabel>("LabelPriceValue");
+            if (
+                priceText == null
+                || value == null
+                || !priceText.isVisible
+                || !value.isVisible
+                || priceText.width < 1f
+            )
+            {
+                return;
+            }
+
+            float x = value.relativePosition.x - priceText.width - 8f;
+            if (Mathf.Abs(priceText.relativePosition.x - x) > 0.5f)
+            {
+                priceText.relativePosition = new Vector3(x, value.relativePosition.y);
             }
         }
 
