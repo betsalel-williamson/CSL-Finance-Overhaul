@@ -46,6 +46,7 @@ namespace FinanceOverhaul
         {
             try
             {
+                VanillaBoards.RestoreAll();
                 if (root != null)
                 {
                     UnityEngine.Object.Destroy(root);
@@ -81,6 +82,7 @@ namespace FinanceOverhaul
             new Vector3(13.15f, 12.45f, 24.1f), // right (Submesh03)
         };
         internal const float BoardWidth = 15.3f;
+        internal const float PanelBehindText = 0.35f;
         internal const float BoardHeight = 3.4f;
 
         // Padding from the Figma FO/TickerBoard design (600 px board: 14 px sides ≈ 2.5%,
@@ -116,6 +118,7 @@ namespace FinanceOverhaul
             new Dictionary<ushort, GameObject>();
         private Font font;
         private Material textMaterial;
+        private Material panelMaterial;
         private float nextRefresh;
         private float nextLod;
         private float nextRescan;
@@ -136,6 +139,10 @@ namespace FinanceOverhaul
                     if (tickerOn)
                     {
                         Rescan();
+                    }
+                    else
+                    {
+                        VanillaBoards.RestoreAll();
                     }
                 }
 
@@ -178,16 +185,27 @@ namespace FinanceOverhaul
                     continue;
                 }
 
-                bool show =
+                // Panels stay while the ticker is on (the vanilla boards are hidden, so the
+                // facade still needs boards); only the text is distance-culled.
+                if (group.activeSelf != tickerOn)
+                {
+                    group.SetActive(tickerOn);
+                }
+
+                bool near =
                     tickerOn
                     && camera != null
                     && (group.transform.GetChild(0).position - eye).sqrMagnitude <= maxSqr;
-                if (group.activeSelf != show)
+                for (int i = 0; i < BoardCentres.Length && i < group.transform.childCount; i++)
                 {
-                    group.SetActive(show);
-                    if (show)
+                    GameObject board = group.transform.GetChild(i).gameObject;
+                    if (board.activeSelf != near)
                     {
-                        fitPasses = Math.Max(fitPasses, 2);
+                        board.SetActive(near);
+                        if (near)
+                        {
+                            fitPasses = Math.Max(fitPasses, 2);
+                        }
                     }
                 }
             }
@@ -200,6 +218,7 @@ namespace FinanceOverhaul
             {
                 font = PickFont();
                 textMaterial = CreateDepthTestedMaterial(font);
+                panelMaterial = CreatePanelMaterial();
             }
 
             var seen = new HashSet<ushort>();
@@ -219,6 +238,7 @@ namespace FinanceOverhaul
 
                 ushort id = (ushort)i;
                 seen.Add(id);
+                VanillaBoards.Hide(info); // idempotent; shared per asset
                 GameObject group;
                 if (!boards.TryGetValue(id, out group) || group == null)
                 {
@@ -372,6 +392,28 @@ namespace FinanceOverhaul
             return material;
         }
 
+        /// <summary>Flat board-colored, depth-tested material for the backing panels.</summary>
+        private static Material CreatePanelMaterial()
+        {
+            Shader shader = Shader.Find("UI/Default");
+            if (shader == null)
+            {
+                return null;
+            }
+
+            var material = new Material(shader);
+            material.name = "FinanceOverhaulTickerPanel";
+            material.mainTexture = Texture2D.whiteTexture;
+            // color/ticker/board (#1E303E) from the Figma tokens.
+            material.color = new Color32(0x1E, 0x30, 0x3E, 0xFF);
+            material.SetInt(
+                "unity_GUIZTestMode",
+                (int)UnityEngine.Rendering.CompareFunction.LessEqual
+            );
+            material.renderQueue = 2999; // just before the text
+            return material;
+        }
+
         /// <summary>One group per Stock Exchange: centre, left and right boards.</summary>
         private GameObject CreateBoard(ushort id)
         {
@@ -382,6 +424,27 @@ namespace FinanceOverhaul
                 var board = new GameObject("Board" + b);
                 board.transform.SetParent(group.transform, false);
                 AddRows(board);
+            }
+
+            // Backing panels replace the hidden vanilla boards (children after the boards,
+            // so row and fit code only ever touches text).
+            for (int b = 0; b < BoardCentres.Length; b++)
+            {
+                GameObject panel = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                panel.name = "Panel" + b;
+                Collider collider = panel.GetComponent<Collider>();
+                if (collider != null)
+                {
+                    Destroy(collider);
+                }
+
+                panel.transform.SetParent(group.transform, false);
+                panel.transform.localScale = new Vector3(BoardWidth, BoardHeight, 1f);
+                Renderer renderer = panel.GetComponent<Renderer>();
+                if (renderer != null && panelMaterial != null)
+                {
+                    renderer.sharedMaterial = panelMaterial;
+                }
             }
 
             return group;
@@ -424,6 +487,15 @@ namespace FinanceOverhaul
             {
                 Vector3 c = BoardCentres[i];
                 group.transform.GetChild(i).localPosition = new Vector3(-c.x, c.y, -c.z);
+                if (group.transform.childCount > BoardCentres.Length + i)
+                {
+                    // Panel 0.35 m behind the text, still in front of the board frame.
+                    group.transform.GetChild(BoardCentres.Length + i).localPosition = new Vector3(
+                        -c.x,
+                        c.y,
+                        -(c.z - PanelBehindText)
+                    );
+                }
             }
 
             if (!placementLogged)
@@ -604,7 +676,7 @@ namespace FinanceOverhaul
 
         private static void SetRows(GameObject group, string[] rows)
         {
-            for (int g = 0; g < group.transform.childCount; g++)
+            for (int g = 0; g < BoardCentres.Length && g < group.transform.childCount; g++)
             {
                 Transform board = group.transform.GetChild(g);
                 for (int r = 0; r < board.childCount; r++)
@@ -630,9 +702,14 @@ namespace FinanceOverhaul
 
         private static void Fit(GameObject group)
         {
-            for (int g = 0; g < group.transform.childCount; g++)
+            for (int g = 0; g < BoardCentres.Length && g < group.transform.childCount; g++)
             {
                 Transform board = group.transform.GetChild(g);
+                if (!board.gameObject.activeInHierarchy)
+                {
+                    continue; // hidden renderers report empty bounds at the origin
+                }
+
                 for (int r = 0; r < board.childCount; r++)
                 {
                     FitWidth(board.GetChild(r).GetComponent<TextMesh>());
