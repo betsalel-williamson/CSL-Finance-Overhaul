@@ -46,6 +46,11 @@ namespace FinanceOverhaul
             "GetMaximumShareCount"
         );
 
+        private static readonly MethodInfo PixelsToUnitsMethod = AccessTools.Method(
+            typeof(UIComponent),
+            "PixelsToUnits"
+        );
+
         public const string FieldName = "FinanceOverhaulShareAmountField";
 
         private static readonly ShareAmountEditor Editor = new ShareAmountEditor();
@@ -112,17 +117,15 @@ namespace FinanceOverhaul
                 // Raises eventKeyDown before the field's own Enter/Escape handling.
                 field.builtinKeyNavigation = true;
                 field.readOnly = false;
-                field.horizontalAlignment = UIHorizontalAlignment.Center;
-                field.verticalAlignment = UIVerticalAlignment.Middle;
+                // Left alignment keeps Colossal's caret/selection math correct; we
+                // center the digits with padding instead (see Recenter).
+                field.horizontalAlignment = UIHorizontalAlignment.Left;
                 if (label.font != null)
                 {
                     field.font = label.font;
                 }
 
                 field.textScale = label.textScale;
-                // UITextField draws text from padding.top (verticalAlignment is ignored),
-                // so center it from the rendered line height.
-                field.padding = CenteredPadding(field);
                 field.textColor = label.textColor;
                 field.normalBgSprite = "TextFieldPanel";
                 field.hoveredBgSprite = "TextFieldPanelHovered";
@@ -131,6 +134,7 @@ namespace FinanceOverhaul
                 field.color = new Color32(28, 28, 28, 255);
                 field.tooltip = "Type a share amount · Enter/Tab apply · Esc reverts";
                 field.text = label.text;
+                Recenter(true);
                 field.eventGotFocus += OnGotFocus;
                 field.eventTextChanged += OnTextChanged;
                 field.eventKeyDown += OnKeyDown;
@@ -156,6 +160,7 @@ namespace FinanceOverhaul
             }
 
             field.text = label.text ?? string.Empty;
+            Recenter(false);
         }
 
         /// <summary>
@@ -189,6 +194,7 @@ namespace FinanceOverhaul
         {
             try
             {
+                Recenter(false);
                 if (owner == null || !field.hasFocus)
                 {
                     return;
@@ -243,6 +249,7 @@ namespace FinanceOverhaul
                 SetSlider(Editor.Commit(text, min, max));
                 // Show what vanilla actually holds (clamped, or unchanged if invalid).
                 field.text = label.text;
+                Recenter(false);
             }
             catch (Exception ex)
             {
@@ -261,6 +268,7 @@ namespace FinanceOverhaul
 
                 SetSlider(Editor.Cancel());
                 field.text = label.text;
+                Recenter(false);
             }
             catch (Exception ex)
             {
@@ -268,11 +276,94 @@ namespace FinanceOverhaul
             }
         }
 
-        private static RectOffset CenteredPadding(UITextField f)
+        /// <summary>
+        /// Centers the digits by padding (left alignment keeps caret/selection math
+        /// right). Horizontal: measured text width. Vertical: the digit glyphs, not
+        /// the font's full line box, with equal bottom padding so the selection
+        /// highlight wraps the digits.
+        /// </summary>
+        private static void Recenter(bool logMetrics)
         {
-            float lineHeight = f.font != null ? f.font.lineHeight * f.textScale : label.height;
-            int top = Mathf.Max(0, Mathf.RoundToInt((f.height - lineHeight) * 0.5f));
-            return new RectOffset(4, 4, top, 0);
+            if (field == null || field.font == null)
+            {
+                return;
+            }
+
+            try
+            {
+                float scale = field.textScale;
+                float size = field.font.size * scale;
+                // Open Sans lining digits are ~0.72 em tall.
+                float glyphHeight = size * 0.72f;
+                UIDynamicFont dynamicFont = field.font as UIDynamicFont;
+                float baseline = dynamicFont != null ? dynamicFont.baseline * scale : size * 0.8f;
+                float glyphTop = Mathf.Max(0f, baseline - glyphHeight);
+                float textWidth = MeasureWidth(field.text);
+                TextBoxLayout.Padding p = TextBoxLayout.Center(
+                    field.width,
+                    field.height,
+                    textWidth,
+                    glyphTop,
+                    glyphHeight,
+                    4
+                );
+                field.padding = new RectOffset(p.Left, 4, p.Top, p.Bottom);
+                if (logMetrics)
+                {
+                    ModLog.Info(
+                        "share field: metrics box="
+                            + field.width
+                            + "x"
+                            + field.height
+                            + " fontSize="
+                            + field.font.size
+                            + " lineHeight="
+                            + field.font.lineHeight
+                            + " baseline="
+                            + (dynamicFont != null ? dynamicFont.baseline.ToString() : "n/a")
+                            + " scale="
+                            + scale
+                            + " textW="
+                            + textWidth
+                            + " pad=L"
+                            + p.Left
+                            + "/T"
+                            + p.Top
+                            + "/B"
+                            + p.Bottom
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                LogOnce("share field: centering failed, text stays left: " + ex.Message);
+            }
+        }
+
+        private static float MeasureWidth(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return 0f;
+            }
+
+            UIFontRenderer renderer = field.font.ObtainRenderer();
+            try
+            {
+                renderer.wordWrap = false;
+                renderer.processMarkup = false;
+                renderer.textScale = field.textScale;
+                if (PixelsToUnitsMethod != null)
+                {
+                    renderer.pixelRatio = (float)PixelsToUnitsMethod.Invoke(field, null);
+                }
+
+                return renderer.MeasureString(text).x;
+            }
+            finally
+            {
+                renderer.Release();
+            }
         }
 
         private static void GetRange(out uint min, out uint max)
