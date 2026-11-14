@@ -73,6 +73,10 @@ sector basket.
   `TrafficJelly`, the only share stock with no unlock milestone; money-stack icon), bought 100
   shares, Your Portfolio row and **Sell: Index** dialog correct. Bug found and fixed: the cloned AI
   lost its `m_info` back-link and threw in `InvestmentAI.IsAvailable` every tick.
+- **2026-11-13 history backfill verified:** an Index re-created after a vanilla re-save had one
+  point (flat chart at ₡1,465, game paused). After hot reload the mod logged
+  `backfilled 29 older day(s) before 1 real point(s)` and the Invest dialog showed a full 30-day
+  line (~₡1,300–₡1,445) like the other stocks.
 - **2026-11-13 volatility fix verified:** before, Index moved up to −11.91% per update (chart
   ₡1,100–₡1,800, average of prices plus vanilla variance). After the chain-linked equal-weight
   return mark, updates moved −0.30% to +2.51% over 7 unlocked members, and the chart tail held
