@@ -31,8 +31,11 @@ namespace FinanceOverhaul
                 Harmony harmony = new Harmony(HarmonyId);
                 int applied = ApplyStockUpdatePostfixes(harmony);
                 int index = ApplyIndexPatches(harmony);
+                int ui = ApplyShareFieldPatches(harmony);
                 patched = true;
-                ModLog.Info("harmony patched targets=" + applied + " index=" + index);
+                ModLog.Info(
+                    "harmony patched targets=" + applied + " index=" + index + " shareField=" + ui
+                );
                 LogDiscoverySummaryOnce();
             }
             catch (Exception ex)
@@ -252,6 +255,71 @@ namespace FinanceOverhaul
                 null
             );
             return applied;
+        }
+
+        private static int ApplyShareFieldPatches(Harmony harmony)
+        {
+            if (!ShareAmountField.IsReady)
+            {
+                ModLog.Warn(
+                    "share field: vanilla BuySellInvestmentPanel members changed; skipping"
+                );
+                return 0;
+            }
+
+            int applied = 0;
+            applied += TryPatch(
+                harmony,
+                AccessTools.Method(typeof(BuySellInvestmentPanel), "Awake"),
+                null,
+                nameof(ShareFieldAwakePostfix)
+            );
+            applied += TryPatch(
+                harmony,
+                AccessTools.Method(typeof(BuySellInvestmentPanel), "SetSliderValue"),
+                null,
+                nameof(ShareFieldSetSliderValuePostfix)
+            );
+            applied += TryPatch(
+                harmony,
+                AccessTools.Method(typeof(BuySellInvestmentPanel), "OnKeyDown"),
+                nameof(ShareFieldOnKeyDownPrefix),
+                null
+            );
+            return applied;
+        }
+
+        private static void ShareFieldAwakePostfix(BuySellInvestmentPanel __instance)
+        {
+            try
+            {
+                ShareAmountField.Attach(__instance);
+            }
+            catch
+            {
+                // fail soft — vanilla slider still works
+            }
+        }
+
+        private static void ShareFieldSetSliderValuePostfix()
+        {
+            try
+            {
+                ShareAmountField.MirrorFromLabel();
+            }
+            catch
+            {
+                // fail soft
+            }
+        }
+
+        /// <summary>
+        /// Vanilla OnKeyDown maps Enter to clicking Buy. While the typed field has
+        /// focus, let the field consume keys so Enter submits the number instead.
+        /// </summary>
+        private static bool ShareFieldOnKeyDownPrefix()
+        {
+            return !ShareAmountField.HasFocus;
         }
 
         private static int TryPatch(
