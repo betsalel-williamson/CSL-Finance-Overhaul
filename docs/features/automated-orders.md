@@ -42,7 +42,10 @@ stock's holding (or where that stock would be listed when not held), showing the
 · BUY**, shares and limit, days left, and **Cancel**. Vanilla re-sorts the list periodically and
 only knows its own cards, so the mod re-places order cards right after each sort (postfix on
 `EconomyPanel.UpdateInvestments`). A filled, cancelled or expired order's card disappears at the
-next refresh.
+next refresh. Fills keep the game's average cost basis ([Cost basis](./cost-basis.md)).
+
+Known flaky interaction: right after a holding card is removed (a test selling all its shares), an
+order card was once reported not visible for under a second; not reproduced in normal play.
 
 ## Game UI tests
 
