@@ -43,13 +43,13 @@ Windows: set `CitiesManaged` to `…\Cities_Data\Managed` and let the csproj use
 3. With Cities Harmony + Finance Overhaul enabled, load a city that has a Stock Exchange (or place
    one).
 4. Confirm Options title shows a new assembly build/revision each install.
-5. Tail the probe log:
+5. Tail the mod log:
 
    ```bash
    tail -f "${TMPDIR:-/tmp}/finance-overhaul.log"
    ```
 
-6. Toggle **MVP probe bias** only when verifying the hook; leave it off for normal play.
+6. Check Options → **Finance Overhaul** toggles (live ticker, experimental Index) as needed.
 
 Details: [Local MVP install](./local-mvp-install.md), [Live reload](./live-reload.md).
 

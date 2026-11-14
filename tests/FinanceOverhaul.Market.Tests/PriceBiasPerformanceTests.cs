@@ -53,24 +53,6 @@ namespace FinanceOverhaul.Market.Tests
             Assert.Equal(0L, allocated);
         }
 
-        [Fact]
-        public void Apply_ProbeBias_StaysUnderBudget()
-        {
-            float last = 0f;
-            int i = 0;
-            double best = BestBatchMilliseconds(
-                40_000,
-                () => last = PriceBias.Apply(100f + (i++ % 13), PriceBias.DefaultProbeFactor)
-            );
-
-            Assert.True(last > 0f);
-            // A few ns per call; budget 0.5 µs per call (20 ms per batch).
-            Assert.True(
-                best < 20.0,
-                "PriceBias.Apply too slow: best batch " + best.ToString("0.0") + "ms / 40k calls"
-            );
-        }
-
         private static float[] SectorPrices()
         {
             float[] prices = new float[PriceBias.VanillaSectorCount];

@@ -6,19 +6,6 @@ namespace FinanceOverhaul.Market.Tests
     public class PriceBiasTests
     {
         [Fact]
-        public void Apply_MultipliesByFactor()
-        {
-            Assert.Equal(101f, PriceBias.Apply(100f, 1.01f), 3);
-        }
-
-        [Fact]
-        public void Apply_RejectsNonPositiveFactor()
-        {
-            Assert.Equal(50f, PriceBias.Apply(50f, 0f));
-            Assert.Equal(50f, PriceBias.Apply(50f, -1f));
-        }
-
-        [Fact]
         public void WeightedAverage_MatchesEqualWeights()
         {
             float avg = PriceBias.WeightedAverage(new[] { 10f, 20f, 30f }, new[] { 1f, 1f, 1f });

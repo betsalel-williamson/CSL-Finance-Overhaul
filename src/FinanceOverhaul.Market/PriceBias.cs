@@ -1,30 +1,13 @@
 namespace FinanceOverhaul.Market
 {
     /// <summary>
-    /// Pure price helpers for the MVP probe and future index/ETF marks.
+    /// Pure price helpers for index/ETF marks.
     /// Cities-free — unit and performance tests own this surface.
     /// </summary>
     public static class PriceBias
     {
-        public const float DefaultProbeFactor = 1.01f;
-
         /// <summary>Vanilla Financial Districts lists thirteen sector stocks.</summary>
         public const int VanillaSectorCount = 13;
-
-        public static float Apply(float price, float factor)
-        {
-            if (float.IsNaN(price) || float.IsInfinity(price))
-            {
-                return price;
-            }
-
-            if (float.IsNaN(factor) || float.IsInfinity(factor) || factor <= 0f)
-            {
-                return price;
-            }
-
-            return price * factor;
-        }
 
         public static float WeightedAverage(float[] prices, float[] weights)
         {

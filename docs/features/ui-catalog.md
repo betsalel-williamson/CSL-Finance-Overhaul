@@ -17,27 +17,28 @@ table; [UI Figma map](../developer/ui-figma-map.md) pins map screens to this inv
 
 Section order: **Finance Overhaul** (single group today).
 
-| Field id      | Label                                 | Control  | Host    | Status                 |
-| ------------- | ------------------------------------- | -------- | ------- | ---------------------- |
-| `probe-bias`  | MVP probe bias (+1% on hooked prices) | Checkbox | Options | shipped                |
-| `built-utc`   | Built (UTC): …                        | Footer   | Options | shipped (`--dev` only) |
-| `built-local` | Built (local): …                      | Footer   | Options | shipped (`--dev` only) |
+| Field id      | Label                                                           | Control  | Host    | Status                 |
+| ------------- | --------------------------------------------------------------- | -------- | ------- | ---------------------- |
+| `live-ticker` | Live Stock Exchange ticker (visual only)                        | Checkbox | Options | shipped                |
+| `index-stock` | Experimental: Index stock (adds a mod-only investment to saves) | Checkbox | Options | experimental           |
+| `built-utc`   | Built (UTC): …                                                  | Footer   | Options | shipped (`--dev` only) |
+| `built-local` | Built (local): …                                                | Footer   | Options | shipped (`--dev` only) |
 
 Title chrome (`Finance Overhaul {version}`) is Content Manager / Options identity — see
 [Live reload](../developer/live-reload.md).
 
 ## Vanilla Investments regions (host)
 
-| Region id                 | Label                   | Notes                                     |
-| ------------------------- | ----------------------- | ----------------------------------------- |
-| `economy-investments-tab` | Investments             | Economy modal tab                         |
-| `purchasable-list`        | Purchasable Investments | Left column                               |
-| `row-value`               | Value                   | Primary mark observation for probe bias   |
-| `row-change-rate`         | Change rate             | Vanilla display                           |
-| `buy` / `sell`            | Buy / Sell              | Vanilla trade — untouched by MVP          |
-| `portfolio-list`          | Your Portfolio          | Right column                              |
-| `portfolio-current-value` | Current value           | May reflect biased marks when probe is on |
-| `portfolio-total`         | Total value             | Aggregate                                 |
+| Region id                 | Label                   | Notes                            |
+| ------------------------- | ----------------------- | -------------------------------- |
+| `economy-investments-tab` | Investments             | Economy modal tab                |
+| `purchasable-list`        | Purchasable Investments | Left column                      |
+| `row-value`               | Value                   | Vanilla mark                     |
+| `row-change-rate`         | Change rate             | Vanilla display                  |
+| `buy` / `sell`            | Buy / Sell              | Vanilla trade — untouched by MVP |
+| `portfolio-list`          | Your Portfolio          | Right column                     |
+| `portfolio-current-value` | Current value           | Vanilla mark                     |
+| `portfolio-total`         | Total value             | Aggregate                        |
 
 ### Hover tooltip (host)
 

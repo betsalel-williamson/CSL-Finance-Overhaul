@@ -1,5 +1,10 @@
 # ADR 0001 — Reflective stock hooks
 
+**Status:** superseded (2026-11-14). The reflective discovery, its catch-all price postfix and the
+MVP probe bias option were removed. The mod now patches named vanilla members only (Index listing,
+typed share field, live ticker), each failing soft on its own. Old settings files with
+`probeBiasEnabled` still load; the key is ignored.
+
 ## Context
 
 Financial Districts stock types live in `Assembly-CSharp` and differ by game build. Hard-coding

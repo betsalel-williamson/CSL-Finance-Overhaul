@@ -11,6 +11,4 @@
 
 1. Load a city that already has a Stock Exchange (or place one).
 2. Open Options → **Finance Overhaul** and confirm the version title.
-3. Leave **MVP probe bias** off for normal play; turn it on only when verifying the hook (see
-   [MVP probe bias](./mvp-probe-bias.md)).
-4. Open the Investments panel and confirm vanilla trading still works.
+3. Open the Investments panel and confirm vanilla trading still works.

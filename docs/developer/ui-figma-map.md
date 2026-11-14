@@ -41,26 +41,26 @@ Numbers below are **per-frame**. Catalog ids stay stable for docs↔code.
 
 ### Options frame (`shipped`)
 
-| #   | Catalog id        | Title                           | Docs                                          | Code evidence                                                                                                    |
-| --- | ----------------- | ------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| 1   | `opt.title`       | Options / Content Manager title | [Live reload](./live-reload.md)               | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs)                                                                       |
-| 2   | `opt.probe-bias`  | MVP probe bias checkbox         | [MVP probe bias](../client/mvp-probe-bias.md) | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs), [`ProbeSettings`](../../src/FinanceOverhaul.Market/ProbeSettings.cs) |
-| 3   | `opt.built-utc`   | Dev Built (UTC) footer          | [Live reload](./live-reload.md)               | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs)                                                                       |
-| 4   | `opt.built-local` | Dev Built (local) footer        | [Live reload](./live-reload.md)               | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs)                                                                       |
+| #   | Catalog id        | Title                                             | Docs                                             | Code evidence                                                                                                |
+| --- | ----------------- | ------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| 1   | `opt.title`       | Options / Content Manager title                   | [Live reload](./live-reload.md)                  | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs)                                                                   |
+| 2   | `opt.toggles`     | Feature toggles (live ticker, experimental Index) | [City Index stock](../client/city-index-fund.md) | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs), [`ModSettings`](../../src/FinanceOverhaul.Market/ModSettings.cs) |
+| 3   | `opt.built-utc`   | Dev Built (UTC) footer                            | [Live reload](./live-reload.md)                  | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs)                                                                   |
+| 4   | `opt.built-local` | Dev Built (local) footer                          | [Live reload](./live-reload.md)                  | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs)                                                                   |
 
 ### Investments frame (`vanilla-host`)
 
 | #   | Catalog id                     | Title                        | Docs                                                        | Code evidence / host                     |
 | --- | ------------------------------ | ---------------------------- | ----------------------------------------------------------- | ---------------------------------------- |
 | 1   | `host.economy-investments-tab` | Economy → Investments tab    | [Install and first run](../client/install-and-first-run.md) | Vanilla FD Economy panel                 |
-| 2   | `host.purchasable-list`        | Purchasable Investments      | [Stock hook MVP](../features/stock-hook-mvp.md)             | `BuySellInvestmentPanel`                 |
-| 3   | `host.row-value`               | Per-row Value (₡)            | [Stock hook MVP](../features/stock-hook-mvp.md)             | Probe observation                        |
-| 4   | `host.row-change-rate`         | Per-row Change rate (%)      | [Stock hook MVP](../features/stock-hook-mvp.md)             | Vanilla display                          |
+| 2   | `host.purchasable-list`        | Purchasable Investments      | [Install and first run](../client/install-and-first-run.md) | `BuySellInvestmentPanel`                 |
+| 3   | `host.row-value`               | Per-row Value (₡)            | [Install and first run](../client/install-and-first-run.md) | Vanilla mark                             |
+| 4   | `host.row-change-rate`         | Per-row Change rate (%)      | [Install and first run](../client/install-and-first-run.md) | Vanilla display                          |
 | 5   | `host.buy`                     | Buy action                   | [Install and first run](../client/install-and-first-run.md) | Untouched by MVP                         |
 | 6   | `host.sell`                    | Sell action                  | [Install and first run](../client/install-and-first-run.md) | Untouched by MVP                         |
-| 7   | `host.portfolio-list`          | Your Portfolio               | [Stock hook MVP](../features/stock-hook-mvp.md)             | Vanilla FD                               |
-| 8   | `host.portfolio-current-value` | Portfolio Current value      | [MVP probe bias](../client/mvp-probe-bias.md)               | May reflect biased marks                 |
-| 9   | `host.portfolio-total`         | Portfolio Total value        | [MVP probe bias](../client/mvp-probe-bias.md)               | Aggregate marks                          |
+| 7   | `host.portfolio-list`          | Your Portfolio               | [Install and first run](../client/install-and-first-run.md) | Vanilla FD                               |
+| 8   | `host.portfolio-current-value` | Portfolio Current value      | [Install and first run](../client/install-and-first-run.md) | Vanilla mark                             |
+| 9   | `host.portfolio-total`         | Portfolio Total value        | [Install and first run](../client/install-and-first-run.md) | Aggregate marks                          |
 | 10  | `host.price-tick`              | Price simulation (no window) | [ADR 0001](../features/adr/0001-reflective-stock-hooks.md)  | `InvestmentAI` / `EconomyManager`        |
 | 11  | `host.se-world-info`           | Stock Exchange world info    | [Stock Exchange](../glossary/stock-exchange.md)             | `StockExchangeWorldInfoPanel` (TBD shot) |
 
@@ -70,10 +70,10 @@ The zone-income block under Investments columns is not pinned.
 
 Row hover — Share value chart + flavor text.
 
-| #   | Catalog id               | Title              | Docs                                            | Code evidence / host |
-| --- | ------------------------ | ------------------ | ----------------------------------------------- | -------------------- |
-| 1   | `host.hover-share-chart` | Share value chart  | [Stock hook MVP](../features/stock-hook-mvp.md) | `InvestmentTooltip`  |
-| 2   | `host.hover-description` | Flavor description | [Stock hook MVP](../features/stock-hook-mvp.md) | Vanilla tooltip copy |
+| #   | Catalog id               | Title              | Docs                                                        | Code evidence / host |
+| --- | ------------------------ | ------------------ | ----------------------------------------------------------- | -------------------- |
+| 1   | `host.hover-share-chart` | Share value chart  | [Install and first run](../client/install-and-first-run.md) | `InvestmentTooltip`  |
+| 2   | `host.hover-description` | Flavor description | [Install and first run](../client/install-and-first-run.md) | Vanilla tooltip copy |
 
 ### Invest / Buy dialog frame (`vanilla-host` + typed field)
 
@@ -83,12 +83,12 @@ Click Buy / open invest dialog. Pin 6 is the mod's typed field; pin 9 marks its 
 | #   | Catalog id                  | Title                 | Docs                                                        | Code evidence / host                                    |
 | --- | --------------------------- | --------------------- | ----------------------------------------------------------- | ------------------------------------------------------- |
 | 1   | `host.invest-dialog-title`  | Invest in: {name}     | [Install and first run](../client/install-and-first-run.md) | Buy/sell dialog chrome                                  |
-| 2   | `host.invest-share-chart`   | Share value chart     | [Stock hook MVP](../features/stock-hook-mvp.md)             | Same chart family as hover                              |
-| 3   | `host.invest-description`   | Flavor description    | [Stock hook MVP](../features/stock-hook-mvp.md)             | Vanilla copy                                            |
-| 4   | `host.invest-current-value` | Current value / share | [MVP probe bias](../client/mvp-probe-bias.md)               | Mark for pricing                                        |
+| 2   | `host.invest-share-chart`   | Share value chart     | [Install and first run](../client/install-and-first-run.md) | Same chart family as hover                              |
+| 3   | `host.invest-description`   | Flavor description    | [Install and first run](../client/install-and-first-run.md) | Vanilla copy                                            |
+| 4   | `host.invest-current-value` | Current value / share | [Install and first run](../client/install-and-first-run.md) | Mark for pricing                                        |
 | 5   | `host.invest-share-amount`  | Share amount slider   | [Install and first run](../client/install-and-first-run.md) | Quantity                                                |
 | 6   | `host.invest-share-field`   | Share amount field    | [Typed share amount](../features/share-amount-input.md)     | Typed entry: `ShareAmountField` (shipped, mod-enhanced) |
-| 7   | `host.invest-total-price`   | Price (total)         | [MVP probe bias](../client/mvp-probe-bias.md)               | quantity × mark                                         |
+| 7   | `host.invest-total-price`   | Price (total)         | [Install and first run](../client/install-and-first-run.md) | quantity × mark                                         |
 | 8   | `host.invest-buy-confirm`   | Buy confirm           | [Install and first run](../client/install-and-first-run.md) | Untouched by MVP                                        |
 | 9   | `host.invest-share-field`   | Editing state         | [Typed share amount](../features/share-amount-input.md)     | `ShareAmountEditor`: caret, live slider, Esc reverts    |
 

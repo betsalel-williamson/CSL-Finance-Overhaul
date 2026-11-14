@@ -17,7 +17,6 @@ namespace FinanceOverhaul
 
         private static bool patched;
         private static bool harmonyMissingLogged;
-        private static bool discoveryLogged;
 
         public static void PatchAll()
         {
@@ -29,7 +28,6 @@ namespace FinanceOverhaul
             try
             {
                 Harmony harmony = new Harmony(HarmonyId);
-                int applied = ApplyStockUpdatePostfixes(harmony);
                 int index = ApplyIndexPatches(harmony);
                 int ui = ApplyShareFieldPatches(harmony);
                 int ticker = TryPatch(
@@ -40,20 +38,12 @@ namespace FinanceOverhaul
                 );
                 patched = true;
                 ModLog.Info(
-                    "harmony patched targets="
-                        + applied
-                        + " index="
-                        + index
-                        + " shareField="
-                        + ui
-                        + " ticker="
-                        + ticker
+                    "harmony patched index=" + index + " shareField=" + ui + " ticker=" + ticker
                 );
                 // Hot reload / mid-game enable: list Index in the running city if enabled.
                 IndexListing.EnsureInLoadedCity();
                 // Hot reload: re-attach the live ticker overlay in a loaded city.
                 TickerBoards.Ensure();
-                LogDiscoverySummaryOnce();
             }
             catch (Exception ex)
             {
@@ -97,7 +87,6 @@ namespace FinanceOverhaul
             }
 
             patched = false;
-            discoveryLogged = false;
         }
 
         public static void LogHarmonyMissingOnce()
@@ -121,139 +110,6 @@ namespace FinanceOverhaul
             }
 
             ModLog.Warn(line);
-        }
-
-        public static void LogDiscoverySummaryOnce()
-        {
-            if (discoveryLogged)
-            {
-                return;
-            }
-
-            discoveryLogged = true;
-            try
-            {
-                Assembly game = typeof(SimulationManager).Assembly;
-                StockMarketProbe.DiscoveryResult discovery = StockMarketProbe.Discover(game);
-                ModLog.Info(
-                    "stock probe types="
-                        + discovery.CandidateTypeNames.Count
-                        + " methods="
-                        + discovery.CandidateMethodNames.Count
-                );
-                int limit = Math.Min(12, discovery.CandidateTypeNames.Count);
-                for (int i = 0; i < limit; i++)
-                {
-                    ModLog.Info("stock type candidate: " + discovery.CandidateTypeNames[i]);
-                }
-            }
-            catch (Exception ex)
-            {
-                ModLog.Warn("stock probe failed: " + ex.Message);
-            }
-        }
-
-        private static int ApplyStockUpdatePostfixes(Harmony harmony)
-        {
-            const int maxPatches = 8;
-            int applied = 0;
-            Assembly game = typeof(SimulationManager).Assembly;
-            StockMarketProbe.DiscoveryResult discovery = StockMarketProbe.Discover(game);
-            MethodInfo postfix = typeof(Patcher).GetMethod(
-                nameof(StockUpdatePostfix),
-                BindingFlags.Static | BindingFlags.NonPublic
-            );
-
-            applied += PatchMethodSubset(
-                harmony,
-                game,
-                discovery,
-                postfix,
-                preferPriceName: true,
-                maxPatches - applied
-            );
-            if (applied < maxPatches)
-            {
-                applied += PatchMethodSubset(
-                    harmony,
-                    game,
-                    discovery,
-                    postfix,
-                    preferPriceName: false,
-                    maxPatches - applied
-                );
-            }
-
-            return applied;
-        }
-
-        private static int PatchMethodSubset(
-            Harmony harmony,
-            Assembly game,
-            StockMarketProbe.DiscoveryResult discovery,
-            MethodInfo postfix,
-            bool preferPriceName,
-            int remaining
-        )
-        {
-            int applied = 0;
-            for (int i = 0; i < discovery.CandidateMethodNames.Count && applied < remaining; i++)
-            {
-                string entry = discovery.CandidateMethodNames[i];
-                int sep = entry.LastIndexOf("::", StringComparison.Ordinal);
-                if (sep <= 0)
-                {
-                    continue;
-                }
-
-                string typeName = entry.Substring(0, sep);
-                string methodName = entry.Substring(sep + 2);
-                bool hasPrice =
-                    methodName.IndexOf("Price", StringComparison.OrdinalIgnoreCase) >= 0;
-                if (preferPriceName != hasPrice)
-                {
-                    continue;
-                }
-
-                Type type = game.GetType(typeName);
-                if (type == null)
-                {
-                    continue;
-                }
-
-                MethodInfo[] methods = type.GetMethods(
-                    BindingFlags.Instance
-                        | BindingFlags.Static
-                        | BindingFlags.Public
-                        | BindingFlags.NonPublic
-                );
-                for (int m = 0; m < methods.Length && applied < remaining; m++)
-                {
-                    MethodInfo method = methods[m];
-                    if (method == null || method.Name != methodName)
-                    {
-                        continue;
-                    }
-
-                    if (method.IsAbstract || method.ContainsGenericParameters)
-                    {
-                        continue;
-                    }
-
-                    try
-                    {
-                        harmony.Patch(method, postfix: new HarmonyMethod(postfix));
-                        applied++;
-                        ModLog.Info("patched " + entry);
-                    }
-                    catch (Exception ex)
-                    {
-                        ModLog.Warn("skip patch " + entry + ": " + ex.Message);
-                    }
-                }
-            }
-
-            return applied;
         }
 
         private static int ApplyIndexPatches(Harmony harmony)
@@ -541,18 +397,6 @@ namespace FinanceOverhaul
             __result =
                 "Equal-weight city index of every unlocked sector stock. It moves by their average daily change, so one sector crash hurts less than holding it alone.";
             return false;
-        }
-
-        private static void StockUpdatePostfix(object __instance)
-        {
-            try
-            {
-                ProbeBiasApplier.TryApply(__instance, Mod.Settings);
-            }
-            catch
-            {
-                // fail soft — never break simulation ticks
-            }
         }
     }
 }

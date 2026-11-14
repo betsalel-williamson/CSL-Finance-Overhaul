@@ -19,7 +19,7 @@ namespace FinanceOverhaul
         public string Description =>
             "Financial Districts market overhaul — MVP stock hook, live reload, future index funds & automation.";
 
-        public static ProbeSettings Settings { get; private set; }
+        public static ModSettings Settings { get; private set; }
 
         public static string OptionsTitle
         {
@@ -145,7 +145,7 @@ namespace FinanceOverhaul
             }
         }
 
-        internal static ProbeSettings LoadSettings()
+        internal static ModSettings LoadSettings()
         {
             try
             {
@@ -160,7 +160,7 @@ namespace FinanceOverhaul
                 ModLog.Warn("settings: read failed, using defaults: " + ex.Message);
             }
 
-            return new ProbeSettings();
+            return new ModSettings();
         }
 
         internal static void SaveSettings()
@@ -179,9 +179,7 @@ namespace FinanceOverhaul
         {
             Settings = LoadSettings();
             ModLog.Info(
-                "settings: probeBias="
-                    + Settings.ProbeBiasEnabled
-                    + " indexStock="
+                "settings: indexStock="
                     + Settings.IndexStockEnabled
                     + " liveTicker="
                     + Settings.LiveTickerEnabled
@@ -239,11 +237,6 @@ namespace FinanceOverhaul
 
             UIHelperBase group = helper.AddGroup(OptionsTitle);
             group.AddCheckbox(
-                "MVP probe bias (+1% on hooked prices)",
-                Settings.ProbeBiasEnabled,
-                OnProbeBiasChanged
-            );
-            group.AddCheckbox(
                 "Live Stock Exchange ticker (visual only)",
                 Settings.LiveTickerEnabled,
                 OnLiveTickerChanged
@@ -271,7 +264,7 @@ namespace FinanceOverhaul
         {
             if (Settings == null)
             {
-                Settings = new ProbeSettings();
+                Settings = new ModSettings();
             }
 
             Settings.IndexStockEnabled = enabled;
@@ -292,24 +285,12 @@ namespace FinanceOverhaul
         {
             if (Settings == null)
             {
-                Settings = new ProbeSettings();
+                Settings = new ModSettings();
             }
 
             Settings.LiveTickerEnabled = enabled;
             SaveSettings();
             ModLog.Info("live ticker enabled=" + enabled);
-        }
-
-        private static void OnProbeBiasChanged(bool enabled)
-        {
-            if (Settings == null)
-            {
-                Settings = new ProbeSettings();
-            }
-
-            Settings.ProbeBiasEnabled = enabled;
-            SaveSettings();
-            ModLog.Info("probe bias enabled=" + enabled);
         }
 #endif
     }

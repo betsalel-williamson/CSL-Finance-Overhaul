@@ -2,13 +2,13 @@
 
 ## Context
 
-Stock math, index weights, and probe bias must be unit-tested and performance- budgeted without
+Stock math, index weights, and ticker layout must be unit-tested and performance- budgeted without
 Cities managed assemblies. Harmony and `IUserMod` cannot load in CI.
 
 ## Decision
 
-1. **`src/FinanceOverhaul.Market`** owns price bias, index helpers, reflective discovery helpers,
-   and probe apply — no `ICities`, Harmony, or UnityEngine.
+1. **`src/FinanceOverhaul.Market`** owns index, ticker, settings and input rules — no `ICities`,
+   Harmony, or UnityEngine.
 2. **`mod/`** owns Content Manager entry, Options, Harmony patch wiring, and log/deploy — it
    references the Market library and supplies game assemblies at runtime.
 3. **Tests split:** `FinanceOverhaul.Market.Tests` (unit + perf) always run in CI and agent hooks;

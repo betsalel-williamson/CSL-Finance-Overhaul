@@ -3,13 +3,12 @@ using Xunit;
 
 namespace FinanceOverhaul.Market.Tests
 {
-    public class ProbeSettingsTests
+    public class ModSettingsTests
     {
         [Fact]
         public void Defaults_AreSaveSafe()
         {
-            var settings = new ProbeSettings();
-            Assert.False(settings.ProbeBiasEnabled);
+            var settings = new ModSettings();
             Assert.False(settings.IndexStockEnabled);
             // Visual-only and save-neutral, so on by default.
             Assert.True(settings.LiveTickerEnabled);

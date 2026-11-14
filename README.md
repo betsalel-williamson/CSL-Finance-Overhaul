@@ -4,8 +4,8 @@
 management — index funds, sector ETFs, dividend funds, municipal bonds, commodities, automated
 orders, and IPOs.
 
-> Status: **MVP** — reflective stock hooks, optional +1% probe bias, and live reload. Broader
-> instruments are documented under `docs/features/` and not shipped yet.
+> Status: **MVP** — experimental Index stock, typed share amount, live LED Stock Exchange ticker,
+> and live reload. Broader instruments are documented under `docs/features/` and not shipped yet.
 
 ## Why this exists
 
@@ -23,8 +23,7 @@ game requires a local clone** on a machine with the game installed — see
 3. Deploy: `./scripts/install-mod-local.sh --dev` (see
    [local MVP install](docs/developer/local-mvp-install.md)).
 4. Enable **Finance Overhaul** in Content Manager.
-5. Load a city with a Stock Exchange. Leave **MVP probe bias** off unless you are verifying the
-   hook.
+5. Load a city with a Stock Exchange.
 
 Live reload: rebuild with `--dev` so `AssemblyVersion` changes — see
 [Live reload](docs/developer/live-reload.md).

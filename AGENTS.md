@@ -14,11 +14,11 @@ Merlon docs. Do **not** claim merge-ready without it.
 
 ## Test layers
 
-| Command             | Layer                                    | Cities assemblies              |
-| ------------------- | ---------------------------------------- | ------------------------------ |
-| `npm run test:unit` | `FinanceOverhaul.Market` math/probe/perf | Never                          |
-| `npm run test:mod`  | Mod host identity                        | Off (`EnableCitiesRefs=false`) |
-| Local game loop     | Harmony + Stock Exchange                 | Required on your machine       |
+| Command             | Layer                                     | Cities assemblies              |
+| ------------------- | ----------------------------------------- | ------------------------------ |
+| `npm run test:unit` | `FinanceOverhaul.Market` math/ticker/perf | Never                          |
+| `npm run test:mod`  | Mod host identity                         | Off (`EnableCitiesRefs=false`) |
+| Local game loop     | Harmony + Stock Exchange                  | Required on your machine       |
 
 Stock business logic and performance budgets live only under `src/FinanceOverhaul.Market/` and
 `tests/FinanceOverhaul.Market.Tests/`. Cities Harmony / `ICities` stay in `mod/Host/`.

@@ -14,8 +14,5 @@ together (equal weight) — similar in spirit to a Vanguard total-market fund fo
    prices, so one disaster in a single industry hurts Index less than holding that industry alone.
 5. Sell from Your Portfolio when you want cash back.
 
-Leave **MVP probe bias** off for normal play; if it is on for hook testing, sector marks (and thus
-Index) can look slightly elevated.
-
 Sell your Index shares before disabling Finance Overhaul. Without the mod the game drops the Index
 listing on the next load, and any shares still held are lost.

@@ -1,14 +1,10 @@
 namespace FinanceOverhaul.Market
 {
     /// <summary>
-    /// Probe bias settings — pure data, no Cities Options UI.
+    /// Mod Options toggles — pure data, no Cities Options UI.
     /// </summary>
-    public sealed class ProbeSettings
+    public sealed class ModSettings
     {
-        public bool ProbeBiasEnabled { get; set; }
-
-        public float ProbeBiasFactor { get; set; } = PriceBias.DefaultProbeFactor;
-
         /// <summary>
         /// Experimental Index stock. Off by default because it adds a mod-only
         /// investment to the save; see docs/features/save-compatibility.md.

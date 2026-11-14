@@ -33,8 +33,7 @@ sector basket.
    move is clamped to −50%…+100%. A brand-new Index seeds from the members' price average. The hook
    runs after vanilla random variance, so Index carries none.
 3. **Trading** — Players buy and sell Index with the same Buy / Sell / share-amount flow as any
-   other investment. Probe bias, when enabled, may affect hooked sector marks and therefore the
-   Index mark.
+   other investment.
 4. **Fail soft** — If the Index listing cannot be created or sector prices cannot be read, log a
    clear message and leave the vanilla thirteen names alone.
 

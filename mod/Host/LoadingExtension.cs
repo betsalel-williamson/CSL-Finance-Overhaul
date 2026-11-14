@@ -22,7 +22,6 @@ namespace FinanceOverhaul
             try
             {
                 ModLog.Info("level loaded mode=" + mode);
-                Patcher.LogDiscoverySummaryOnce();
                 IndexListing.EnsureInLoadedCity();
                 IndexListing.LogStatus();
                 TickerBoards.Ensure();

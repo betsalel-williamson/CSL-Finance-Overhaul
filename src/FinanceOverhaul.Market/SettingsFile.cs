@@ -6,19 +6,19 @@ namespace FinanceOverhaul.Market
     /// <summary>
     /// Plain <c>key=value</c> settings file so Options survive hot reload and game
     /// restarts. Unknown keys, comments and malformed lines are ignored; anything
-    /// missing falls back to the save-safe defaults of <see cref="ProbeSettings"/>.
+    /// missing falls back to the save-safe defaults of <see cref="ModSettings"/>. The retired
+    /// <c>probeBiasEnabled</c> key from older versions is ignored like any unknown key.
     /// </summary>
     public static class SettingsFile
     {
         public const string FileName = "FinanceOverhaul.settings.txt";
 
-        private const string ProbeBiasKey = "probeBiasEnabled";
         private const string IndexStockKey = "indexStockEnabled";
         private const string LiveTickerKey = "liveTickerEnabled";
 
-        public static ProbeSettings Parse(string text)
+        public static ModSettings Parse(string text)
         {
-            var settings = new ProbeSettings();
+            var settings = new ModSettings();
             if (string.IsNullOrEmpty(text))
             {
                 return settings;
@@ -47,11 +47,7 @@ namespace FinanceOverhaul.Market
                     continue;
                 }
 
-                if (string.Equals(key, ProbeBiasKey, StringComparison.OrdinalIgnoreCase))
-                {
-                    settings.ProbeBiasEnabled = flag;
-                }
-                else if (string.Equals(key, IndexStockKey, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(key, IndexStockKey, StringComparison.OrdinalIgnoreCase))
                 {
                     settings.IndexStockEnabled = flag;
                 }
@@ -64,15 +60,11 @@ namespace FinanceOverhaul.Market
             return settings;
         }
 
-        public static string Format(ProbeSettings settings)
+        public static string Format(ModSettings settings)
         {
-            settings = settings ?? new ProbeSettings();
+            settings = settings ?? new ModSettings();
             var sb = new StringBuilder();
             sb.Append("# Finance Overhaul settings (written by the mod)\n");
-            sb.Append(ProbeBiasKey)
-                .Append('=')
-                .Append(settings.ProbeBiasEnabled ? "true" : "false")
-                .Append('\n');
             sb.Append(IndexStockKey)
                 .Append('=')
                 .Append(settings.IndexStockEnabled ? "true" : "false")
