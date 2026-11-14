@@ -39,6 +39,12 @@ namespace FinanceOverhaul
                 return;
             }
 
+            if (Mod.Settings == null || !Mod.Settings.IndexStockEnabled)
+            {
+                ModLog.Info("index: experimental Index stock disabled in Options; not registering");
+                return;
+            }
+
             try
             {
                 InvestmentInfo source = FindSectorSource(collection.m_prefabs);

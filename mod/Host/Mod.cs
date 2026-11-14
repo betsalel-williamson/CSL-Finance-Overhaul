@@ -182,6 +182,11 @@ namespace FinanceOverhaul
                 Settings.ProbeBiasEnabled,
                 OnProbeBiasChanged
             );
+            group.AddCheckbox(
+                "Experimental: Index stock (adds a mod-only investment to saves; set before loading)",
+                Settings.IndexStockEnabled,
+                OnIndexStockChanged
+            );
 
             string footer = GetBuildInfoFooterDisplay();
             if (!string.IsNullOrEmpty(footer))
@@ -194,6 +199,17 @@ namespace FinanceOverhaul
             {
                 group.AddGroup(local);
             }
+        }
+
+        private static void OnIndexStockChanged(bool enabled)
+        {
+            if (Settings == null)
+            {
+                Settings = new ProbeSettings();
+            }
+
+            Settings.IndexStockEnabled = enabled;
+            ModLog.Info("index stock enabled=" + enabled + " (applies on next city load)");
         }
 
         private static void OnProbeBiasChanged(bool enabled)
