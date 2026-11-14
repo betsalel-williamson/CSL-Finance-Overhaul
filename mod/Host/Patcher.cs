@@ -251,6 +251,12 @@ namespace FinanceOverhaul
             // base class and runs after vanilla random variance, so Index carries none.
             applied += TryPatch(
                 harmony,
+                AccessTools.Method(typeof(InvestmentAI), "CreateInvestment"),
+                null,
+                nameof(IndexCreateInvestmentPostfix)
+            );
+            applied += TryPatch(
+                harmony,
                 AccessTools.Method(typeof(InvestmentAI), "SafeCalculateValue"),
                 null,
                 nameof(IndexSafeCalculateValuePostfix)
@@ -434,6 +440,24 @@ namespace FinanceOverhaul
             try
             {
                 IndexListing.Unregister();
+            }
+            catch
+            {
+                // fail soft
+            }
+        }
+
+        private static void IndexCreateInvestmentPostfix(
+            InvestmentAI __instance,
+            ref Investment data
+        )
+        {
+            try
+            {
+                if (IndexListing.IsIndex(__instance))
+                {
+                    IndexListing.BackfillHistory(ref data);
+                }
             }
             catch
             {

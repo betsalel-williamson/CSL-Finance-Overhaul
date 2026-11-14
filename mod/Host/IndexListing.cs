@@ -224,8 +224,16 @@ namespace FinanceOverhaul
         {
             try
             {
-                if (info == null || FindIndexInvestment() >= 0)
+                if (info == null)
                 {
+                    return;
+                }
+
+                int existing = FindIndexInvestment();
+                if (existing >= 0)
+                {
+                    // Already listed (e.g. loaded from a save): fill any missing older days.
+                    BackfillHistory(ref EconomyManager.instance.m_investments.m_buffer[existing]);
                     return;
                 }
 
@@ -242,6 +250,8 @@ namespace FinanceOverhaul
                     return;
                 }
 
+                // Idempotent with the CreateInvestment postfix (no-op once history is full).
+                BackfillHistory(ref EconomyManager.instance.m_investments.m_buffer[id]);
                 InvestmentInfo bound = EconomyManager.instance.m_investments.m_buffer[id].Info;
                 ModLog.Info(
                     "index: created investment id="
@@ -256,6 +266,115 @@ namespace FinanceOverhaul
             catch (Exception ex)
             {
                 ModLog.Warn("index: create investment failed: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Postfix target: InvestmentAI.CreateInvestment, and called for an Index that
+        /// already exists when a city is listed. Rebuilds the days before Index's own
+        /// oldest point from the members' vanilla histories, so a new or re-created
+        /// Index shows the same window of history as every other stock instead of a
+        /// flat line. Real Index points are kept as they are.
+        /// </summary>
+        public static void BackfillHistory(ref Investment data)
+        {
+            try
+            {
+                Investment.Queue<float> own = data.allValues;
+                int ownCount = own == null ? 0 : own.Count;
+                if (ownCount == 0)
+                {
+                    return;
+                }
+
+                var names = new List<string>(16);
+                var histories = new List<float[]>(16);
+                var eligible = new List<bool>(16);
+                ReadBasketHistories(names, histories, eligible);
+
+                float[] older = CityIndexBasket.BackfillOlder(
+                    own.GetFromTop(ownCount - 1),
+                    ownCount,
+                    names,
+                    histories,
+                    eligible,
+                    Investment.kPastValueCount
+                );
+                if (older.Length == 0)
+                {
+                    return;
+                }
+
+                var ownNewestFirst = new float[ownCount];
+                for (int j = 0; j < ownCount; j++)
+                {
+                    ownNewestFirst[j] = own.GetFromTop(j);
+                }
+
+                // Queue.Add appends newest, so add oldest first.
+                data.ClearValues();
+                for (int j = older.Length - 1; j >= 0; j--)
+                {
+                    data.AddValue(older[j]);
+                }
+
+                for (int j = ownCount - 1; j >= 0; j--)
+                {
+                    data.AddValue(ownNewestFirst[j]);
+                }
+
+                ModLog.Info(
+                    "index: backfilled "
+                        + older.Length
+                        + " older day(s) before "
+                        + ownCount
+                        + " real point(s); oldest="
+                        + older[older.Length - 1].ToString("0.##")
+                        + " newest="
+                        + ownNewestFirst[0].ToString("0.##")
+                );
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn(
+                    "index: history backfill failed, keeping real points only: " + ex.Message
+                );
+            }
+        }
+
+        private static void ReadBasketHistories(
+            List<string> names,
+            List<float[]> histories,
+            List<bool> eligible
+        )
+        {
+            Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                if ((buffer[i].m_flags & Investment.Flags.Created) == 0)
+                {
+                    continue;
+                }
+
+                InvestmentInfo info = buffer[i].Info;
+                if (info == null || info.m_investmentAI == null)
+                {
+                    continue;
+                }
+
+                Investment.Queue<float> history = buffer[i].allValues;
+                int count = history == null ? 0 : history.Count;
+                var newestFirst = new float[count];
+                for (int j = 0; j < count; j++)
+                {
+                    newestFirst[j] = history.GetFromTop(j);
+                }
+
+                names.Add(info.m_name);
+                histories.Add(newestFirst);
+                eligible.Add(
+                    IsSectorStock(info) && info.m_investmentAI.IsAvailable((byte)i, ref buffer[i])
+                );
             }
         }
 

@@ -55,6 +55,11 @@ sector basket.
   the prefab.
 - **Removal** — if the mod is disabled, vanilla drops the investment whose prefab is missing on the
   next load. Index shares held at that point are lost and are not refunded.
+- **History backfill** — a new or re-created Index rebuilds the days before its oldest real point by
+  running the chain-linked rule backwards over the members' vanilla histories
+  (`CityIndexBasket.BackfillOlder`), up to `Investment.kPastValueCount` points, so its chart shows
+  the same window as other stocks instead of a flat line. Runs on `InvestmentAI.CreateInvestment`
+  and when a loaded city's Index is shorter than its members. Real Index points are never changed.
 - **Mid-game / hot reload** — `IndexListing.EnsureInLoadedCity` adopts an Index prefab an older
   assembly already registered, or clones and registers one, calls `BindPrefabs` (which appends
   unbound scene prefabs to the simulation list), then queues `EconomyManager.CreateInvestment` on
