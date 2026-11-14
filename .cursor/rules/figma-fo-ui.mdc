@@ -1,0 +1,15 @@
+---
+description: Finance Overhaul Figma UI Map — annotation pins (red numbered dots)
+alwaysApply: true
+---
+
+# Figma FO UI
+
+When editing `figma.com/design/ZJ0oXFLXCOFOXQsLxE86Vh` or pin/token docs:
+
+1. Read `.agents/skills/figma-fo-ui/SKILL.md` before any `use_figma` mutation.
+2. A **pin** is a **red dot with a frame-local number**, tied to a legend title + description — not a large docs card on the canvas.
+3. Pins **never overlap**, never cover important text; numbers may restart at 1 on each frame.
+4. Optional thin spider lines pin→legend only when they stay readable.
+5. Keep catalog ids (`opt.*` / `host.*` / `plan.*`) in the legend/docs tables; sync `docs/developer/ui-figma-map.md`.
+6. Screenshot and fix ambiguity before finishing.
