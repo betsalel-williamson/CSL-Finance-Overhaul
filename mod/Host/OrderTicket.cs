@@ -9,23 +9,25 @@ using UnityEngine;
 namespace FinanceOverhaul
 {
     /// <summary>
-    /// Limit buy ticket in the Invest dialog (Figma band 09, pins 1–4). Buy mode gains
-    /// "Buy now" / "Limit" tabs above the share amount; Limit shows a limit price field
-    /// and turns the vanilla button into "Place limit order", which places an order via
-    /// <see cref="OrderDesk"/> instead of buying. "Buy now" is the untouched vanilla buy.
-    /// Sell mode hides the ticket. Hot-reload safe: stale parts are removed by name and
+    /// Order ticket in the Invest dialog (Figma band 09, pins 1–5). Tabs above the share
+    /// amount pick the order type for the dialog's mode: Buy → "Buy now" / "Limit";
+    /// Sell → "Sell now" / "Stop-loss". "Buy now" / "Sell now" are the untouched vanilla
+    /// trade. An order type shows a trigger price field, a plain-words rule, its own
+    /// estimate row in place of the vanilla stats rows, and turns the vanilla button into
+    /// "Place …", which places the order via <see cref="OrderDesk"/> instead of trading.
+    /// Vanilla labels are never rewritten (the button is re-labelled from the game's
+    /// localization). Hot-reload safe: stale parts are removed by name and
     /// <see cref="Detach"/> restores the vanilla dialog (button text and height).
     /// </summary>
     public static class OrderTicket
     {
         public const string TabsName = "FinanceOverhaulOrderTabs";
         public const string PriceName = "FinanceOverhaulLimitPrice";
-        public const string BuyNowTabName = "FinanceOverhaulOrderTabBuyNow";
-        public const string LimitTabName = "FinanceOverhaulOrderTabLimit";
+        public const string TabPrefix = "FinanceOverhaulOrderTab-";
         public const string PriceFieldName = "FinanceOverhaulLimitPriceField";
+        public const string CaptionName = "FinanceOverhaulLimitCaption";
         public const string HintName = "FinanceOverhaulLimitHint";
         public const string EstimateName = "FinanceOverhaulLimitEstimate";
-        public const string PlaceLabel = "Place limit order";
 
         private static readonly FieldInfo ModeField = AccessTools.Field(
             typeof(BuySellInvestmentPanel),
@@ -56,18 +58,60 @@ namespace FinanceOverhaul
         private static readonly Color32 ErrorColor = new Color32(233, 66, 79, 255);
         private static readonly Color32 EstimateColor = new Color32(78, 205, 96, 255);
 
+        /// <summary>One tab: an order kind, or null for the vanilla trade.</summary>
+        private sealed class Tab
+        {
+            public string Key;
+            public OrderKind? Kind;
+            public bool Buy;
+            public string Label;
+            public UIButton Button;
+        }
+
+        private static readonly Tab[] AllTabs =
+        {
+            new Tab
+            {
+                Key = "Market",
+                Kind = null,
+                Buy = true,
+                Label = "Buy now",
+            },
+            new Tab
+            {
+                Key = "Limit",
+                Kind = OrderKind.LimitBuy,
+                Buy = true,
+                Label = "Limit",
+            },
+            new Tab
+            {
+                Key = "Market",
+                Kind = null,
+                Buy = false,
+                Label = "Sell now",
+            },
+            new Tab
+            {
+                Key = "StopLoss",
+                Kind = OrderKind.StopLossSell,
+                Buy = false,
+                Label = "Stop-loss",
+            },
+        };
+
         private static BuySellInvestmentPanel owner;
         private static UIPanel dark;
         private static UIPanel tabs;
         private static UIPanel pricePanel;
-        private static UIButton buyNowTab;
-        private static UIButton limitTab;
+        private static UILabel caption;
         private static UITextField priceField;
         private static UILabel hint;
         private static UILabel priceText; // vanilla, only ever repaired (never rewritten)
         private static UIComponent buyStats; // vanilla Price row + "can't afford"
+        private static UIComponent sellStats; // vanilla Original / Current value / Gain rows
         private static UILabel estimate;
-        private static bool limitActive;
+        private static OrderKind? active;
         private static float addedHeight;
         private static bool failureLogged;
         private static bool refreshing;
@@ -89,12 +133,13 @@ namespace FinanceOverhaul
             get { return priceField != null && priceField.hasFocus; }
         }
 
-        public static bool LimitActive
+        /// <summary>An order type (not the vanilla trade) is selected.</summary>
+        public static bool OrderActive
         {
-            get { return limitActive; }
+            get { return active.HasValue; }
         }
 
-        /// <summary>Postfix targets: Awake and ShowPanel. Resets to "Buy now" on every show.</summary>
+        /// <summary>Postfix targets: Awake and ShowPanel. Every open starts on the vanilla trade.</summary>
         public static void Attach(BuySellInvestmentPanel panel)
         {
             if (panel == null || !IsReady)
@@ -114,17 +159,17 @@ namespace FinanceOverhaul
             catch (Exception ex)
             {
                 Detach();
-                LogOnce("order ticket: attach failed, vanilla Buy kept: " + ex.Message);
+                LogOnce("order ticket: attach failed, vanilla trade kept: " + ex.Message);
             }
         }
 
         /// <summary>
         /// Prefix target: BuySellInvestmentPanel.OnButtonClicked. Returns true when the
-        /// click was handled here (a limit order), so vanilla must not buy.
+        /// click was handled here (an order), so vanilla must not trade.
         /// </summary>
         public static bool HandleButton(BuySellInvestmentPanel panel)
         {
-            if (!limitActive || panel != owner || !IsBuyMode(panel))
+            if (!active.HasValue || panel != owner)
             {
                 return false;
             }
@@ -133,33 +178,55 @@ namespace FinanceOverhaul
             uint shares = (uint)SliderValueField.GetValue(panel);
             if (!TryPrice(out price) || shares == 0)
             {
-                ShowError("Enter a limit price in whole ₡ and at least one share.");
-                return true; // never fall through to a market buy
-            }
-
-            if ((long)price * shares > EconomyManager.playerMoney)
-            {
-                ShowError("The city can't afford this many shares at your limit.");
-                return true;
+                ShowError("Enter a price in whole ₡ and at least one share.");
+                return true; // never fall through to a market trade
             }
 
             byte id = (byte)IdField.GetValue(panel);
-            TradeOrder order = OrderDesk.PlaceLimitBuy(id, shares, price);
+            string problem = Problem(active.Value, price, shares, Mark(id));
+            if (problem != null)
+            {
+                ShowError(problem);
+                return true;
+            }
+
+            TradeOrder order =
+                active.Value == OrderKind.StopLossSell
+                    ? OrderDesk.PlaceStopLoss(id, shares, price)
+                    : OrderDesk.PlaceLimitBuy(id, shares, price);
             if (order == null)
             {
                 ShowError("The order could not be placed.");
                 return true;
             }
 
-            SetLimit(false); // leave the dialog in its vanilla state
+            SetKind(null); // leave the dialog in its vanilla state
             CloseMethod.Invoke(panel, null);
             return true;
         }
 
-        /// <summary>Postfix target: SetSliderValue — keeps the estimate in the hint current.</summary>
+        /// <summary>Why this order can't be placed, or null.</summary>
+        private static string Problem(OrderKind kind, int price, uint shares, float mark)
+        {
+            if (kind == OrderKind.LimitBuy && (long)price * shares > EconomyManager.playerMoney)
+            {
+                return "The city can't afford this many shares at your limit.";
+            }
+
+            if (kind == OrderKind.StopLossSell && mark > 0f && price >= mark)
+            {
+                return "Set the stop below today's price (₡"
+                    + Mathf.FloorToInt(mark).ToString("N0")
+                    + ").";
+            }
+
+            return null;
+        }
+
+        /// <summary>Postfix target: SetSliderValue — keeps the rule and estimate current.</summary>
         public static void Refresh()
         {
-            if (hint == null || !limitActive)
+            if (hint == null || !active.HasValue)
             {
                 return;
             }
@@ -168,7 +235,7 @@ namespace FinanceOverhaul
             uint shares = owner == null ? 0 : (uint)SliderValueField.GetValue(owner);
             if (!TryPrice(out price))
             {
-                ShowError("Enter a limit price in whole ₡.");
+                ShowError("Enter a price in whole ₡.");
                 return;
             }
 
@@ -180,14 +247,20 @@ namespace FinanceOverhaul
             refreshing = true;
             try
             {
+                bool stop = active.Value == OrderKind.StopLossSell;
                 hint.textColor = HintColor;
-                hint.text =
-                    "Buys when the daily price is at or below ₡"
-                    + price.ToString("N0")
-                    + ". Good for "
-                    + TradeOrder.LifetimeDays
-                    + " days.";
-                ShowEstimate((long)price * shares);
+                hint.text = stop
+                    ? "Sells when the daily price is at or below ₡"
+                        + price.ToString("N0")
+                        + ". After a sharp drop it can sell for less. Good for "
+                        + TradeOrder.LifetimeDays
+                        + " days."
+                    : "Buys when the daily price is at or below ₡"
+                        + price.ToString("N0")
+                        + ". Good for "
+                        + TradeOrder.LifetimeDays
+                        + " days.";
+                ShowEstimate(active.Value, price, shares);
                 FitPricePanel();
             }
             finally
@@ -197,36 +270,49 @@ namespace FinanceOverhaul
         }
 
         /// <summary>
-        /// Limit mode: our own estimate row replaces the vanilla Price row (hidden), and the
-        /// button follows affordability at the limit. Vanilla labels are never rewritten.
+        /// Our estimate row stands in for the vanilla stats rows (hidden); the button follows
+        /// whether the order could be placed. Vanilla labels are never rewritten.
         /// </summary>
-        private static void ShowEstimate(long cost)
+        private static void ShowEstimate(OrderKind kind, int price, uint shares)
         {
-            if (estimate == null)
+            if (estimate == null || owner == null)
             {
                 return;
             }
 
-            long cash = EconomyManager.playerMoney;
-            bool affordable = cost <= cash;
-            estimate.textColor = affordable ? EstimateColor : ErrorColor;
+            long amount = (long)price * shares;
+            string problem = Problem(kind, price, shares, Mark((byte)IdField.GetValue(owner)));
+            estimate.textColor = problem == null ? EstimateColor : ErrorColor;
             estimate.text =
-                "Est. cost (at limit): ₡"
-                + cost.ToString("N0")
-                + (affordable ? string.Empty : " — more than the city's ₡" + cash.ToString("N0"));
-            UIButton button = owner == null ? null : ButtonField.GetValue(owner) as UIButton;
+                (
+                    kind == OrderKind.StopLossSell
+                        ? "Est. proceeds (at stop): ₡"
+                        : "Est. cost (at limit): ₡"
+                )
+                + amount.ToString("N0")
+                + (problem == null ? string.Empty : " — " + problem);
+            UIButton button = ButtonField.GetValue(owner) as UIButton;
             if (button != null)
             {
-                button.isEnabled = affordable;
+                button.isEnabled = problem == null;
             }
         }
 
-        /// <summary>Back to vanilla: show its Price row and let it recompute price and Buy state.</summary>
-        private static void RestorePriceRow()
+        /// <summary>Back to vanilla: show its stats rows and let it recompute price and button state.</summary>
+        private static void RestoreStats()
         {
-            if (buyStats != null && owner != null && IsBuyMode(owner))
+            if (owner != null)
             {
-                buyStats.isVisible = true;
+                bool buy = IsBuyMode(owner);
+                if (buyStats != null && buy)
+                {
+                    buyStats.isVisible = true;
+                }
+
+                if (sellStats != null && !buy)
+                {
+                    sellStats.isVisible = true;
+                }
             }
 
             if (owner != null && UpdatePriceMethod != null)
@@ -291,12 +377,12 @@ namespace FinanceOverhaul
         }
 
         /// <summary>
-        /// Postfix target: UpdatePriceNumbers (open, slider moves). Limit keeps our estimate;
-        /// otherwise the vanilla Price label is put back in its place if anything moved it.
+        /// Postfix target: UpdatePriceNumbers (open, slider moves). An order type keeps our
+        /// estimate; otherwise the vanilla Price label is put back in its place if moved.
         /// </summary>
         public static void AfterVanillaPrice()
         {
-            if (limitActive)
+            if (active.HasValue)
             {
                 Refresh();
             }
@@ -331,41 +417,11 @@ namespace FinanceOverhaul
             }
         }
 
-        /// <summary>E2E: switches the ticket like a click on a tab.</summary>
-        public static void SelectLimit(bool limit)
-        {
-            UIButton tab = limit ? limitTab : buyNowTab;
-            if (tab != null)
-            {
-                tab.SimulateClick();
-            }
-        }
-
-        /// <summary>E2E: types into the limit price field.</summary>
-        public static void TypePrice(string text)
-        {
-            if (priceField != null)
-            {
-                priceField.text = text;
-                Refresh();
-            }
-        }
-
-        /// <summary>E2E: presses the dialog's main button.</summary>
-        public static void PressButton()
-        {
-            UIButton button = owner == null ? null : ButtonField.GetValue(owner) as UIButton;
-            if (button != null)
-            {
-                button.SimulateClick();
-            }
-        }
-
         public static void Detach()
         {
             try
             {
-                SetLimit(false);
+                SetKind(null);
                 if (dark != null && addedHeight != 0f)
                 {
                     Grow(-addedHeight);
@@ -378,19 +434,24 @@ namespace FinanceOverhaul
 
             Destroy(tabs);
             Destroy(pricePanel);
+            foreach (Tab t in AllTabs)
+            {
+                t.Button = null;
+            }
+
             tabs = null;
             pricePanel = null;
-            buyNowTab = null;
-            limitTab = null;
+            caption = null;
             priceField = null;
             hint = null;
             estimate = null;
             buyStats = null;
+            sellStats = null;
             priceText = null;
             dark = null;
             owner = null;
             addedHeight = 0f;
-            limitActive = false;
+            active = null;
         }
 
         private static void Build(BuySellInvestmentPanel panel)
@@ -403,7 +464,7 @@ namespace FinanceOverhaul
             UIButton button = ButtonField.GetValue(panel) as UIButton;
             if (dark == null || slider == null || button == null)
             {
-                LogOnce("order ticket: dialog layout not recognised; vanilla Buy kept");
+                LogOnce("order ticket: dialog layout not recognised; vanilla trade kept");
                 dark = null;
                 return;
             }
@@ -412,24 +473,26 @@ namespace FinanceOverhaul
             owner = panel;
             priceText = dark.Find<UILabel>("LabelPriceText");
             buyStats = dark.Find("PanelBuyStats");
+            sellStats = dark.Find("PanelSellStats");
 
-            // Tabs row above the share amount.
+            // Tabs row above the share amount; one button per (mode, kind).
             tabs = dark.AddUIComponent<UIPanel>();
             tabs.name = TabsName;
             tabs.size = new Vector2(dark.width, 38f);
-            buyNowTab = AddTab(tabs, "Buy now", 26f);
-            buyNowTab.name = BuyNowTabName;
-            limitTab = AddTab(tabs, "Limit", 26f + 116f);
-            limitTab.name = LimitTabName;
-            buyNowTab.eventClick += (c, p) => SetLimit(false);
-            limitTab.eventClick += (c, p) => SetLimit(true);
+            foreach (Tab t in AllTabs)
+            {
+                Tab tab = t;
+                tab.Button = AddTab(tabs, tab.Label);
+                tab.Button.name = TabPrefix + tab.Key + (tab.Buy ? string.Empty : "Sell");
+                tab.Button.eventClick += (c, p) => SetKind(tab.Kind);
+            }
 
-            // Limit price row under the share amount, field in the share field's column.
+            // Trigger price row under the share amount, field in the share field's column.
             pricePanel = dark.AddUIComponent<UIPanel>();
             pricePanel.name = PriceName;
             pricePanel.size = new Vector2(dark.width, 62f);
-            UILabel caption = pricePanel.AddUIComponent<UILabel>();
-            caption.text = "Limit price (₡ per share)";
+            caption = pricePanel.AddUIComponent<UILabel>();
+            caption.name = CaptionName;
             CopyLabelStyle(shareLabel, caption);
             caption.relativePosition = new Vector3(26f, 10f);
             priceField = pricePanel.AddUIComponent<UITextField>();
@@ -451,8 +514,7 @@ namespace FinanceOverhaul
             priceField.selectionSprite = "EmptySprite";
             priceField.color = new Color32(28, 28, 28, 255);
             priceField.textColor = Color.white;
-            priceField.tooltip =
-                "Whole ₡ per share · the order buys at the daily price, never above this";
+            priceField.tooltip = "Whole ₡ per share · orders trade at the daily price";
             if (shareLabel != null && shareLabel.font != null)
             {
                 priceField.font = shareLabel.font;
@@ -483,21 +545,14 @@ namespace FinanceOverhaul
             // Place both just around the slider block (autoLayout follows zOrder).
             tabs.zOrder = slider.zOrder;
             pricePanel.zOrder = slider.zOrder + 1;
-            ModLog.Info(
-                "order ticket: attached (DarkSection autoLayout="
-                    + dark.autoLayout
-                    + ", autoFit="
-                    + dark.autoFitChildrenVertically
-                    + ")"
-            );
+            ModLog.Info("order ticket: attached (buy and sell order types)");
         }
 
-        private static UIButton AddTab(UIPanel parent, string text, float x)
+        private static UIButton AddTab(UIPanel parent, string text)
         {
             UIButton tab = parent.AddUIComponent<UIButton>();
             tab.text = text;
             tab.size = new Vector2(108f, 28f);
-            tab.relativePosition = new Vector3(x, 6f);
             tab.textScale = 0.875f;
             tab.normalBgSprite = "ButtonMenu";
             tab.hoveredBgSprite = "ButtonMenuHovered";
@@ -509,30 +564,21 @@ namespace FinanceOverhaul
         }
 
         /// <summary>
-        /// A fresh open starts on "Buy now". Vanilla has just set the button text for this
-        /// mode ("Buy" or "Sell"), so it is left alone; only our own overrides are undone.
+        /// A fresh open starts on the vanilla trade. Vanilla labels the button by localeID
+        /// and skips re-applying an unchanged id, so always re-apply the localized label
+        /// for this mode (also repairs labels left by older builds).
         /// </summary>
         private static void ResetForShow()
         {
-            limitActive = false;
-            // Vanilla labels the button by localeID and skips re-applying an unchanged id,
-            // so any text written on it sticks across opens. Always re-apply the localized
-            // label for this mode (also repairs labels left by older builds).
+            active = null;
             ApplyVanillaButtonLabel();
-
-            if (buyNowTab != null)
-            {
-                StyleTab(buyNowTab, true);
-                StyleTab(limitTab, false);
-            }
-
             RepairPriceLabel();
-
             if (priceField != null)
             {
-                priceField.text = string.Empty; // re-filled from today's price on Limit
+                priceField.text = string.Empty; // re-filled from today's price per order type
             }
 
+            StyleTabs();
             Relayout();
         }
 
@@ -561,55 +607,84 @@ namespace FinanceOverhaul
             button.text = label;
         }
 
-        private static void SetLimit(bool limit)
+        private static void SetKind(OrderKind? kind)
         {
-            bool was = limitActive;
-            limitActive = limit;
-            if (buyNowTab != null)
-            {
-                StyleTab(buyNowTab, !limit);
-                StyleTab(limitTab, limit);
-            }
+            OrderKind? was = active;
+            active = kind;
+            StyleTabs();
 
             UIButton button = owner == null ? null : ButtonField.GetValue(owner) as UIButton;
-            if (button != null && limit)
+            if (button != null && kind.HasValue)
             {
-                button.text = PlaceLabel;
+                button.text =
+                    kind.Value == OrderKind.StopLossSell ? "Place stop-loss" : "Place limit order";
             }
-            else if (!limit && was)
+            else if (!kind.HasValue && was.HasValue)
             {
                 ApplyVanillaButtonLabel();
             }
 
-            if (!limit && was)
+            if (!kind.HasValue && was.HasValue)
             {
-                RestorePriceRow();
+                RestoreStats();
             }
 
-            if (
-                limit
-                && priceField != null
-                && string.IsNullOrEmpty(priceField.text)
-                && owner != null
-            )
+            if (kind.HasValue && caption != null)
             {
-                byte id = (byte)IdField.GetValue(owner);
-                float mark = EconomyManager.instance.m_investments.m_buffer[id].value;
-                priceField.text = Mathf.Max(1, Mathf.FloorToInt(mark)).ToString();
+                caption.text =
+                    kind.Value == OrderKind.StopLossSell
+                        ? "Stop price (₡ per share)"
+                        : "Limit price (₡ per share)";
+            }
+
+            if (kind.HasValue && priceField != null && owner != null && kind != was)
+            {
+                // Limit: today's price; stop-loss: 10% below it (a sell stop must be below).
+                float mark = Mark((byte)IdField.GetValue(owner));
+                float suggested = kind.Value == OrderKind.StopLossSell ? mark * 0.9f : mark;
+                priceField.text = Mathf.Max(1, Mathf.FloorToInt(suggested)).ToString();
             }
 
             Relayout();
             Refresh();
         }
 
-        private static void StyleTab(UIButton tab, bool active)
+        private static void StyleTabs()
         {
-            tab.normalBgSprite = active ? "ButtonMenuPressed" : "ButtonMenu";
-            tab.focusedBgSprite = tab.normalBgSprite;
-            tab.textColor = active ? (Color32)Color.white : new Color32(170, 180, 190, 255);
+            if (owner == null)
+            {
+                return;
+            }
+
+            bool buy = IsBuyMode(owner);
+            float x = 26f;
+            foreach (Tab t in AllTabs)
+            {
+                if (t.Button == null)
+                {
+                    continue;
+                }
+
+                bool shown = t.Buy == buy;
+                t.Button.isVisible = shown;
+                if (!shown)
+                {
+                    continue;
+                }
+
+                t.Button.relativePosition = new Vector3(x, 6f);
+                x += t.Button.width + 8f;
+                bool on = t.Kind == active;
+                t.Button.normalBgSprite = on ? "ButtonMenuPressed" : "ButtonMenu";
+                t.Button.focusedBgSprite = t.Button.normalBgSprite;
+                t.Button.textColor = on ? (Color32)Color.white : new Color32(170, 180, 190, 255);
+            }
         }
 
-        /// <summary>Shows the ticket only in Buy mode, and the price row only for Limit; grows the dialog to fit.</summary>
+        /// <summary>
+        /// Tabs in both modes; the price row only for an order type, where it stands in for
+        /// the mode's vanilla stats rows. Grows the dialog to fit.
+        /// </summary>
         private static void Relayout()
         {
             if (dark == null || owner == null)
@@ -618,19 +693,20 @@ namespace FinanceOverhaul
             }
 
             bool buy = IsBuyMode(owner);
-            tabs.isVisible = buy;
-            pricePanel.isVisible = buy && limitActive;
-            float wanted = buy ? tabs.height : 0f;
-            if (buy && limitActive)
+            UIComponent stats = buy ? buyStats : sellStats;
+            tabs.isVisible = true;
+            pricePanel.isVisible = active.HasValue;
+            float wanted = tabs.height;
+            if (active.HasValue)
             {
-                // Our estimate row stands in for the vanilla Price row.
                 wanted += pricePanel.height;
-                if (buyStats != null)
+                if (stats != null)
                 {
-                    buyStats.isVisible = false;
-                    wanted -= buyStats.height;
+                    stats.isVisible = false;
+                    wanted -= stats.height;
                 }
             }
+
             Grow(wanted - addedHeight);
             addedHeight = wanted;
         }
@@ -660,6 +736,11 @@ namespace FinanceOverhaul
         {
             return (BuySellInvestmentPanel.Mode)ModeField.GetValue(panel)
                 == BuySellInvestmentPanel.Mode.Buy;
+        }
+
+        private static float Mark(byte id)
+        {
+            return EconomyManager.instance.m_investments.m_buffer[id].value;
         }
 
         private static bool TryPrice(out int price)

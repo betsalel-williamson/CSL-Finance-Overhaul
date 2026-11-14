@@ -74,6 +74,53 @@ namespace FinanceOverhaul
             }
         }
 
+        /// <summary>Places a stop-loss sell for the investment with this id. Returns the order or null.</summary>
+        public static TradeOrder PlaceStopLoss(byte investmentId, uint shares, int stopPrice)
+        {
+            try
+            {
+                InvestmentInfo info = EconomyManager
+                    .instance
+                    .m_investments
+                    .m_buffer[investmentId]
+                    .Info;
+                if (info == null)
+                {
+                    return null;
+                }
+
+                lock (Sync)
+                {
+                    OrderBook b = Book();
+                    TradeOrder order = b.AddStopLoss(info.name, shares, stopPrice, Today);
+                    if (order != null)
+                    {
+                        Save(b);
+                        ModLog.Info(
+                            "orders: placed #"
+                                + order.Id
+                                + " stop-loss sell "
+                                + shares
+                                + " "
+                                + info.name
+                                + " at or below "
+                                + stopPrice
+                                + " (expires day "
+                                + order.ExpiresDay
+                                + ")"
+                        );
+                    }
+
+                    return order;
+                }
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("orders: place failed: " + ex.Message);
+                return null;
+            }
+        }
+
         public static bool Cancel(int id)
         {
             lock (Sync)
@@ -150,12 +197,14 @@ namespace FinanceOverhaul
             int id = Find(buffer, order.InvestmentKey);
             float mark = 0f;
             uint available = 0;
+            uint owned = 0;
             InvestmentAI ai = null;
             if (id >= 0)
             {
                 ai = buffer[id].Info.m_investmentAI;
                 mark = buffer[id].value;
                 available = ai.AvailableForBuyingCount(ref buffer[id]);
+                owned = ai.OwnedCount(ref buffer[id]);
             }
 
             // A locked or missing listing just waits (until it expires).
@@ -166,9 +215,34 @@ namespace FinanceOverhaul
 
             // Whole ₡, the same unit as CalculatePrice (the vanilla dialog compares them directly).
             long cash = EconomyManager.playerMoney;
-            OrderDecision d = OrderRules.Evaluate(order, today, mark, available, cash);
+            OrderDecision d = OrderRules.Evaluate(order, today, mark, available, cash, owned);
             switch (d.Action)
             {
+                case OrderAction.Fill when order.IsSell:
+                    int proceeds = ai.SellShares((byte)id, ref buffer[id], d.Shares);
+                    // Same bookkeeping as the vanilla Sell button.
+                    economy.m_lastInvestmentSell = SimulationManager.instance.m_currentGameTime;
+                    b.Cancel(order.Id);
+                    ModLog.Info(
+                        "orders: filled #"
+                            + order.Id
+                            + " sold "
+                            + d.Shares
+                            + " "
+                            + order.InvestmentKey
+                            + " at "
+                            + mark.ToString("0.##")
+                            + " (stop "
+                            + order.TriggerPrice
+                            + ") for "
+                            + proceeds
+                    );
+                    if (ai.OwnedCount(ref buffer[id]) == 0)
+                    {
+                        RemovePortfolioRowOnMainThread((byte)id);
+                    }
+
+                    return true;
                 case OrderAction.Fill:
                     int cost = ai.BuyShares((byte)id, ref buffer[id], d.Shares);
                     // Same bookkeeping as the vanilla Buy button.
@@ -185,7 +259,7 @@ namespace FinanceOverhaul
                             + " at "
                             + mark.ToString("0.##")
                             + " (limit "
-                            + order.LimitPrice
+                            + order.TriggerPrice
                             + ") for "
                             + cost
                     );
@@ -196,7 +270,7 @@ namespace FinanceOverhaul
                     ModLog.Info(
                         "orders: cancelled #"
                             + order.Id
-                            + " limit buy "
+                            + (order.IsSell ? " stop-loss sell " : " limit buy ")
                             + order.Shares
                             + " "
                             + order.InvestmentKey
@@ -244,6 +318,32 @@ namespace FinanceOverhaul
                                 id,
                                 ref EconomyManager.instance.m_investments.m_buffer[id]
                             );
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ModLog.Warn("orders: portfolio refresh failed: " + ex.Message);
+                    }
+                });
+            }
+            catch
+            {
+                // fail soft: the portfolio list rebuilds when the panel reopens
+            }
+        }
+
+        private static void RemovePortfolioRowOnMainThread(byte id)
+        {
+            try
+            {
+                SimulationManager.instance.m_ThreadingWrapper.QueueMainThread(() =>
+                {
+                    try
+                    {
+                        EconomyPanel panel = UnityEngine.Object.FindObjectOfType<EconomyPanel>();
+                        if (panel != null)
+                        {
+                            panel.RemoveOwnedInvestment(id);
                         }
                     }
                     catch (Exception ex)

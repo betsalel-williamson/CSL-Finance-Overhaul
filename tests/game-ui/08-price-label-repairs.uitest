@@ -7,10 +7,10 @@ set-text LabelPriceText Price::::
 close-dialog
 show-buy Oil
 expect-text-is LabelPriceText Price:
-click FinanceOverhaulOrderTabLimit
-click FinanceOverhaulOrderTabBuyNow
-click FinanceOverhaulOrderTabLimit
-click FinanceOverhaulOrderTabBuyNow
+click FinanceOverhaulOrderTab-Limit
+click FinanceOverhaulOrderTab-Market
+click FinanceOverhaulOrderTab-Limit
+click FinanceOverhaulOrderTab-Market
 expect-text-is LabelPriceText Price:
 expect-no-overlap LabelPriceText LabelPriceValue
 expect-no-overflow

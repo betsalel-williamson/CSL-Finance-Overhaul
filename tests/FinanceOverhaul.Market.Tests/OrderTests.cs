@@ -127,7 +127,7 @@ namespace FinanceOverhaul.Market.Tests
             Assert.Equal(2, o.Id);
             Assert.Equal("Index", o.InvestmentKey);
             Assert.Equal(25u, o.Shares);
-            Assert.Equal(2400, o.LimitPrice);
+            Assert.Equal(2400, o.TriggerPrice);
             Assert.Equal(12, o.PlacedDay);
             Assert.Equal(72, o.ExpiresDay);
             Assert.Equal(3, back.AddLimitBuy("Y", 1, 1, 1).Id); // next id survives
@@ -163,6 +163,99 @@ namespace FinanceOverhaul.Market.Tests
                 "Weird|Name\nCo",
                 OrderBookCodec.Parse(OrderBookCodec.Format(book)).Orders[0].InvestmentKey
             );
+        }
+    }
+}
+
+namespace FinanceOverhaul.Market.Tests
+{
+    public class StopLossRulesTests
+    {
+        private static TradeOrder Stop(uint shares = 50, int stop = 90, int placed = 10) =>
+            TradeOrder.StopLossSell(7, "Oil Industry", shares, stop, placed);
+
+        [Fact]
+        public void WaitsWhileThePriceStaysAboveTheStop()
+        {
+            OrderDecision d = OrderRules.Evaluate(Stop(), 11, 95f, 0, 0, owned: 100);
+            Assert.Equal(OrderAction.Wait, d.Action);
+        }
+
+        [Fact]
+        public void SellsAtTheDailyPriceOnceAtOrBelowTheStop()
+        {
+            OrderDecision d = OrderRules.Evaluate(Stop(), 11, 90f, 0, 0, owned: 100);
+            Assert.Equal(OrderAction.Fill, d.Action);
+            Assert.Equal(50u, d.Shares);
+            Assert.Equal(4500, d.Cost); // proceeds: round(mark × shares)
+        }
+
+        [Fact]
+        public void AfterAGapDownItSellsLowerThanTheStop()
+        {
+            OrderDecision d = OrderRules.Evaluate(Stop(), 11, 70f, 0, 0, owned: 100);
+            Assert.Equal(OrderAction.Fill, d.Action);
+            Assert.Equal(3500, d.Cost);
+        }
+
+        [Fact]
+        public void NeverSellsMoreThanIsOwned()
+        {
+            OrderDecision d = OrderRules.Evaluate(Stop(shares: 50), 11, 80f, 0, 0, owned: 20);
+            Assert.Equal(20u, d.Shares);
+        }
+
+        [Fact]
+        public void CancelsWhenNothingIsLeftToSell()
+        {
+            OrderDecision d = OrderRules.Evaluate(Stop(), 11, 80f, 0, 0, owned: 0);
+            Assert.Equal(OrderAction.Cancel, d.Action);
+            Assert.Equal(OrderRules.ReasonNoShares, d.Reason);
+        }
+
+        [Fact]
+        public void ExpiresLikeEveryOrder()
+        {
+            OrderDecision d = OrderRules.Evaluate(Stop(placed: 10), 71, 80f, 0, 0, owned: 100);
+            Assert.Equal(OrderAction.Cancel, d.Action);
+            Assert.Equal(OrderRules.ReasonExpired, d.Reason);
+        }
+
+        [Fact]
+        public void IsASell()
+        {
+            Assert.True(Stop().IsSell);
+            Assert.False(TradeOrder.LimitBuy(1, "Oil Industry", 1, 1, 1).IsSell);
+        }
+    }
+
+    public class StopLossBookTests
+    {
+        [Fact]
+        public void BookAddsAndRoundTripsStopLosses()
+        {
+            var book = new OrderBook();
+            book.AddLimitBuy("Oil Industry", 10, 80, 5);
+            TradeOrder stop = book.AddStopLoss("Index", 25, 21000, 6);
+            Assert.Equal(OrderKind.StopLossSell, stop.Kind);
+            OrderBook back = OrderBookCodec.Parse(OrderBookCodec.Format(book));
+            Assert.Equal(2, back.Orders.Count);
+            Assert.Equal(OrderKind.LimitBuy, back.Orders[0].Kind);
+            TradeOrder s = back.Orders[1];
+            Assert.Equal(OrderKind.StopLossSell, s.Kind);
+            Assert.Equal("Index", s.InvestmentKey);
+            Assert.Equal(25u, s.Shares);
+            Assert.Equal(21000, s.TriggerPrice);
+            Assert.Equal(66, s.ExpiresDay);
+        }
+
+        [Fact]
+        public void RejectsMeaninglessStops()
+        {
+            var book = new OrderBook();
+            Assert.Null(book.AddStopLoss("Oil Industry", 0, 90, 1));
+            Assert.Null(book.AddStopLoss("Oil Industry", 5, 0, 1));
+            Assert.Empty(book.Orders);
         }
     }
 }

@@ -31,6 +31,7 @@ namespace FinanceOverhaul
         private const float CardHeight = 92f;
         private static readonly Color32 BuyColor = new Color32(78, 205, 96, 255);
         private static readonly Color32 MutedColor = new Color32(160, 172, 182, 255);
+        private static readonly Color32 SellColor = new Color32(233, 150, 66, 255);
 
         private EconomyPanel economy;
         private string shownSignature;
@@ -236,8 +237,8 @@ namespace FinanceOverhaul
 
             UILabel side = card.AddUIComponent<UILabel>();
             Style(side, bodyStyle, 1f);
-            side.textColor = BuyColor;
-            side.text = "Open order · BUY";
+            side.textColor = order.IsSell ? SellColor : BuyColor;
+            side.text = order.IsSell ? "Open order · SELL (stop-loss)" : "Open order · BUY";
             side.relativePosition = new Vector3(24f, 38f);
 
             UILabel detail = card.AddUIComponent<UILabel>();
@@ -251,8 +252,8 @@ namespace FinanceOverhaul
             int left = Math.Max(0, order.ExpiresDay - today);
             detail.text =
                 order.Shares.ToString("N0")
-                + " shares at or below ₡"
-                + order.LimitPrice.ToString("N0")
+                + (order.IsSell ? " shares if the price drops to ₡" : " shares at or below ₡")
+                + order.TriggerPrice.ToString("N0")
                 + " · "
                 + left
                 + (left == 1 ? " day left" : " days left");

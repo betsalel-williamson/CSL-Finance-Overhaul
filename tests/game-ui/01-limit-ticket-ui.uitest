@@ -1,11 +1,11 @@
 name limit ticket: tabs, price field, estimate and button text
 show-buy Oil
-expect-visible FinanceOverhaulOrderTabBuyNow
-expect-visible FinanceOverhaulOrderTabLimit
+expect-visible FinanceOverhaulOrderTab-Market
+expect-visible FinanceOverhaulOrderTab-Limit
 expect-hidden FinanceOverhaulLimitPrice
 expect-text Button Buy
 expect-text-is LabelPriceText Price:
-click FinanceOverhaulOrderTabLimit
+click FinanceOverhaulOrderTab-Limit
 expect-visible FinanceOverhaulLimitPriceField
 expect-text Button Place limit order
 type FinanceOverhaulLimitPriceField 95
@@ -22,7 +22,7 @@ type FinanceOverhaulLimitPriceField 9999999
 expect-text FinanceOverhaulLimitPriceField 9999999
 expect-no-overflow
 capture limit-ticket
-click FinanceOverhaulOrderTabBuyNow
+click FinanceOverhaulOrderTab-Market
 expect-hidden FinanceOverhaulLimitPrice
 expect-text Button Buy
 expect-visible PanelBuyStats

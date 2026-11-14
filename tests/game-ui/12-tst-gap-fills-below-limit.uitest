@@ -4,7 +4,7 @@ set-price TST 100
 run-days 1
 remember TST
 show-buy TST
-click FinanceOverhaulOrderTabLimit
+click FinanceOverhaulOrderTab-Limit
 type FinanceOverhaulShareAmountField 4
 type FinanceOverhaulLimitPriceField 90
 click Button

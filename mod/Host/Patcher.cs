@@ -335,7 +335,7 @@ namespace FinanceOverhaul
             {
                 // Never market-buy when the player chose Limit and something broke.
                 ModLog.Warn("order ticket: place failed: " + ex.Message);
-                return !OrderTicket.LimitActive;
+                return !OrderTicket.OrderActive;
             }
         }
 

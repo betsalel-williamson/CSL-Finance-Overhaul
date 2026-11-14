@@ -1,6 +1,6 @@
 name an open order is an entry of Your Portfolio, under its holding, and can be cancelled there
 show-buy Oil
-click FinanceOverhaulOrderTabLimit
+click FinanceOverhaulOrderTab-Limit
 type FinanceOverhaulShareAmountField 3
 type FinanceOverhaulLimitPriceField 1
 click Button

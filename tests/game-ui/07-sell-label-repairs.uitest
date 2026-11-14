@@ -7,7 +7,7 @@ close-dialog
 show-sell IDX
 expect-text Button Sell
 show-buy IDX
-click FinanceOverhaulOrderTabLimit
+click FinanceOverhaulOrderTab-Limit
 show-sell IDX
 expect-text Button Sell
 show-buy IDX

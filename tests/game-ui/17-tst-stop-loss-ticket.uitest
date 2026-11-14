@@ -1,0 +1,37 @@
+# Needs the dev test stock (TST) in a test save.
+name the Sell dialog places a stop-loss: suggested stop, refused at or above today's price, shown in Your Portfolio
+set-price TST 100
+run-days 1
+show-buy TST
+type FinanceOverhaulShareAmountField 10
+click Button
+wait 1
+show-sell TST
+click FinanceOverhaulOrderTab-StopLossSell
+expect-visible FinanceOverhaulLimitPriceField
+expect-text FinanceOverhaulLimitCaption Stop price
+expect-text-is FinanceOverhaulLimitPriceField 90
+expect-text Button Place stop-loss
+expect-hidden PanelSellStats
+expect-text FinanceOverhaulLimitEstimate Est. proceeds (at stop): ₡
+type FinanceOverhaulLimitPriceField 120
+expect-text FinanceOverhaulLimitEstimate Set the stop below today's price
+click Button
+expect-orders-delta 0
+type FinanceOverhaulLimitPriceField 95
+expect-text FinanceOverhaulLimitHint After a sharp drop it can sell for less
+expect-no-overflow
+capture stop-loss-ticket
+click Button
+expect-orders-delta 1
+show-economy
+wait 1
+scroll-into-view FinanceOverhaulOpenOrderRow-$order
+expect-in-view FinanceOverhaulOpenOrderRow-$order OwnedInvestmentsPanel
+expect-text FinanceOverhaulOpenOrderDetail-$order 10 shares if the price drops to ₡95
+capture stop-loss-card
+cleanup:
+cancel-new-orders
+sell-back TST 10
+set-price TST 100
+close-dialog

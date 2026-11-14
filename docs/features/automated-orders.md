@@ -3,7 +3,7 @@
 ## Value
 
 Mayors set a buy price once and keep building, like a limit order at Schwab or E*Trade, instead of
-watching the Investments panel for a dip. Step 1 is the **limit buy**.
+watching the Investments panel for a dip. Step 1 is the **limit buy**; step 2 the **stop-loss**.
 
 ## Contract (step 1: limit buy)
 
@@ -35,6 +35,24 @@ limit)**. The button reads **Place limit order**; it places the order and closes
 empty or invalid price shows an error and never buys. Sell mode is unchanged. Every open resets to
 Buy now with the vanilla labels.
 
+## Stop-loss (shipped)
+
+The **Sell** dialog has **Sell now** (vanilla, unchanged) and **Stop-loss** tabs. Stop-loss shows
+**Stop price (₡ per share)**, pre-filled 10% below today's price, with the rule in plain words and
+**Est. proceeds (at stop)** in place of the vanilla value rows; the button reads **Place
+stop-loss**.
+
+- **Place.** The stop must be below today's price (as brokers reject a sell stop at or above the
+  market); otherwise the estimate row says why and the button is disabled.
+- **Fill.** Once the daily price is at or below the stop, it sells through vanilla `SellShares` at
+  that day's price, so after a sharp drop it sells for less than the stop. Never more than the city
+  still holds; same bookkeeping as the vanilla Sell button (last sell time, portfolio card removed
+  when nothing is left). The gain or loss is booked against the average cost
+  ([Cost basis](./cost-basis.md)).
+- **Cancel.** If the shares were already sold, it cancels ("no shares left to sell"). Expires after
+  60 game days like every order.
+- **Saved** as a `stop-sell` line in the same versioned order book; older builds skip it.
+
 ## Open orders in Your Portfolio (shipped)
 
 Each open order is an entry of **Economy → Investments → Your Portfolio**: a card right under its
@@ -56,7 +74,7 @@ unchanged. See [Testing](../developer/testing.md).
 
 ## Later steps
 
-Stop-loss and take-profit sells, trailing stop, recurring monthly investment, an open-orders panel
+Take-profit sells, trailing stop, recurring monthly investment, an open-orders panel
 in the Investments view, fill notifications in Chirper, and Figma ticket designs. Dividend
 reinvestment waits for dividend shares ([Market analogs](./market-analogs.md)).
 

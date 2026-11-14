@@ -147,7 +147,7 @@ namespace FinanceOverhaul
                             + " "
                             + o.InvestmentKey
                             + " <= "
-                            + o.LimitPrice
+                            + o.TriggerPrice
                             + " expires day "
                             + o.ExpiresDay
                             + " (today "

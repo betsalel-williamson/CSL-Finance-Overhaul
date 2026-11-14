@@ -4,7 +4,7 @@ close-dialog
 show-buy HS
 type FinanceOverhaulShareAmountField 900
 expect-no-overlap LabelPriceText LabelPriceValue
-click FinanceOverhaulOrderTabLimit
+click FinanceOverhaulOrderTab-Limit
 close-dialog
 show-buy HS
 expect-no-overlap LabelPriceText LabelPriceValue

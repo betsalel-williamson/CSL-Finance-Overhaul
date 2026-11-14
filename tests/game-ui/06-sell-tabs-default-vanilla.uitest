@@ -1,0 +1,14 @@
+name the Sell dialog offers Sell now / Stop-loss and stays vanilla until Stop-loss is picked
+show-buy Oil
+click FinanceOverhaulOrderTab-Limit
+close-dialog
+show-sell Oil
+expect-visible FinanceOverhaulOrderTab-MarketSell
+expect-visible FinanceOverhaulOrderTab-StopLossSell
+expect-hidden FinanceOverhaulOrderTab-Limit
+expect-hidden FinanceOverhaulLimitPrice
+expect-visible PanelSellStats
+expect-text Button Sell
+expect-no-overflow
+cleanup:
+close-dialog

@@ -1,7 +1,7 @@
 name a limit at or above the price fills on the next daily price
 remember Oil
 show-buy Oil
-click FinanceOverhaulOrderTabLimit
+click FinanceOverhaulOrderTab-Limit
 type FinanceOverhaulShareAmountField 3
 type FinanceOverhaulLimitPriceField 100000
 click Button
