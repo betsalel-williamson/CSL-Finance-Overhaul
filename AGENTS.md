@@ -36,5 +36,5 @@ Edit Merlon shards under `docs/`, then `npm run docs`. Follow `.agents/skills/me
 ## Figma UI Map
 
 Editing the Finance Overhaul Figma library (UI Map / Foundations / Components): follow
-`.agents/skills/figma-fo-ui/` (and `.cursor/rules/figma-fo-ui.mdc`). No overlapping pins; pin grids
-sit under screens; hug layout only.
+`.agents/skills/figma-fo-ui/` (and `.cursor/rules/figma-fo-ui.mdc`). Pins are red numbered dots on
+the screenshot and the new UI (not legend cards). No overlapping pins; hug layout.
