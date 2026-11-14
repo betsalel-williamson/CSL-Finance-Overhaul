@@ -1,5 +1,8 @@
 # City index fund (Index stock)
 
+> **Status: experimental, off by default.** Enable in Options before loading a city. Blocked on the
+> [Save compatibility](./save-compatibility.md) test matrix; not yet verified in game.
+
 ## Value
 
 Mayors can buy and hold a single **Index** stock that tracks all listed Financial Districts sector
@@ -8,15 +11,16 @@ volatile names.
 
 ## Scope
 
-| In                                                                 | Out                                      |
-| ------------------------------------------------------------------ | ---------------------------------------- |
-| One tradable stock named **Index** on the Investments board        | Sector ETFs, bonds, commodities, IPOs    |
-| Mark = equal-weight average of the other sector share prices       | Custom weights / smart beta              |
-| Buy / sell through vanilla Investments chrome                      | Separate treasury UI                     |
-| Fail soft if Financial Districts or listing hooks are unavailable  | Rewriting vanilla Investment prefabs     |
+| In                                                                | Out                                   |
+| ----------------------------------------------------------------- | ------------------------------------- |
+| One tradable stock named **Index** on the Investments board       | Sector ETFs, bonds, commodities, IPOs |
+| Mark = equal-weight average of the other sector share prices      | Custom weights / smart beta           |
+| Buy / sell through vanilla Investments chrome                     | Separate treasury UI                  |
+| Fail soft if Financial Districts or listing hooks are unavailable | Rewriting vanilla Investment prefabs  |
 
-Population / land-value drivers and black-swan dampening stay in [World dynamics](./world-dynamics.md)
-for later; this slice only ties Index’s price to the live sector basket.
+Population / land-value drivers and black-swan dampening stay in
+[World dynamics](./world-dynamics.md) for later; this slice only ties Index’s price to the live
+sector basket.
 
 ## Contracts
 
@@ -40,9 +44,9 @@ for later; this slice only ties Index’s price to the live sector basket.
   `RandomRiskInvestmentAI` prefab, renames it **Index**, and registers it with
   `PrefabCollection<InvestmentInfo>`. Vanilla `EconomyManager.LateUpdateData` then creates one
   investment per loaded prefab, so listing, saving, and Buy / Sell all stay vanilla.
-- **Mark** — a postfix on `RandomRiskInvestmentAI.CalculateValue` replaces the Index value with
-  the basket mark. Prefixes on `GetLocalizedName` / `GetLocalizedDescription` supply the display
-  text. `InvestmentCollection.OnDestroy` unregisters the prefab.
+- **Mark** — a postfix on `RandomRiskInvestmentAI.CalculateValue` replaces the Index value with the
+  basket mark. Prefixes on `GetLocalizedName` / `GetLocalizedDescription` supply the display text.
+  `InvestmentCollection.OnDestroy` unregisters the prefab.
 - **Removal** — if the mod is disabled, vanilla drops the investment whose prefab is missing on the
   next load. Index shares held at that point are lost and are not refunded.
 - **Readout** — after a level loads, `finance-overhaul.log` shows a line like

@@ -6,62 +6,62 @@ table; [UI Figma map](../developer/ui-figma-map.md) pins map screens to this inv
 
 ## Hosts
 
-| Host                    | Toolkit                         | Role                                      |
-| ----------------------- | ------------------------------- | ----------------------------------------- |
-| Options                 | Cities `UIHelper`               | Mod settings (shipped today)              |
-| Economy Investments     | Vanilla Financial Districts     | Trading board — host / observation only   |
-| Custom treasury panels  | Colossal UI (future)            | Index / bonds / orders when those ship    |
-| Figma design library    | Components + variables          | Specimens and pins — not loaded by Cities |
+| Host                   | Toolkit                     | Role                                      |
+| ---------------------- | --------------------------- | ----------------------------------------- |
+| Options                | Cities `UIHelper`           | Mod settings (shipped today)              |
+| Economy Investments    | Vanilla Financial Districts | Trading board — host / observation only   |
+| Custom treasury panels | Colossal UI (future)        | Index / bonds / orders when those ship    |
+| Figma design library   | Components + variables      | Specimens and pins — not loaded by Cities |
 
 ## Options sections (shipped)
 
 Section order: **Finance Overhaul** (single group today).
 
-| Field id       | Label                                    | Control   | Host    | Status  |
-| -------------- | ---------------------------------------- | --------- | ------- | ------- |
-| `probe-bias`   | MVP probe bias (+1% on hooked prices)    | Checkbox  | Options | shipped |
-| `built-utc`    | Built (UTC): …                           | Footer    | Options | shipped (`--dev` only) |
-| `built-local`  | Built (local): …                         | Footer    | Options | shipped (`--dev` only) |
+| Field id      | Label                                 | Control  | Host    | Status                 |
+| ------------- | ------------------------------------- | -------- | ------- | ---------------------- |
+| `probe-bias`  | MVP probe bias (+1% on hooked prices) | Checkbox | Options | shipped                |
+| `built-utc`   | Built (UTC): …                        | Footer   | Options | shipped (`--dev` only) |
+| `built-local` | Built (local): …                      | Footer   | Options | shipped (`--dev` only) |
 
 Title chrome (`Finance Overhaul {version}`) is Content Manager / Options identity — see
 [Live reload](../developer/live-reload.md).
 
 ## Vanilla Investments regions (host)
 
-| Region id                    | Label                     | Notes                                      |
-| ---------------------------- | ------------------------- | ------------------------------------------ |
-| `economy-investments-tab`    | Investments               | Economy modal tab                          |
-| `purchasable-list`           | Purchasable Investments   | Left column                                |
-| `row-value`                  | Value                     | Primary mark observation for probe bias    |
-| `row-change-rate`            | Change rate               | Vanilla display                            |
-| `buy` / `sell`               | Buy / Sell                | Vanilla trade — untouched by MVP           |
-| `portfolio-list`             | Your Portfolio            | Right column                               |
-| `portfolio-current-value`    | Current value             | May reflect biased marks when probe is on  |
-| `portfolio-total`            | Total value               | Aggregate                                  |
+| Region id                 | Label                   | Notes                                     |
+| ------------------------- | ----------------------- | ----------------------------------------- |
+| `economy-investments-tab` | Investments             | Economy modal tab                         |
+| `purchasable-list`        | Purchasable Investments | Left column                               |
+| `row-value`               | Value                   | Primary mark observation for probe bias   |
+| `row-change-rate`         | Change rate             | Vanilla display                           |
+| `buy` / `sell`            | Buy / Sell              | Vanilla trade — untouched by MVP          |
+| `portfolio-list`          | Your Portfolio          | Right column                              |
+| `portfolio-current-value` | Current value           | May reflect biased marks when probe is on |
+| `portfolio-total`         | Total value             | Aggregate                                 |
 
 ### Hover tooltip (host)
 
 Appears when hovering a purchasable (or portfolio) row — vanilla `InvestmentTooltip`-class chrome.
 
-| Region id              | Label            | Notes                                      |
-| ---------------------- | ---------------- | ------------------------------------------ |
-| `hover-share-chart`    | Share value chart| History sparkline / graph                  |
-| `hover-description`    | Flavor text      | Sector blurb                               |
+| Region id           | Label             | Notes                     |
+| ------------------- | ----------------- | ------------------------- |
+| `hover-share-chart` | Share value chart | History sparkline / graph |
+| `hover-description` | Flavor text       | Sector blurb              |
 
 ### Invest / Buy dialog (host)
 
 Opens after clicking Buy (or equivalent) on a row — buy amount + confirm.
 
-| Region id                 | Label                 | Notes                                   |
-| ------------------------- | --------------------- | --------------------------------------- |
-| `invest-dialog-title`     | Invest in: {name}     | Dialog chrome                           |
-| `invest-share-chart`      | Share value chart     | Same family as hover chart              |
-| `invest-description`      | Flavor text           | Sector blurb                            |
-| `invest-current-value`    | Current value / share | Mark used for order pricing             |
-| `invest-share-amount`     | Share amount slider   | Quantity                                |
-| `invest-share-field`      | Share amount field    | Numeric entry / steppers                |
-| `invest-total-price`      | Price (total)         | quantity × mark                         |
-| `invest-buy-confirm`      | Buy                   | Confirms purchase — untouched by MVP    |
+| Region id              | Label                 | Notes                                                                            |
+| ---------------------- | --------------------- | -------------------------------------------------------------------------------- |
+| `invest-dialog-title`  | Invest in: {name}     | Dialog chrome                                                                    |
+| `invest-share-chart`   | Share value chart     | Same family as hover chart                                                       |
+| `invest-description`   | Flavor text           | Sector blurb                                                                     |
+| `invest-current-value` | Current value / share | Mark used for order pricing                                                      |
+| `invest-share-amount`  | Share amount slider   | Quantity                                                                         |
+| `invest-share-field`   | Share amount field    | Typed entry (mod) + steppers — see [Typed share amount](./share-amount-input.md) |
+| `invest-total-price`   | Price (total)         | quantity × mark                                                                  |
+| `invest-buy-confirm`   | Buy                   | Confirms purchase — untouched by MVP                                             |
 
 Zone-income UI under the market columns is not part of this catalog.
 

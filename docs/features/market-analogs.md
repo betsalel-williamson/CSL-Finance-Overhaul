@@ -11,8 +11,8 @@ A single weighted fund over all listed city sectors. Price is the weighted avera
 sector prices. Population, land value, and overall production move the index; a single local
 disaster does not wipe the position.
 
-**First shippable slice:** a tradable stock named **Index** (equal-weight basket of the other
-sector names) — see [City index fund](./city-index-fund.md).
+**First shippable slice:** a tradable stock named **Index** (equal-weight basket of the other sector
+names) — see [City index fund](./city-index-fund.md).
 
 ## Sector ETFs
 
