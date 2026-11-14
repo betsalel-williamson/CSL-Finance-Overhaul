@@ -59,6 +59,16 @@ Additional issuer names (including project / studio company Easter eggs) that en
 through IPO events with roadshow unlock conditions, float size, and opening volatility — still tied
 to simulation signals, not RNG-only casinos.
 
+Later expansion (noted 2026-11-14, not scheduled):
+
+- **Local IPOs** — make it more likely that a company grown in the city (a large office, industry or
+  commercial employer) lists on the exchange, so the board reflects what the mayor built.
+- **Dividend shares** — listings that pay a periodic dividend (vanilla shares only pay on sale),
+  which also makes dividend reinvestment a real automated order type.
+- **Other exchanges** — neighbor-city or regional boards alongside the local Stock Exchange.
+- **Interface for many companies** — once listings grow past the vanilla thirteen, the Investments
+  UI needs search, sorting and grouping (sector, watchlist) to stay easy to use.
+
 ## Automated order types
 
 Limit, stop-loss, trailing stop, dollar-cost averaging, and dividend reinvestment so mayors set
