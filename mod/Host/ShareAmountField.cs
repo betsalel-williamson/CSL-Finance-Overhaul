@@ -51,6 +51,9 @@ namespace FinanceOverhaul
             "PixelsToUnits"
         );
 
+        private const float DigitHeightEm = 0.87f;
+        private const float DigitTopEm = 0f;
+
         public const string FieldName = "FinanceOverhaulShareAmountField";
 
         private static readonly ShareAmountEditor Editor = new ShareAmountEditor();
@@ -293,11 +296,12 @@ namespace FinanceOverhaul
             {
                 float scale = field.textScale;
                 float size = field.font.size * scale;
-                // Open Sans lining digits are ~0.72 em tall.
-                float glyphHeight = size * 0.72f;
+                // Calibrated in game (2026-11-13, box 27 units, font 16 × 0.875): Colossal's
+                // dynamic font draws digits from the top of the line box (not down from
+                // the baseline), about 0.87 em tall.
+                float glyphHeight = size * DigitHeightEm;
+                float glyphTop = size * DigitTopEm;
                 UIDynamicFont dynamicFont = field.font as UIDynamicFont;
-                float baseline = dynamicFont != null ? dynamicFont.baseline * scale : size * 0.8f;
-                float glyphTop = Mathf.Max(0f, baseline - glyphHeight);
                 float textWidth = MeasureWidth(field.text);
                 TextBoxLayout.Padding p = TextBoxLayout.Center(
                     field.width,
