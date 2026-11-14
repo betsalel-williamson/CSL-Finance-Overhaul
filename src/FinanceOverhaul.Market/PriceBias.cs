@@ -73,13 +73,23 @@ namespace FinanceOverhaul.Market
                 return 0f;
             }
 
-            float[] weights = new float[sectorPrices.Length];
-            for (int i = 0; i < weights.Length; i++)
+            // Same result as WeightedAverage with all weights 1 (non-finite prices
+            // skipped), without allocating a weights array on every call.
+            float sum = 0f;
+            int count = 0;
+            for (int i = 0; i < sectorPrices.Length; i++)
             {
-                weights[i] = 1f;
+                float p = sectorPrices[i];
+                if (float.IsNaN(p) || float.IsInfinity(p))
+                {
+                    continue;
+                }
+
+                sum += p;
+                count++;
             }
 
-            return WeightedAverage(sectorPrices, weights);
+            return count == 0 ? 0f : sum / count;
         }
     }
 }

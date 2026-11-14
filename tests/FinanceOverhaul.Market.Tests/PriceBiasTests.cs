@@ -51,5 +51,25 @@ namespace FinanceOverhaul.Market.Tests
             float expected = (10f + 22f) / 2f;
             Assert.Equal(expected, PriceBias.EqualWeightIndex(prices), 3);
         }
+
+        [Theory]
+        [InlineData(new[] { 100f, 101f, 102f })]
+        [InlineData(new[] { 100f, float.NaN, 50f, float.PositiveInfinity })]
+        [InlineData(new[] { float.NaN })]
+        [InlineData(new[] { -5f, 5f, 0f })]
+        public void EqualWeightIndex_MatchesWeightedAverageWithUnitWeights(float[] prices)
+        {
+            var ones = new float[prices.Length];
+            for (int i = 0; i < ones.Length; i++)
+            {
+                ones[i] = 1f;
+            }
+
+            Assert.Equal(
+                PriceBias.WeightedAverage(prices, ones),
+                PriceBias.EqualWeightIndex(prices),
+                5
+            );
+        }
     }
 }
