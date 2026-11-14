@@ -7,8 +7,8 @@ using UnityEngine;
 namespace FinanceOverhaul
 {
     /// <summary>
-    /// Live ticker: scrolling LED boards (three dot-matrix rows from
-    /// <see cref="TickerFeed.CurrentStrips"/>) on the front facade of every Stock
+    /// Live ticker: scrolling LED boards (three dot-matrix rows fed from
+    /// <see cref="TickerFeed.Current"/>) on the front facade of every Stock
     /// Exchange, in place of the hidden vanilla boards. Visual only, save-neutral,
     /// hot-reload safe (single root found by name and replaced; destroyed with its
     /// textures and materials on unload / disable).
@@ -72,10 +72,12 @@ namespace FinanceOverhaul
 
     /// <summary>
     /// Per-frame driver on the overlay root (main thread). Each board screen shows three
-    /// LED dot-matrix rows. Once per in-game day each row is drawn into one wide texture
-    /// (from <see cref="TickerFeed.CurrentStrips"/>); scrolling only moves that
-    /// texture's offset in whole-dot steps, so text is clipped exactly at the screen edge
-    /// and the depth-tested quads hide behind anything in front of the facade.
+    /// LED dot-matrix rows; each row is a ring-buffer marquee (<see cref="LedMarquee"/>)
+    /// drawn into one repeat-wrapped texture shared by every Stock Exchange. The window
+    /// only moves forward in whole dots and new entries are written just past its right
+    /// edge, so values on screen never change and the scroll never jumps. Text clips
+    /// exactly at the screen edge and the depth-tested quads hide behind anything in
+    /// front of the facade.
     /// </summary>
     public class TickerOverlay : MonoBehaviour
     {
@@ -115,7 +117,6 @@ namespace FinanceOverhaul
 
         // Each dot is TexelsPerDot² texels: lit block plus a 1-texel dark gap (LED look).
         internal const int TexelsPerDot = 4;
-        internal const int MaxTextureWidth = 4096;
         internal const float DotsPerSecond = 14f;
 
         // Performance tiers: LED rows draw only within VisibleDistance; textures are
@@ -140,18 +141,18 @@ namespace FinanceOverhaul
         private readonly Dictionary<ushort, GameObject> boards =
             new Dictionary<ushort, GameObject>();
         private readonly Material[] rowMaterials = new Material[RowCount];
-        private readonly int[] stripDots = new int[RowCount];
+        private readonly LedMarquee[] marquees = new LedMarquee[RowCount];
+        private readonly Texture2D[] rowTextures = new Texture2D[RowCount];
+        private readonly Color32[][] rowPixels = new Color32[RowCount][];
         private Material panelMaterial;
         private Material frameMaterial;
         private bool materialsReady;
         private float nextRefresh;
         private float nextLod;
         private float nextRescan;
-        private LedStrip[] appliedStrips;
-        private bool hasAppliedStrips;
+        private TickerSnapshot appliedSnapshot;
         private bool anyNear;
-        private float scrollTime;
-        private int appliedStep = -1;
+        private float scrollDots;
         private bool placementLogged;
 
         private void Update()
@@ -184,7 +185,7 @@ namespace FinanceOverhaul
                     nextRefresh = now + RefreshSeconds;
                     if (tickerOn)
                     {
-                        RefreshStrips();
+                        RefreshContent();
                     }
                 }
 
@@ -233,6 +234,12 @@ namespace FinanceOverhaul
                         board.SetActive(near);
                     }
                 }
+            }
+
+            if (nearAny && !anyNear)
+            {
+                // Rows were hidden: safe to refill them with today's values before they show.
+                RestartAll();
             }
 
             anyNear = nearAny;
@@ -306,6 +313,8 @@ namespace FinanceOverhaul
                     // Unlit/Transparent does not write depth, so the panel behind would paint
                     // over the rows in the same queue: draw the rows right after it.
                     rowMaterials[r].renderQueue = 2001;
+                    CreateRow(r);
+                    // Rows start full, so the boards never begin with an empty sweep.
                 }
             }
 
@@ -323,104 +332,138 @@ namespace FinanceOverhaul
             );
         }
 
-        /// <summary>Texture work only when the daily strips change.</summary>
-        private void RefreshStrips()
+        /// <summary>
+        /// Hands the newest day's entries to each row's marquee. Nothing is redrawn here:
+        /// the marquees use the new values only for entries written from now on, beyond
+        /// the right edge of the screen.
+        /// </summary>
+        private void RefreshContent()
         {
-            LedStrip[] strips = TickerFeed.CurrentStrips;
-            if (hasAppliedStrips && ReferenceEquals(strips, appliedStrips))
+            TickerSnapshot snapshot = TickerFeed.Current;
+            if (snapshot == null || ReferenceEquals(snapshot, appliedSnapshot))
             {
                 return;
             }
 
-            hasAppliedStrips = true;
-            appliedStrips = strips;
+            appliedSnapshot = snapshot;
             for (int r = 0; r < RowCount; r++)
             {
-                Material material = rowMaterials[r];
-                if (material == null)
+                if (marquees[r] == null)
                 {
                     continue;
                 }
 
-                LedStrip strip =
-                    strips == null
-                        ? (
-                            r == 1
-                                ? LedText.RenderText("Waiting for market data", LedText.Unknown)
-                                : null
-                        )
-                    : r < strips.Length ? strips[r]
-                    : null;
-                if (strip == null || strip.Width == 0)
-                {
-                    strip = new LedStrip(ScreenDots, LedFont.Height); // all dots off
-                }
-
-                Texture old = material.mainTexture;
-                material.mainTexture = BuildTexture(strip);
-                if (old != null)
-                {
-                    Destroy(old);
-                }
-
-                // BuildTexture keeps at most MaxTextureWidth dots (never reached in practice).
-                stripDots[r] = Math.Min(strip.Width, MaxTextureWidth);
-                material.mainTextureScale = new Vector2(ScreenDots / (float)stripDots[r], 1f);
-            }
-
-            appliedStep = -1; // re-apply offsets for the new widths
-            Scroll(0f);
-        }
-
-        /// <summary>Moves each row left in whole-dot steps; the textures repeat seamlessly.</summary>
-        private void Scroll(float deltaSeconds)
-        {
-            scrollTime += deltaSeconds;
-            if (scrollTime > 3600f)
-            {
-                scrollTime -= 3600f; // keep float precision; one step jump per hour is invisible
-            }
-
-            int step = (int)(scrollTime * DotsPerSecond);
-            if (step == appliedStep)
-            {
-                return;
-            }
-
-            appliedStep = step;
-            for (int r = 0; r < RowCount; r++)
-            {
-                Material material = rowMaterials[r];
-                int dots = stripDots[r];
-                if (material == null || dots <= 0)
-                {
-                    continue;
-                }
-
-                material.mainTextureOffset = new Vector2((step % dots) / (float)dots, 0f);
+                int start;
+                int count;
+                LedText.RowRange(snapshot.Count, RowCount, r, out start, out count);
+                marquees[r].SetContent(snapshot, start, count);
             }
         }
 
         /// <summary>
-        /// One strip → texture: each dot is a lit block with a 1-texel dark gap on its
-        /// right and bottom; dot row 0 is the top. Repeat-wrapped for scrolling, mipmapped
-        /// so distant boards blend instead of shimmering. CPU copy freed after upload.
+        /// Traditional scroller: every row's window moves left by whole dots (never
+        /// backwards, never reset), and each marquee writes its next entry into the ring
+        /// just beyond the right edge. Only those freshly written columns are repainted.
         /// </summary>
-        private static Texture2D BuildTexture(LedStrip strip)
+        private void Scroll(float deltaSeconds)
         {
-            int t = TexelsPerDot;
-            while (t > 1 && strip.Width * t > MaxTextureWidth)
+            scrollDots += deltaSeconds * DotsPerSecond;
+            int steps = (int)scrollDots;
+            if (steps <= 0)
             {
-                t--;
+                return;
             }
 
-            int dotsWide = Math.Min(strip.Width, MaxTextureWidth / t);
-            int w = Math.Max(1, dotsWide * t);
-            int h = strip.Height * t;
-            var pixels = new Color32[w * h];
-            for (int dy = 0; dy < strip.Height; dy++)
+            scrollDots -= steps;
+            for (int r = 0; r < RowCount; r++)
             {
-                for (int dx = 0; dx < dotsWide; dx++)
+                LedMarquee marquee = marquees[r];
+                if (marquee == null)
+                {
+                    continue;
+                }
+
+                long from;
+                long to;
+                marquee.Advance(steps, out from, out to);
+                if (to > from)
+                {
+                    Paint(r, from, to);
+                    rowTextures[r].SetPixels32(rowPixels[r]);
+                    rowTextures[r].Apply(true, false);
+                }
+
+                rowMaterials[r].mainTextureOffset = new Vector2(
+                    marquee.RingOffset / (float)marquee.RingDots,
+                    0f
+                );
+            }
+        }
+
+        /// <summary>
+        /// Only while no board is visible: refill each window from the current values so
+        /// the rows do not come back showing a stale day.
+        /// </summary>
+        private void RestartAll()
+        {
+            for (int r = 0; r < RowCount; r++)
+            {
+                if (marquees[r] == null)
+                {
+                    continue;
+                }
+
+                marquees[r].Restart();
+                Paint(r, 0, marquees[r].RingDots);
+                rowTextures[r].SetPixels32(rowPixels[r]);
+                rowTextures[r].Apply(true, false);
+                rowMaterials[r].mainTextureOffset = new Vector2(
+                    marquees[r].RingOffset / (float)marquees[r].RingDots,
+                    0f
+                );
+            }
+        }
+
+        /// <summary>One marquee row with its ring texture (readable, so columns can be repainted).</summary>
+        private void CreateRow(int r)
+        {
+            var marquee = new LedMarquee(ScreenDots, r == 1 ? "Waiting for market data" : null);
+            int w = marquee.RingDots * TexelsPerDot;
+            int h = LedFont.Height * TexelsPerDot;
+            var texture = new Texture2D(w, h, TextureFormat.RGBA32, true);
+            texture.name = "FinanceOverhaulTickerRing" + r;
+            texture.wrapMode = TextureWrapMode.Repeat;
+            texture.filterMode = FilterMode.Bilinear;
+            texture.anisoLevel = 4;
+            marquees[r] = marquee;
+            rowTextures[r] = texture;
+            rowPixels[r] = new Color32[w * h];
+            Paint(r, 0, marquee.RingDots);
+            texture.SetPixels32(rowPixels[r]);
+            texture.Apply(true, false);
+            rowMaterials[r].mainTexture = texture;
+            // The window shows ScreenDots of the ring; the texture repeats across the seam.
+            rowMaterials[r].mainTextureScale = new Vector2(
+                ScreenDots / (float)marquee.RingDots,
+                1f
+            );
+        }
+
+        /// <summary>
+        /// Repaints absolute columns [from, to) of row r's ring into its pixel buffer. Each
+        /// dot is a lit block with a 1-texel dark gap on its right and bottom (LED look);
+        /// dot row 0 is the top.
+        /// </summary>
+        private void Paint(int r, long from, long to)
+        {
+            LedStrip strip = marquees[r].Strip;
+            Color32[] pixels = rowPixels[r];
+            int t = TexelsPerDot;
+            int w = strip.Width * t;
+            for (long ax = from; ax < to; ax++)
+            {
+                int dx = (int)(ax % strip.Width);
+                for (int dy = 0; dy < strip.Height; dy++)
                 {
                     byte cell = strip.Get(dx, dy);
                     Color32 lit = cell < Palette.Length ? Palette[cell] : Palette[0];
@@ -429,21 +472,12 @@ namespace FinanceOverhaul
                         int texY = (strip.Height - 1 - dy) * t + (t - 1 - ty);
                         for (int tx = 0; tx < t; tx++)
                         {
-                            bool gap = t > 1 && (tx == t - 1 || ty == t - 1);
+                            bool gap = tx == t - 1 || ty == t - 1;
                             pixels[texY * w + dx * t + tx] = gap ? BoardColour : lit;
                         }
                     }
                 }
             }
-
-            var texture = new Texture2D(w, h, TextureFormat.RGBA32, true);
-            texture.name = "FinanceOverhaulTickerStrip";
-            texture.wrapMode = TextureWrapMode.Repeat;
-            texture.filterMode = FilterMode.Bilinear;
-            texture.anisoLevel = 4;
-            texture.SetPixels32(pixels);
-            texture.Apply(true, true);
-            return texture;
         }
 
         private static Texture2D SolidTexture(Color32 colour)

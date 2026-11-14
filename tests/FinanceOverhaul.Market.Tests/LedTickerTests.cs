@@ -150,3 +150,162 @@ namespace FinanceOverhaul.Market.Tests
         }
     }
 }
+
+namespace FinanceOverhaul.Market.Tests
+{
+    public class LedMarqueeTests
+    {
+        private static TickerSnapshot Snap(params float[] rates)
+        {
+            var symbols = new string[rates.Length];
+            for (int i = 0; i < rates.Length; i++)
+            {
+                symbols[i] = ((char)('A' + i)).ToString();
+            }
+
+            return new TickerSnapshot(symbols, rates);
+        }
+
+        private static byte[] Window(LedMarquee m)
+        {
+            var cells = new byte[m.WindowDots * LedFont.Height];
+            for (int x = 0; x < m.WindowDots; x++)
+            {
+                int ring = (int)((m.Offset + x) % m.RingDots);
+                for (int y = 0; y < LedFont.Height; y++)
+                {
+                    cells[y * m.WindowDots + x] = m.Strip.Get(ring, y);
+                }
+            }
+
+            return cells;
+        }
+
+        [Fact]
+        public void StartsWithAFullWindowAndLookahead()
+        {
+            var m = new LedMarquee(100, "Waiting");
+            Assert.True(m.Head >= m.Offset + m.WindowDots + LedMarquee.Lookahead);
+            Assert.Contains(LedText.Unknown, m.Strip.Cells);
+        }
+
+        [Fact]
+        public void OffsetOnlyMovesForwardByWholeDots()
+        {
+            var m = new LedMarquee(100, null);
+            m.SetContent(Snap(1f, -2f, 3f), 0, 3);
+            long previous = m.Offset;
+            long from,
+                to;
+            for (int i = 0; i < 1000; i++)
+            {
+                m.Advance(1, out from, out to);
+                Assert.Equal(previous + 1, m.Offset);
+                previous = m.Offset;
+            }
+        }
+
+        [Fact]
+        public void VisibleColumnsNeverChangeWhenContentChanges()
+        {
+            var m = new LedMarquee(100, null);
+            m.SetContent(Snap(1f, -2f, 3f), 0, 3);
+            long from,
+                to;
+            for (int step = 0; step < 2000; step++)
+            {
+                byte[] before = Window(m);
+                if (step % 37 == 0)
+                {
+                    // New day: values and even the entry count change.
+                    m.SetContent(Snap(step % 2 == 0 ? -5f : 7f, 1f), 0, 2);
+                }
+
+                m.Advance(1, out from, out to);
+
+                // The window moved by one dot: what was visible shifted left, unchanged.
+                byte[] after = Window(m);
+                for (int x = 0; x < m.WindowDots - 1; x++)
+                {
+                    for (int y = 0; y < LedFont.Height; y++)
+                    {
+                        Assert.Equal(before[y * m.WindowDots + x + 1], after[y * m.WindowDots + x]);
+                    }
+                }
+            }
+        }
+
+        [Fact]
+        public void WritesHappenOnlyBeyondTheWindow()
+        {
+            var m = new LedMarquee(100, null);
+            m.SetContent(Snap(1f, 2f), 0, 2);
+            long from,
+                to;
+            for (int i = 0; i < 500; i++)
+            {
+                m.Advance(1, out from, out to);
+                if (to > from)
+                {
+                    Assert.True(from >= m.Offset + m.WindowDots);
+                    Assert.True(to - m.Offset <= m.RingDots);
+                }
+            }
+        }
+
+        [Fact]
+        public void NewValuesAppearInTheNextWrittenEntry()
+        {
+            var m = new LedMarquee(60, null);
+            m.SetContent(Snap(1f), 0, 1);
+            m.SetContent(Snap(-1f), 0, 1);
+            Assert.DoesNotContain(LedText.Loss, m.Strip.Cells); // already written stays
+
+            long from,
+                to;
+            int guard = 0;
+            do
+            {
+                m.Advance(1, out from, out to);
+            } while (to == from && guard++ < 1000);
+
+            Assert.Contains(LedText.Loss, m.Strip.Cells);
+        }
+
+        [Fact]
+        public void HugeRateIsClipped()
+        {
+            var m = new LedMarquee(100, null);
+            m.SetContent(new TickerSnapshot(new[] { "TVLC" }, new[] { 1234567f }), 0, 1);
+            long from,
+                to;
+            for (int i = 0; i < 500; i++)
+            {
+                m.Advance(1, out from, out to);
+                Assert.True(to - from <= LedMarquee.MaxEntryDots * 2);
+            }
+        }
+
+        [Fact]
+        public void RowSliceUsesOnlyItsEntries()
+        {
+            var m = new LedMarquee(100, null);
+            m.SetContent(new TickerSnapshot(new[] { "A", "B" }, new[] { 1f, -1f }), 1, 1);
+            m.Restart();
+            Assert.Contains(LedText.Loss, m.Strip.Cells);
+            Assert.DoesNotContain(LedText.Gain, m.Strip.Cells);
+        }
+
+        [Fact]
+        public void RowRangeSplitsLikeTheBoards()
+        {
+            int s,
+                c;
+            LedText.RowRange(8, 3, 2, out s, out c);
+            Assert.Equal(6, s);
+            Assert.Equal(2, c);
+            LedText.RowRange(1, 3, 2, out s, out c);
+            Assert.Equal(0, c);
+        }
+    }
+}

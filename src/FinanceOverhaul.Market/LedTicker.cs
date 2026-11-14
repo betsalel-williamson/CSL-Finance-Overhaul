@@ -203,6 +203,22 @@ namespace FinanceOverhaul.Market
         /// <summary>Dark columns after each entry.</summary>
         public const int EntryGap = 10;
 
+        public static byte RateColour(float rate)
+        {
+            return float.IsNaN(rate) || float.IsInfinity(rate) ? Unknown
+                : rate < 0f ? Loss
+                : Gain;
+        }
+
+        /// <summary>Row r's entry range when n entries are split over rows (earlier rows fuller).</summary>
+        public static void RowRange(int n, int rows, int r, out int start, out int count)
+        {
+            rows = Math.Max(1, rows);
+            int perRow = (Math.Max(0, n) + rows - 1) / rows;
+            start = Math.Min(n, r * perRow);
+            count = Math.Max(0, Math.Min(perRow, n - start));
+        }
+
         public static int MeasureEntry(string symbol, float rate)
         {
             return MeasureText(symbol + RatePart(rate)) + EntryGap;
@@ -282,12 +298,12 @@ namespace FinanceOverhaul.Market
             return result;
         }
 
-        private static string RatePart(float rate)
+        internal static string RatePart(float rate)
         {
             return " ( " + TickerLine.FormatRate(rate) + " )";
         }
 
-        private static int MeasureText(string text)
+        internal static int MeasureText(string text)
         {
             if (string.IsNullOrEmpty(text))
             {
@@ -304,7 +320,7 @@ namespace FinanceOverhaul.Market
         }
 
         /// <summary>Draws text at column x; returns the column just after its last glyph.</summary>
-        private static int Draw(LedStrip strip, int x, string text, byte colour)
+        internal static int Draw(LedStrip strip, int x, string text, byte colour)
         {
             if (string.IsNullOrEmpty(text))
             {
@@ -323,7 +339,7 @@ namespace FinanceOverhaul.Market
                 {
                     for (int gy = 0; gy < LedFont.Height; gy++)
                     {
-                        if (g.IsLit(gx, gy))
+                        if (g.IsLit(gx, gy) && x + gx < strip.Width)
                         {
                             strip.Set(x + gx, gy, colour);
                         }
@@ -334,6 +350,177 @@ namespace FinanceOverhaul.Market
             }
 
             return x;
+        }
+    }
+}
+
+namespace FinanceOverhaul.Market
+{
+    /// <summary>One day's ticker entries, published as a single object so readers never see a half update.</summary>
+    public sealed class TickerSnapshot
+    {
+        public TickerSnapshot(string[] symbols, float[] rates)
+        {
+            Symbols = symbols ?? new string[0];
+            Rates = rates ?? new float[0];
+        }
+
+        public string[] Symbols { get; private set; }
+
+        public float[] Rates { get; private set; }
+
+        public int Count
+        {
+            get { return Math.Min(Symbols.Length, Rates.Length); }
+        }
+    }
+
+    /// <summary>
+    /// A traditional LED marquee for one ticker row. The strip is a ring buffer of
+    /// <see cref="RingDots"/> columns; the visible window starts at <see cref="Offset"/>
+    /// (absolute, only ever increases) and is <see cref="WindowDots"/> wide. Entries are
+    /// written one after another at <see cref="Head"/>, always beyond the window's right
+    /// edge, using the newest content at the moment they are written. Nothing inside the
+    /// window is ever redrawn, so values on screen never change and the scroll never jumps.
+    /// </summary>
+    public sealed class LedMarquee
+    {
+        /// <summary>Dark columns written when there is nothing to show.</summary>
+        public const int IdleGap = 20;
+
+        /// <summary>Widest entry a slot of the ring reserves room for; wider entries are clipped.</summary>
+        public static readonly int MaxEntryDots =
+            LedText.MeasureText("WWWW ( -999.99 )") + LedText.EntryGap;
+
+        private readonly string idleText;
+        private TickerSnapshot content;
+        private int start;
+        private int count;
+        private int cursor;
+
+        public LedMarquee(int windowDots, string idleText)
+        {
+            WindowDots = Math.Max(1, windowDots);
+            this.idleText = idleText;
+            int idle = string.IsNullOrEmpty(idleText)
+                ? 0
+                : LedText.MeasureText(idleText) + LedText.EntryGap;
+            RingDots = WindowDots + Lookahead + Math.Max(MaxEntryDots, idle);
+            Strip = new LedStrip(RingDots, LedFont.Height);
+            Fill();
+        }
+
+        /// <summary>Columns kept written beyond the window's right edge.</summary>
+        public const int Lookahead = 2;
+
+        public int WindowDots { get; private set; }
+
+        public int RingDots { get; private set; }
+
+        public LedStrip Strip { get; private set; }
+
+        /// <summary>Absolute column at the window's left edge; only ever increases.</summary>
+        public long Offset { get; private set; }
+
+        /// <summary>Absolute column where the next entry will be written.</summary>
+        public long Head { get; private set; }
+
+        /// <summary>Ring column of the window's left edge (for the texture offset).</summary>
+        public int RingOffset
+        {
+            get { return (int)(Offset % RingDots); }
+        }
+
+        /// <summary>Uses these entries (row slice [start, start + count)) for entries written from now on.</summary>
+        public void SetContent(TickerSnapshot snapshot, int start, int count)
+        {
+            content = snapshot;
+            this.start = start;
+            this.count =
+                snapshot == null ? 0 : Math.Max(0, Math.Min(count, snapshot.Count - start));
+            if (this.count > 0)
+            {
+                cursor %= this.count;
+            }
+            else
+            {
+                cursor = 0;
+            }
+        }
+
+        /// <summary>
+        /// Scrolls left by whole dots and writes new entries ahead of the window. Returns
+        /// the absolute column range written (<paramref name="fromX"/> inclusive,
+        /// <paramref name="toX"/> exclusive); empty when fromX == toX.
+        /// </summary>
+        public void Advance(int dots, out long fromX, out long toX)
+        {
+            Offset += Math.Max(0, dots);
+            fromX = Head;
+            Fill();
+            toX = Head;
+        }
+
+        /// <summary>
+        /// Only while nobody can see the row: rewrites the whole window from the current
+        /// content (e.g. when the camera comes back after values went stale).
+        /// </summary>
+        public void Restart()
+        {
+            Head = Offset;
+            Fill();
+        }
+
+        private void Fill()
+        {
+            while (Head < Offset + WindowDots + Lookahead)
+            {
+                LedStrip entry = NextEntry();
+                int width = Math.Max(1, Math.Min(entry.Width, RingDots - WindowDots - Lookahead));
+                for (int x = 0; x < width; x++)
+                {
+                    int ring = (int)((Head + x) % RingDots);
+                    for (int y = 0; y < LedFont.Height; y++)
+                    {
+                        Strip.Set(ring, y, x < entry.Width ? entry.Get(x, y) : LedText.Off);
+                    }
+                }
+
+                Head += width;
+            }
+        }
+
+        private LedStrip NextEntry()
+        {
+            if (count == 0)
+            {
+                LedStrip idle = string.IsNullOrEmpty(idleText)
+                    ? null
+                    : LedText.RenderText(idleText, LedText.Unknown);
+                return idle != null && idle.Width > 0
+                    ? idle
+                    : new LedStrip(IdleGap, LedFont.Height);
+            }
+
+            int i = start + cursor;
+            cursor = (cursor + 1) % count;
+            LedStrip entry = LedText.RenderRow(content.Symbols, content.Rates, i, 1);
+            if (entry.Width > MaxEntryDots)
+            {
+                // Clip absurd rates, keeping the trailing gap.
+                var clipped = new LedStrip(MaxEntryDots, LedFont.Height);
+                for (int x = 0; x < MaxEntryDots - LedText.EntryGap; x++)
+                {
+                    for (int y = 0; y < LedFont.Height; y++)
+                    {
+                        clipped.Set(x, y, entry.Get(x, y));
+                    }
+                }
+
+                return clipped;
+            }
+
+            return entry;
         }
     }
 }
