@@ -54,10 +54,17 @@ Order is the proposed build order: UI-only proofs first, then opt-in instruments
   for unlocked investments, formatted by `TickerLine` as `SYM ( +2.67 )` and never `NaN` (`( -- )`).
   Logged as `ticker: …` and kept in `TickerFeed.CurrentLine`.
 
-**Step 2a (shipped, calibrating):** `TickerBoards` / `TickerOverlay` draw one live board (three
-rich-text rows from `TickerFeed.CurrentRows`, ticker token colors) on the lot-front facade of every
-Stock Exchange via `Building.CalculatePosition` (local +Z = sidewalk side), refreshed every second.
-OS serif font (Goudy Old Style → Hoefler Text → Baskerville → Georgia → Times). Options toggle
-**Live Stock Exchange ticker** (default on, save-neutral). Known limit: Unity's font material draws
-on top of other geometry. Next: calibrate placement from screenshots, depth-tested material,
-scrolling, then hide or retexture the baked boards.
+**Step 2a (shipped):** `TickerBoards` / `TickerOverlay` draw three live boards (three rich-text rows
+each, ticker token colors) exactly over the vanilla boards, read from the Stock Exchange's three
+`AnimUV` sub-meshes (centre x −7.7…7.7, y 15.2…18.6; sides x ±5.5…20.8, y 10.8…14.1; face z 23.6),
+0.5 m in front. Padding from the Figma board (0.4 m sides, 0.24 m top and bottom); rows shrink to
+fit and are centred on their visible glyphs. Depth-tested `UI/Default` material (hidden by
+geometry). OS serif: Palatino on macOS (Unity's font list). Options toggle **Live Stock Exchange
+ticker** (default on, save-neutral).
+
+**Performance:** visibility (LOD) every 0.25 s, so a board group is active only within 600 m of the
+camera; off-screen boards are also frustum-culled. Text work only when the daily rows change (plus
+two fit passes). Stock Exchange scan every 5 s, placement set once per building.
+
+**Next (step 3):** replace the vanilla board texture on the three `AnimUV` sub-meshes with live text
+(hides the baked text, keeps vanilla scrolling and lighting).
