@@ -84,6 +84,7 @@ namespace FinanceOverhaul
                 Rates.Add(ai.CalculateChangeRate((byte)i, ref buffer[i], PanelChangeRateWindow));
             }
 
+            TickerLine.SortBySymbol(Symbols, Rates);
             CurrentRows = TickerLine.FormatRichRows(Symbols, Rates, BoardRows);
             return TickerLine.Format(Symbols, Rates);
         }

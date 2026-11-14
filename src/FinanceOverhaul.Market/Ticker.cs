@@ -117,6 +117,38 @@ namespace FinanceOverhaul.Market
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Sorts entries alphabetically by symbol (case-insensitive, stable), keeping each
+        /// rate paired with its symbol. No-op for null or mismatched lists.
+        /// </summary>
+        public static void SortBySymbol(IList<string> symbols, IList<float> changeRates)
+        {
+            if (symbols == null || changeRates == null || symbols.Count != changeRates.Count)
+            {
+                return;
+            }
+
+            // Insertion sort: tiny lists, and stable for equal symbols.
+            for (int i = 1; i < symbols.Count; i++)
+            {
+                string symbol = symbols[i];
+                float rate = changeRates[i];
+                int j = i - 1;
+                while (
+                    j >= 0
+                    && string.Compare(symbols[j], symbol, StringComparison.OrdinalIgnoreCase) > 0
+                )
+                {
+                    symbols[j + 1] = symbols[j];
+                    changeRates[j + 1] = changeRates[j];
+                    j--;
+                }
+
+                symbols[j + 1] = symbol;
+                changeRates[j + 1] = rate;
+            }
+        }
+
         // Figma tokens color/ticker/* (sampled from the vanilla facade boards).
         public const string SymbolHex = "#EFB058";
         public const string GainHex = "#4EF465";

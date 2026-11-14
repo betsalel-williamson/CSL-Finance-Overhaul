@@ -156,3 +156,59 @@ namespace FinanceOverhaul.Market.Tests
         }
     }
 }
+
+namespace FinanceOverhaul.Market.Tests
+{
+    public class TickerSortTests
+    {
+        [Fact]
+        public void SortsBySymbolCaseInsensitiveKeepingRatesPaired()
+        {
+            var symbols = new System.Collections.Generic.List<string>
+            {
+                "Oil",
+                "FaI",
+                "DS",
+                "HS",
+                "IDX",
+                "TJL",
+                "GGI",
+                "TVLC",
+                "CAi",
+            };
+            var rates = new System.Collections.Generic.List<float>
+            {
+                1f,
+                2f,
+                3f,
+                4f,
+                5f,
+                6f,
+                7f,
+                8f,
+                9f,
+            };
+            TickerLine.SortBySymbol(symbols, rates);
+            Assert.Equal(
+                new[] { "CAi", "DS", "FaI", "GGI", "HS", "IDX", "Oil", "TJL", "TVLC" },
+                symbols
+            );
+            Assert.Equal(new[] { 9f, 3f, 2f, 7f, 4f, 5f, 1f, 6f, 8f }, rates);
+        }
+
+        [Fact]
+        public void StableForEqualSymbolsAndSafeOnBadInput()
+        {
+            var symbols = new System.Collections.Generic.List<string> { "B", "a", "A" };
+            var rates = new System.Collections.Generic.List<float> { 1f, 2f, 3f };
+            TickerLine.SortBySymbol(symbols, rates);
+            Assert.Equal(new[] { "a", "A", "B" }, symbols);
+            Assert.Equal(new[] { 2f, 3f, 1f }, rates);
+            TickerLine.SortBySymbol(null, null);
+            TickerLine.SortBySymbol(
+                new System.Collections.Generic.List<string> { "B", "A" },
+                new System.Collections.Generic.List<float> { 1f }
+            );
+        }
+    }
+}
