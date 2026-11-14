@@ -7,12 +7,11 @@ using UnityEngine;
 namespace FinanceOverhaul
 {
     /// <summary>
-    /// Live ticker step 2a: draws one live board (three rich-text rows from
-    /// <see cref="TickerFeed.CurrentRows"/>) on the front facade of every Stock
-    /// Exchange. Visual only, save-neutral, hot-reload safe (single root found by
-    /// name and replaced; destroyed on unload / disable). Placement uses vanilla
-    /// Building.CalculatePosition; local +Z is the lot front (sidewalk side).
-    /// Offsets are first guesses, logged for calibration.
+    /// Live ticker: scrolling LED boards (three dot-matrix rows from
+    /// <see cref="TickerFeed.CurrentStrips"/>) on the front facade of every Stock
+    /// Exchange, in place of the hidden vanilla boards. Visual only, save-neutral,
+    /// hot-reload safe (single root found by name and replaced; destroyed with its
+    /// textures and materials on unload / disable).
     /// </summary>
     public static class TickerBoards
     {
@@ -71,73 +70,88 @@ namespace FinanceOverhaul
         }
     }
 
-    /// <summary>Per-frame driver on the overlay root (main thread).</summary>
+    /// <summary>
+    /// Per-frame driver on the overlay root (main thread). Each board screen shows three
+    /// LED dot-matrix rows. Once per in-game day each row is drawn into one wide texture
+    /// (from <see cref="TickerFeed.CurrentStrips"/>); scrolling only moves that
+    /// texture's offset in whole-dot steps, so text is clipped exactly at the screen edge
+    /// and the depth-tested quads hide behind anything in front of the facade.
+    /// </summary>
     public class TickerOverlay : MonoBehaviour
     {
         // Exact vanilla board rectangles, read from the Stock Exchange's three AnimUV
         // sub-meshes (Submesh01..03) in the building's own frame (+Z = street side):
         // centre x −7.7..7.7, y 15.2..18.6; sides x ±(5.5..20.8), y 10.8..14.1; face z 23.6.
+        // Screen recessed inside the vanilla bezel (bezel lip runs z 23.6 → 23.4).
         internal static readonly Vector3[] BoardCentres =
         {
-            // Text and panel share one plane just in front of the old board face (z 23.6), so
-            // there is no parallax between them at steep camera angles. The text ignores
-            // depth (GUI/Text Shader), so being coplanar with the panel cannot hide it.
-            // Screen recessed inside the vanilla bezel (bezel lip runs z 23.6 → 23.4).
             new Vector3(0f, 16.9f, 23.5f), // centre (Submesh01)
             new Vector3(-13.15f, 12.45f, 23.5f), // left (Submesh02)
             new Vector3(13.15f, 12.45f, 23.5f), // right (Submesh03)
         };
         internal const float BoardWidth = 15.3f;
-        internal const float PanelBehindText = 0f; // coplanar: no parallax
         internal const float BoardHeight = 3.4f;
 
-        // The vanilla frame has a 0.3 m bezel (inner screen x ±7.4, y 15.5..18.3 on the
-        // centre board); our screen fills that opening.
+        // The vanilla frame has a 0.3 m bezel; our screen fills that opening.
         internal const float Bezel = 0.3f;
         internal const float ScreenWidth = BoardWidth - 2f * Bezel; // 14.7 m
         internal const float ScreenHeight = BoardHeight - 2f * Bezel; // 2.8 m
 
-        // Padding from the Figma FO/TickerBoard design (600 px board: 14 px sides ≈ 2.5%,
-        // 8 px top/bottom ≈ 7%), inside the screen.
-        internal const float PaddingX = 0.4f;
-        internal const float PaddingY = 0.24f;
-        internal const float MaxRowWidth = ScreenWidth - 2f * PaddingX; // 13.9 m
-        internal const float InnerHeight = ScreenHeight - 2f * PaddingY; // 2.32 m
-        internal const float RowSpacing = InnerHeight / 3f; // ≈ 0.77 m
-        internal const float RowHeight = 0.65f; // metres per row of text
-        internal const int FontSize = 64;
+        // Dark panel 2 cm behind the LED rows: no z-fighting, no visible parallax.
+        internal const float PanelBehindRows = 0.02f;
 
-        // Performance tiers: visibility is a distance check per Stock Exchange; text work
-        // happens only when the daily rows change; the building scan is rare.
-        internal const float VisibleDistance = 600f; // metres; beyond this the text is unreadable
+        // LED layout: three rows of 8-dot glyphs, 2 dark dot rows between them, padded
+        // inside the screen. Dots are square.
+        internal const float PaddingX = 0.15f;
+        internal const float PaddingY = 0.24f;
+        internal const int RowGapDots = 2;
+        internal const int RowCount = TickerFeed.BoardRows;
+        internal static readonly float DotPitch =
+            (ScreenHeight - 2f * PaddingY)
+            / (RowCount * LedFont.Height + (RowCount - 1) * RowGapDots); // ≈ 0.083 m
+        internal static readonly int ScreenDots = Mathf.FloorToInt(
+            (ScreenWidth - 2f * PaddingX) / DotPitch
+        ); // ≈ 173
+
+        // Each dot is TexelsPerDot² texels: lit block plus a 1-texel dark gap (LED look).
+        internal const int TexelsPerDot = 4;
+        internal const int MaxTextureWidth = 4096;
+        internal const float DotsPerSecond = 14f;
+
+        // Performance tiers: LED rows draw only within VisibleDistance; textures are
+        // rebuilt only when the daily strips change; the building scan is rare.
+        internal const float VisibleDistance = 600f;
         internal const float LodSeconds = 0.25f;
         internal const float RefreshSeconds = 1f;
         internal const float RescanSeconds = 5f;
 
-        private static readonly string[] SerifFonts =
+        // Figma tokens color/ticker/*: board, symbol, gain, loss, unknown; plus a dim
+        // unlit-dot shade between board and board-lit.
+        private static readonly Color32 BoardColour = new Color32(0x1E, 0x30, 0x3E, 0xFF);
+        private static readonly Color32[] Palette =
         {
-            "Goudy Old Style",
-            "Hoefler Text",
-            "Baskerville",
-            "Georgia",
-            // Unity's font enumeration on macOS lists Palatino and Times but not the others.
-            "Palatino",
-            "Times New Roman",
-            "Times",
+            new Color32(0x29, 0x3A, 0x46, 0xFF), // LedText.Off
+            new Color32(0xEF, 0xB0, 0x58, 0xFF), // LedText.Symbol
+            new Color32(0x4E, 0xF4, 0x65, 0xFF), // LedText.Gain
+            new Color32(0xE9, 0x42, 0x4F, 0xFF), // LedText.Loss
+            new Color32(0x9F, 0xB0, 0xC0, 0xFF), // LedText.Unknown
         };
 
         private readonly Dictionary<ushort, GameObject> boards =
             new Dictionary<ushort, GameObject>();
-        private Font font;
-        private Material textMaterial;
+        private readonly Material[] rowMaterials = new Material[RowCount];
+        private readonly int[] stripDots = new int[RowCount];
         private Material panelMaterial;
         private Material frameMaterial;
+        private bool materialsReady;
         private float nextRefresh;
         private float nextLod;
         private float nextRescan;
-        private string[] appliedRows;
-        private bool hasAppliedRows;
-        private int fitPasses;
+        private LedStrip[] appliedStrips;
+        private bool hasAppliedStrips;
+        private bool anyNear;
+        private float scrollTime;
+        private int appliedStep = -1;
         private bool placementLogged;
 
         private void Update()
@@ -170,8 +184,13 @@ namespace FinanceOverhaul
                     nextRefresh = now + RefreshSeconds;
                     if (tickerOn)
                     {
-                        RefreshText();
+                        RefreshStrips();
                     }
+                }
+
+                if (anyNear)
+                {
+                    Scroll(Time.unscaledDeltaTime);
                 }
             }
             catch (Exception ex)
@@ -182,15 +201,15 @@ namespace FinanceOverhaul
         }
 
         /// <summary>
-        /// LOD: a board group is active only when the camera is close enough to read it.
-        /// Inactive groups cost nothing to draw or update; off-screen ones are also
-        /// frustum-culled by Unity.
+        /// LOD: panels and frames stay while the ticker is on (the vanilla boards are
+        /// hidden); the LED rows draw only when the camera is close enough to read them.
         /// </summary>
         private void UpdateVisibility(bool tickerOn)
         {
             Camera camera = Camera.main;
             Vector3 eye = camera != null ? camera.transform.position : Vector3.zero;
             float maxSqr = VisibleDistance * VisibleDistance;
+            bool nearAny = false;
             foreach (GameObject group in boards.Values)
             {
                 if (group == null)
@@ -198,48 +217,31 @@ namespace FinanceOverhaul
                     continue;
                 }
 
-                // Panels stay while the ticker is on (the vanilla boards are hidden, so the
-                // facade still needs boards); only the text is distance-culled.
                 if (group.activeSelf != tickerOn)
                 {
                     group.SetActive(tickerOn);
                 }
 
-                // Text draws over geometry (GUI/Text Shader), so show it only when the camera
-                // is in front of the facade (group forward points into the building) and
-                // close enough to read it.
                 Vector3 toEye = eye - group.transform.GetChild(0).position;
-                bool near =
-                    tickerOn
-                    && camera != null
-                    && toEye.sqrMagnitude <= maxSqr
-                    && Vector3.Dot(toEye, group.transform.forward) < 0f;
+                bool near = tickerOn && camera != null && toEye.sqrMagnitude <= maxSqr;
+                nearAny |= near;
                 for (int i = 0; i < BoardCentres.Length && i < group.transform.childCount; i++)
                 {
                     GameObject board = group.transform.GetChild(i).gameObject;
                     if (board.activeSelf != near)
                     {
                         board.SetActive(near);
-                        if (near)
-                        {
-                            fitPasses = Math.Max(fitPasses, 2);
-                        }
                     }
                 }
             }
+
+            anyNear = nearAny;
         }
 
         /// <summary>Finds Stock Exchanges (rare); placement is set once per building.</summary>
         private void Rescan()
         {
-            if (font == null)
-            {
-                font = PickFont();
-                textMaterial = CreateDepthTestedMaterial(font);
-                panelMaterial = CreatePanelMaterial();
-                frameMaterial = CreateFrameMaterial();
-            }
-
+            EnsureMaterials();
             var seen = new HashSet<ushort>();
             Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
             for (int i = 1; i < buffer.Length; i++)
@@ -264,8 +266,6 @@ namespace FinanceOverhaul
                     group = CreateBoard(id);
                     boards[id] = group;
                     Place(group, ref buffer[i], info, id);
-                    SetRows(group, appliedRows);
-                    fitPasses = Math.Max(fitPasses, 2);
                 }
             }
 
@@ -285,164 +285,203 @@ namespace FinanceOverhaul
             }
         }
 
-        /// <summary>Text work only when the daily rows change (plus two fit passes).</summary>
-        private void RefreshText()
+        private void EnsureMaterials()
         {
-            if (textMaterial != null && font != null && font.material != null)
+            if (materialsReady)
             {
-                // Dynamic fonts rebuild their atlas when new glyphs are requested.
-                textMaterial.mainTexture = font.material.mainTexture;
+                return;
             }
 
-            string[] rows = TickerFeed.CurrentRows;
-            if (!hasAppliedRows || !ReferenceEquals(rows, appliedRows))
+            materialsReady = true;
+            panelMaterial = CreateUnlitMaterial(
+                "FinanceOverhaulTickerPanel",
+                SolidTexture(BoardColour)
+            );
+            frameMaterial = CreateFrameMaterial();
+            for (int r = 0; r < RowCount; r++)
             {
-                hasAppliedRows = true;
-                appliedRows = rows;
-                foreach (GameObject group in boards.Values)
+                rowMaterials[r] = CreateUnlitMaterial("FinanceOverhaulTickerRow" + r, null);
+                if (rowMaterials[r] != null)
                 {
-                    if (group != null)
-                    {
-                        SetRows(group, rows);
-                    }
+                    // Unlit/Transparent does not write depth, so the panel behind would paint
+                    // over the rows in the same queue: draw the rows right after it.
+                    rowMaterials[r].renderQueue = 2001;
                 }
-
-                fitPasses = 2; // the text mesh rebuilds lazily, so fit now and once more
             }
 
-            if (fitPasses > 0)
+            ModLog.Info(
+                "ticker: LED boards "
+                    + ScreenDots
+                    + " dots wide, pitch "
+                    + DotPitch.ToString("0.000")
+                    + " m"
+                    + (
+                        rowMaterials[0] == null
+                            ? " (Unlit/Transparent missing: no rows)"
+                            : string.Empty
+                    )
+            );
+        }
+
+        /// <summary>Texture work only when the daily strips change.</summary>
+        private void RefreshStrips()
+        {
+            LedStrip[] strips = TickerFeed.CurrentStrips;
+            if (hasAppliedStrips && ReferenceEquals(strips, appliedStrips))
             {
-                fitPasses--;
-                foreach (GameObject group in boards.Values)
+                return;
+            }
+
+            hasAppliedStrips = true;
+            appliedStrips = strips;
+            for (int r = 0; r < RowCount; r++)
+            {
+                Material material = rowMaterials[r];
+                if (material == null)
                 {
-                    if (group != null && group.activeSelf)
-                    {
-                        Fit(group);
-                    }
+                    continue;
                 }
+
+                LedStrip strip =
+                    strips == null
+                        ? (
+                            r == 1
+                                ? LedText.RenderText("Waiting for market data", LedText.Unknown)
+                                : null
+                        )
+                    : r < strips.Length ? strips[r]
+                    : null;
+                if (strip == null || strip.Width == 0)
+                {
+                    strip = new LedStrip(ScreenDots, LedFont.Height); // all dots off
+                }
+
+                Texture old = material.mainTexture;
+                material.mainTexture = BuildTexture(strip);
+                if (old != null)
+                {
+                    Destroy(old);
+                }
+
+                // BuildTexture keeps at most MaxTextureWidth dots (never reached in practice).
+                stripDots[r] = Math.Min(strip.Width, MaxTextureWidth);
+                material.mainTextureScale = new Vector2(ScreenDots / (float)stripDots[r], 1f);
+            }
+
+            appliedStep = -1; // re-apply offsets for the new widths
+            Scroll(0f);
+        }
+
+        /// <summary>Moves each row left in whole-dot steps; the textures repeat seamlessly.</summary>
+        private void Scroll(float deltaSeconds)
+        {
+            scrollTime += deltaSeconds;
+            if (scrollTime > 3600f)
+            {
+                scrollTime -= 3600f; // keep float precision; one step jump per hour is invisible
+            }
+
+            int step = (int)(scrollTime * DotsPerSecond);
+            if (step == appliedStep)
+            {
+                return;
+            }
+
+            appliedStep = step;
+            for (int r = 0; r < RowCount; r++)
+            {
+                Material material = rowMaterials[r];
+                int dots = stripDots[r];
+                if (material == null || dots <= 0)
+                {
+                    continue;
+                }
+
+                material.mainTextureOffset = new Vector2((step % dots) / (float)dots, 0f);
             }
         }
 
         /// <summary>
-        /// CreateDynamicFontFromOSFont names the font after the first requested name even
-        /// when it is missing (and silently falls back to a sans), so pick from the fonts
-        /// that are actually installed and log the real choice.
+        /// One strip → texture: each dot is a lit block with a 1-texel dark gap on its
+        /// right and bottom; dot row 0 is the top. Repeat-wrapped for scrolling, mipmapped
+        /// so distant boards blend instead of shimmering. CPU copy freed after upload.
         /// </summary>
-        private static Font PickFont()
+        private static Texture2D BuildTexture(LedStrip strip)
         {
-            string[] installed = Font.GetOSInstalledFontNames() ?? new string[0];
-            // Installed names can carry style suffixes ("Baskerville Regular"), so match by
-            // prefix in preference order.
-            for (int i = 0; i < SerifFonts.Length; i++)
+            int t = TexelsPerDot;
+            while (t > 1 && strip.Width * t > MaxTextureWidth)
             {
-                for (int j = 0; j < installed.Length; j++)
+                t--;
+            }
+
+            int dotsWide = Math.Min(strip.Width, MaxTextureWidth / t);
+            int w = Math.Max(1, dotsWide * t);
+            int h = strip.Height * t;
+            var pixels = new Color32[w * h];
+            for (int dy = 0; dy < strip.Height; dy++)
+            {
+                for (int dx = 0; dx < dotsWide; dx++)
                 {
-                    string name = installed[j];
-                    if (
-                        name != null
-                        && name.StartsWith(SerifFonts[i], StringComparison.OrdinalIgnoreCase)
-                    )
+                    byte cell = strip.Get(dx, dy);
+                    Color32 lit = cell < Palette.Length ? Palette[cell] : Palette[0];
+                    for (int ty = 0; ty < t; ty++)
                     {
-                        Font f = Font.CreateDynamicFontFromOSFont(name, FontSize);
-                        if (f != null)
+                        int texY = (strip.Height - 1 - dy) * t + (t - 1 - ty);
+                        for (int tx = 0; tx < t; tx++)
                         {
-                            ModLog.Info("ticker: board font=" + name + " (installed)");
-                            return f;
+                            bool gap = t > 1 && (tx == t - 1 || ty == t - 1);
+                            pixels[texY * w + dx * t + tx] = gap ? BoardColour : lit;
                         }
                     }
                 }
             }
 
-            var serifLike = new List<string>();
-            for (int j = 0; j < installed.Length && serifLike.Count < 15; j++)
-            {
-                string n = installed[j] ?? string.Empty;
-                if (
-                    n.IndexOf("Goudy", StringComparison.OrdinalIgnoreCase) >= 0
-                    || n.IndexOf("Baskerville", StringComparison.OrdinalIgnoreCase) >= 0
-                    || n.IndexOf("Georgia", StringComparison.OrdinalIgnoreCase) >= 0
-                    || n.IndexOf("Times", StringComparison.OrdinalIgnoreCase) >= 0
-                    || n.IndexOf("Hoefler", StringComparison.OrdinalIgnoreCase) >= 0
-                    || n.IndexOf("Garamond", StringComparison.OrdinalIgnoreCase) >= 0
-                    || n.IndexOf("Palatino", StringComparison.OrdinalIgnoreCase) >= 0
-                )
-                {
-                    serifLike.Add(n);
-                }
-            }
-
-            ModLog.Warn(
-                "ticker: no preferred serif matched ("
-                    + installed.Length
-                    + " fonts; serif-like: "
-                    + string.Join(", ", serifLike.ToArray())
-                    + "; first: "
-                    + string.Join(", ", installed, 0, Math.Min(8, installed.Length))
-                    + "); using Arial"
-            );
-            return Resources.GetBuiltinResource<Font>("Arial.ttf");
+            var texture = new Texture2D(w, h, TextureFormat.RGBA32, true);
+            texture.name = "FinanceOverhaulTickerStrip";
+            texture.wrapMode = TextureWrapMode.Repeat;
+            texture.filterMode = FilterMode.Bilinear;
+            texture.anisoLevel = 4;
+            texture.SetPixels32(pixels);
+            texture.Apply(true, true);
+            return texture;
         }
 
-        private static readonly string[] ProbeShaders =
+        private static Texture2D SolidTexture(Color32 colour)
         {
-            "Legacy Shaders/Diffuse",
-            "Diffuse",
-            "Standard",
-            "Unlit/Color",
-            "Unlit/Texture",
-            "Unlit/Transparent",
-            "Sprites/Default",
-            "UI/Default",
-            "GUI/Text Shader",
-            "Custom/Props/Prop/Default",
-        };
-
-        /// <summary>
-        /// Text keeps Unity's font material (GUI/Text Shader): in Cities' render setup a
-        /// depth-tested UI/Default material drew nothing at all (verified with an
-        /// in-game capture). Occlusion is handled by <see cref="UpdateVisibility"/>
-        /// (facing + distance) instead. Logs which built-in shaders this build has.
-        /// </summary>
-        private static Material CreateDepthTestedMaterial(Font font)
-        {
-            var found = new List<string>();
-            foreach (string name in ProbeShaders)
-            {
-                if (Shader.Find(name) != null)
-                {
-                    found.Add(name);
-                }
-            }
-
-            ModLog.Info("ticker: shaders available: " + string.Join(", ", found.ToArray()));
-            return null;
+            var texture = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+            texture.name = "FinanceOverhaulTickerSolid";
+            texture.SetPixel(0, 0, colour);
+            texture.Apply();
+            return texture;
         }
 
         /// <summary>
-        /// Unlit board panel in the ticker/board color, so it stays dark day and night like
-        /// the vanilla (self-lit) boards instead of washing out in sunlight. Unlit/Transparent
-        /// has no tint, so it samples a 1×1 board-colored texture; it is drawn in the
-        /// geometry queue, where depth testing works in Cities' render setup. Falls back to
-        /// the lit Legacy Diffuse panel if the shader is missing.
+        /// Unlit/Transparent in the geometry queue: stays at full brightness day and night
+        /// like the vanilla self-lit boards, and is depth-tested in Cities' render setup.
         /// </summary>
-        private static Material CreatePanelMaterial()
+        private static Material CreateUnlitMaterial(string name, Texture texture)
         {
-            // color/ticker/board (#1E303E) from the Figma tokens.
-            var board = new Color32(0x1E, 0x30, 0x3E, 0xFF);
             Shader unlit = Shader.Find("Unlit/Transparent");
-            if (unlit != null)
+            if (unlit == null)
             {
-                var texture = new Texture2D(1, 1, TextureFormat.RGBA32, false);
-                texture.SetPixel(0, 0, board);
-                texture.Apply();
-                var material = new Material(unlit);
-                material.name = "FinanceOverhaulTickerPanel";
-                material.mainTexture = texture;
-                material.renderQueue = 2000;
-                ModLog.Info("ticker: panel material=Unlit/Transparent (unlit, geometry queue)");
-                return material;
+                if (texture != null)
+                {
+                    Destroy(texture);
+                }
+
+                return null;
             }
 
+            var material = new Material(unlit);
+            material.name = name;
+            material.mainTexture = texture;
+            material.renderQueue = 2000;
+            return material;
+        }
+
+        /// <summary>Lit near-black frame so the board edges and depth catch the light.</summary>
+        private static Material CreateFrameMaterial()
+        {
             foreach (string name in new[] { "Legacy Shaders/Diffuse", "Diffuse" })
             {
                 Shader shader = Shader.Find(name);
@@ -452,20 +491,87 @@ namespace FinanceOverhaul
                 }
 
                 var material = new Material(shader);
-                material.name = "FinanceOverhaulTickerPanel";
-                material.color = board;
-                ModLog.Info("ticker: panel material=" + name + " (lit fallback)");
+                material.name = "FinanceOverhaulTickerFrame";
+                material.color = new Color32(0x0E, 0x14, 0x18, 0xFF);
                 return material;
             }
 
-            ModLog.Warn("ticker: no panel shader available; boards drawn without panels");
             return null;
+        }
+
+        /// <summary>
+        /// One group per Stock Exchange. Children in order: Board0..2 (LED rows),
+        /// Panel0..2 (dark screens), Frame0..2 (vanilla board meshes).
+        /// </summary>
+        private GameObject CreateBoard(ushort id)
+        {
+            var group = new GameObject("FO Ticker " + id);
+            group.transform.SetParent(transform, false);
+            for (int b = 0; b < BoardCentres.Length; b++)
+            {
+                var board = new GameObject("Board" + b);
+                board.transform.SetParent(group.transform, false);
+                for (int r = 0; r < RowCount; r++)
+                {
+                    if (rowMaterials[r] == null)
+                    {
+                        continue;
+                    }
+
+                    GameObject row = CreateQuad("Row" + r, board.transform, rowMaterials[r]);
+                    row.transform.localScale = new Vector3(
+                        ScreenDots * DotPitch,
+                        LedFont.Height * DotPitch,
+                        1f
+                    );
+                    row.transform.localPosition = new Vector3(
+                        0f,
+                        (1 - r) * (LedFont.Height + RowGapDots) * DotPitch,
+                        0f
+                    );
+                }
+            }
+
+            for (int b = 0; b < BoardCentres.Length; b++)
+            {
+                GameObject panel = CreateQuad("Panel" + b, group.transform, panelMaterial);
+                panel.transform.localScale = new Vector3(ScreenWidth, ScreenHeight, 1f);
+            }
+
+            return group;
+        }
+
+        private GameObject CreateQuad(string name, Transform parent, Material material)
+        {
+            GameObject quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            quad.name = name;
+            Collider collider = quad.GetComponent<Collider>();
+            if (collider != null)
+            {
+                Destroy(collider);
+            }
+
+            quad.transform.SetParent(parent, false);
+            Renderer renderer = quad.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                if (material != null)
+                {
+                    renderer.sharedMaterial = material;
+                }
+                else
+                {
+                    renderer.enabled = false;
+                }
+            }
+
+            return quad;
         }
 
         /// <summary>
         /// Real board geometry: redraws the vanilla board meshes (box frame, bezel and
         /// recess, already in the building's frame) with a plain lit near-black material
-        /// instead of the baked scrolling texture. Children after boards and panels.
+        /// instead of the baked scrolling texture.
         /// </summary>
         private void AddFrames(GameObject group, BuildingInfo info)
         {
@@ -498,106 +604,24 @@ namespace FinanceOverhaul
             }
         }
 
-        /// <summary>Lit near-black frame so the board edges and depth catch the light.</summary>
-        private static Material CreateFrameMaterial()
-        {
-            foreach (string name in new[] { "Legacy Shaders/Diffuse", "Diffuse" })
-            {
-                Shader shader = Shader.Find(name);
-                if (shader == null)
-                {
-                    continue;
-                }
-
-                var material = new Material(shader);
-                material.name = "FinanceOverhaulTickerFrame";
-                material.color = new Color32(0x0E, 0x14, 0x18, 0xFF);
-                return material;
-            }
-
-            return null;
-        }
-
-        /// <summary>One group per Stock Exchange: centre, left and right boards.</summary>
-        private GameObject CreateBoard(ushort id)
-        {
-            var group = new GameObject("FO Ticker " + id);
-            group.transform.SetParent(transform, false);
-            for (int b = 0; b < BoardCentres.Length; b++)
-            {
-                var board = new GameObject("Board" + b);
-                board.transform.SetParent(group.transform, false);
-                AddRows(board);
-            }
-
-            // Backing panels replace the hidden vanilla boards (children after the boards,
-            // so row and fit code only ever touches text).
-            for (int b = 0; b < BoardCentres.Length; b++)
-            {
-                GameObject panel = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                panel.name = "Panel" + b;
-                Collider collider = panel.GetComponent<Collider>();
-                if (collider != null)
-                {
-                    Destroy(collider);
-                }
-
-                panel.transform.SetParent(group.transform, false);
-                panel.transform.localScale = new Vector3(ScreenWidth, ScreenHeight, 1f);
-                Renderer renderer = panel.GetComponent<Renderer>();
-                if (renderer != null && panelMaterial != null)
-                {
-                    renderer.sharedMaterial = panelMaterial;
-                }
-            }
-
-            return group;
-        }
-
-        private void AddRows(GameObject board)
-        {
-            for (int r = 0; r < 3; r++)
-            {
-                var row = new GameObject("Row" + r);
-                row.transform.SetParent(board.transform, false);
-                row.transform.localPosition = new Vector3(0f, (1 - r) * RowSpacing, 0f);
-                TextMesh text = row.AddComponent<TextMesh>();
-                text.font = font;
-                text.fontSize = FontSize;
-                text.characterSize = RowHeight * 10f / FontSize;
-                text.anchor = TextAnchor.MiddleCenter;
-                text.alignment = TextAlignment.Center;
-                text.richText = true;
-                text.color = Color.white;
-                MeshRenderer renderer = row.GetComponent<MeshRenderer>();
-                if (renderer != null && font != null)
-                {
-                    renderer.sharedMaterial = textMaterial ?? font.material;
-                }
-            }
-        }
-
         private void Place(GameObject group, ref Building b, BuildingInfo info, ushort id)
         {
-            Vector3 size = info.m_size;
             var front = new Vector3(-Mathf.Sin(b.m_angle), 0f, Mathf.Cos(b.m_angle));
             group.transform.position = b.m_position;
-            // TextMesh is readable when looking along its forward axis, so the group faces
-            // into the building; local −Z is therefore toward the street.
+            // The group faces into the building, so a quad's visible (−Z) side faces the
+            // street and reads left-to-right. That is a 180° turn about Y: building
+            // (x, y, z) is group (−x, y, −z).
             group.transform.rotation = Quaternion.LookRotation(-front, Vector3.up);
-            // The group faces into the building (TextMesh reads along +forward), which is a
-            // 180° turn about Y, so building (x, y, z) is group (−x, y, −z).
             for (int i = 0; i < BoardCentres.Length; i++)
             {
                 Vector3 c = BoardCentres[i];
                 group.transform.GetChild(i).localPosition = new Vector3(-c.x, c.y, -c.z);
                 if (group.transform.childCount > BoardCentres.Length + i)
                 {
-                    // Panel in the text plane (PanelBehindText = 0), in front of the old board face.
                     group.transform.GetChild(BoardCentres.Length + i).localPosition = new Vector3(
                         -c.x,
                         c.y,
-                        -(c.z - PanelBehindText)
+                        -(c.z - PanelBehindRows)
                     );
                 }
             }
@@ -606,7 +630,6 @@ namespace FinanceOverhaul
 
             if (!placementLogged)
             {
-                LogAssetParts(info);
                 placementLogged = true;
                 ModLog.Info(
                     "ticker: boards for building "
@@ -615,266 +638,7 @@ namespace FinanceOverhaul
                         + b.m_position
                         + " angle="
                         + b.m_angle.ToString("0.###")
-                        + " meshSize="
-                        + size
-                        + " centre="
-                        + group.transform.GetChild(0).position
                 );
-            }
-        }
-
-        /// <summary>
-        /// One-time diagnostic: the vanilla ticker boards may be props or sub-meshes with
-        /// their own (scrolling) material. Their local positions would give exact board
-        /// placement and a way to hide the baked boards later.
-        /// </summary>
-        private static void LogAssetParts(BuildingInfo info)
-        {
-            try
-            {
-                ModLog.Info(
-                    "ticker: asset '"
-                        + info.name
-                        + "' material="
-                        + MaterialName(info.m_material)
-                        + " props="
-                        + (info.m_props == null ? 0 : info.m_props.Length)
-                        + " subMeshes="
-                        + (info.m_subMeshes == null ? 0 : info.m_subMeshes.Length)
-                );
-                if (info.m_props != null)
-                {
-                    for (int i = 0; i < info.m_props.Length; i++)
-                    {
-                        BuildingInfo.Prop p = info.m_props[i];
-                        PropInfo prop = p.m_finalProp ?? p.m_prop;
-                        ModLog.Info(
-                            "ticker:  prop["
-                                + i
-                                + "] "
-                                + (
-                                    prop != null
-                                        ? prop.name
-                                        : (p.m_tree != null ? "tree " + p.m_tree.name : "null")
-                                )
-                                + " pos="
-                                + p.m_position
-                                + " angle="
-                                + p.m_angle.ToString("0.#")
-                                + (
-                                    prop != null
-                                        ? " material=" + MaterialName(prop.m_material)
-                                        : string.Empty
-                                )
-                                + (
-                                    prop != null && prop.m_mesh != null
-                                        ? " meshBounds=" + prop.m_mesh.bounds.size
-                                        : string.Empty
-                                )
-                        );
-                    }
-                }
-
-                if (info.m_subMeshes != null)
-                {
-                    for (int i = 0; i < info.m_subMeshes.Length; i++)
-                    {
-                        BuildingInfo.MeshInfo m = info.m_subMeshes[i];
-                        BuildingInfoBase sub = m.m_subInfo;
-                        ModLog.Info(
-                            "ticker:  subMesh["
-                                + i
-                                + "] "
-                                + (sub != null ? sub.name : "null")
-                                + " pos="
-                                + m.m_position
-                                + " angle="
-                                + m.m_angle.ToString("0.#")
-                                + (
-                                    sub != null
-                                        ? " material=" + MaterialName(sub.m_material)
-                                        : string.Empty
-                                )
-                                + (
-                                    sub != null && sub.m_mesh != null
-                                        ? " meshBounds="
-                                            + sub.m_mesh.bounds.center
-                                            + "/"
-                                            + sub.m_mesh.bounds.size
-                                        : string.Empty
-                                )
-                        );
-                        if (sub != null && sub.m_mesh != null && sub.m_mesh.isReadable)
-                        {
-                            Vector3[] v = sub.m_mesh.vertices;
-                            Vector2[] uv = sub.m_mesh.uv;
-                            var sb = new System.Text.StringBuilder();
-                            for (int k = 0; k < v.Length && k < 24; k++)
-                            {
-                                sb.Append(" [")
-                                    .Append(v[k].x.ToString("0.0"))
-                                    .Append(',')
-                                    .Append(v[k].y.ToString("0.0"))
-                                    .Append(',')
-                                    .Append(v[k].z.ToString("0.0"))
-                                    .Append(" uv ")
-                                    .Append(
-                                        uv != null && k < uv.Length
-                                            ? uv[k].x.ToString("0.00")
-                                                + ","
-                                                + uv[k].y.ToString("0.00")
-                                            : "-"
-                                    )
-                                    .Append(']');
-                            }
-
-                            ModLog.Info(
-                                "ticker:   verts="
-                                    + v.Length
-                                    + " tris="
-                                    + (sub.m_mesh.triangles.Length / 3)
-                                    + sb
-                            );
-                        }
-                        else if (sub != null && sub.m_mesh != null)
-                        {
-                            ModLog.Info("ticker:   mesh not readable");
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ModLog.Warn("ticker: asset part log failed: " + ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// Shrinks a row that would run into the board padding. Measured in world space
-        /// (boards are rotated with the building): for a flat row rotated about Y the
-        /// world AABB gives width = √(x² + z²).
-        /// </summary>
-        private static void FitWidth(TextMesh text)
-        {
-            Renderer renderer = text.GetComponent<Renderer>();
-            if (renderer == null || string.IsNullOrEmpty(text.text))
-            {
-                return;
-            }
-
-            Vector3 world = renderer.bounds.size;
-            float width = Mathf.Sqrt(world.x * world.x + world.z * world.z);
-            if (width > MaxRowWidth && width > 0f)
-            {
-                text.characterSize *= MaxRowWidth / width;
-            }
-        }
-
-        private static string MaterialName(Material m)
-        {
-            if (m == null)
-            {
-                return "null";
-            }
-
-            return m.name + "/" + (m.shader != null ? m.shader.name : "?");
-        }
-
-        private static void SetRows(GameObject group, string[] rows)
-        {
-            for (int g = 0; g < BoardCentres.Length && g < group.transform.childCount; g++)
-            {
-                Transform board = group.transform.GetChild(g);
-                for (int r = 0; r < board.childCount; r++)
-                {
-                    TextMesh text = board.GetChild(r).GetComponent<TextMesh>();
-                    string value =
-                        rows == null
-                            ? (
-                                r == 1
-                                    ? "<color=#9FB0C0>Waiting for market data…</color>"
-                                    : string.Empty
-                            )
-                        : r < rows.Length ? rows[r]
-                        : string.Empty;
-                    if (text.text != value)
-                    {
-                        text.text = value;
-                        text.characterSize = RowHeight * 10f / FontSize;
-                    }
-                }
-            }
-        }
-
-        private static void Fit(GameObject group)
-        {
-            for (int g = 0; g < BoardCentres.Length && g < group.transform.childCount; g++)
-            {
-                Transform board = group.transform.GetChild(g);
-                if (!board.gameObject.activeInHierarchy)
-                {
-                    continue; // hidden renderers report empty bounds at the origin
-                }
-
-                for (int r = 0; r < board.childCount; r++)
-                {
-                    FitWidth(board.GetChild(r).GetComponent<TextMesh>());
-                }
-
-                FitHeight(board);
-            }
-        }
-
-        /// <summary>
-        /// Centres the board's rows on their visible glyph extent (TextMesh centres the
-        /// line box, so descenders and parentheses pushed the block low) and shrinks
-        /// them if taller than the padded board. Uses current world bounds, so the
-        /// correction converges in one step.
-        /// </summary>
-        private static void FitHeight(Transform board)
-        {
-            float min = float.MaxValue;
-            float max = float.MinValue;
-            int counted = 0;
-            for (int r = 0; r < board.childCount; r++)
-            {
-                Transform row = board.GetChild(r);
-                TextMesh text = row.GetComponent<TextMesh>();
-                Renderer renderer = row.GetComponent<Renderer>();
-                if (renderer == null || text == null || string.IsNullOrEmpty(text.text))
-                {
-                    continue;
-                }
-
-                Bounds b = renderer.bounds;
-                min = Mathf.Min(min, b.min.y);
-                max = Mathf.Max(max, b.max.y);
-                counted++;
-            }
-
-            if (counted == 0)
-            {
-                return;
-            }
-
-            float height = max - min;
-            if (height > InnerHeight && height > 0f)
-            {
-                float shrink = InnerHeight / height;
-                for (int r = 0; r < board.childCount; r++)
-                {
-                    board.GetChild(r).GetComponent<TextMesh>().characterSize *= shrink;
-                }
-            }
-
-            float delta = board.position.y - (min + max) * 0.5f;
-            if (Mathf.Abs(delta) > 0.01f)
-            {
-                for (int r = 0; r < board.childCount; r++)
-                {
-                    Transform row = board.GetChild(r);
-                    row.position += new Vector3(0f, delta, 0f);
-                }
             }
         }
 
@@ -889,6 +653,33 @@ namespace FinanceOverhaul
             }
 
             boards.Clear();
+
+            // Hot reload / unload: free everything this overlay created.
+            for (int r = 0; r < RowCount; r++)
+            {
+                DestroyMaterial(rowMaterials[r]);
+                rowMaterials[r] = null;
+            }
+
+            DestroyMaterial(panelMaterial);
+            DestroyMaterial(frameMaterial);
+            panelMaterial = null;
+            frameMaterial = null;
+        }
+
+        private static void DestroyMaterial(Material material)
+        {
+            if (material == null)
+            {
+                return;
+            }
+
+            if (material.mainTexture != null)
+            {
+                Destroy(material.mainTexture);
+            }
+
+            Destroy(material);
         }
     }
 }

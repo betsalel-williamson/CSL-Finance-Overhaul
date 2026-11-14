@@ -27,8 +27,8 @@ namespace FinanceOverhaul
 
         public static string CurrentLine { get; private set; }
 
-        /// <summary>Three rich-text board rows (ticker token colors), for the facade overlay.</summary>
-        public static string[] CurrentRows { get; private set; }
+        /// <summary>Three LED dot rows (ticker token colour indices), for the facade boards.</summary>
+        public static LedStrip[] CurrentStrips { get; private set; }
 
         public const int BoardRows = 3;
 
@@ -85,7 +85,7 @@ namespace FinanceOverhaul
             }
 
             TickerLine.SortBySymbol(Symbols, Rates);
-            CurrentRows = TickerLine.FormatRichRows(Symbols, Rates, BoardRows);
+            CurrentStrips = LedText.RenderRows(Symbols, Rates, BoardRows);
             return TickerLine.Format(Symbols, Rates);
         }
 
@@ -95,7 +95,7 @@ namespace FinanceOverhaul
             lastDay = -1;
             daysLogged = 0;
             CurrentLine = null;
-            CurrentRows = null;
+            CurrentStrips = null;
         }
     }
 }
