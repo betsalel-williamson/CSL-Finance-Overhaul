@@ -112,3 +112,12 @@ the old Index climbed far above its members. On the city's real last 30 days, th
 ×1.191 against ×1.112 for the geometric rule (which equals the members' own end ÷ start). Replaying
 those 30 days forward then backward, the old rule ended up ×1.148 instead of exactly ×1.000. The
 backfill of older Index history uses the exact inverse of the same geometric step.
+
+**One-time rebase (cities that ran the old rule):** an Index more than ×2 away from its members'
+average price is scaled — its current value and its whole history, by one factor — to that average,
+the level a fresh Index seeds at. Every day's move in the chart stays the same, so there is no
+cliff. It runs at most once per city (marker `FinanceOverhaul.IndexRebase` in the mod's save data),
+inside the Index's daily update, and waits while the city holds Index shares or has open Index
+orders (rescaling would change a holding's value or fire orders set at the old level). Logged as
+`index: rebase …`. In the test city (2079): ₡97,712 → ₡1,453, with the 30-day chart at
+₡1,417–₡1,492.

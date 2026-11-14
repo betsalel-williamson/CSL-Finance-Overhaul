@@ -464,9 +464,10 @@ namespace FinanceOverhaul
 
             try
             {
+                ReadBasket();
+                RebaseOnce(ai, ref data);
                 float previous =
                     data.allValues != null && data.allValues.Count > 0 ? data.value : 0f;
-                ReadBasket();
                 float mark;
                 string mode;
                 if (
@@ -521,6 +522,116 @@ namespace FinanceOverhaul
         }
 
         private static int updateCount;
+
+        // null = not read yet for this city; true = done (marker in the city's mod data).
+        private static bool? rebaseDone;
+        private static int lastRebaseWaitDay = -1;
+
+        /// <summary>Level load / unload: the next city reads its own marker.</summary>
+        public static void ResetRebase()
+        {
+            rebaseDone = null;
+            lastRebaseWaitDay = -1;
+        }
+
+        /// <summary>
+        /// One-time correction (see <see cref="IndexRebase"/>): scales an Index inflated by the
+        /// old mean-of-returns rule, and its whole history, to the members' average price.
+        /// Simulation thread, inside the Index's daily update, before today's step. Needs the
+        /// basket already read (<see cref="ReadBasket"/>).
+        /// </summary>
+        private static void RebaseOnce(InvestmentAI ai, ref Investment data)
+        {
+            try
+            {
+                if (rebaseDone == null)
+                {
+                    byte[] marker = SimulationManager.instance.m_SerializableDataWrapper.LoadData(
+                        IndexRebase.DataId
+                    );
+                    rebaseDone = marker != null && marker.Length > 0;
+                }
+
+                if (rebaseDone.Value || data.allValues == null || data.allValues.Count == 0)
+                {
+                    return;
+                }
+
+                float average;
+                if (!CityIndexBasket.TryComputeMark(Names, Last, Eligible, out average))
+                {
+                    return; // no members readable yet; try again tomorrow
+                }
+
+                int openOrders = 0;
+                foreach (TradeOrder o in OrderDesk.Snapshot())
+                {
+                    if (CityIndexBasket.IsIndexName(o.InvestmentKey))
+                    {
+                        openOrders++;
+                    }
+                }
+
+                IndexRebase.Plan plan = IndexRebase.Decide(
+                    data.value,
+                    average,
+                    ai.OwnedCount(ref data),
+                    openOrders
+                );
+                if (plan.Decision == IndexRebase.Decision.Wait)
+                {
+                    if (OrderDesk.Today != lastRebaseWaitDay)
+                    {
+                        lastRebaseWaitDay = OrderDesk.Today;
+                        ModLog.Info("index: rebase waiting: " + plan.Reason);
+                    }
+
+                    return;
+                }
+
+                float before = data.value;
+                if (plan.Decision == IndexRebase.Decision.Rescale)
+                {
+                    Investment.Queue<float> q = data.allValues;
+                    var oldestFirst = new float[q.Count];
+                    for (int j = 0; j < oldestFirst.Length; j++)
+                    {
+                        oldestFirst[j] = q.GetFromTop(oldestFirst.Length - 1 - j);
+                    }
+
+                    float[] scaled = IndexRebase.Scale(oldestFirst, plan.Factor);
+                    data.ClearValues();
+                    foreach (float v in scaled)
+                    {
+                        data.AddValue(v);
+                    }
+                }
+
+                SimulationManager.instance.m_SerializableDataWrapper.SaveData(
+                    IndexRebase.DataId,
+                    System.Text.Encoding.UTF8.GetBytes(IndexRebase.Marker)
+                );
+                rebaseDone = true;
+                ModLog.Info(
+                    "index: rebase "
+                        + (plan.Decision == IndexRebase.Decision.Rescale ? "applied" : "not needed")
+                        + " ("
+                        + plan.Reason
+                        + "): "
+                        + before.ToString("0.##")
+                        + " -> "
+                        + data.value.ToString("0.##")
+                        + " (members' average "
+                        + average.ToString("0.##")
+                        + ")"
+                );
+            }
+            catch (Exception ex)
+            {
+                rebaseDone = true; // never retry a failing correction every day
+                ModLog.Warn("index: rebase failed, level kept: " + ex.Message);
+            }
+        }
 
         /// <summary>First 20 updates after (re)load, then every 30th, to keep the log small.</summary>
         private static void LogUpdate(string mode, float previous, float mark)

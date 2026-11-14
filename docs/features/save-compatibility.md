@@ -38,6 +38,9 @@ game**:
 
 Until the matrix passes, the Index toggle stays off by default.
 
+The Index's one-time rebase marker lives in mod data (`FinanceOverhaul.IndexRebase`, text `v1`);
+vanilla ignores it, and without it the mod simply checks the level once more.
+
 ## Test matrix (in game)
 
 | #   | Saved with                 | Loaded with            | Pass when                                 |
