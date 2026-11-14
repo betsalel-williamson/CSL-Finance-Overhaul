@@ -122,6 +122,8 @@ namespace FinanceOverhaul
             indexInfo = PrefabCollection<InvestmentInfo>.FindLoaded(CityIndexBasket.IndexName);
             markFailureLogged = false;
             ModLog.Info("index: adopted already-registered Index prefab");
+            // Repairs an Index registered by an older build whose AI lost its back-link.
+            RepairLinks(indexInfo);
             return indexInfo != null;
         }
 
@@ -154,6 +156,7 @@ namespace FinanceOverhaul
                     new[] { info },
                     null
                 );
+                RepairLinks(info);
                 if (bindNow)
                 {
                     // Mid-game: give the new prefab a simulation index now (BindPrefabs
@@ -178,6 +181,41 @@ namespace FinanceOverhaul
                 DestroyHolder();
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Instantiate does not carry the AI's back-link (InvestmentAI.m_info), and the
+        /// clone keeps the source's "already initialized" flag, so vanilla
+        /// InvestmentInfo.InitializePrefab never sets it. A null m_info throws in
+        /// InvestmentAI.IsAvailable on every simulation tick, so set it explicitly.
+        /// </summary>
+        private static void RepairLinks(InvestmentInfo info)
+        {
+            if (info == null)
+            {
+                return;
+            }
+
+            if (info.m_investmentAI == null)
+            {
+                info.m_investmentAI = info.GetComponent<InvestmentAI>();
+            }
+
+            if (info.m_investmentAI == null)
+            {
+                ModLog.Warn("index: Index prefab has no InvestmentAI component");
+                return;
+            }
+
+            bool wasBroken = info.m_investmentAI.m_info != info;
+            info.m_investmentAI.m_info = info;
+            ModLog.Info(
+                "index: AI linked to Index info (was "
+                    + (wasBroken ? "broken, repaired" : "ok")
+                    + ", ai="
+                    + info.m_investmentAI.GetType().Name
+                    + ")"
+            );
         }
 
         /// <summary>Simulation thread.</summary>
