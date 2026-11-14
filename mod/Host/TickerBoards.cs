@@ -69,17 +69,19 @@ namespace FinanceOverhaul
     /// <summary>Per-frame driver on the overlay root (main thread).</summary>
     public class TickerOverlay : MonoBehaviour
     {
-        // Placement calibrated from an in-game screenshot (2026-11-13): the vanilla facade
-        // has a centre board at ~9.6 m and two side boards at ~7.6 m, ~12.5 m either side,
-        // set back behind the columns. Offsets are metres in the building's frame.
-        internal const float Setback = 5f; // metres behind the mesh's front bound
-        internal static readonly Vector3[] BoardOffsets =
+        // Exact vanilla board rectangles, read from the Stock Exchange's three AnimUV
+        // sub-meshes (Submesh01..03) in the building's own frame (+Z = street side):
+        // centre x −7.7..7.7, y 15.2..18.6; sides x ±(5.5..20.8), y 10.8..14.1; face z 23.6.
+        internal static readonly Vector3[] BoardCentres =
         {
-            new Vector3(0f, 9.6f, 0f), // centre
-            new Vector3(-12.5f, 7.6f, 0f), // left
-            new Vector3(12.5f, 7.6f, 0f), // right
+            new Vector3(0f, 16.9f, 23.7f), // centre (Submesh01), 0.1 m in front of the face
+            new Vector3(-13.15f, 12.45f, 23.7f), // left (Submesh02)
+            new Vector3(13.15f, 12.45f, 23.7f), // right (Submesh03)
         };
-        internal const float RowHeight = 1.2f; // metres per row
+        internal const float BoardWidth = 15.3f;
+        internal const float MaxRowWidth = 14.8f; // keep text inside the board edges
+        internal const float RowSpacing = 1.1f; // 3 rows across the 3.4 m board
+        internal const float RowHeight = 0.9f; // metres per row of text
         internal const int FontSize = 64;
         internal const float RefreshSeconds = 1f;
 
@@ -249,7 +251,7 @@ namespace FinanceOverhaul
         {
             var group = new GameObject("FO Ticker " + id);
             group.transform.SetParent(transform, false);
-            for (int b = 0; b < BoardOffsets.Length; b++)
+            for (int b = 0; b < BoardCentres.Length; b++)
             {
                 var board = new GameObject("Board" + b);
                 board.transform.SetParent(group.transform, false);
@@ -265,7 +267,7 @@ namespace FinanceOverhaul
             {
                 var row = new GameObject("Row" + r);
                 row.transform.SetParent(board.transform, false);
-                row.transform.localPosition = new Vector3(0f, (1 - r) * RowHeight * 1.1f, 0f);
+                row.transform.localPosition = new Vector3(0f, (1 - r) * RowSpacing, 0f);
                 TextMesh text = row.AddComponent<TextMesh>();
                 text.font = font;
                 text.fontSize = FontSize;
@@ -290,11 +292,12 @@ namespace FinanceOverhaul
             // TextMesh is readable when looking along its forward axis, so the group faces
             // into the building; local −Z is therefore toward the street.
             group.transform.rotation = Quaternion.LookRotation(-front, Vector3.up);
-            float faceZ = -(size.z * 0.5f - Setback);
-            for (int i = 0; i < BoardOffsets.Length; i++)
+            // The group faces into the building (TextMesh reads along +forward), which is a
+            // 180° turn about Y, so building (x, y, z) is group (−x, y, −z).
+            for (int i = 0; i < BoardCentres.Length; i++)
             {
-                Vector3 o = BoardOffsets[i];
-                group.transform.GetChild(i).localPosition = new Vector3(o.x, o.y, faceZ);
+                Vector3 c = BoardCentres[i];
+                group.transform.GetChild(i).localPosition = new Vector3(-c.x, c.y, -c.z);
             }
 
             if (!placementLogged)
@@ -310,8 +313,6 @@ namespace FinanceOverhaul
                         + b.m_angle.ToString("0.###")
                         + " meshSize="
                         + size
-                        + " faceZ="
-                        + faceZ.ToString("0.0")
                         + " centre="
                         + group.transform.GetChild(0).position
                 );
@@ -444,6 +445,23 @@ namespace FinanceOverhaul
             }
         }
 
+        /// <summary>Shrinks a row that would run past the vanilla board's edges.</summary>
+        private static void FitWidth(TextMesh text)
+        {
+            MeshFilter filter = text.GetComponent<MeshFilter>();
+            Mesh mesh = filter != null ? filter.sharedMesh : null;
+            if (mesh == null)
+            {
+                return;
+            }
+
+            float width = mesh.bounds.size.x;
+            if (width > MaxRowWidth && width > 0f)
+            {
+                text.characterSize *= MaxRowWidth / width;
+            }
+        }
+
         private static string MaterialName(Material m)
         {
             if (m == null)
@@ -474,7 +492,10 @@ namespace FinanceOverhaul
                     if (text.text != value)
                     {
                         text.text = value;
+                        text.characterSize = RowHeight * 10f / FontSize;
                     }
+
+                    FitWidth(text);
                 }
             }
         }
