@@ -4,6 +4,7 @@ Product and architecture contracts for Finance Overhaul.
 
 - [About this guide](./about-this-guide.md)
 - [Stock hook MVP](./stock-hook-mvp.md)
+- [City index fund](./city-index-fund.md)
 - [UI catalog](./ui-catalog.md)
 - [Market analogs](./market-analogs.md)
 - [World dynamics](./world-dynamics.md)
