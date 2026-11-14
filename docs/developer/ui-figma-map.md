@@ -107,6 +107,19 @@ Built from library instances; in-game capture pending. Toggle off by default
 | 8   | `idx.chart`        | Basket history chart | Vanilla `ShareChart`                         |
 | 9   | `idx.description`  | Index description    | `Patcher.IndexLocalizedDescriptionPrefix`    |
 
+### Stock Exchange facade frame (`planned`)
+
+Live ticker boards (`plan.live-ticker`). Screenshot: the vanilla facade at night; new UI: three
+`FO/TickerBoard` instances with the first live line the mod logged.
+
+| #   | Catalog id         | Title         | Code evidence                                     |
+| --- | ------------------ | ------------- | ------------------------------------------------- |
+| 1   | `plan.live-ticker` | Ticker board  | Vanilla baked art; FO overlay is the next step    |
+| 2   | `ticker.symbol`    | Symbol        | `TickerSymbols.For`                               |
+| 3   | `ticker.gain`      | Gain          | `TickerFeed` (`CalculateChangeRate(id, data, 5)`) |
+| 4   | `ticker.loss`      | Loss          | `TickerLine`                                      |
+| 5   | `ticker.unknown`   | Unknown value | `TickerLine.FormatRate` (`--`, never `NaN`)       |
+
 ### Planned frame (`planned`)
 
 | #   | Catalog id         | Title            | Docs                                                                                             |
