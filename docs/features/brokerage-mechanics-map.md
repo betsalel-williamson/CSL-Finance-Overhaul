@@ -66,5 +66,12 @@ ticker** (default on, save-neutral).
 camera; off-screen boards are also frustum-culled. Text work only when the daily rows change (plus
 two fit passes). Stock Exchange scan every 5 s, placement set once per building.
 
-**Next (step 3):** replace the vanilla board texture on the three `AnimUV` sub-meshes with live text
-(hides the baked text, keeps vanilla scrolling and lighting).
+**Step 3 (shipped):** the baked boards are hidden by requiring `Building.Flags.Deleted` on the three
+`AnimUV` sub-meshes (`MeshInfo.m_flagsRequired`, honoured by `BuildingAI.RenderMeshes`): runtime
+only, restored on toggle-off, unload, disable and hot reload. Opaque lit panels
+(`Legacy Shaders/Diffuse`, `ticker/board` color) replace them; level-of-detail culls only the text.
+Verified 2026-11-13 with the dev in-game capture (`FinanceOverhaul.capture` trigger, `--dev`
+builds).
+
+**Known limit:** text can still draw over a building that stands between the camera and the facade
+(it is culled by distance and facing, not by depth).
