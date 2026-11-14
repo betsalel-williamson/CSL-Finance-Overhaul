@@ -307,3 +307,33 @@ namespace FinanceOverhaul.Market.Tests
         }
     }
 }
+
+namespace FinanceOverhaul.Market.Tests
+{
+    public class HoverTests
+    {
+        [Fact]
+        public void IndexAtInvertsTheColumnMapping()
+        {
+            for (int i = 0; i < 30; i++)
+            {
+                float x = Sparkline.ColumnOf(i, 144, 30);
+                Assert.Equal(i, Sparkline.IndexAt(x, 144, 30));
+            }
+
+            Assert.Equal(0, Sparkline.IndexAt(-20f, 144, 30));
+            Assert.Equal(29, Sparkline.IndexAt(999f, 144, 30));
+            Assert.Equal(0, Sparkline.IndexAt(5f, 144, 1));
+            Assert.Equal(0, Sparkline.IndexAt(5f, 144, 0));
+        }
+
+        [Fact]
+        public void HoverTextSaysWhen()
+        {
+            Assert.Equal("Oil · today · ₡942", StockMonitor.HoverText("Oil", 29, 30, 942f));
+            Assert.Equal("Oil · yesterday · ₡932", StockMonitor.HoverText("Oil", 28, 30, 932f));
+            Assert.Equal("Oil · 8 days ago · ₡925", StockMonitor.HoverText("Oil", 21, 30, 925f));
+            Assert.Equal("6 days ago · ₡90", StockMonitor.HoverText(null, 0, 7, 90f));
+        }
+    }
+}

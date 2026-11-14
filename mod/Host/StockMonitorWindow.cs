@@ -73,6 +73,8 @@ namespace FinanceOverhaul
             public UILabel Price;
             public UILabel Change;
             public int Id = -1;
+            public string Sym;
+            public float[] History;
         }
 
         private static StockMonitorSettings Settings
@@ -122,6 +124,7 @@ namespace FinanceOverhaul
 
             DragButton();
             FadeBackground();
+            UpdateHover();
             if (window == null || !window.isVisible || Time.unscaledTime < nextCheck)
             {
                 return;
@@ -702,10 +705,13 @@ namespace FinanceOverhaul
         private static void Fill(Row r, MonitorQuote q)
         {
             r.Id = q.Id;
+            r.Sym = q.Symbol;
+            r.History = StockDetail.Range(q.History, StockDetail.LongRange);
             r.Panel.name = Prefix + "Row-" + q.Symbol;
             r.Symbol.name = Prefix + "Symbol-" + q.Symbol;
             r.Symbol.text = q.Symbol;
             r.Name.text = q.Name;
+            r.Spark.name = Prefix + "Spark-" + q.Symbol;
             r.Price.name = Prefix + "Price-" + q.Symbol;
             r.Price.text = StockMonitor.PriceText(q.Price);
             r.Change.name = Prefix + "Change-" + q.Symbol;
@@ -802,6 +808,9 @@ namespace FinanceOverhaul
 
             rows.Clear();
             DestroyDetail();
+            hoverTip = null; // destroyed with the window
+            hoverLine = null;
+            hoverDot = null;
             filterTabs.Clear();
             if (buttonIcon != null && buttonIcon.texture != null)
             {

@@ -206,6 +206,24 @@ namespace FinanceOverhaul.Market
             return "Daily close · " + gameDate.ToString("d MMM yyyy", CultureInfo.InvariantCulture);
         }
 
+        /// <summary>
+        /// Hover bubble for point <paramref name="index"/> of a range of <paramref name="count"/>
+        /// daily prices ending today: "Oil · 8 days ago · ₡925", "Oil · yesterday · ₡932",
+        /// "Oil · today · ₡942".
+        /// </summary>
+        public static string HoverText(string symbol, int index, int count, float price)
+        {
+            int ago = Math.Max(0, count - 1 - index);
+            string when =
+                ago == 0 ? "today"
+                : ago == 1 ? "yesterday"
+                : ago.ToString(CultureInfo.InvariantCulture) + " days ago";
+            return (string.IsNullOrEmpty(symbol) ? "" : symbol + " · ")
+                + when
+                + " · "
+                + PriceText(price);
+        }
+
         /// <summary>Text shown when a filter leaves nothing to list.</summary>
         public static string EmptyText(MonitorFilter filter)
         {

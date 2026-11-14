@@ -38,6 +38,12 @@ window remembers which view was open).
 - **Buy / Sell** open the game's Invest dialog for that stock (with the order tabs). Sell is
   disabled when the city holds none.
 
+## Hover (shipped)
+
+Over any row sparkline or the detail chart: a crosshair, a dot on the line and a bubble with that
+day's price ("Oil · 8 days ago · ₡925", "today", "yesterday"), like City Vitals' value bubble.
+Hit-testing runs only while the mouse is over the window.
+
 ## Background on hover
 
 Like City Vitals' "Transparent Unhovered": the background sits at the chosen opacity and fades to a
@@ -62,8 +68,7 @@ is removed by name. Prices move once per game day, so rows are rebuilt only when
 
 ## Later steps
 
-Row and chart hover (crosshair and that day's price), the settings popover (opacity slider, compact
-rows, which stocks show, ₡ or % change), Esc to close.
+The settings popover (opacity slider, compact rows, which stocks show, ₡ or % change), Esc to close.
 
 ## Code
 

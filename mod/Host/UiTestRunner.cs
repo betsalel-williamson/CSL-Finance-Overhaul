@@ -464,9 +464,80 @@ namespace FinanceOverhaul
                 case "wait":
                     yield return new WaitForSeconds(ParseFloat(a, 1f));
                     break;
+                case "log-basket":
+                {
+                    // Dev audit: every created investment's daily history (oldest first),
+                    // availability and symbol, for checking the Index math offline.
+                    Investment[] buf = EconomyManager.instance.m_investments.m_buffer;
+                    for (int i = 0; i < buf.Length; i++)
+                    {
+                        InvestmentInfo info = buf[i].Info;
+                        if (
+                            (buf[i].m_flags & Investment.Flags.Created) == 0
+                            || info == null
+                            || info.m_investmentAI == null
+                        )
+                        {
+                            continue;
+                        }
+
+                        Investment.Queue<float> h = buf[i].allValues;
+                        int n = h == null ? 0 : h.Count;
+                        var sb = new System.Text.StringBuilder();
+                        for (int k = n - 1; k >= 0; k--)
+                        {
+                            sb.Append(
+                                    h.GetFromTop(k).ToString("0.####", CultureInfo.InvariantCulture)
+                                )
+                                .Append(k > 0 ? "," : "");
+                        }
+
+                        ModLog.Info(
+                            "basket: "
+                                + StockSymbols.For(info)
+                                + "|"
+                                + info.name
+                                + "|available="
+                                + info.m_investmentAI.IsAvailable((byte)i, ref buf[i])
+                                + "|"
+                                + sb
+                        );
+                    }
+
+                    break;
+                }
                 case "log-symbols":
                     StockSymbols.Dump();
                     break;
+                case "hover":
+                {
+                    // hover CONTROL FX FY — simulated mouse at that fraction of the control
+                    // (Stock Monitor hover); "hover off" returns to the real mouse.
+                    if (a == "off")
+                    {
+                        StockMonitorHost.TestMouse = null;
+                        break;
+                    }
+
+                    UIComponent target = FindControl(a);
+                    string[] f = line.Split(' ');
+                    if (target == null || f.Length < 4)
+                    {
+                        r.Error = "hover needs a visible control and two fractions";
+                        break;
+                    }
+
+                    float fx = ParseFloat(f[2], 0.5f),
+                        fy = ParseFloat(f[3], 0.5f);
+                    Vector3 p = target.absolutePosition;
+                    StockMonitorHost.TestMouse = new Vector2(
+                        p.x + fx * target.width,
+                        p.y + fy * target.height
+                    );
+                    yield return null;
+                    yield return null;
+                    break;
+                }
                 case "monitor":
                 {
                     // monitor open|close — sets the Stock Monitor window outright.

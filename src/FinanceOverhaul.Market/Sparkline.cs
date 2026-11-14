@@ -112,6 +112,29 @@ namespace FinanceOverhaul.Market
             return bottom - (int)Math.Round((value - lo) / (hi - lo) * (bottom - top));
         }
 
+        /// <summary>
+        /// The data point nearest column <paramref name="x"/> in a chart of this width over
+        /// <paramref name="count"/> points — the inverse of the column mapping Render uses.
+        /// </summary>
+        public static int IndexAt(float x, int width, int count)
+        {
+            if (count <= 1 || width <= 1)
+            {
+                return Math.Max(0, count - 1);
+            }
+
+            int i = (int)Math.Round(x * (count - 1) / (double)(width - 1));
+            return Math.Max(0, Math.Min(count - 1, i));
+        }
+
+        /// <summary>Column of data point <paramref name="index"/> (same mapping as Render).</summary>
+        public static float ColumnOf(int index, int width, int count)
+        {
+            return count <= 1
+                ? width - 1
+                : (float)Math.Round(index * (width - 1) / (double)(count - 1));
+        }
+
         private static void FillBelow(byte[] mask, int w, int h)
         {
             for (int x = 0; x < w; x++)
