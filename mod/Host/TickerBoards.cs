@@ -74,9 +74,11 @@ namespace FinanceOverhaul
         // centre x −7.7..7.7, y 15.2..18.6; sides x ±(5.5..20.8), y 10.8..14.1; face z 23.6.
         internal static readonly Vector3[] BoardCentres =
         {
-            new Vector3(0f, 16.9f, 23.7f), // centre (Submesh01), 0.1 m in front of the face
-            new Vector3(-13.15f, 12.45f, 23.7f), // left (Submesh02)
-            new Vector3(13.15f, 12.45f, 23.7f), // right (Submesh03)
+            // 0.5 m in front of the board face (z 23.6): Cities' huge far plane leaves little
+            // depth precision at a few hundred metres, and 0.1 m lost the depth test.
+            new Vector3(0f, 16.9f, 24.1f), // centre (Submesh01)
+            new Vector3(-13.15f, 12.45f, 24.1f), // left (Submesh02)
+            new Vector3(13.15f, 12.45f, 24.1f), // right (Submesh03)
         };
         internal const float BoardWidth = 15.3f;
         internal const float BoardHeight = 3.4f;
@@ -90,7 +92,13 @@ namespace FinanceOverhaul
         internal const float RowHeight = 0.8f; // metres per row of text
         internal const float InnerHeight = BoardHeight - 2f * PaddingY; // 2.92 m
         internal const int FontSize = 64;
+
+        // Performance tiers: visibility is a distance check per Stock Exchange; text work
+        // happens only when the daily rows change; the building scan is rare.
+        internal const float VisibleDistance = 600f; // metres; beyond this the text is unreadable
+        internal const float LodSeconds = 0.25f;
         internal const float RefreshSeconds = 1f;
+        internal const float RescanSeconds = 5f;
 
         private static readonly string[] SerifFonts =
         {
@@ -109,39 +117,84 @@ namespace FinanceOverhaul
         private Font font;
         private Material textMaterial;
         private float nextRefresh;
+        private float nextLod;
+        private float nextRescan;
+        private string[] appliedRows;
+        private bool hasAppliedRows;
+        private int fitPasses;
         private bool placementLogged;
 
         private void Update()
         {
-            if (Time.unscaledTime < nextRefresh)
-            {
-                return;
-            }
-
-            nextRefresh = Time.unscaledTime + RefreshSeconds;
+            float now = Time.unscaledTime;
             try
             {
-                bool enabled = Mod.Settings == null || Mod.Settings.LiveTickerEnabled;
-                if (!enabled)
+                bool tickerOn = Mod.Settings == null || Mod.Settings.LiveTickerEnabled;
+                if (now >= nextRescan)
                 {
-                    foreach (GameObject b in boards.Values)
+                    nextRescan = now + RescanSeconds;
+                    if (tickerOn)
                     {
-                        b.SetActive(false);
+                        Rescan();
                     }
-
-                    return;
                 }
 
-                Refresh();
+                if (now >= nextLod)
+                {
+                    nextLod = now + LodSeconds;
+                    UpdateVisibility(tickerOn);
+                }
+
+                if (now >= nextRefresh)
+                {
+                    nextRefresh = now + RefreshSeconds;
+                    if (tickerOn)
+                    {
+                        RefreshText();
+                    }
+                }
             }
             catch (Exception ex)
             {
-                ModLog.Warn("ticker: overlay refresh failed: " + ex.Message);
+                ModLog.Warn("ticker: overlay update failed: " + ex.Message);
                 enabled = false; // stop this component; vanilla boards remain
             }
         }
 
-        private void Refresh()
+        /// <summary>
+        /// LOD: a board group is active only when the camera is close enough to read it.
+        /// Inactive groups cost nothing to draw or update; off-screen ones are also
+        /// frustum-culled by Unity.
+        /// </summary>
+        private void UpdateVisibility(bool tickerOn)
+        {
+            Camera camera = Camera.main;
+            Vector3 eye = camera != null ? camera.transform.position : Vector3.zero;
+            float maxSqr = VisibleDistance * VisibleDistance;
+            foreach (GameObject group in boards.Values)
+            {
+                if (group == null)
+                {
+                    continue;
+                }
+
+                bool show =
+                    tickerOn
+                    && camera != null
+                    && (group.transform.GetChild(0).position - eye).sqrMagnitude <= maxSqr;
+                if (group.activeSelf != show)
+                {
+                    group.SetActive(show);
+                    if (show)
+                    {
+                        fitPasses = Math.Max(fitPasses, 2);
+                    }
+                }
+            }
+        }
+
+        /// <summary>Finds Stock Exchanges (rare); placement is set once per building.</summary>
+        private void Rescan()
         {
             if (font == null)
             {
@@ -149,13 +202,6 @@ namespace FinanceOverhaul
                 textMaterial = CreateDepthTestedMaterial(font);
             }
 
-            if (textMaterial != null && font != null && font.material != null)
-            {
-                // Dynamic fonts rebuild their atlas when new glyphs are requested.
-                textMaterial.mainTexture = font.material.mainTexture;
-            }
-
-            string[] rows = TickerFeed.CurrentRows;
             var seen = new HashSet<ushort>();
             Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
             for (int i = 1; i < buffer.Length; i++)
@@ -173,16 +219,15 @@ namespace FinanceOverhaul
 
                 ushort id = (ushort)i;
                 seen.Add(id);
-                GameObject board;
-                if (!boards.TryGetValue(id, out board) || board == null)
+                GameObject group;
+                if (!boards.TryGetValue(id, out group) || group == null)
                 {
-                    board = CreateBoard(id);
-                    boards[id] = board;
+                    group = CreateBoard(id);
+                    boards[id] = group;
+                    Place(group, ref buffer[i], info, id);
+                    SetRows(group, appliedRows);
+                    fitPasses = Math.Max(fitPasses, 2);
                 }
-
-                board.SetActive(true);
-                Place(board, ref buffer[i], info, id);
-                SetRows(board, rows);
             }
 
             var gone = new List<ushort>();
@@ -198,6 +243,44 @@ namespace FinanceOverhaul
             {
                 Destroy(boards[id]);
                 boards.Remove(id);
+            }
+        }
+
+        /// <summary>Text work only when the daily rows change (plus two fit passes).</summary>
+        private void RefreshText()
+        {
+            if (textMaterial != null && font != null && font.material != null)
+            {
+                // Dynamic fonts rebuild their atlas when new glyphs are requested.
+                textMaterial.mainTexture = font.material.mainTexture;
+            }
+
+            string[] rows = TickerFeed.CurrentRows;
+            if (!hasAppliedRows || !ReferenceEquals(rows, appliedRows))
+            {
+                hasAppliedRows = true;
+                appliedRows = rows;
+                foreach (GameObject group in boards.Values)
+                {
+                    if (group != null)
+                    {
+                        SetRows(group, rows);
+                    }
+                }
+
+                fitPasses = 2; // the text mesh rebuilds lazily, so fit now and once more
+            }
+
+            if (fitPasses > 0)
+            {
+                fitPasses--;
+                foreach (GameObject group in boards.Values)
+                {
+                    if (group != null && group.activeSelf)
+                    {
+                        Fit(group);
+                    }
+                }
             }
         }
 
@@ -541,8 +624,18 @@ namespace FinanceOverhaul
                         text.text = value;
                         text.characterSize = RowHeight * 10f / FontSize;
                     }
+                }
+            }
+        }
 
-                    FitWidth(text);
+        private static void Fit(GameObject group)
+        {
+            for (int g = 0; g < group.transform.childCount; g++)
+            {
+                Transform board = group.transform.GetChild(g);
+                for (int r = 0; r < board.childCount; r++)
+                {
+                    FitWidth(board.GetChild(r).GetComponent<TextMesh>());
                 }
 
                 FitHeight(board);
