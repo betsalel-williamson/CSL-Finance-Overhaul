@@ -40,8 +40,8 @@ Order is the proposed build order: UI-only proofs first, then opt-in instruments
 ## Stretch goals
 
 - **Live exchange ticker** (`plan.live-ticker`). The Stock Exchange building's facade boards scroll
-  abbreviations with a change in brackets (for example `FC (+0.54)`, `Oil (-6.04)`). Make them show
-  the same live numbers as Economy → Investments, include **Index** when it is enabled, and never
-  show `NaN` (vanilla currently shows `KTM (NaN)` for an investment with no history). Host-only and
-  save-neutral: find the board's text source on the Stock Exchange building (likely
-  `StockExchangeAI` or its prop/sub-building text) and feed it from the investment marks.
+  abbreviations with a change in brackets (for example `FC (+0.54)`, `Oil (-6.04)`). They are
+  **static art baked into the building texture** (no code feeds them; values never change; see
+  [Known issues](./known-issues.md)). To show live numbers, including **Index** and never `NaN`, the
+  mod must render its own text on the facade (for example a text mesh or a generated texture placed
+  over the boards on each Stock Exchange instance). Host-only and save-neutral.

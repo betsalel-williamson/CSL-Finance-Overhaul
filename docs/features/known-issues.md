@@ -3,21 +3,22 @@
 Open bugs to investigate, newest first. Each entry says what was seen, what we know, and the next
 check. Move an entry to its feature shard (or delete it) once fixed.
 
-## KTM shows `NaN` on the Stock Exchange ticker
+## Resolved
 
-- **Seen:** 2026-11-13, facade ticker boards on the in-game Stock Exchange show `KTM (NaN)` while
-  other names show numbers (for example `FC (+0.54)`, `Oil (-6.04)`).
-- **Known:** the Index stock was **off** when this was captured, and the mod log showed no errors,
-  so it is most likely vanilla. Not yet ruled out: the old reflective stock hook (ADR 0001), which
-  postfixes `InvestmentAI.CalculatePrice` and `StockExchangeAI.UpdateGuide` even with probe bias
-  off.
-- **Likely cause to check:** the ticker's change value is computed from an investment's value
-  history; an investment with no history or a zero/locked value would divide by zero and render
-  `NaN`.
-- **Next checks:**
-  1. Identify which investment `KTM` abbreviates (ticker names are initials of the investment
-     names).
-  2. Reproduce with Finance Overhaul disabled. If `NaN` remains, it is vanilla.
-  3. Find the ticker's text source on the Stock Exchange building and how it computes the change.
-- **Related:** the live ticker stretch goal (`plan.live-ticker`) in
-  [Brokerage mechanics map](./brokerage-mechanics-map.md) must never show `NaN`.
+### KTM shows `NaN` on the Stock Exchange ticker: not a bug (baked art)
+
+- **Seen:** 2026-11-13, facade ticker boards on the Stock Exchange show `KTM (NaN)`.
+- **Finding (2026-11-13):** the boards are **static art baked into the building's texture**, not
+  live data.
+  1. No game code feeds the facade: every reader of investment values (`Investment.value`,
+     `allValues`, `InvestmentAI.CalculateChangeRate`) is the Economy panel, Buy/Sell dialog,
+     tooltip, save/load, or simulation.
+  2. `KTM` does not occur in `Assembly-CSharp.dll` or `ColossalManaged.dll`.
+  3. Board values never change and do not match live change rates: two captures at different game
+     times both show `TJL (-5.76)`, `TVLC (+5.66)`, `Oil (-6.04)`, `COE (+13.37)` while live Traffic
+     Jelly Logistics was +3.21%, The Very Legit Company −0.28%/+1.96%, Oil −2.08%/+0.62%. All three
+     boards repeat the same numbers.
+  4. Several symbols are not investments in the game (`KTM`, `K&B`, `BFT`, `COE`, `B`), consistent
+     with decorative art; `NaN` reads as a developer joke.
+- **Outcome:** no fix in code. The live ticker stretch goal (`plan.live-ticker`) must draw its own
+  text over or instead of the baked texture.
