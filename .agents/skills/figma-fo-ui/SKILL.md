@@ -56,7 +56,10 @@ belong in the **legend copy**, not as the on-canvas marker.
    Same pin numbers may appear on both surfaces when they mark the same feature
    (vanilla host vs planned FO chrome). Gap ≥ 24 between columns. Legend is copy
    only — never a substitute for on-surface dots.
-5. **Root hugs content.** No fixed heights that clip pins or legends.
+5. **Root and legends hug content.** No fixed heights that clip pins or legends.
+    Every `legend-N` row must use **vertical HUG** (`counterAxisSizingMode: AUTO` /
+    `layoutSizingVertical: HUG`). Fixed row heights (e.g. 10px after removing a pin
+    glyph) stack text on top of itself — never leave a legend row FIXED-height.
 6. **Reference screenshots** max width ~480, `FIT`. Prefer also pinning the
    **new UI / wireframe** so the map shows host chrome and FO intent together.
 7. **Tokens.** Use FO semantic colors for panels/text; pin fill is **annotation
