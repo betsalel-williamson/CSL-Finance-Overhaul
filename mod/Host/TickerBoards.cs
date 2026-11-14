@@ -399,6 +399,42 @@ namespace FinanceOverhaul
                                         : string.Empty
                                 )
                         );
+                        if (sub != null && sub.m_mesh != null && sub.m_mesh.isReadable)
+                        {
+                            Vector3[] v = sub.m_mesh.vertices;
+                            Vector2[] uv = sub.m_mesh.uv;
+                            var sb = new System.Text.StringBuilder();
+                            for (int k = 0; k < v.Length && k < 24; k++)
+                            {
+                                sb.Append(" [")
+                                    .Append(v[k].x.ToString("0.0"))
+                                    .Append(',')
+                                    .Append(v[k].y.ToString("0.0"))
+                                    .Append(',')
+                                    .Append(v[k].z.ToString("0.0"))
+                                    .Append(" uv ")
+                                    .Append(
+                                        uv != null && k < uv.Length
+                                            ? uv[k].x.ToString("0.00")
+                                                + ","
+                                                + uv[k].y.ToString("0.00")
+                                            : "-"
+                                    )
+                                    .Append(']');
+                            }
+
+                            ModLog.Info(
+                                "ticker:   verts="
+                                    + v.Length
+                                    + " tris="
+                                    + (sub.m_mesh.triangles.Length / 3)
+                                    + sb
+                            );
+                        }
+                        else if (sub != null && sub.m_mesh != null)
+                        {
+                            ModLog.Info("ticker:   mesh not readable");
+                        }
                     }
                 }
             }
