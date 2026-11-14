@@ -185,7 +185,7 @@ namespace FinanceOverhaul
                         continue;
                     }
 
-                    string symbol = TickerSymbols.For(info.m_investmentAI.GetLocalizedName());
+                    string symbol = StockSymbols.For(info);
                     if (
                         info.name == w[3]
                         || string.Equals(symbol, w[3], StringComparison.OrdinalIgnoreCase)
@@ -214,7 +214,7 @@ namespace FinanceOverhaul
                     continue;
                 }
 
-                string symbol = TickerSymbols.For(info.m_investmentAI.GetLocalizedName());
+                string symbol = StockSymbols.For(info);
                 if (
                     info.name == nameOrSymbol
                     || string.Equals(symbol, nameOrSymbol, StringComparison.OrdinalIgnoreCase)

@@ -77,7 +77,7 @@ namespace FinanceOverhaul
                     row = CreateRow(layout);
                 }
 
-                string symbol = TickerSymbols.For(info.m_investmentAI.GetLocalizedName());
+                string symbol = StockSymbols.For(info);
                 row.name = RowPrefix + symbol;
                 row.isVisible = true;
                 UILabel value = row.components.Count > 1 ? row.components[1] as UILabel : null;

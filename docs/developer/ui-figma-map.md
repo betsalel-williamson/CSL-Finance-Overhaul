@@ -123,7 +123,7 @@ game).
 | #   | Catalog id         | Title            | Code evidence                                        |
 | --- | ------------------ | ---------------- | ---------------------------------------------------- |
 | 1   | `plan.live-ticker` | Ticker board     | `TickerBoards` / `TickerOverlay`, `VanillaBoards`    |
-| 2   | `ticker.symbol`    | Symbol           | `TickerSymbols.For`                                  |
+| 2   | `ticker.symbol`    | Symbol           | `SymbolBook` via `StockSymbols.For` (prefab-keyed)   |
 | 3   | `ticker.gain`      | Gain             | `TickerFeed` (`CalculateChangeRate(id, data, 5)`)    |
 | 4   | `ticker.loss`      | Loss             | `LedText.RateColour`                                 |
 | 5   | `ticker.unknown`   | Unknown value    | `TickerLine.FormatRate` (`--`, never `NaN`)          |

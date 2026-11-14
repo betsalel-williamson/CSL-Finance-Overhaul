@@ -14,11 +14,12 @@ a phone stocks app, styled like the City Vitals window players already know.
   the title to move it; the position is remembered.
 - **Filters:** All · Portfolio (stocks the city holds) · Orders (stocks with open orders). **Sort**
   (click it) cycles Change (biggest gain first) → Symbol → Price → Value held.
-- **Rows:** ticker symbol (same as the LED board) and name; a cyan dot when the city holds it and a
-  gold "N orders" badge for open orders; a sparkline of the game's 30 daily prices with a dashed
-  line at yesterday's price, coloured by today's change; today's price in whole ₡; a change pill
-  with the game's change rate (the same number as the Economy panel and the LED), green / red / grey
-  for 0.00, black text.
+- **Rows:** ticker symbol (same as the LED board; unique per stock, see
+  [Brokerage mechanics map](./brokerage-mechanics-map.md)) and name; a cyan dot when the city holds
+  it and a gold "N orders" badge for open orders; a sparkline of the game's 30 daily prices with a
+  dashed line at yesterday's price, coloured by today's change; today's price in whole ₡; a change
+  pill with the game's change rate (the same number as the Economy panel and the LED), green / red /
+  grey for 0.00, black text.
 - Up to 10 rows show at once; the list scrolls with the mouse wheel. Footer: "Daily close · date".
 
 ## History limit

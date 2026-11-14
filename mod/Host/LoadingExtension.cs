@@ -11,6 +11,7 @@ namespace FinanceOverhaul
             {
                 TickerBoards.DestroyAll();
                 OrderDesk.Reset();
+                StockSymbols.Reset();
             }
             catch
             {

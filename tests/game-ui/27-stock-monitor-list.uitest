@@ -10,6 +10,7 @@ expect-visible FinanceOverhaulStockMonitorSettings
 expect-text FinanceOverhaulStockMonitorFooter Daily close
 expect-text FinanceOverhaulStockMonitorSort Sort:
 expect-no-overflow FinanceOverhaulStockMonitor
+expect-text FinanceOverhaulStockMonitorSymbol-CHC CHC
 capture stock-monitor-list
 click FinanceOverhaulStockMonitorFilter-Portfolio
 wait 1

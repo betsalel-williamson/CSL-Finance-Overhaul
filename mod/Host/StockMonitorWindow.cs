@@ -571,7 +571,7 @@ namespace FinanceOverhaul
                     new MonitorQuote
                     {
                         Id = i,
-                        Symbol = TickerSymbols.For(name),
+                        Symbol = StockSymbols.For(info),
                         Name = name,
                         Price = buffer[i].value,
                         ChangeRate = ai.CalculateChangeRate(

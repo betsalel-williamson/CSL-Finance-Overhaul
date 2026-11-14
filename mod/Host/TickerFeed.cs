@@ -80,7 +80,7 @@ namespace FinanceOverhaul
                     continue;
                 }
 
-                Symbols.Add(TickerSymbols.For(ai.GetLocalizedName()));
+                Symbols.Add(StockSymbols.For(info));
                 Rates.Add(ai.CalculateChangeRate((byte)i, ref buffer[i], PanelChangeRateWindow));
             }
 

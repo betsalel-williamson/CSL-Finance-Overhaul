@@ -24,13 +24,14 @@ npm run test:game              # game UI scenarios (running game, --dev build)
 `FinanceOverhaul.uitest` trigger; the mod (`UiTestRunner`, `--dev` only) drives the real UI —
 `show-buy`, `click`, `type` (focus, type, tab out), `run-days`, `set-flag <OrderKind|all> on|off`
 (same as ticking an order type's Options checkbox), `monitor open|close` (sets the Stock Monitor
-window outright, never toggling a player's window) — and checks `expect-visible`, `expect-text`,
-`expect-no-overflow` (every visible part inside the dialog or the named control, and none of our
-fixed-width labels cutting its text off; inside a clipping, scrolling list only the width is
-checked, against the list), `expect-owned-delta`, `expect-orders-delta` (orders this scenario
-created) and `expect-log`. Lines after `cleanup:` always run (cancel orders, sell back, close the
-dialog). Results: `uitest: PASS|FAIL` in the mod log, captures as `FinanceOverhaul-uitest-*.png`.
-Scenarios trade small amounts in the loaded city and undo them in cleanup; use a test save.
+window outright, never toggling a player's window), `log-symbols` (logs every stock prefab with its
+ticker symbol and any clash) — and checks `expect-visible`, `expect-text`, `expect-no-overflow`
+(every visible part inside the dialog or the named control, and none of our fixed-width labels
+cutting its text off; inside a clipping, scrolling list only the width is checked, against the
+list), `expect-owned-delta`, `expect-orders-delta` (orders this scenario created) and `expect-log`.
+Lines after `cleanup:` always run (cancel orders, sell back, close the dialog). Results:
+`uitest: PASS|FAIL` in the mod log, captures as `FinanceOverhaul-uitest-*.png`. Scenarios trade
+small amounts in the loaded city and undo them in cleanup; use a test save.
 
 Performance tests in `PriceBiasPerformanceTests` budget the equal-weight index (best of nine
 batches, so a busy machine cannot fail them) and assert it allocates nothing. They measure Market

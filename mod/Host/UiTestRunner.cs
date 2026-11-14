@@ -464,6 +464,9 @@ namespace FinanceOverhaul
                 case "wait":
                     yield return new WaitForSeconds(ParseFloat(a, 1f));
                     break;
+                case "log-symbols":
+                    StockSymbols.Dump();
+                    break;
                 case "monitor":
                 {
                     // monitor open|close — sets the Stock Monitor window outright.
@@ -1085,7 +1088,7 @@ namespace FinanceOverhaul
                 if (
                     info.name == symbol
                     || string.Equals(
-                        TickerSymbols.For(info.m_investmentAI.GetLocalizedName()),
+                        StockSymbols.For(info),
                         symbol,
                         StringComparison.OrdinalIgnoreCase
                     )

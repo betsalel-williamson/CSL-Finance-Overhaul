@@ -46,13 +46,19 @@ Order is the proposed build order: UI-only proofs first, then opt-in instruments
   mod must render its own text on the facade (for example a text mesh or a generated texture placed
   over the boards on each Stock Exchange instance). Host-only and save-neutral.
 
-  **Step 1 (symbols + live values):** `TickerSymbols.For` maps each investment's display name to a
-  symbol (the artwork's own symbols where an investment matches, e.g. TJL, TVLC, DS, HS, FaI, FoI,
-  OrI, Oil, CAi, CCr, CC; new ones `GeI`, `GGI`, `IDX`; a fallback rule for unknown names).
-  `TickerFeed` builds the line once per in-game day from vanilla `GetLocalizedName` and
-  `CalculateChangeRate(id, ref data, 5)`, the exact calls behind the Economy panel's Change rate,
-  for unlocked investments, formatted by `TickerLine` as `SYM ( +2.67 )` and never `NaN` (`( -- )`).
-  Logged as `ticker: …` and kept in `TickerFeed.CurrentLine`.
+  **Step 1 (symbols + live values):** `SymbolBook` gives every stock prefab its own symbol, keyed by
+  **prefab name** (the same in every language and game version; display names are not — the game's
+  `Chirp Coin` prefab now shows as "ChirperCrypto"). The game's 13 prefabs and the mod's `Index` /
+  test stock have fixed symbols, using the facade artwork's where it has one: CHC (ChirperCrypto),
+  CAi, CCr, DS, HS, GGI, FaI, FoI, GeI, Oil, OrI, TJL, TVLC, IDX, TST. Any other prefab (a game
+  update, another mod) gets a candidate from its display name, extended with more letters, then a
+  digit, until it is unique; fixed symbols are reserved even when unlisted. Symbols are display only
+  (orders and saves key on prefab names). The dev `log-symbols` step lists every prefab with its
+  symbol, and game UI scenario `28-symbols-unique` fails on any clash. `TickerFeed` builds the line
+  once per in-game day from vanilla `GetLocalizedName` and `CalculateChangeRate(id, ref data, 5)`,
+  the exact calls behind the Economy panel's Change rate, for unlocked investments, formatted by
+  `TickerLine` as `SYM ( +2.67 )` and never `NaN` (`( -- )`). Logged as `ticker: …` and kept in
+  `TickerFeed.CurrentLine`.
 
 **Step 2a (shipped):** `TickerBoards` / `TickerOverlay` draw three live boards exactly over the
 vanilla boards, read from the Stock Exchange's three `AnimUV` sub-meshes (centre x −7.7…7.7, y

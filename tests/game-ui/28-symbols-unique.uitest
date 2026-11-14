@@ -1,0 +1,5 @@
+# Read only: logs every stock prefab with its symbol. Fails if two stocks share a symbol
+# (e.g. a game update or another mod adds a stock).
+name every stock prefab has its own ticker symbol (no clashes on the LED or in the Stock Monitor)
+log-symbols
+expect-log no clashes
