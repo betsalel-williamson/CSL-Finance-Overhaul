@@ -15,5 +15,10 @@ namespace FinanceOverhaul.Market
         /// Read when the investment collection loads, so toggle before loading a city.
         /// </summary>
         public bool IndexStockEnabled { get; set; }
+
+        /// <summary>
+        /// Live Stock Exchange ticker overlay. Visual only and save-neutral, so on by default.
+        /// </summary>
+        public bool LiveTickerEnabled { get; set; } = true;
     }
 }

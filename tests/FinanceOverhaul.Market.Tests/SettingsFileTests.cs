@@ -15,6 +15,14 @@ namespace FinanceOverhaul.Market.Tests
         }
 
         [Fact]
+        public void RoundTrip_LiveTickerOff()
+        {
+            var original = new ProbeSettings { LiveTickerEnabled = false };
+            Assert.False(SettingsFile.Parse(SettingsFile.Format(original)).LiveTickerEnabled);
+            Assert.True(SettingsFile.Parse("").LiveTickerEnabled);
+        }
+
+        [Fact]
         public void Parse_EmptyOrNullGivesSaveSafeDefaults()
         {
             foreach (string text in new[] { null, "", "   \n" })

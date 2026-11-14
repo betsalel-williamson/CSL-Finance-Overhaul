@@ -117,6 +117,75 @@ namespace FinanceOverhaul.Market
             return sb.ToString();
         }
 
+        // Figma tokens color/ticker/* (sampled from the vanilla facade boards).
+        public const string SymbolHex = "#EFB058";
+        public const string GainHex = "#4EF465";
+        public const string LossHex = "#E9424F";
+        public const string UnknownHex = "#9FB0C0";
+
+        /// <summary>
+        /// Splits entries into <paramref name="rows"/> board rows (as even as possible,
+        /// earlier rows fuller) using Unity rich-text color tags from the ticker tokens.
+        /// Always returns at least one row.
+        /// </summary>
+        public static string[] FormatRichRows(
+            IList<string> symbols,
+            IList<float> changeRates,
+            int rows
+        )
+        {
+            rows = Math.Max(1, rows);
+            var result = new string[rows];
+            for (int r = 0; r < rows; r++)
+            {
+                result[r] = string.Empty;
+            }
+
+            if (symbols == null || changeRates == null)
+            {
+                return result;
+            }
+
+            int n = Math.Min(symbols.Count, changeRates.Count);
+            int perRow = (n + rows - 1) / rows;
+            if (perRow == 0)
+            {
+                return result;
+            }
+
+            var sb = new StringBuilder(perRow * 48);
+            for (int r = 0; r < rows; r++)
+            {
+                sb.Length = 0;
+                for (int i = r * perRow; i < Math.Min(n, (r + 1) * perRow); i++)
+                {
+                    if (sb.Length > 0)
+                    {
+                        sb.Append(Separator);
+                    }
+
+                    float rate = changeRates[i];
+                    string color =
+                        float.IsNaN(rate) || float.IsInfinity(rate) ? UnknownHex
+                        : rate < 0f ? LossHex
+                        : GainHex;
+                    sb.Append("<color=")
+                        .Append(SymbolHex)
+                        .Append('>')
+                        .Append(symbols[i])
+                        .Append("</color> <color=")
+                        .Append(color)
+                        .Append(">( ")
+                        .Append(FormatRate(rate))
+                        .Append(" )</color>");
+                }
+
+                result[r] = sb.ToString();
+            }
+
+            return result;
+        }
+
         public static string FormatRate(float rate)
         {
             if (float.IsNaN(rate) || float.IsInfinity(rate))

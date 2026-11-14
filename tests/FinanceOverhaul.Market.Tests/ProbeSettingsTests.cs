@@ -11,6 +11,8 @@ namespace FinanceOverhaul.Market.Tests
             var settings = new ProbeSettings();
             Assert.False(settings.ProbeBiasEnabled);
             Assert.False(settings.IndexStockEnabled);
+            // Visual-only and save-neutral, so on by default.
+            Assert.True(settings.LiveTickerEnabled);
         }
     }
 }

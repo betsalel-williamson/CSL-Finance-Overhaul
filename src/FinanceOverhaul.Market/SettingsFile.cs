@@ -14,6 +14,7 @@ namespace FinanceOverhaul.Market
 
         private const string ProbeBiasKey = "probeBiasEnabled";
         private const string IndexStockKey = "indexStockEnabled";
+        private const string LiveTickerKey = "liveTickerEnabled";
 
         public static ProbeSettings Parse(string text)
         {
@@ -54,6 +55,10 @@ namespace FinanceOverhaul.Market
                 {
                     settings.IndexStockEnabled = flag;
                 }
+                else if (string.Equals(key, LiveTickerKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.LiveTickerEnabled = flag;
+                }
             }
 
             return settings;
@@ -71,6 +76,10 @@ namespace FinanceOverhaul.Market
             sb.Append(IndexStockKey)
                 .Append('=')
                 .Append(settings.IndexStockEnabled ? "true" : "false")
+                .Append('\n');
+            sb.Append(LiveTickerKey)
+                .Append('=')
+                .Append(settings.LiveTickerEnabled ? "true" : "false")
                 .Append('\n');
             return sb.ToString();
         }
