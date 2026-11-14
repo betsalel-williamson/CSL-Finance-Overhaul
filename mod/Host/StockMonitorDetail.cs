@@ -15,7 +15,7 @@ namespace FinanceOverhaul
     /// </summary>
     public sealed partial class StockMonitorHost
     {
-        private const float DetailHeight = 466f;
+        private const float DetailHeight = 490f;
         private const float ChartX = 12f,
             ChartY = 116f,
             ChartW = 286f,
@@ -44,6 +44,9 @@ namespace FinanceOverhaul
         private Texture2D dTexture;
         private readonly List<UILabel> dAxis = new List<UILabel>();
         private readonly List<UILabel[]> dStats = new List<UILabel[]>();
+
+        // (x, width) of each stats cell, in dStats order.
+        private readonly List<Vector2> dCells = new List<Vector2>();
 
         private static readonly Color32 Accent = new Color32(101, 214, 248, 255);
 
@@ -149,12 +152,17 @@ namespace FinanceOverhaul
             dToLabel = Label(detail, Prefix + "DetailTo", "today", 0.6f, Muted);
             dToLabel.relativePosition = new Vector3(ChartX + ChartW - 28f, ChartY + ChartH + 4f);
 
+            // Four rows of two cells, then Open orders across the full width (an order summary
+            // such as "1 · SELL ≥ ₡925 (target)" never fits half a row).
             float y = ChartY + ChartH + 26f;
-            for (int row = 0; row < 4; row++)
+            for (int row = 0; row < 5; row++)
             {
-                for (int col = 0; col < 2; col++)
+                int cols = row < 4 ? 2 : 1;
+                for (int col = 0; col < cols; col++)
                 {
                     float x = 12f + col * 172f;
+                    float cellW = cols == 2 ? 162f : Width - 24f;
+                    dCells.Add(new Vector2(x, cellW));
                     UILabel k = Label(detail, null, "", 0.7f, Muted);
                     k.relativePosition = new Vector3(x, y);
                     UILabel v = Label(
@@ -171,7 +179,7 @@ namespace FinanceOverhaul
                     UIPanel line = detail.AddUIComponent<UIPanel>();
                     line.backgroundSprite = "EmptySprite";
                     line.color = Divider;
-                    line.size = new Vector2(162f, 1f);
+                    line.size = new Vector2(cellW, 1f);
                     line.relativePosition = new Vector3(x, y + 19f);
                     line.isInteractive = false;
                     dStats.Add(new[] { k, v });
@@ -385,6 +393,13 @@ namespace FinanceOverhaul
             SetStat(
                 3,
                 1,
+                "Current value",
+                owned > 0 ? StockMonitor.PriceText(OrderRules.Price(price, owned)) : "—",
+                White
+            );
+            SetStat(
+                4,
+                0,
                 "Open orders",
                 StockDetail.OrdersSummary(orders),
                 orders.Count > 0 ? Gold : Muted
@@ -400,10 +415,37 @@ namespace FinanceOverhaul
 
         private void SetStat(int row, int col, string key, string value, Color32 colour)
         {
-            UILabel[] kv = dStats[row * 2 + col];
+            int i = row * 2 + col;
+            UILabel[] kv = dStats[i];
             kv[0].text = key;
             kv[1].text = value;
             kv[1].textColor = colour;
+            FitCell(kv[0], kv[1], dCells[i]);
+        }
+
+        /// <summary>
+        /// Value right-aligned in the space the key leaves; a value that still does not fit is
+        /// scaled down (never below 0.6) instead of being cut off.
+        /// </summary>
+        private static void FitCell(UILabel key, UILabel value, Vector2 cell)
+        {
+            const float gap = 6f,
+                baseScale = 0.75f,
+                minScale = 0.6f;
+            float x = cell.x,
+                w = cell.y;
+            float available = w - key.width - gap;
+            value.textScale = baseScale;
+            value.autoSize = true;
+            float needed = value.width;
+            if (needed > available && needed > 0f)
+            {
+                value.textScale = Mathf.Max(minScale, baseScale * available / needed);
+            }
+
+            value.autoSize = false;
+            value.size = new Vector2(Mathf.Max(0f, available), 16f);
+            value.relativePosition = new Vector3(x + key.width + gap, value.relativePosition.y);
         }
 
         private static void StyleRange(UIButton b, bool on)
@@ -479,6 +521,7 @@ namespace FinanceOverhaul
 
             dAxis.Clear();
             dStats.Clear();
+            dCells.Clear();
             detail = null; // destroyed with the window
             detailId = -1;
         }

@@ -33,7 +33,11 @@ window remembers which view was open).
   yesterday's price, grid with ₡ labels at the high, the low and two steps between.
 - **Stats:** today, yesterday, the range's high and low; shares held, avg cost / share
   ([Cost basis](./cost-basis.md)), gain or loss like Your Portfolio (current value − you invested;
-  "—" with no shares), and open orders (e.g. "1 · SELL ≥ ₡120 (target)", or "3 open").
+  "—" with no shares) and current value; then **Open orders** across the full width — one or two
+  orders in short form ("BUY ≤ ₡95 · SELL ≥ ₡125 (target)"), or "3 open (see Your Portfolio)". Each
+  value is right-aligned in the space its label leaves and shrinks slightly (never below 0.6) rather
+  than being cut off; scenario `33-tst-monitor-orders-fit` checks the list, detail and Your
+  Portfolio cards with three open orders.
 - **Buy / Sell** open the game's Invest dialog for that stock (with the order tabs). Sell is
   disabled when the city holds none.
 

@@ -149,8 +149,9 @@ namespace FinanceOverhaul.Market
         }
 
         /// <summary>
-        /// "—", "1 · BUY ≤ ₡900", "1 · SELL ≤ ₡95 (stop)", "1 · SELL ≥ ₡120 (target)",
-        /// "1 · SELL, 10% trail", or "3 open" for several.
+        /// The detail's Open orders row (full width): "—", one or two orders in short form —
+        /// "SELL ≥ ₡925 (target)", "BUY ≤ ₡900 · SELL ≤ ₡95 (stop)" — or "3 open (see Your
+        /// Portfolio)" for more.
         /// </summary>
         public static string OrdersSummary(IList<TradeOrder> orders)
         {
@@ -159,25 +160,36 @@ namespace FinanceOverhaul.Market
                 return "—";
             }
 
-            if (orders.Count > 1)
+            if (orders.Count > 2)
             {
-                return orders.Count.ToString(CultureInfo.InvariantCulture) + " open";
+                return orders.Count.ToString(CultureInfo.InvariantCulture)
+                    + " open (see Your Portfolio)";
             }
 
-            TradeOrder o = orders[0];
+            var parts = new string[orders.Count];
+            for (int i = 0; i < parts.Length; i++)
+            {
+                parts[i] = Short(orders[i]);
+            }
+
+            return string.Join(" · ", parts);
+        }
+
+        private static string Short(TradeOrder o)
+        {
             string p = "₡" + o.TriggerPrice.ToString("N0", CultureInfo.InvariantCulture);
             switch (o.Kind)
             {
                 case OrderKind.StopLossSell:
-                    return "1 · SELL ≤ " + p + " (stop)";
+                    return "SELL ≤ " + p + " (stop)";
                 case OrderKind.TakeProfitSell:
-                    return "1 · SELL ≥ " + p + " (target)";
+                    return "SELL ≥ " + p + " (target)";
                 case OrderKind.TrailingStopSell:
-                    return "1 · SELL, "
+                    return "SELL, "
                         + o.TrailPercent.ToString(CultureInfo.InvariantCulture)
                         + "% trail";
                 default:
-                    return "1 · BUY ≤ " + p;
+                    return "BUY ≤ " + p;
             }
         }
     }

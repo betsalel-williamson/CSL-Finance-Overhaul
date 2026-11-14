@@ -756,7 +756,8 @@ namespace FinanceOverhaul
             r.Name.isVisible = !compact;
             r.Symbol.relativePosition = new Vector3(12f, compact ? 7f : 7f);
             r.Spark.isVisible = Settings.ShowSparklines;
-            r.Spark.relativePosition = new Vector3(compact ? 150f : 186f, (h - SparkH) / 2f);
+            // Compact: leave room for a 6-digit price (₡54,191) between the line and the pill.
+            r.Spark.relativePosition = new Vector3(compact ? 134f : 186f, (h - SparkH) / 2f);
             r.Price.relativePosition = compact
                 ? new Vector3(Width - 178f, 8f)
                 : new Vector3(Width - 102f, 6f);

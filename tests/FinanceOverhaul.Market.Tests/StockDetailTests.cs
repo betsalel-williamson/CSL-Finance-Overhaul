@@ -72,30 +72,41 @@ namespace FinanceOverhaul.Market.Tests
         {
             Assert.Equal("—", StockDetail.OrdersSummary(new List<TradeOrder>()));
             Assert.Equal(
-                "1 · BUY ≤ ₡900",
+                "BUY ≤ ₡900",
                 StockDetail.OrdersSummary(new[] { TradeOrder.LimitBuy(1, "x", 5, 900, 0) })
             );
             Assert.Equal(
-                "1 · SELL ≤ ₡95 (stop)",
+                "SELL ≤ ₡95 (stop)",
                 StockDetail.OrdersSummary(new[] { TradeOrder.StopLossSell(1, "x", 5, 95, 0) })
             );
             Assert.Equal(
-                "1 · SELL ≥ ₡120 (target)",
-                StockDetail.OrdersSummary(new[] { TradeOrder.TakeProfitSell(1, "x", 5, 120, 0) })
+                "SELL ≥ ₡925 (target)",
+                StockDetail.OrdersSummary(new[] { TradeOrder.TakeProfitSell(1, "x", 5, 925, 0) })
             );
             Assert.Equal(
-                "1 · SELL, 10% trail",
+                "SELL, 10% trail",
                 StockDetail.OrdersSummary(
                     new[] { TradeOrder.TrailingStopSell(1, "x", 5, 10, 100f, 0) }
                 )
             );
             Assert.Equal(
-                "2 open",
+                "BUY ≤ ₡900 · SELL ≤ ₡95 (stop)",
                 StockDetail.OrdersSummary(
                     new[]
                     {
                         TradeOrder.LimitBuy(1, "x", 5, 900, 0),
                         TradeOrder.StopLossSell(2, "x", 5, 95, 0),
+                    }
+                )
+            );
+            Assert.Equal(
+                "3 open (see Your Portfolio)",
+                StockDetail.OrdersSummary(
+                    new[]
+                    {
+                        TradeOrder.LimitBuy(1, "x", 5, 900, 0),
+                        TradeOrder.StopLossSell(2, "x", 5, 95, 0),
+                        TradeOrder.TakeProfitSell(3, "x", 5, 120, 0),
                     }
                 )
             );
