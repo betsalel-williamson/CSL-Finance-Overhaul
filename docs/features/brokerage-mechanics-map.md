@@ -72,6 +72,8 @@ a traditional ring-buffer marquee (`LedMarquee`, Market, unit tested):
 
 - the window offset only moves forward, in whole dots (14 dots/s), and is never reset;
 - the next entry, with the newest values, is written into the ring just past the right edge;
+- colours follow real tickers on the printed value: up green, down red, unchanged `0.00` and unknown
+  `--` neutral grey (`LedText.RateColour`);
 - columns inside the window are never redrawn, so values on screen never change and daily updates
   never make the scroll jump; a changed list of investments simply scrolls in.
 

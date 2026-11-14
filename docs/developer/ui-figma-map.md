@@ -107,18 +107,21 @@ Built from library instances; in-game capture pending. Toggle off by default
 | 8   | `idx.chart`        | Basket history chart | Vanilla `ShareChart`                         |
 | 9   | `idx.description`  | Index description    | `Patcher.IndexLocalizedDescriptionPrefix`    |
 
-### Stock Exchange facade frame (`planned`)
+### Stock Exchange facade frame (`shipped`)
 
-Live ticker boards (`plan.live-ticker`). Screenshot: the vanilla facade at night; new UI: three
-`FO/TickerBoard` instances with the first live line the mod logged.
+Live LED ticker (`plan.live-ticker`). Screenshot: the vanilla facade at night; new UI: three
+`FO/TickerBoard` instances (LED dot-matrix, entries sorted by symbol, TVLC at 0.00 as captured in
+game).
 
-| #   | Catalog id         | Title         | Code evidence                                     |
-| --- | ------------------ | ------------- | ------------------------------------------------- |
-| 1   | `plan.live-ticker` | Ticker board  | Vanilla baked art; FO overlay is the next step    |
-| 2   | `ticker.symbol`    | Symbol        | `TickerSymbols.For`                               |
-| 3   | `ticker.gain`      | Gain          | `TickerFeed` (`CalculateChangeRate(id, data, 5)`) |
-| 4   | `ticker.loss`      | Loss          | `TickerLine`                                      |
-| 5   | `ticker.unknown`   | Unknown value | `TickerLine.FormatRate` (`--`, never `NaN`)       |
+| #   | Catalog id         | Title            | Code evidence                                        |
+| --- | ------------------ | ---------------- | ---------------------------------------------------- |
+| 1   | `plan.live-ticker` | Ticker board     | `TickerBoards` / `TickerOverlay`, `VanillaBoards`    |
+| 2   | `ticker.symbol`    | Symbol           | `TickerSymbols.For`                                  |
+| 3   | `ticker.gain`      | Gain             | `TickerFeed` (`CalculateChangeRate(id, data, 5)`)    |
+| 4   | `ticker.loss`      | Loss             | `LedText.RateColour`                                 |
+| 5   | `ticker.unknown`   | Unknown value    | `TickerLine.FormatRate` (`--`, never `NaN`)          |
+| 6   | `ticker.flat`      | Flat (no change) | `LedText.RateColour` (neutral when it prints `0.00`) |
+| 7   | `ticker.scroll`    | Scroll and clip  | `LedMarquee` (ring buffer, whole-dot steps)          |
 
 ### Planned frame (`planned`)
 
