@@ -31,6 +31,23 @@ for later; this slice only ties Index’s price to the live sector basket.
 4. **Fail soft** — If the Index listing cannot be created or sector prices cannot be read, log a
    clear message and leave the vanilla thirteen names alone.
 
+## Implementation
+
+- **Market** — `CityIndexBasket.TryComputeMark` owns the basket rules: exclude Index, keep only
+  eligible share stocks with finite positive marks, equal weight, and return `false` on an empty
+  basket so the Host keeps the vanilla value.
+- **Host** — a Harmony postfix on `InvestmentCollection.Awake` clones the first share-based
+  `RandomRiskInvestmentAI` prefab, renames it **Index**, and registers it with
+  `PrefabCollection<InvestmentInfo>`. Vanilla `EconomyManager.LateUpdateData` then creates one
+  investment per loaded prefab, so listing, saving, and Buy / Sell all stay vanilla.
+- **Mark** — a postfix on `RandomRiskInvestmentAI.CalculateValue` replaces the Index value with
+  the basket mark. Prefixes on `GetLocalizedName` / `GetLocalizedDescription` supply the display
+  text. `InvestmentCollection.OnDestroy` unregisters the prefab.
+- **Removal** — if the mod is disabled, vanilla drops the investment whose prefab is missing on the
+  next load. Index shares held at that point are lost and are not refunded.
+- **Readout** — after a level loads, `finance-overhaul.log` shows a line like
+  `index: listed=True value=… basket=… sectors=13`.
+
 ## Acceptance
 
 - Market unit tests cover equal-weight Index marks (empty basket, NaNs skipped, Index excluded from

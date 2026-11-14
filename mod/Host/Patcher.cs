@@ -30,8 +30,9 @@ namespace FinanceOverhaul
             {
                 Harmony harmony = new Harmony(HarmonyId);
                 int applied = ApplyStockUpdatePostfixes(harmony);
+                int index = ApplyIndexPatches(harmony);
                 patched = true;
-                ModLog.Info("harmony patched targets=" + applied);
+                ModLog.Info("harmony patched targets=" + applied + " index=" + index);
                 LogDiscoverySummaryOnce();
             }
             catch (Exception ex)
@@ -215,6 +216,150 @@ namespace FinanceOverhaul
             }
 
             return applied;
+        }
+
+        private static int ApplyIndexPatches(Harmony harmony)
+        {
+            int applied = 0;
+            applied += TryPatch(
+                harmony,
+                AccessTools.Method(typeof(InvestmentCollection), "Awake"),
+                null,
+                nameof(IndexCollectionAwakePostfix)
+            );
+            applied += TryPatch(
+                harmony,
+                AccessTools.Method(typeof(InvestmentCollection), "OnDestroy"),
+                nameof(IndexCollectionOnDestroyPrefix),
+                null
+            );
+            applied += TryPatch(
+                harmony,
+                AccessTools.Method(typeof(RandomRiskInvestmentAI), "CalculateValue"),
+                null,
+                nameof(IndexCalculateValuePostfix)
+            );
+            applied += TryPatch(
+                harmony,
+                AccessTools.Method(typeof(InvestmentAI), "GetLocalizedName"),
+                nameof(IndexLocalizedNamePrefix),
+                null
+            );
+            applied += TryPatch(
+                harmony,
+                AccessTools.Method(typeof(InvestmentAI), "GetLocalizedDescription"),
+                nameof(IndexLocalizedDescriptionPrefix),
+                null
+            );
+            return applied;
+        }
+
+        private static int TryPatch(
+            Harmony harmony,
+            MethodBase target,
+            string prefixName,
+            string postfixName
+        )
+        {
+            if (target == null)
+            {
+                ModLog.Warn("index: patch target missing for " + (prefixName ?? postfixName));
+                return 0;
+            }
+
+            try
+            {
+                HarmonyMethod prefix =
+                    prefixName == null
+                        ? null
+                        : new HarmonyMethod(
+                            typeof(Patcher).GetMethod(
+                                prefixName,
+                                BindingFlags.Static | BindingFlags.NonPublic
+                            )
+                        );
+                HarmonyMethod postfix =
+                    postfixName == null
+                        ? null
+                        : new HarmonyMethod(
+                            typeof(Patcher).GetMethod(
+                                postfixName,
+                                BindingFlags.Static | BindingFlags.NonPublic
+                            )
+                        );
+                harmony.Patch(target, prefix: prefix, postfix: postfix);
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("index: skip patch " + target.Name + ": " + ex.Message);
+                return 0;
+            }
+        }
+
+        private static void IndexCollectionAwakePostfix(InvestmentCollection __instance)
+        {
+            try
+            {
+                IndexListing.Register(__instance);
+            }
+            catch
+            {
+                // fail soft
+            }
+        }
+
+        private static void IndexCollectionOnDestroyPrefix(InvestmentCollection __instance)
+        {
+            try
+            {
+                IndexListing.Unregister();
+            }
+            catch
+            {
+                // fail soft
+            }
+        }
+
+        private static void IndexCalculateValuePostfix(
+            RandomRiskInvestmentAI __instance,
+            ref float __result
+        )
+        {
+            try
+            {
+                IndexListing.ApplyMark(__instance, ref __result);
+            }
+            catch
+            {
+                // fail soft — never break simulation ticks
+            }
+        }
+
+        private static bool IndexLocalizedNamePrefix(InvestmentAI __instance, ref string __result)
+        {
+            if (!IndexListing.IsIndex(__instance))
+            {
+                return true;
+            }
+
+            __result = CityIndexBasket.IndexName;
+            return false;
+        }
+
+        private static bool IndexLocalizedDescriptionPrefix(
+            InvestmentAI __instance,
+            ref string __result
+        )
+        {
+            if (!IndexListing.IsIndex(__instance))
+            {
+                return true;
+            }
+
+            __result =
+                "Equal-weight city index of every listed sector stock. One sector crash hurts less than holding it alone.";
+            return false;
         }
 
         private static void StockUpdatePostfix(object __instance)

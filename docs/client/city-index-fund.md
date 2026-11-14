@@ -13,3 +13,6 @@ together (equal weight) — similar in spirit to a Vanguard total-market fund fo
 
 Leave **MVP probe bias** off for normal play; if it is on for hook testing, sector marks (and thus
 Index) can look slightly elevated.
+
+Sell your Index shares before disabling Finance Overhaul. Without the mod the game drops the Index
+listing on the next load, and any shares still held are lost.
