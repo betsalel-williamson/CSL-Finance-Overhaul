@@ -196,10 +196,15 @@ namespace FinanceOverhaul
                     group.SetActive(tickerOn);
                 }
 
+                // Text draws over geometry (GUI/Text Shader), so show it only when the camera
+                // is in front of the facade (group forward points into the building) and
+                // close enough to read it.
+                Vector3 toEye = eye - group.transform.GetChild(0).position;
                 bool near =
                     tickerOn
                     && camera != null
-                    && (group.transform.GetChild(0).position - eye).sqrMagnitude <= maxSqr;
+                    && toEye.sqrMagnitude <= maxSqr
+                    && Vector3.Dot(toEye, group.transform.forward) < 0f;
                 for (int i = 0; i < BoardCentres.Length && i < group.transform.childCount; i++)
                 {
                     GameObject board = group.transform.GetChild(i).gameObject;
@@ -368,54 +373,73 @@ namespace FinanceOverhaul
             return Resources.GetBuiltinResource<Font>("Arial.ttf");
         }
 
+        private static readonly string[] ProbeShaders =
+        {
+            "Legacy Shaders/Diffuse",
+            "Diffuse",
+            "Standard",
+            "Unlit/Color",
+            "Unlit/Texture",
+            "Unlit/Transparent",
+            "Sprites/Default",
+            "UI/Default",
+            "GUI/Text Shader",
+            "Custom/Props/Prop/Default",
+        };
+
         /// <summary>
-        /// Unity's default font material (GUI/Text Shader) uses ZTest Always, so text
-        /// showed through the building. UI/Default with a LessEqual Z test and the
-        /// alpha-only atlas fix (_TextureSampleAdd = (1,1,1,0), as Unity UI text does)
-        /// is hidden by geometry in front of it. Null when the shader is missing.
+        /// Text keeps Unity's font material (GUI/Text Shader): in Cities' render setup a
+        /// depth-tested UI/Default material drew nothing at all (verified with an
+        /// in-game capture). Occlusion is handled by <see cref="UpdateVisibility"/>
+        /// (facing + distance) instead. Logs which built-in shaders this build has.
         /// </summary>
         private static Material CreateDepthTestedMaterial(Font font)
         {
-            Shader shader = Shader.Find("UI/Default");
-            if (shader == null || font == null || font.material == null)
+            var found = new List<string>();
+            foreach (string name in ProbeShaders)
             {
-                ModLog.Warn("ticker: UI/Default shader not found; text draws over geometry");
-                return null;
+                if (Shader.Find(name) != null)
+                {
+                    found.Add(name);
+                }
             }
 
-            var material = new Material(shader);
-            material.name = "FinanceOverhaulTickerText";
-            material.mainTexture = font.material.mainTexture;
-            material.SetVector("_TextureSampleAdd", new Vector4(1f, 1f, 1f, 0f));
-            material.SetInt(
-                "unity_GUIZTestMode",
-                (int)UnityEngine.Rendering.CompareFunction.LessEqual
-            );
-            material.renderQueue = 3000;
-            ModLog.Info("ticker: text material=UI/Default (depth-tested)");
-            return material;
+            ModLog.Info("ticker: shaders available: " + string.Join(", ", found.ToArray()));
+            return null;
         }
 
-        /// <summary>Flat board-colored, depth-tested material for the backing panels.</summary>
+        /// <summary>
+        /// Opaque, lit board panel (first available of Legacy Diffuse / Standard /
+        /// Unlit Color), so it sits in the scene like vanilla geometry.
+        /// </summary>
         private static Material CreatePanelMaterial()
         {
-            Shader shader = Shader.Find("UI/Default");
-            if (shader == null)
+            foreach (
+                string name in new[]
+                {
+                    "Legacy Shaders/Diffuse",
+                    "Diffuse",
+                    "Standard",
+                    "Unlit/Color",
+                }
+            )
             {
-                return null;
+                Shader shader = Shader.Find(name);
+                if (shader == null)
+                {
+                    continue;
+                }
+
+                var material = new Material(shader);
+                material.name = "FinanceOverhaulTickerPanel";
+                // color/ticker/board (#1E303E) from the Figma tokens.
+                material.color = new Color32(0x1E, 0x30, 0x3E, 0xFF);
+                ModLog.Info("ticker: panel material=" + name);
+                return material;
             }
 
-            var material = new Material(shader);
-            material.name = "FinanceOverhaulTickerPanel";
-            material.mainTexture = Texture2D.whiteTexture;
-            // color/ticker/board (#1E303E) from the Figma tokens.
-            material.color = new Color32(0x1E, 0x30, 0x3E, 0xFF);
-            material.SetInt(
-                "unity_GUIZTestMode",
-                (int)UnityEngine.Rendering.CompareFunction.LessEqual
-            );
-            material.renderQueue = 2999; // just before the text
-            return material;
+            ModLog.Warn("ticker: no panel shader available; boards drawn without panels");
+            return null;
         }
 
         /// <summary>One group per Stock Exchange: centre, left and right boards.</summary>
