@@ -82,22 +82,29 @@ namespace FinanceOverhaul
             // Text and panel share one plane just in front of the old board face (z 23.6), so
             // there is no parallax between them at steep camera angles. The text ignores
             // depth (GUI/Text Shader), so being coplanar with the panel cannot hide it.
-            new Vector3(0f, 16.9f, 23.65f), // centre (Submesh01)
-            new Vector3(-13.15f, 12.45f, 23.65f), // left (Submesh02)
-            new Vector3(13.15f, 12.45f, 23.65f), // right (Submesh03)
+            // Screen recessed inside the vanilla bezel (bezel lip runs z 23.6 → 23.4).
+            new Vector3(0f, 16.9f, 23.5f), // centre (Submesh01)
+            new Vector3(-13.15f, 12.45f, 23.5f), // left (Submesh02)
+            new Vector3(13.15f, 12.45f, 23.5f), // right (Submesh03)
         };
         internal const float BoardWidth = 15.3f;
         internal const float PanelBehindText = 0f; // coplanar: no parallax
         internal const float BoardHeight = 3.4f;
 
+        // The vanilla frame has a 0.3 m bezel (inner screen x ±7.4, y 15.5..18.3 on the
+        // centre board); our screen fills that opening.
+        internal const float Bezel = 0.3f;
+        internal const float ScreenWidth = BoardWidth - 2f * Bezel; // 14.7 m
+        internal const float ScreenHeight = BoardHeight - 2f * Bezel; // 2.8 m
+
         // Padding from the Figma FO/TickerBoard design (600 px board: 14 px sides ≈ 2.5%,
-        // 8 px top/bottom ≈ 7%), scaled to the 15.3 × 3.4 m vanilla board.
+        // 8 px top/bottom ≈ 7%), inside the screen.
         internal const float PaddingX = 0.4f;
         internal const float PaddingY = 0.24f;
-        internal const float MaxRowWidth = BoardWidth - 2f * PaddingX; // 14.5 m
-        internal const float RowSpacing = (BoardHeight - 2f * PaddingY) / 3f; // ≈ 0.97 m
-        internal const float RowHeight = 0.8f; // metres per row of text
-        internal const float InnerHeight = BoardHeight - 2f * PaddingY; // 2.92 m
+        internal const float MaxRowWidth = ScreenWidth - 2f * PaddingX; // 13.9 m
+        internal const float InnerHeight = ScreenHeight - 2f * PaddingY; // 2.32 m
+        internal const float RowSpacing = InnerHeight / 3f; // ≈ 0.77 m
+        internal const float RowHeight = 0.65f; // metres per row of text
         internal const int FontSize = 64;
 
         // Performance tiers: visibility is a distance check per Stock Exchange; text work
@@ -124,6 +131,7 @@ namespace FinanceOverhaul
         private Font font;
         private Material textMaterial;
         private Material panelMaterial;
+        private Material frameMaterial;
         private float nextRefresh;
         private float nextLod;
         private float nextRescan;
@@ -229,6 +237,7 @@ namespace FinanceOverhaul
                 font = PickFont();
                 textMaterial = CreateDepthTestedMaterial(font);
                 panelMaterial = CreatePanelMaterial();
+                frameMaterial = CreateFrameMaterial();
             }
 
             var seen = new HashSet<ushort>();
@@ -453,6 +462,62 @@ namespace FinanceOverhaul
             return null;
         }
 
+        /// <summary>
+        /// Real board geometry: redraws the vanilla board meshes (box frame, bezel and
+        /// recess, already in the building's frame) with a plain lit near-black material
+        /// instead of the baked scrolling texture. Children after boards and panels.
+        /// </summary>
+        private void AddFrames(GameObject group, BuildingInfo info)
+        {
+            if (frameMaterial == null || info.m_subMeshes == null)
+            {
+                return;
+            }
+
+            if (group.transform.Find("Frame0") != null)
+            {
+                return;
+            }
+
+            int n = 0;
+            for (int i = 0; i < info.m_subMeshes.Length; i++)
+            {
+                BuildingInfo.MeshInfo mesh = info.m_subMeshes[i];
+                if (mesh == null || !VanillaBoards.IsBoard(mesh) || mesh.m_subInfo.m_mesh == null)
+                {
+                    continue;
+                }
+
+                var frame = new GameObject("Frame" + n++);
+                frame.transform.SetParent(group.transform, false);
+                // Undo the group's 180° turn so mesh vertices (building frame) line up.
+                frame.transform.localPosition = Vector3.zero;
+                frame.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+                frame.AddComponent<MeshFilter>().sharedMesh = mesh.m_subInfo.m_mesh;
+                frame.AddComponent<MeshRenderer>().sharedMaterial = frameMaterial;
+            }
+        }
+
+        /// <summary>Lit near-black frame so the board edges and depth catch the light.</summary>
+        private static Material CreateFrameMaterial()
+        {
+            foreach (string name in new[] { "Legacy Shaders/Diffuse", "Diffuse" })
+            {
+                Shader shader = Shader.Find(name);
+                if (shader == null)
+                {
+                    continue;
+                }
+
+                var material = new Material(shader);
+                material.name = "FinanceOverhaulTickerFrame";
+                material.color = new Color32(0x0E, 0x14, 0x18, 0xFF);
+                return material;
+            }
+
+            return null;
+        }
+
         /// <summary>One group per Stock Exchange: centre, left and right boards.</summary>
         private GameObject CreateBoard(ushort id)
         {
@@ -478,7 +543,7 @@ namespace FinanceOverhaul
                 }
 
                 panel.transform.SetParent(group.transform, false);
-                panel.transform.localScale = new Vector3(BoardWidth, BoardHeight, 1f);
+                panel.transform.localScale = new Vector3(ScreenWidth, ScreenHeight, 1f);
                 Renderer renderer = panel.GetComponent<Renderer>();
                 if (renderer != null && panelMaterial != null)
                 {
@@ -536,6 +601,8 @@ namespace FinanceOverhaul
                     );
                 }
             }
+
+            AddFrames(group, info);
 
             if (!placementLogged)
             {

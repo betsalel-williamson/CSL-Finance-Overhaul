@@ -85,7 +85,7 @@ namespace FinanceOverhaul
             logged = false;
         }
 
-        private static bool IsBoard(BuildingInfo.MeshInfo mesh)
+        internal static bool IsBoard(BuildingInfo.MeshInfo mesh)
         {
             BuildingInfoBase sub = mesh.m_subInfo;
             return sub != null
