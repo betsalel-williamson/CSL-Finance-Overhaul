@@ -32,9 +32,10 @@ namespace FinanceOverhaul
             get { return indexInfo != null; }
         }
 
+        /// <summary>Postfix target: InvestmentCollection.Awake (city loading).</summary>
         public static void Register(InvestmentCollection collection)
         {
-            if (indexInfo != null || collection == null || collection.m_prefabs == null)
+            if (collection == null || collection.m_prefabs == null)
             {
                 return;
             }
@@ -45,19 +46,89 @@ namespace FinanceOverhaul
                 return;
             }
 
+            if (indexInfo != null || TryAdoptExisting())
+            {
+                return;
+            }
+
+            InvestmentInfo source = FindSectorSource(collection.m_prefabs);
+            if (source == null)
+            {
+                ModLog.Info(
+                    "index: collection '"
+                        + collection.name
+                        + "' has no sector stock to clone; skipping"
+                );
+                return;
+            }
+
+            RegisterFrom(source, false);
+        }
+
+        /// <summary>
+        /// Lists Index in an already-loaded city: called when the toggle is turned
+        /// on, after a hot reload (PatchAll), and after a level loads. Main thread.
+        /// Registers (or adopts) the prefab, binds it, then queues investment
+        /// creation on the simulation thread exactly like EconomyManager.LateUpdateData.
+        /// </summary>
+        public static void EnsureInLoadedCity()
+        {
             try
             {
-                InvestmentInfo source = FindSectorSource(collection.m_prefabs);
-                if (source == null)
+                if (Mod.Settings == null || !Mod.Settings.IndexStockEnabled)
                 {
-                    ModLog.Info(
-                        "index: collection '"
-                            + collection.name
-                            + "' has no sector stock to clone; skipping"
-                    );
                     return;
                 }
 
+                if (!LoadingManager.exists || !LoadingManager.instance.m_loadingComplete)
+                {
+                    return;
+                }
+
+                if (indexInfo == null && !TryAdoptExisting())
+                {
+                    InvestmentInfo source = FindLoadedSectorSource();
+                    if (source == null)
+                    {
+                        ModLog.Info("index: no sector stock loaded (Financial Districts missing?)");
+                        return;
+                    }
+
+                    if (!RegisterFrom(source, true))
+                    {
+                        return;
+                    }
+                }
+
+                InvestmentInfo info = indexInfo;
+                SimulationManager.instance.AddAction(() => CreateInvestmentIfMissing(info));
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn(
+                    "index: mid-game listing failed, vanilla stocks untouched: " + ex.Message
+                );
+            }
+        }
+
+        private static bool TryAdoptExisting()
+        {
+            // Hot reload: an older copy of this mod may already have registered Index.
+            if (!PrefabCollection<InvestmentInfo>.LoadedExists(CityIndexBasket.IndexName))
+            {
+                return false;
+            }
+
+            indexInfo = PrefabCollection<InvestmentInfo>.FindLoaded(CityIndexBasket.IndexName);
+            markFailureLogged = false;
+            ModLog.Info("index: adopted already-registered Index prefab");
+            return indexInfo != null;
+        }
+
+        private static bool RegisterFrom(InvestmentInfo source, bool bindNow)
+        {
+            try
+            {
                 holder = new GameObject("FinanceOverhaulIndexHolder");
                 holder.SetActive(false);
                 UnityEngine.Object.DontDestroyOnLoad(holder);
@@ -70,7 +141,7 @@ namespace FinanceOverhaul
                 {
                     ModLog.Warn("index: cloned prefab lost InvestmentInfo; skipping");
                     DestroyHolder();
-                    return;
+                    return false;
                 }
 
                 info.m_name = CityIndexBasket.IndexName;
@@ -81,16 +152,102 @@ namespace FinanceOverhaul
                     new[] { info },
                     null
                 );
+                if (bindNow)
+                {
+                    // Mid-game: give the new prefab a simulation index now (BindPrefabs
+                    // appends unbound scene prefabs) so Investment.Info resolves.
+                    PrefabCollection<InvestmentInfo>.BindPrefabs();
+                }
+
                 indexInfo = info;
                 markFailureLogged = false;
-                ModLog.Info("index: registered prefab cloned from '" + source.name + "'");
+                ModLog.Info(
+                    "index: registered prefab cloned from '"
+                        + source.name
+                        + "' index="
+                        + info.m_prefabDataIndex
+                );
+                return true;
             }
             catch (Exception ex)
             {
                 ModLog.Warn("index: register failed, vanilla stocks untouched: " + ex.Message);
                 indexInfo = null;
                 DestroyHolder();
+                return false;
             }
+        }
+
+        /// <summary>Simulation thread.</summary>
+        private static void CreateInvestmentIfMissing(InvestmentInfo info)
+        {
+            try
+            {
+                if (info == null || FindIndexInvestment() >= 0)
+                {
+                    return;
+                }
+
+                byte id;
+                if (
+                    !EconomyManager.instance.CreateInvestment(
+                        out id,
+                        ref SimulationManager.instance.m_randomizer,
+                        info
+                    )
+                )
+                {
+                    ModLog.Warn("index: no free investment slot; Index not listed");
+                    return;
+                }
+
+                InvestmentInfo bound = EconomyManager.instance.m_investments.m_buffer[id].Info;
+                ModLog.Info(
+                    "index: created investment id="
+                        + id
+                        + " info="
+                        + (bound == null ? "null" : bound.m_name)
+                        + " value="
+                        + EconomyManager.instance.m_investments.m_buffer[id].value
+                        + " (reopen Economy to see it)"
+                );
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("index: create investment failed: " + ex.Message);
+            }
+        }
+
+        private static int FindIndexInvestment()
+        {
+            Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                if ((buffer[i].m_flags & Investment.Flags.Created) == 0)
+                {
+                    continue;
+                }
+
+                InvestmentInfo info = buffer[i].Info;
+                if (info != null && CityIndexBasket.IsIndexName(info.m_name))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private static InvestmentInfo FindLoadedSectorSource()
+        {
+            int count = PrefabCollection<InvestmentInfo>.LoadedCount();
+            var loaded = new InvestmentInfo[count];
+            for (int i = 0; i < count; i++)
+            {
+                loaded[i] = PrefabCollection<InvestmentInfo>.GetLoaded((uint)i);
+            }
+
+            return FindSectorSource(loaded);
         }
 
         public static void Unregister()
@@ -111,6 +268,15 @@ namespace FinanceOverhaul
             catch (Exception ex)
             {
                 ModLog.Warn("index: unregister failed: " + ex.Message);
+            }
+
+            if (holder == null && indexInfo != null)
+            {
+                // Adopted from an older assembly: destroy its holder too.
+                Transform parent = indexInfo.transform.parent;
+                UnityEngine.Object.Destroy(
+                    parent != null ? parent.gameObject : indexInfo.gameObject
+                );
             }
 
             indexInfo = null;

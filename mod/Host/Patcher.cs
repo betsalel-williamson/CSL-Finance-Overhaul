@@ -36,6 +36,8 @@ namespace FinanceOverhaul
                 ModLog.Info(
                     "harmony patched targets=" + applied + " index=" + index + " shareField=" + ui
                 );
+                // Hot reload / mid-game enable: list Index in the running city if enabled.
+                IndexListing.EnsureInLoadedCity();
                 LogDiscoverySummaryOnce();
             }
             catch (Exception ex)

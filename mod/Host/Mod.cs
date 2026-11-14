@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.IO;
 using FinanceOverhaul.Market;
 #if HAS_CITIES
 using CitiesHarmony.API;
@@ -119,12 +120,70 @@ namespace FinanceOverhaul
                 + local.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
         }
 
+        /// <summary>
+        /// Options persist in a small key=value file so they survive hot reload
+        /// (every reload calls OnEnabled on a fresh assembly) and game restarts.
+        /// </summary>
+        internal static string SettingsPath
+        {
+            get
+            {
+#if HAS_CITIES
+                try
+                {
+                    return Path.Combine(
+                        ColossalFramework.IO.DataLocation.localApplicationData,
+                        SettingsFile.FileName
+                    );
+                }
+                catch
+                {
+                    // fall through to temp
+                }
+#endif
+                return Path.Combine(Path.GetTempPath(), SettingsFile.FileName);
+            }
+        }
+
+        internal static ProbeSettings LoadSettings()
+        {
+            try
+            {
+                string path = SettingsPath;
+                if (File.Exists(path))
+                {
+                    return SettingsFile.Parse(File.ReadAllText(path));
+                }
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("settings: read failed, using defaults: " + ex.Message);
+            }
+
+            return new ProbeSettings();
+        }
+
+        internal static void SaveSettings()
+        {
+            try
+            {
+                File.WriteAllText(SettingsPath, SettingsFile.Format(Settings));
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("settings: write failed: " + ex.Message);
+            }
+        }
+
         public void OnEnabled()
         {
-            if (Settings == null)
-            {
-                Settings = new ProbeSettings();
-            }
+            Settings = LoadSettings();
+            ModLog.Info(
+                "settings: probeBias="
+                    + Settings.ProbeBiasEnabled
+                    + " indexStock="
+                    + Settings.IndexStockEnabled
+            );
 
             ModLog.Info("mod enabled product=" + (GetProductVersionDisplay() ?? "?"));
 
@@ -173,7 +232,7 @@ namespace FinanceOverhaul
 
             if (Settings == null)
             {
-                Settings = new ProbeSettings();
+                Settings = LoadSettings();
             }
 
             UIHelperBase group = helper.AddGroup(OptionsTitle);
@@ -183,7 +242,7 @@ namespace FinanceOverhaul
                 OnProbeBiasChanged
             );
             group.AddCheckbox(
-                "Experimental: Index stock (adds a mod-only investment to saves; set before loading)",
+                "Experimental: Index stock (adds a mod-only investment to saves)",
                 Settings.IndexStockEnabled,
                 OnIndexStockChanged
             );
@@ -209,7 +268,17 @@ namespace FinanceOverhaul
             }
 
             Settings.IndexStockEnabled = enabled;
-            ModLog.Info("index stock enabled=" + enabled + " (applies on next city load)");
+            SaveSettings();
+            ModLog.Info("index stock enabled=" + enabled);
+            if (enabled)
+            {
+                // Mid-game: list Index now instead of waiting for the next city load.
+                IndexListing.EnsureInLoadedCity();
+            }
+            else
+            {
+                ModLog.Info("index: disabling keeps an existing listing until the next city load");
+            }
         }
 
         private static void OnProbeBiasChanged(bool enabled)
@@ -220,6 +289,7 @@ namespace FinanceOverhaul
             }
 
             Settings.ProbeBiasEnabled = enabled;
+            SaveSettings();
             ModLog.Info("probe bias enabled=" + enabled);
         }
 #endif

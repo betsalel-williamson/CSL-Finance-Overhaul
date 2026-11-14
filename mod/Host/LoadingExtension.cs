@@ -11,6 +11,7 @@ namespace FinanceOverhaul
             {
                 ModLog.Info("level loaded mode=" + mode);
                 Patcher.LogDiscoverySummaryOnce();
+                IndexListing.EnsureInLoadedCity();
                 IndexListing.LogStatus();
             }
             catch

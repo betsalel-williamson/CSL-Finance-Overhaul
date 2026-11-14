@@ -1,7 +1,8 @@
 # City index fund (Index stock)
 
-> **Status: experimental, off by default.** Enable in Options before loading a city. Blocked on the
-> [Save compatibility](./save-compatibility.md) test matrix; not yet verified in game.
+> **Status: experimental, off by default.** Enable in Options (works mid-game; persisted in
+> `FinanceOverhaul.settings.txt`). Blocked on the [Save compatibility](./save-compatibility.md) test
+> matrix; not yet verified in game.
 
 ## Value
 
@@ -49,6 +50,10 @@ sector basket.
   `InvestmentCollection.OnDestroy` unregisters the prefab.
 - **Removal** — if the mod is disabled, vanilla drops the investment whose prefab is missing on the
   next load. Index shares held at that point are lost and are not refunded.
+- **Mid-game / hot reload** — `IndexListing.EnsureInLoadedCity` adopts an Index prefab an older
+  assembly already registered, or clones and registers one, calls `BindPrefabs` (which appends
+  unbound scene prefabs to the simulation list), then queues `EconomyManager.CreateInvestment` on
+  the simulation thread. Runs on toggle-on, after `PatchAll`, and after level load.
 - **Readout** — after a level loads, `finance-overhaul.log` shows a line like
   `index: listed=True value=… basket=… sectors=13`.
 

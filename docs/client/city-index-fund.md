@@ -5,8 +5,9 @@ together (equal weight) — similar in spirit to a Vanguard total-market fund fo
 
 ## How to use it
 
-1. Before loading a city, open Options → **Finance Overhaul** and tick **Experimental: Index
-   stock**. It is off by default because it adds a mod-only investment to your save.
+1. Open Options → **Finance Overhaul** and tick **Experimental: Index stock**. It is off by default
+   because it adds a mod-only investment to your save. The setting is remembered. You can tick it
+   with a city already loaded; close and reopen **Economy** to see Index.
 2. Place or open a Stock Exchange and open **Economy → Investments**.
 3. Find **Index** under Purchasable Investments (with Finance Overhaul enabled).
 4. Buy shares as you would any other name. The Value is the average of the other listed sector
