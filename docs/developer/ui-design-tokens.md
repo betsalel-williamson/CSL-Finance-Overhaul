@@ -79,7 +79,7 @@ annotation copy on the UI Map uses Inter so it never reads as game UI.
 | Molecule   | `FO/InvestmentRow`                            | Kind=Purchasable/Portfolio × Trend=Gain/Loss · Name |
 | Molecule   | `FO/TotalBar`                                 | Amount                                              |
 | Molecule   | `FO/ShareChart`                               | —                                                   |
-| Molecule   | `FO/ShareAmount`                              | Shares                                              |
+| Molecule   | `FO/ShareAmount`                              | State=Default/Editing · Shares                      |
 | Molecule   | `FO/OptionsCheckbox`, `FO/OptionsBuiltFooter` | Label                                               |
 | Organism   | `FO/OptionsPanel`                             | Title                                               |
 | Organism   | `FO/EconomyInvestmentsPanel`                  | Composed from the above                             |

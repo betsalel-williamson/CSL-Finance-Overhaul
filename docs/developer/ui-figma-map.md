@@ -75,9 +75,10 @@ Row hover — Share value chart + flavor text.
 | 1   | `host.hover-share-chart` | Share value chart  | [Stock hook MVP](../features/stock-hook-mvp.md) | `InvestmentTooltip`  |
 | 2   | `host.hover-description` | Flavor description | [Stock hook MVP](../features/stock-hook-mvp.md) | Vanilla tooltip copy |
 
-### Invest / Buy dialog frame (`vanilla-host`)
+### Invest / Buy dialog frame (`vanilla-host` + typed field)
 
-Click Buy / open invest dialog.
+Click Buy / open invest dialog. Pin 6 is the mod's typed field; pin 9 marks its editing state
+(`FO/ShareAmount` `State=Editing`) drawn below the dialog.
 
 | #   | Catalog id                  | Title                 | Docs                                                        | Code evidence / host                                    |
 | --- | --------------------------- | --------------------- | ----------------------------------------------------------- | ------------------------------------------------------- |
@@ -89,6 +90,7 @@ Click Buy / open invest dialog.
 | 6   | `host.invest-share-field`   | Share amount field    | [Typed share amount](../features/share-amount-input.md)     | Typed entry: `ShareAmountField` (shipped, mod-enhanced) |
 | 7   | `host.invest-total-price`   | Price (total)         | [MVP probe bias](../client/mvp-probe-bias.md)               | quantity × mark                                         |
 | 8   | `host.invest-buy-confirm`   | Buy confirm           | [Install and first run](../client/install-and-first-run.md) | Untouched by MVP                                        |
+| 9   | `host.invest-share-field`   | Editing state         | [Typed share amount](../features/share-amount-input.md)     | `ShareAmountEditor`: caret, live slider, Esc reverts    |
 
 ### Index stock frame (`experimental`)
 
