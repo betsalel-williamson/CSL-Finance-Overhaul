@@ -247,17 +247,31 @@ namespace FinanceOverhaul
                 OnIndexStockChanged
             );
 
-            string footer = GetBuildInfoFooterDisplay();
-            if (!string.IsNullOrEmpty(footer))
+            // Dev footers are plain labels inside the one group: nested AddGroup calls would
+            // each draw another separator rule.
+            AddFooterLabel(group, GetBuildInfoFooterDisplay());
+            AddFooterLabel(group, GetBuildInfoLocalDisplay());
+        }
+
+        private static void AddFooterLabel(UIHelperBase group, string text)
+        {
+            if (string.IsNullOrEmpty(text))
             {
-                group.AddGroup(footer);
+                return;
             }
 
-            string local = GetBuildInfoLocalDisplay();
-            if (!string.IsNullOrEmpty(local))
+            var helper = group as UIHelper;
+            var panel = helper == null ? null : helper.self as ColossalFramework.UI.UIComponent;
+            if (panel == null)
             {
-                group.AddGroup(local);
+                group.AddGroup(text); // fallback: still visible, with an extra rule
+                return;
             }
+
+            ColossalFramework.UI.UILabel label =
+                panel.AddUIComponent<ColossalFramework.UI.UILabel>();
+            label.text = text;
+            label.textScale = 0.875f;
         }
 
         private static void OnIndexStockChanged(bool enabled)
