@@ -220,6 +220,26 @@ namespace FinanceOverhaul
                     yield return null;
                     break;
                 }
+                case "set-text":
+                {
+                    // Simulates a stale label (e.g. left by an older build).
+                    UIComponent c = FindControl(a);
+                    if (c is UIButton)
+                    {
+                        ((UIButton)c).text = b ?? string.Empty;
+                    }
+                    else if (c is UILabel)
+                    {
+                        ((UILabel)c).text = b ?? string.Empty;
+                    }
+                    else
+                    {
+                        r.Error = "no visible label or button " + a;
+                    }
+
+                    yield return null;
+                    break;
+                }
                 case "wait":
                     yield return new WaitForSeconds(ParseFloat(a, 1f));
                     break;

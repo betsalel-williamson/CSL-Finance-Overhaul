@@ -1,0 +1,16 @@
+name Sell twice in a row keeps (and repairs) the Sell label
+show-sell IDX
+expect-text Button Sell
+# A label left on the shared button by an older build:
+set-text Button Buy
+close-dialog
+show-sell IDX
+expect-text Button Sell
+show-buy IDX
+click FinanceOverhaulOrderTabLimit
+show-sell IDX
+expect-text Button Sell
+show-buy IDX
+expect-text Button Buy
+cleanup:
+close-dialog

@@ -62,7 +62,6 @@ namespace FinanceOverhaul
         private static UIButton limitTab;
         private static UITextField priceField;
         private static UILabel hint;
-        private static string vanillaButtonText;
         private static UILabel priceText;
         private static UILabel priceValue;
         private static string vanillaPriceText;
@@ -420,13 +419,10 @@ namespace FinanceOverhaul
         private static void ResetForShow()
         {
             limitActive = false;
-            // Vanilla only re-labels the button when the mode changes, so a dialog closed
-            // in Limit would reopen saying "Place limit order": put the vanilla label back.
-            UIButton button = owner == null ? null : ButtonField.GetValue(owner) as UIButton;
-            if (button != null && button.text == PlaceLabel && vanillaButtonText != null)
-            {
-                button.text = vanillaButtonText;
-            }
+            // Vanilla labels the button by localeID and skips re-applying an unchanged id,
+            // so any text written on it sticks across opens. Always re-apply the localized
+            // label for this mode (also repairs labels left by older builds).
+            ApplyVanillaButtonLabel();
 
             if (buyNowTab != null)
             {
@@ -448,6 +444,31 @@ namespace FinanceOverhaul
             Relayout();
         }
 
+        /// <summary>The game's own localized label for the dialog's mode ("Buy" / "Sell").</summary>
+        private static void ApplyVanillaButtonLabel()
+        {
+            UIButton button = owner == null ? null : ButtonField.GetValue(owner) as UIButton;
+            if (button == null)
+            {
+                return;
+            }
+
+            bool buy = IsBuyMode(owner);
+            string label;
+            try
+            {
+                label = ColossalFramework.Globalization.Locale.Get(
+                    buy ? "INVESTMENTS_BUY" : "INVESTMENTS_SELL"
+                );
+            }
+            catch
+            {
+                label = buy ? "Buy" : "Sell";
+            }
+
+            button.text = label;
+        }
+
         private static void SetLimit(bool limit)
         {
             bool was = limitActive;
@@ -458,16 +479,14 @@ namespace FinanceOverhaul
                 StyleTab(limitTab, limit);
             }
 
-            // Only touch vanilla text when switching, so Sell keeps "Sell" and Buy keeps "Buy".
             UIButton button = owner == null ? null : ButtonField.GetValue(owner) as UIButton;
-            if (button != null && limit && !was)
+            if (button != null && limit)
             {
-                vanillaButtonText = button.text;
                 button.text = PlaceLabel;
             }
-            else if (button != null && !limit && was && vanillaButtonText != null)
+            else if (!limit && was)
             {
-                button.text = vanillaButtonText;
+                ApplyVanillaButtonLabel();
             }
 
             if (!limit && was)
