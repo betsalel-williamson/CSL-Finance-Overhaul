@@ -79,9 +79,15 @@ namespace FinanceOverhaul
             new Vector3(13.15f, 12.45f, 23.7f), // right (Submesh03)
         };
         internal const float BoardWidth = 15.3f;
-        internal const float MaxRowWidth = 14.8f; // keep text inside the board edges
-        internal const float RowSpacing = 1.1f; // 3 rows across the 3.4 m board
-        internal const float RowHeight = 0.9f; // metres per row of text
+        internal const float BoardHeight = 3.4f;
+
+        // Padding from the Figma FO/TickerBoard design (600 px board: 14 px sides ≈ 2.5%,
+        // 8 px top/bottom ≈ 7%), scaled to the 15.3 × 3.4 m vanilla board.
+        internal const float PaddingX = 0.4f;
+        internal const float PaddingY = 0.24f;
+        internal const float MaxRowWidth = BoardWidth - 2f * PaddingX; // 14.5 m
+        internal const float RowSpacing = (BoardHeight - 2f * PaddingY) / 3f; // ≈ 0.97 m
+        internal const float RowHeight = 0.85f; // metres per row of text
         internal const int FontSize = 64;
         internal const float RefreshSeconds = 1f;
 
@@ -445,17 +451,21 @@ namespace FinanceOverhaul
             }
         }
 
-        /// <summary>Shrinks a row that would run past the vanilla board's edges.</summary>
+        /// <summary>
+        /// Shrinks a row that would run into the board padding. Measured in world space
+        /// (boards are rotated with the building): for a flat row rotated about Y the
+        /// world AABB gives width = √(x² + z²).
+        /// </summary>
         private static void FitWidth(TextMesh text)
         {
-            MeshFilter filter = text.GetComponent<MeshFilter>();
-            Mesh mesh = filter != null ? filter.sharedMesh : null;
-            if (mesh == null)
+            Renderer renderer = text.GetComponent<Renderer>();
+            if (renderer == null || string.IsNullOrEmpty(text.text))
             {
                 return;
             }
 
-            float width = mesh.bounds.size.x;
+            Vector3 world = renderer.bounds.size;
+            float width = Mathf.Sqrt(world.x * world.x + world.z * world.z);
             if (width > MaxRowWidth && width > 0f)
             {
                 text.characterSize *= MaxRowWidth / width;
