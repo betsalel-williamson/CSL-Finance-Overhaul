@@ -106,6 +106,7 @@ namespace FinanceOverhaul
         private readonly Dictionary<ushort, GameObject> boards =
             new Dictionary<ushort, GameObject>();
         private Font font;
+        private Material textMaterial;
         private float nextRefresh;
         private bool placementLogged;
 
@@ -144,6 +145,13 @@ namespace FinanceOverhaul
             if (font == null)
             {
                 font = PickFont();
+                textMaterial = CreateDepthTestedMaterial(font);
+            }
+
+            if (textMaterial != null && font != null && font.material != null)
+            {
+                // Dynamic fonts rebuild their atlas when new glyphs are requested.
+                textMaterial.mainTexture = font.material.mainTexture;
             }
 
             string[] rows = TickerFeed.CurrentRows;
@@ -252,6 +260,34 @@ namespace FinanceOverhaul
             return Resources.GetBuiltinResource<Font>("Arial.ttf");
         }
 
+        /// <summary>
+        /// Unity's default font material (GUI/Text Shader) uses ZTest Always, so text
+        /// showed through the building. UI/Default with a LessEqual Z test and the
+        /// alpha-only atlas fix (_TextureSampleAdd = (1,1,1,0), as Unity UI text does)
+        /// is hidden by geometry in front of it. Null when the shader is missing.
+        /// </summary>
+        private static Material CreateDepthTestedMaterial(Font font)
+        {
+            Shader shader = Shader.Find("UI/Default");
+            if (shader == null || font == null || font.material == null)
+            {
+                ModLog.Warn("ticker: UI/Default shader not found; text draws over geometry");
+                return null;
+            }
+
+            var material = new Material(shader);
+            material.name = "FinanceOverhaulTickerText";
+            material.mainTexture = font.material.mainTexture;
+            material.SetVector("_TextureSampleAdd", new Vector4(1f, 1f, 1f, 0f));
+            material.SetInt(
+                "unity_GUIZTestMode",
+                (int)UnityEngine.Rendering.CompareFunction.LessEqual
+            );
+            material.renderQueue = 3000;
+            ModLog.Info("ticker: text material=UI/Default (depth-tested)");
+            return material;
+        }
+
         /// <summary>One group per Stock Exchange: centre, left and right boards.</summary>
         private GameObject CreateBoard(ushort id)
         {
@@ -285,7 +321,7 @@ namespace FinanceOverhaul
                 MeshRenderer renderer = row.GetComponent<MeshRenderer>();
                 if (renderer != null && font != null)
                 {
-                    renderer.sharedMaterial = font.material;
+                    renderer.sharedMaterial = textMaterial ?? font.material;
                 }
             }
         }
