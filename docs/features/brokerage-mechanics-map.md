@@ -45,3 +45,14 @@ Order is the proposed build order: UI-only proofs first, then opt-in instruments
   [Known issues](./known-issues.md)). To show live numbers, including **Index** and never `NaN`, the
   mod must render its own text on the facade (for example a text mesh or a generated texture placed
   over the boards on each Stock Exchange instance). Host-only and save-neutral.
+
+  **Step 1 (symbols + live values):** `TickerSymbols.For` maps each investment's display name to a
+  symbol (the artwork's own symbols where an investment matches, e.g. TJL, TVLC, DS, HS, FaI, FoI,
+  OrI, Oil, CAi, CCr, CC; new ones `GeI`, `GGI`, `IDX`; a fallback rule for unknown names).
+  `TickerFeed` builds the line once per in-game day from vanilla `GetLocalizedName` and
+  `CalculateChangeRate(id, ref data, 5)`, the exact calls behind the Economy panel's Change rate,
+  for unlocked investments, formatted by `TickerLine` as `SYM ( +2.67 )` and never `NaN` (`( -- )`).
+  Logged as `ticker: …` and kept in `TickerFeed.CurrentLine`.
+
+  **Step 2 (next):** design the board in Figma (colors, font, layout sampled from the vanilla
+  boards), then draw `CurrentLine` on each Stock Exchange's boards.

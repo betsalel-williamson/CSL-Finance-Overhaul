@@ -32,9 +32,22 @@ namespace FinanceOverhaul
                 int applied = ApplyStockUpdatePostfixes(harmony);
                 int index = ApplyIndexPatches(harmony);
                 int ui = ApplyShareFieldPatches(harmony);
+                int ticker = TryPatch(
+                    harmony,
+                    AccessTools.Method(typeof(EconomyManager), "SimulationStepInvestments"),
+                    null,
+                    nameof(TickerSimulationStepPostfix)
+                );
                 patched = true;
                 ModLog.Info(
-                    "harmony patched targets=" + applied + " index=" + index + " shareField=" + ui
+                    "harmony patched targets="
+                        + applied
+                        + " index="
+                        + index
+                        + " shareField="
+                        + ui
+                        + " ticker="
+                        + ticker
                 );
                 // Hot reload / mid-game enable: list Index in the running city if enabled.
                 IndexListing.EnsureInLoadedCity();
@@ -444,6 +457,18 @@ namespace FinanceOverhaul
             catch
             {
                 // fail soft
+            }
+        }
+
+        private static void TickerSimulationStepPostfix()
+        {
+            try
+            {
+                TickerFeed.OnInvestmentsStepped();
+            }
+            catch
+            {
+                // fail soft — never break simulation ticks
             }
         }
 
