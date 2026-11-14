@@ -1,0 +1,26 @@
+# UI only: no days advanced, no trades. Works in any city with a Stock Exchange.
+name the Stock Monitor button opens a see-through list of every listed stock; filters and sort work; nothing spills out
+monitor close
+click FinanceOverhaulStockMonitorButton
+wait 1
+expect-visible FinanceOverhaulStockMonitor
+expect-text FinanceOverhaulStockMonitorTitle Stock Monitor
+expect-visible FinanceOverhaulStockMonitorClose
+expect-visible FinanceOverhaulStockMonitorSettings
+expect-text FinanceOverhaulStockMonitorFooter Daily close
+expect-text FinanceOverhaulStockMonitorSort Sort:
+expect-no-overflow FinanceOverhaulStockMonitor
+capture stock-monitor-list
+click FinanceOverhaulStockMonitorFilter-Portfolio
+wait 1
+expect-no-overflow FinanceOverhaulStockMonitor
+capture stock-monitor-portfolio
+click FinanceOverhaulStockMonitorSort
+expect-text FinanceOverhaulStockMonitorSort Sort:
+cleanup:
+# four sort clicks in all: the player's saved sort is back where it was
+click FinanceOverhaulStockMonitorSort
+click FinanceOverhaulStockMonitorSort
+click FinanceOverhaulStockMonitorSort
+click FinanceOverhaulStockMonitorFilter-All
+click FinanceOverhaulStockMonitorClose

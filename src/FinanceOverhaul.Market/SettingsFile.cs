@@ -48,6 +48,11 @@ namespace FinanceOverhaul.Market
 
                 string key = line.Substring(0, eq).Trim();
                 string value = line.Substring(eq + 1).Trim();
+                if (settings.Monitor.TryRead(key, value))
+                {
+                    continue;
+                }
+
                 bool flag;
                 if (!TryParseBool(value, out flag))
                 {
@@ -106,6 +111,7 @@ namespace FinanceOverhaul.Market
                     .Append('\n');
             }
 
+            settings.Monitor.Write(sb);
             return sb.ToString();
         }
 

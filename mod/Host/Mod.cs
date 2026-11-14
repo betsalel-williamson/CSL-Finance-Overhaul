@@ -258,6 +258,12 @@ namespace FinanceOverhaul
                 );
             }
 
+            group.AddCheckbox(
+                "Stock Monitor window (testing)",
+                Settings.Monitor.Enabled,
+                OnStockMonitorChanged
+            );
+
             if (BuildInfo.ShowDevBuildIdentity)
             {
                 group.AddCheckbox(
@@ -393,6 +399,22 @@ namespace FinanceOverhaul
             SaveSettings();
             ModLog.Info("orders: " + SettingsFile.OrderKey(kind) + "=" + enabled);
             OrderTicket.OnFlagsChanged();
+        }
+
+        private static void OnStockMonitorChanged(bool enabled)
+        {
+            if (Settings == null)
+            {
+                Settings = new ModSettings();
+            }
+
+            Settings.Monitor.Enabled = enabled;
+            SaveSettings();
+            ModLog.Info("stock monitor enabled=" + enabled);
+            if (StockMonitorHost.Current != null)
+            {
+                StockMonitorHost.Current.ApplyFlag();
+            }
         }
 
         private static void OnLiveTickerChanged(bool enabled)

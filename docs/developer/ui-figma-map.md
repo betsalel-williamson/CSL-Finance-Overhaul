@@ -148,6 +148,26 @@ Your Portfolio with an open order card right under its holding
 | 8   | `orders.recurring`  | Recurring buy    | Planned                                                 |
 | 9   | `orders.notice`     | Fill notice      | Log only today (`OrderDesk`)                            |
 
+### Stock Monitor frame (list `shipped`; rest `planned`)
+
+Band 10: the floating Stock Monitor — in place over a real screenshot (50%) and at 1:1: list window,
+detail view, settings popover, Options flag ([Stock Monitor](../features/stock-monitor.md)).
+
+| #   | Catalog id          | Title          | Code evidence / status                             |
+| --- | ------------------- | -------------- | -------------------------------------------------- |
+| 1   | `monitor.window`    | Window         | Shipped (`StockMonitorHost`); Esc to close planned |
+| 2   | `monitor.settings`  | Settings (⚙)   | Gear cycles opacity today; popover planned         |
+| 3   | `monitor.filter`    | Filter + sort  | Shipped                                            |
+| 4   | `monitor.row`       | Row            | Shipped; click → detail planned                    |
+| 5   | `monitor.sparkline` | Sparkline      | Shipped (`Sparkline`, 30 game days)                |
+| 6   | `monitor.change`    | Change pill    | Shipped (black text); % ↔ ₡ toggle planned         |
+| 7   | `monitor.hover`     | Hover          | Planned                                            |
+| 8   | `monitor.detail`    | Detail         | Planned (7D / 30D)                                 |
+| 9   | `monitor.stats`     | Stats          | Planned                                            |
+| 10  | `monitor.trade`     | Buy / Sell     | Planned                                            |
+| 11  | `monitor.open`      | Toolbar button | Shipped (top-left mod row, right-drag to move)     |
+| 12  | `monitor.flag`      | Options flag   | Shipped: Stock Monitor window (testing)            |
+
 ### Planned frame (`planned`)
 
 | #   | Catalog id         | Title            | Docs                                                                                             |

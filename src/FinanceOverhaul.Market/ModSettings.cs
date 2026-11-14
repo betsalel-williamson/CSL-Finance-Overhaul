@@ -23,6 +23,9 @@ namespace FinanceOverhaul.Market
         /// </summary>
         public bool DevTestStockEnabled { get; set; }
 
+        /// <summary>Stock Monitor flag and per-player window state (UI only, never in saves).</summary>
+        public StockMonitorSettings Monitor { get; } = new StockMonitorSettings();
+
         // Automated orders, one temporary feature flag per order type (on by default; orders
         // live in the mod's own save data, so turning one off never touches holdings). Off:
         // its ticket tab is hidden and its open orders stay saved but are not checked.

@@ -25,6 +25,7 @@ Section order: **Finance Overhaul** (single group today).
 | `orders-stop-loss`     | Orders: Stop-loss sells                                         | Checkbox | Options | temporary flag         |
 | `orders-take-profit`   | Orders: Take-profit sells                                       | Checkbox | Options | temporary flag         |
 | `orders-trailing-stop` | Orders: Trailing stop sells                                     | Checkbox | Options | temporary flag         |
+| `stock-monitor`        | Stock Monitor window (testing)                                  | Checkbox | Options | temporary flag         |
 | `built-utc`            | Built (UTC): …                                                  | Footer   | Options | shipped (`--dev` only) |
 | `built-local`          | Built (local): …                                                | Footer   | Options | shipped (`--dev` only) |
 

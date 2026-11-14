@@ -464,6 +464,19 @@ namespace FinanceOverhaul
                 case "wait":
                     yield return new WaitForSeconds(ParseFloat(a, 1f));
                     break;
+                case "monitor":
+                {
+                    // monitor open|close — sets the Stock Monitor window outright.
+                    if (StockMonitorHost.Current == null || (a != "open" && a != "close"))
+                    {
+                        r.Error = "monitor needs open or close (and the monitor enabled)";
+                        break;
+                    }
+
+                    StockMonitorHost.Current.SetOpen(a == "open");
+                    yield return new WaitForSeconds(0.6f);
+                    break;
+                }
                 case "set-flag":
                 {
                     // set-flag <OrderKind | all> on|off — flips the Options feature flag.
@@ -924,6 +937,14 @@ namespace FinanceOverhaul
         /// </summary>
         private static UIComponent FirstOverflow(UIComponent root, UIComponent c)
         {
+            return FirstOverflow(root, c, null);
+        }
+
+        /// <param name="list">Nearest clipping (scrolling) ancestor below the root, or null.
+        /// Inside it, rows beyond the visible area are hidden by design, so only the width is
+        /// checked, against the list.</param>
+        private static UIComponent FirstOverflow(UIComponent root, UIComponent c, UIComponent list)
+        {
             foreach (UIComponent child in c.components)
             {
                 if (!child.isVisibleSelf)
@@ -937,18 +958,33 @@ namespace FinanceOverhaul
                 }
 
                 Vector3 p = child.absolutePosition;
-                Vector3 r = root.absolutePosition;
-                if (
-                    p.x < r.x - 1f
-                    || p.y < r.y - 1f
-                    || p.x + child.width > r.x + root.width + 1f
-                    || p.y + child.height > r.y + root.height + 1f
-                )
+                if (list != null)
                 {
-                    return child;
+                    Vector3 lp = list.absolutePosition;
+                    if (p.x < lp.x - 1f || p.x + child.width > lp.x + list.width + 1f)
+                    {
+                        return child;
+                    }
+                }
+                else
+                {
+                    Vector3 r = root.absolutePosition;
+                    if (
+                        p.x < r.x - 1f
+                        || p.y < r.y - 1f
+                        || p.x + child.width > r.x + root.width + 1f
+                        || p.y + child.height > r.y + root.height + 1f
+                    )
+                    {
+                        return child;
+                    }
                 }
 
-                UIComponent deeper = FirstOverflow(root, child);
+                UIComponent deeper = FirstOverflow(
+                    root,
+                    child,
+                    list ?? (child.clipChildren ? child : null)
+                );
                 if (deeper != null)
                 {
                     return deeper;
