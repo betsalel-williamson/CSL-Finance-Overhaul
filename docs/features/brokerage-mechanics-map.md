@@ -54,5 +54,10 @@ Order is the proposed build order: UI-only proofs first, then opt-in instruments
   for unlocked investments, formatted by `TickerLine` as `SYM ( +2.67 )` and never `NaN` (`( -- )`).
   Logged as `ticker: …` and kept in `TickerFeed.CurrentLine`.
 
-  **Step 2 (next):** design the board in Figma (colors, font, layout sampled from the vanilla
-  boards), then draw `CurrentLine` on each Stock Exchange's boards.
+**Step 2a (shipped, calibrating):** `TickerBoards` / `TickerOverlay` draw one live board (three
+rich-text rows from `TickerFeed.CurrentRows`, ticker token colors) on the lot-front facade of every
+Stock Exchange via `Building.CalculatePosition` (local +Z = sidewalk side), refreshed every second.
+OS serif font (Goudy Old Style → Hoefler Text → Baskerville → Georgia → Times). Options toggle
+**Live Stock Exchange ticker** (default on, save-neutral). Known limit: Unity's font material draws
+on top of other geometry. Next: calibrate placement from screenshots, depth-tested material,
+scrolling, then hide or retexture the baked boards.

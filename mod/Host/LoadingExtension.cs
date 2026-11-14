@@ -5,6 +5,18 @@ namespace FinanceOverhaul
 {
     public class LoadingExtension : LoadingExtensionBase
     {
+        public override void OnLevelUnloading()
+        {
+            try
+            {
+                TickerBoards.DestroyAll();
+            }
+            catch
+            {
+                // fail soft
+            }
+        }
+
         public override void OnLevelLoaded(LoadMode mode)
         {
             try
@@ -13,6 +25,7 @@ namespace FinanceOverhaul
                 Patcher.LogDiscoverySummaryOnce();
                 IndexListing.EnsureInLoadedCity();
                 IndexListing.LogStatus();
+                TickerBoards.Ensure();
             }
             catch
             {

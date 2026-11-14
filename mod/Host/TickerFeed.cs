@@ -27,6 +27,11 @@ namespace FinanceOverhaul
 
         public static string CurrentLine { get; private set; }
 
+        /// <summary>Three rich-text board rows (ticker token colors), for the facade overlay.</summary>
+        public static string[] CurrentRows { get; private set; }
+
+        public const int BoardRows = 3;
+
         /// <summary>Postfix target: EconomyManager.SimulationStepInvestments (simulation thread).</summary>
         public static void OnInvestmentsStepped()
         {
@@ -79,6 +84,7 @@ namespace FinanceOverhaul
                 Rates.Add(ai.CalculateChangeRate((byte)i, ref buffer[i], PanelChangeRateWindow));
             }
 
+            CurrentRows = TickerLine.FormatRichRows(Symbols, Rates, BoardRows);
             return TickerLine.Format(Symbols, Rates);
         }
 
@@ -88,6 +94,7 @@ namespace FinanceOverhaul
             lastDay = -1;
             daysLogged = 0;
             CurrentLine = null;
+            CurrentRows = null;
         }
     }
 }

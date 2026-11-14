@@ -183,6 +183,8 @@ namespace FinanceOverhaul
                     + Settings.ProbeBiasEnabled
                     + " indexStock="
                     + Settings.IndexStockEnabled
+                    + " liveTicker="
+                    + Settings.LiveTickerEnabled
             );
 
             ModLog.Info("mod enabled product=" + (GetProductVersionDisplay() ?? "?"));
@@ -242,6 +244,11 @@ namespace FinanceOverhaul
                 OnProbeBiasChanged
             );
             group.AddCheckbox(
+                "Live Stock Exchange ticker (visual only)",
+                Settings.LiveTickerEnabled,
+                OnLiveTickerChanged
+            );
+            group.AddCheckbox(
                 "Experimental: Index stock (adds a mod-only investment to saves)",
                 Settings.IndexStockEnabled,
                 OnIndexStockChanged
@@ -279,6 +286,18 @@ namespace FinanceOverhaul
             {
                 ModLog.Info("index: disabling keeps an existing listing until the next city load");
             }
+        }
+
+        private static void OnLiveTickerChanged(bool enabled)
+        {
+            if (Settings == null)
+            {
+                Settings = new ProbeSettings();
+            }
+
+            Settings.LiveTickerEnabled = enabled;
+            SaveSettings();
+            ModLog.Info("live ticker enabled=" + enabled);
         }
 
         private static void OnProbeBiasChanged(bool enabled)

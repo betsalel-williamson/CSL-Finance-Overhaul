@@ -51,6 +51,8 @@ namespace FinanceOverhaul
                 );
                 // Hot reload / mid-game enable: list Index in the running city if enabled.
                 IndexListing.EnsureInLoadedCity();
+                // Hot reload: re-attach the live ticker overlay in a loaded city.
+                TickerBoards.Ensure();
                 LogDiscoverySummaryOnce();
             }
             catch (Exception ex)
@@ -64,6 +66,15 @@ namespace FinanceOverhaul
             if (!patched)
             {
                 return;
+            }
+
+            try
+            {
+                TickerBoards.DestroyAll();
+            }
+            catch
+            {
+                // fail soft
             }
 
             try
