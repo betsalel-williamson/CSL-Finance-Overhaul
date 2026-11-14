@@ -33,6 +33,10 @@ namespace FinanceOverhaul
                 DestroyAll();
                 root = new GameObject(RootName);
                 root.AddComponent<TickerOverlay>();
+                if (BuildInfo.ShowDevBuildIdentity)
+                {
+                    root.AddComponent<DevCapture>();
+                }
                 ModLog.Info("ticker: overlay attached");
             }
             catch (Exception ex)
