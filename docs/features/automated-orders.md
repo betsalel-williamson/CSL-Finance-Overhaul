@@ -4,7 +4,7 @@
 
 Mayors set a buy price once and keep building, like a limit order at Schwab or E*Trade, instead of
 watching the Investments panel for a dip. Step 1 is the **limit buy**; step 2 the **stop-loss**;
-step 3 the **take-profit**.
+step 3 the **take-profit**; step 4 the **trailing stop**.
 
 ## Contract (step 1: limit buy)
 
@@ -70,6 +70,22 @@ take-profit**.
 Wording for every order kind (tabs, captions, hints, cards, log names) lives in `OrderText` in the
 Market library and is unit tested.
 
+## Trailing stop (shipped)
+
+The fourth Sell tab, **Trailing stop**, takes **Trail (% below the peak)**, whole percent from 1 to
+50, pre-filled with 10%. The hint names today's stop ("stop now ₡90"), and **Est. proceeds (at
+today's stop)** uses it; the button reads **Place trailing stop**.
+
+- **Peak.** Starts at the daily price when placed. Each daily check first raises the peak to a new
+  high (logged as "trailing stop follows a new high"), so the stop only moves up.
+- **Fill.** Once the daily price is at or below the stop (the trail below the peak, rounded down to
+  whole ₡), it sells at that day's price; after a sharp drop that is less than the stop. Capped by
+  the shares still held, same cancel rules and 60-day expiry as the other sells.
+- **Card.** "Open order · SELL (trailing stop)" with "N shares, 10% trail, stop ₡X · days left"; the
+  stop shown follows the peak.
+- **Saved** as a `trail-sell` line with an eighth column, the peak (invariant float). Older builds
+  only read seven-column lines and skip it; a damaged peak or a trail outside 1–50% is skipped.
+
 ## Open orders in Your Portfolio (shipped)
 
 Each open order is an entry of **Economy → Investments → Your Portfolio**: a card right under its
@@ -92,8 +108,8 @@ with no shares left. See [Testing](../developer/testing.md).
 
 ## Later steps
 
-Trailing stop, recurring monthly investment, an open-orders panel in the Investments view, fill
-notifications in Chirper, and Figma ticket designs. Dividend reinvestment waits for dividend shares
+Per-order-type Options toggles (feature flags while testing), recurring monthly investment, fill
+notifications in Chirper. Dividend reinvestment waits for dividend shares
 ([Market analogs](./market-analogs.md)).
 
 ## Code

@@ -1,0 +1,40 @@
+# Needs the dev test stock (TST) in a test save.
+name the Sell dialog places a trailing stop: 10% trail, refused outside 1-50%, stop shown on its Your Portfolio card
+set-price TST 100
+run-days 1
+show-buy TST
+type FinanceOverhaulShareAmountField 10
+click Button
+wait 1
+show-sell TST
+expect-visible FinanceOverhaulOrderTab-TrailingStopSell
+click FinanceOverhaulOrderTab-TrailingStopSell
+expect-visible FinanceOverhaulLimitPriceField
+expect-text FinanceOverhaulLimitCaption Trail (% below the peak)
+expect-text-is FinanceOverhaulLimitPriceField 10
+expect-text Button Place trailing stop
+expect-hidden PanelSellStats
+expect-text FinanceOverhaulLimitHint stop now ₡90
+type FinanceOverhaulLimitPriceField 60
+expect-text FinanceOverhaulLimitEstimate Set the trail between 1% and 50%
+click Button
+expect-orders-delta 0
+type FinanceOverhaulLimitPriceField 10
+expect-text FinanceOverhaulLimitEstimate Est. proceeds (at today's stop): ₡900
+expect-text FinanceOverhaulLimitHint The stop only moves up
+expect-no-overflow
+capture trailing-stop-ticket
+click Button
+expect-orders-delta 1
+show-economy
+wait 1
+scroll-into-view FinanceOverhaulOpenOrderRow-$order
+expect-in-view FinanceOverhaulOpenOrderRow-$order OwnedInvestmentsPanel
+expect-text FinanceOverhaulOpenOrderDetail-$order 10 shares, 10% trail, stop ₡90 · 60 days left
+expect-no-overflow FinanceOverhaulOpenOrderDetail-$order
+capture trailing-stop-card
+cleanup:
+cancel-new-orders
+sell-back TST 10
+set-price TST 100
+close-dialog

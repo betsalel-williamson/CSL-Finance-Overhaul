@@ -23,11 +23,12 @@ npm run test:game              # game UI scenarios (running game, --dev build)
 `scripts/game-ui-test.sh` copies each `tests/game-ui/*.uitest` script into the mod's
 `FinanceOverhaul.uitest` trigger; the mod (`UiTestRunner`, `--dev` only) drives the real UI —
 `show-buy`, `click`, `type` (focus, type, tab out), `run-days` — and checks `expect-visible`,
-`expect-text`, `expect-no-overflow` (every visible part inside the dialog), `expect-owned-delta`,
-`expect-orders-delta` (orders this scenario created) and `expect-log`. Lines after `cleanup:` always
-run (cancel orders, sell back, close the dialog). Results: `uitest: PASS|FAIL` in the mod log,
-captures as `FinanceOverhaul-uitest-*.png`. Scenarios trade small amounts in the loaded city and
-undo them in cleanup; use a test save.
+`expect-text`, `expect-no-overflow` (every visible part inside the dialog, and none of our
+fixed-width labels cutting its text off), `expect-owned-delta`, `expect-orders-delta` (orders this
+scenario created) and `expect-log`. Lines after `cleanup:` always run (cancel orders, sell back,
+close the dialog). Results: `uitest: PASS|FAIL` in the mod log, captures as
+`FinanceOverhaul-uitest-*.png`. Scenarios trade small amounts in the loaded city and undo them in
+cleanup; use a test save.
 
 Performance tests in `PriceBiasPerformanceTests` budget the equal-weight index (best of nine
 batches, so a busy machine cannot fail them) and assert it allocates nothing. They measure Market

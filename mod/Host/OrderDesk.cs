@@ -75,7 +75,9 @@ namespace FinanceOverhaul
         }
 
         /// <summary>
-        /// Places a sell order (stop-loss or take-profit) for the investment with this id.
+        /// Places a sell order (stop-loss, take-profit or trailing stop) for the investment
+        /// with this id. For a trailing stop <paramref name="triggerPrice"/> is the trail
+        /// percent and today's price is the starting peak.
         /// Returns the order or null.
         /// </summary>
         public static TradeOrder PlaceSell(
@@ -100,10 +102,21 @@ namespace FinanceOverhaul
                 lock (Sync)
                 {
                     OrderBook b = Book();
-                    TradeOrder order =
-                        kind == OrderKind.TakeProfitSell
-                            ? b.AddTakeProfit(info.name, shares, triggerPrice, Today)
-                            : b.AddStopLoss(info.name, shares, triggerPrice, Today);
+                    float mark = EconomyManager.instance.m_investments.m_buffer[investmentId].value;
+                    TradeOrder order;
+                    switch (kind)
+                    {
+                        case OrderKind.TakeProfitSell:
+                            order = b.AddTakeProfit(info.name, shares, triggerPrice, Today);
+                            break;
+                        case OrderKind.TrailingStopSell:
+                            order = b.AddTrailingStop(info.name, shares, triggerPrice, mark, Today);
+                            break;
+                        default:
+                            order = b.AddStopLoss(info.name, shares, triggerPrice, Today);
+                            break;
+                    }
+
                     if (order != null)
                     {
                         Save(b);
@@ -117,11 +130,18 @@ namespace FinanceOverhaul
                                 + " "
                                 + info.name
                                 + (
-                                    kind == OrderKind.TakeProfitSell
-                                        ? " at or above "
-                                        : " at or below "
+                                    kind == OrderKind.TrailingStopSell
+                                        ? " trailing "
+                                            + triggerPrice
+                                            + "% from "
+                                            + mark.ToString("0.##")
+                                            + " (stop "
+                                            + order.TriggerPrice
+                                            + ")"
+                                    : kind == OrderKind.TakeProfitSell
+                                        ? " at or above " + triggerPrice
+                                    : " at or below " + triggerPrice
                                 )
-                                + triggerPrice
                                 + " (expires day "
                                 + order.ExpiresDay
                                 + ")"
@@ -300,7 +320,20 @@ namespace FinanceOverhaul
                     );
                     return true;
                 default:
-                    return false;
+                    if (d.PeakRaised)
+                    {
+                        ModLog.Info(
+                            "orders: #"
+                                + order.Id
+                                + " trailing stop follows a new high "
+                                + mark.ToString("0.##")
+                                + " (stop "
+                                + order.TriggerPrice
+                                + ")"
+                        );
+                    }
+
+                    return d.PeakRaised;
             }
         }
 

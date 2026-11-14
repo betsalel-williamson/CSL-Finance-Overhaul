@@ -249,12 +249,7 @@ namespace FinanceOverhaul
             detail.height = 18f;
             detail.relativePosition = new Vector3(24f, 60f);
             detail.textColor = MutedColor;
-            detail.text = OrderText.CardDetail(
-                order.Kind,
-                order.Shares,
-                order.TriggerPrice,
-                order.ExpiresDay - today
-            );
+            detail.text = OrderText.CardDetail(order, today);
 
             UIButton cancel = card.AddUIComponent<UIButton>();
             cancel.name = CancelPrefix + order.Id;

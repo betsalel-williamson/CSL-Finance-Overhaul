@@ -105,6 +105,13 @@ namespace FinanceOverhaul
                 Buy = false,
                 Label = OrderText.TabLabel(OrderKind.TakeProfitSell),
             },
+            new Tab
+            {
+                Key = "TrailingStop",
+                Kind = OrderKind.TrailingStopSell,
+                Buy = false,
+                Label = OrderText.TabLabel(OrderKind.TrailingStopSell),
+            },
         };
 
         private static BuySellInvestmentPanel owner;
@@ -185,7 +192,11 @@ namespace FinanceOverhaul
             uint shares = (uint)SliderValueField.GetValue(panel);
             if (!TryPrice(out price) || shares == 0)
             {
-                ShowError("Enter a price in whole ₡ and at least one share.");
+                ShowError(
+                    active.Value == OrderKind.TrailingStopSell
+                        ? "Enter the trail in whole percent and at least one share."
+                        : "Enter a price in whole ₡ and at least one share."
+                );
                 return true; // never fall through to a market trade
             }
 
@@ -220,7 +231,7 @@ namespace FinanceOverhaul
                 return "The city can't afford this many shares at your limit.";
             }
 
-            return OrderText.PriceSideProblem(kind, price, mark);
+            return OrderText.PlacementProblem(kind, price, mark);
         }
 
         /// <summary>Postfix target: SetSliderValue — keeps the rule and estimate current.</summary>
@@ -235,7 +246,11 @@ namespace FinanceOverhaul
             uint shares = owner == null ? 0 : (uint)SliderValueField.GetValue(owner);
             if (!TryPrice(out price))
             {
-                ShowError("Enter a price in whole ₡.");
+                ShowError(
+                    active.Value == OrderKind.TrailingStopSell
+                        ? "Enter the trail in whole percent."
+                        : "Enter a price in whole ₡."
+                );
                 return;
             }
 
@@ -248,7 +263,11 @@ namespace FinanceOverhaul
             try
             {
                 hint.textColor = HintColor;
-                hint.text = OrderText.Hint(active.Value, price);
+                hint.text = OrderText.Hint(
+                    active.Value,
+                    price,
+                    owner == null ? 0f : Mark((byte)IdField.GetValue(owner))
+                );
                 ShowEstimate(active.Value, price, shares);
                 FitPricePanel();
             }
@@ -269,8 +288,9 @@ namespace FinanceOverhaul
                 return;
             }
 
-            long amount = (long)price * shares;
-            string problem = Problem(kind, price, shares, Mark((byte)IdField.GetValue(owner)));
+            float mark = Mark((byte)IdField.GetValue(owner));
+            long amount = (long)OrderText.EstimatePerShare(kind, price, mark) * shares;
+            string problem = Problem(kind, price, shares, mark);
             estimate.textColor = problem == null ? EstimateColor : ErrorColor;
             estimate.text =
                 OrderText.EstimateLabel(kind)

@@ -125,7 +125,7 @@ game).
 | 6   | `ticker.flat`      | Flat (no change) | `LedText.RateColour` (neutral when it prints `0.00`) |
 | 7   | `ticker.scroll`    | Scroll and clip  | `LedMarquee` (ring buffer, whole-dot steps)          |
 
-### Automated orders frame (limit buy, stop-loss, take-profit `shipped`; trailing, recurring `planned`)
+### Automated orders frame (limit buy and all sell types `shipped`; recurring `planned`)
 
 Band 09: the limit buy ticket in the Invest dialog, a Sell ticket for the planned sell types, and
 Your Portfolio with an open order card right under its holding
@@ -137,7 +137,7 @@ Your Portfolio with an open order card right under its holding
 | 2   | `orders.price`      | Trigger price    | Shipped (`OrderTicket`, `FO/OrderPriceField`)           |
 | 3   | `orders.estimate`   | Estimate         | Shipped: own row, red when unaffordable                 |
 | 4   | `orders.place`      | Place order      | Shipped: `OrderTicket` → `OrderDesk.PlaceLimitBuy`      |
-| 5   | `orders.sell-types` | Sell order types | Stop-loss, take-profit shipped; trailing planned        |
+| 5   | `orders.sell-types` | Sell order types | Stop-loss, take-profit, trailing stop shipped           |
 | 6   | `orders.open-list`  | Open orders      | Shipped: cards in Your Portfolio (`PortfolioOrders`)    |
 | 7   | `orders.cancel`     | Cancel           | Shipped: `PortfolioOrders` → `OrderDesk.Cancel`         |
 | 8   | `orders.recurring`  | Recurring buy    | Planned                                                 |

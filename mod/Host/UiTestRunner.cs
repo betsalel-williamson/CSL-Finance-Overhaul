@@ -890,7 +890,10 @@ namespace FinanceOverhaul
             return null;
         }
 
-        /// <summary>First visible descendant whose box is not inside the dialog's box (1 px slack).</summary>
+        /// <summary>
+        /// First visible descendant whose box is not inside the dialog's box (1 px slack), or
+        /// one of our fixed-width single-line labels whose text is cut off.
+        /// </summary>
         private static UIComponent FirstOverflow(UIComponent root, UIComponent c)
         {
             foreach (UIComponent child in c.components)
@@ -898,6 +901,11 @@ namespace FinanceOverhaul
                 if (!child.isVisibleSelf)
                 {
                     continue;
+                }
+
+                if (IsClipped(child as UILabel))
+                {
+                    return child;
                 }
 
                 Vector3 p = child.absolutePosition;
@@ -920,6 +928,32 @@ namespace FinanceOverhaul
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Our own fixed-width, single-line label whose text is wider than the label (the game
+        /// clips it silently). Measured by autosizing for a moment, then restoring.
+        /// </summary>
+        private static bool IsClipped(UILabel label)
+        {
+            if (
+                label == null
+                || label.autoSize
+                || label.wordWrap
+                || string.IsNullOrEmpty(label.text)
+                || label.name == null
+                || !label.name.StartsWith("FinanceOverhaul", StringComparison.Ordinal)
+            )
+            {
+                return false;
+            }
+
+            Vector2 size = label.size;
+            label.autoSize = true;
+            float needed = label.width;
+            label.autoSize = false;
+            label.size = size;
+            return needed > size.x + 1f;
         }
 
         private static bool IsAncestor(UIComponent maybeAncestor, UIComponent c)

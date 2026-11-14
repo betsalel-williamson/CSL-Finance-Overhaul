@@ -17,6 +17,8 @@ namespace FinanceOverhaul.Market
                     return "Stop-loss";
                 case OrderKind.TakeProfitSell:
                     return "Take-profit";
+                case OrderKind.TrailingStopSell:
+                    return "Trailing stop";
                 default:
                     return "Limit";
             }
@@ -30,6 +32,8 @@ namespace FinanceOverhaul.Market
                     return "Place stop-loss";
                 case OrderKind.TakeProfitSell:
                     return "Place take-profit";
+                case OrderKind.TrailingStopSell:
+                    return "Place trailing stop";
                 default:
                     return "Place limit order";
             }
@@ -43,6 +47,8 @@ namespace FinanceOverhaul.Market
                     return "Stop price (₡ per share)";
                 case OrderKind.TakeProfitSell:
                     return "Target price (₡ per share)";
+                case OrderKind.TrailingStopSell:
+                    return "Trail (% below the peak)";
                 default:
                     return "Limit price (₡ per share)";
             }
@@ -57,17 +63,28 @@ namespace FinanceOverhaul.Market
                     return "Est. proceeds (at stop): ₡";
                 case OrderKind.TakeProfitSell:
                     return "Est. proceeds (at target): ₡";
+                case OrderKind.TrailingStopSell:
+                    return "Est. proceeds (at today's stop): ₡";
                 default:
                     return "Est. cost (at limit): ₡";
             }
         }
 
-        public static string Hint(OrderKind kind, int price)
+        /// <param name="price">The field's value: ₡ per share, or the trail percent.</param>
+        /// <param name="mark">Today's price (trailing stop: shows today's stop).</param>
+        public static string Hint(OrderKind kind, int price, float mark = 0f)
         {
             string p = Money(price);
             string good = " Good for " + TradeOrder.LifetimeDays + " days.";
             switch (kind)
             {
+                case OrderKind.TrailingStopSell:
+                    return "Sells if the daily price falls "
+                        + p
+                        + "% below its highest since you place it (stop now ₡"
+                        + Money(TradeOrder.TrailingStop(mark, price))
+                        + "). The stop only moves up."
+                        + good;
                 case OrderKind.StopLossSell:
                     return "Sells when the daily price is at or below ₡"
                         + p
@@ -84,11 +101,16 @@ namespace FinanceOverhaul.Market
         }
 
         /// <summary>
-        /// Pre-filled price: a limit at today's price, a stop 10% below it, a target 10%
-        /// above it (whole ₡, at least 1).
+        /// Pre-filled field: a limit at today's price, a stop 10% below it, a target 10%
+        /// above it (whole ₡, at least 1); a trailing stop's trail of 10%.
         /// </summary>
         public static int SuggestedPrice(OrderKind kind, float mark)
         {
+            if (kind == OrderKind.TrailingStopSell)
+            {
+                return 10;
+            }
+
             if (float.IsNaN(mark) || float.IsInfinity(mark) || mark <= 0f)
             {
                 return 1;
@@ -106,12 +128,33 @@ namespace FinanceOverhaul.Market
             }
         }
 
-        /// <summary>
-        /// Why a sell trigger is on the wrong side of today's price (a broker rejects a sell
-        /// stop at or above the market, and a sell limit at or below it), or null.
-        /// </summary>
-        public static string PriceSideProblem(OrderKind kind, int price, float mark)
+        /// <summary>Per-share price the estimate row uses: the field's price, or today's trailing stop.</summary>
+        public static int EstimatePerShare(OrderKind kind, int price, float mark)
         {
+            return kind == OrderKind.TrailingStopSell
+                ? TradeOrder.TrailingStop(mark, price)
+                : price;
+        }
+
+        /// <summary>
+        /// Why this trigger can't be placed, or null: a sell stop at or above today's price, a
+        /// sell target at or below it (a broker would reject or fill them at once), or a trail
+        /// outside 1–50%.
+        /// </summary>
+        public static string PlacementProblem(OrderKind kind, int price, float mark)
+        {
+            if (
+                kind == OrderKind.TrailingStopSell
+                && (price < OrderRules.MinTrailPercent || price > OrderRules.MaxTrailPercent)
+            )
+            {
+                return "Set the trail between "
+                    + OrderRules.MinTrailPercent
+                    + "% and "
+                    + OrderRules.MaxTrailPercent
+                    + "%.";
+            }
+
             if (float.IsNaN(mark) || float.IsInfinity(mark) || mark <= 0f)
             {
                 return null;
@@ -141,6 +184,8 @@ namespace FinanceOverhaul.Market
                     return "Open order · SELL (stop-loss)";
                 case OrderKind.TakeProfitSell:
                     return "Open order · SELL (take-profit)";
+                case OrderKind.TrailingStopSell:
+                    return "Open order · SELL (trailing stop)";
                 default:
                     return "Open order · BUY";
             }
@@ -172,6 +217,30 @@ namespace FinanceOverhaul.Market
                 + (left == 1 ? " day left" : " days left");
         }
 
+        /// <summary>The Your Portfolio card's detail line for an open order.</summary>
+        public static string CardDetail(TradeOrder order, int today)
+        {
+            if (order.Kind != OrderKind.TrailingStopSell)
+            {
+                return CardDetail(
+                    order.Kind,
+                    order.Shares,
+                    order.TriggerPrice,
+                    order.ExpiresDay - today
+                );
+            }
+
+            int left = Math.Max(0, order.ExpiresDay - today);
+            return Money(order.Shares)
+                + " shares, "
+                + order.TrailPercent.ToString(CultureInfo.InvariantCulture)
+                + "% trail, stop ₡"
+                + Money(order.TriggerPrice)
+                + " · "
+                + left.ToString(CultureInfo.InvariantCulture)
+                + (left == 1 ? " day left" : " days left");
+        }
+
         /// <summary>Log name, e.g. "take-profit sell".</summary>
         public static string LogName(OrderKind kind)
         {
@@ -181,6 +250,8 @@ namespace FinanceOverhaul.Market
                     return "stop-loss sell";
                 case OrderKind.TakeProfitSell:
                     return "take-profit sell";
+                case OrderKind.TrailingStopSell:
+                    return "trailing stop sell";
                 default:
                     return "limit buy";
             }
@@ -195,6 +266,8 @@ namespace FinanceOverhaul.Market
                     return "stop";
                 case OrderKind.TakeProfitSell:
                     return "target";
+                case OrderKind.TrailingStopSell:
+                    return "stop";
                 default:
                     return "limit";
             }

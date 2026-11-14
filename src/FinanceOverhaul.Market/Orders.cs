@@ -15,6 +15,12 @@ namespace FinanceOverhaul.Market
 
         /// <summary>Sell when the daily price is at or above the trigger (take-profit).</summary>
         TakeProfitSell,
+
+        /// <summary>
+        /// Sell when the daily price falls a set percent below its highest daily price since
+        /// placing (trailing stop). The stop only moves up.
+        /// </summary>
+        TrailingStopSell,
     }
 
     /// <summary>
@@ -37,8 +43,56 @@ namespace FinanceOverhaul.Market
 
         public uint Shares { get; private set; }
 
-        /// <summary>The limit (buys), stop or target (sells), whole ₡ per share.</summary>
-        public int TriggerPrice { get; private set; }
+        private int triggerPrice;
+
+        /// <summary>
+        /// The limit (buys), stop or target (sells), whole ₡ per share. For a trailing stop,
+        /// today's stop: <see cref="TrailPercent"/> below <see cref="Peak"/>, rounded down.
+        /// </summary>
+        public int TriggerPrice
+        {
+            get
+            {
+                return Kind == OrderKind.TrailingStopSell
+                    ? TrailingStop(Peak, TrailPercent)
+                    : triggerPrice;
+            }
+        }
+
+        /// <summary>Trailing stop only: whole percent below the peak (1–50).</summary>
+        public int TrailPercent { get; private set; }
+
+        /// <summary>Trailing stop only: the highest daily price since placing.</summary>
+        public float Peak { get; private set; }
+
+        /// <summary>Trailing stop only: follow a new high. Returns true when the peak rose.</summary>
+        public bool RaisePeak(float mark)
+        {
+            if (
+                Kind != OrderKind.TrailingStopSell
+                || float.IsNaN(mark)
+                || float.IsInfinity(mark)
+                || mark <= Peak
+            )
+            {
+                return false;
+            }
+
+            Peak = mark;
+            return true;
+        }
+
+        /// <summary>The stop <paramref name="percent"/> below <paramref name="peak"/>, whole ₡ (rounded down).</summary>
+        public static int TrailingStop(float peak, int percent)
+        {
+            if (float.IsNaN(peak) || float.IsInfinity(peak) || peak <= 0f)
+            {
+                return 0;
+            }
+
+            // Round away float noise first: 100 × 90% must be 90, not 89.
+            return (int)Math.Floor(Math.Round((double)peak * (100 - percent) / 100.0, 4));
+        }
 
         public bool IsSell
         {
@@ -106,6 +160,55 @@ namespace FinanceOverhaul.Market
             );
         }
 
+        public static TradeOrder TrailingStopSell(
+            int id,
+            string investmentKey,
+            uint shares,
+            int trailPercent,
+            float peak,
+            int placedDay
+        )
+        {
+            TradeOrder order = Create(
+                OrderKind.TrailingStopSell,
+                id,
+                investmentKey,
+                shares,
+                0,
+                placedDay,
+                placedDay + LifetimeDays
+            );
+            order.TrailPercent = trailPercent;
+            order.Peak = peak;
+            return order;
+        }
+
+        internal static TradeOrder Restore(
+            OrderKind kind,
+            int id,
+            string investmentKey,
+            uint shares,
+            int trigger,
+            int placedDay,
+            int expiresDay,
+            int trailPercent,
+            float peak
+        )
+        {
+            TradeOrder order = Create(
+                kind,
+                id,
+                investmentKey,
+                shares,
+                trigger,
+                placedDay,
+                expiresDay
+            );
+            order.TrailPercent = trailPercent;
+            order.Peak = peak;
+            return order;
+        }
+
         internal static TradeOrder Create(
             OrderKind kind,
             int id,
@@ -122,7 +225,7 @@ namespace FinanceOverhaul.Market
                 Kind = kind,
                 InvestmentKey = investmentKey,
                 Shares = shares,
-                TriggerPrice = limitPrice,
+                triggerPrice = limitPrice,
                 PlacedDay = placedDay,
                 ExpiresDay = expiresDay,
             };
@@ -144,6 +247,9 @@ namespace FinanceOverhaul.Market
         /// <summary>Whole ₡, as vanilla <c>CalculatePrice</c> returns.</summary>
         public int Cost;
         public string Reason;
+
+        /// <summary>Trailing stop: the peak moved up (the book must be saved).</summary>
+        public bool PeakRaised;
     }
 
     /// <summary>
@@ -156,6 +262,10 @@ namespace FinanceOverhaul.Market
         public const string ReasonFunds = "insufficient funds";
         public const string ReasonShareLimit = "share limit";
         public const string ReasonNoShares = "no shares left to sell";
+
+        /// <summary>Trailing stop bounds, whole percent below the peak.</summary>
+        public const int MinTrailPercent = 1;
+        public const int MaxTrailPercent = 50;
 
         /// <param name="today">Absolute game day.</param>
         /// <param name="mark">The investment's value per share today.</param>
@@ -184,6 +294,11 @@ namespace FinanceOverhaul.Market
             if (order.Kind == OrderKind.TakeProfitSell)
             {
                 return EvaluateTakeProfit(order, mark, owned);
+            }
+
+            if (order.Kind == OrderKind.TrailingStopSell)
+            {
+                return EvaluateTrailingStop(order, mark, owned);
             }
 
             if (
@@ -253,6 +368,29 @@ namespace FinanceOverhaul.Market
             }
 
             return SellOwned(order, mark, owned);
+        }
+
+        /// <summary>
+        /// Trailing stop: a new high raises the peak (and so the stop); once the daily price
+        /// is at or below the stop, sell at that day's price, never more than is owned.
+        /// Note: this updates <see cref="TradeOrder.Peak"/> on the order.
+        /// </summary>
+        private static OrderDecision EvaluateTrailingStop(TradeOrder order, float mark, uint owned)
+        {
+            if (float.IsNaN(mark) || float.IsInfinity(mark) || mark <= 0f)
+            {
+                return new OrderDecision { Action = OrderAction.Wait };
+            }
+
+            bool raised = order.RaisePeak(mark);
+            if (mark > order.TriggerPrice)
+            {
+                return new OrderDecision { Action = OrderAction.Wait, PeakRaised = raised };
+            }
+
+            OrderDecision d = SellOwned(order, mark, owned);
+            d.PeakRaised = raised;
+            return d;
         }
 
         private static OrderDecision SellOwned(TradeOrder order, float mark, uint owned)
@@ -331,6 +469,43 @@ namespace FinanceOverhaul.Market
             return AddSell(OrderKind.TakeProfitSell, investmentKey, shares, targetPrice, today);
         }
 
+        /// <summary>
+        /// Trailing stop sell starting from today's price as the peak; null when it would
+        /// be meaningless (trail outside 1–50%, no price).
+        /// </summary>
+        public TradeOrder AddTrailingStop(
+            string investmentKey,
+            uint shares,
+            int trailPercent,
+            float mark,
+            int today
+        )
+        {
+            if (
+                string.IsNullOrEmpty(investmentKey)
+                || shares == 0
+                || trailPercent < OrderRules.MinTrailPercent
+                || trailPercent > OrderRules.MaxTrailPercent
+                || float.IsNaN(mark)
+                || float.IsInfinity(mark)
+                || mark <= 0f
+            )
+            {
+                return null;
+            }
+
+            TradeOrder order = TradeOrder.TrailingStopSell(
+                NextId++,
+                investmentKey,
+                shares,
+                trailPercent,
+                mark,
+                today
+            );
+            orders.Add(order);
+            return order;
+        }
+
         private TradeOrder AddSell(
             OrderKind kind,
             string investmentKey,
@@ -389,6 +564,10 @@ namespace FinanceOverhaul.Market
         private const string StopLossTag = "stop-sell";
         private const string TakeProfitTag = "profit-sell";
 
+        // Trailing stops carry the trail percent in the trigger column and an 8th column,
+        // the peak; older builds only read 7-column lines, so they skip them.
+        private const string TrailingStopTag = "trail-sell";
+
         private static string Tag(OrderKind kind)
         {
             switch (kind)
@@ -397,6 +576,8 @@ namespace FinanceOverhaul.Market
                     return StopLossTag;
                 case OrderKind.TakeProfitSell:
                     return TakeProfitTag;
+                case OrderKind.TrailingStopSell:
+                    return TrailingStopTag;
                 default:
                     return LimitBuyTag;
             }
@@ -419,12 +600,21 @@ namespace FinanceOverhaul.Market
                     .Append('|')
                     .Append(o.Shares.ToString(CultureInfo.InvariantCulture))
                     .Append('|')
-                    .Append(o.TriggerPrice.ToString(CultureInfo.InvariantCulture))
+                    .Append(
+                        (
+                            o.Kind == OrderKind.TrailingStopSell ? o.TrailPercent : o.TriggerPrice
+                        ).ToString(CultureInfo.InvariantCulture)
+                    )
                     .Append('|')
                     .Append(o.PlacedDay.ToString(CultureInfo.InvariantCulture))
                     .Append('|')
-                    .Append(o.ExpiresDay.ToString(CultureInfo.InvariantCulture))
-                    .Append('\n');
+                    .Append(o.ExpiresDay.ToString(CultureInfo.InvariantCulture));
+                if (o.Kind == OrderKind.TrailingStopSell)
+                {
+                    sb.Append('|').Append(o.Peak.ToString("R", CultureInfo.InvariantCulture));
+                }
+
+                sb.Append('\n');
             }
 
             return sb.ToString();
@@ -460,7 +650,26 @@ namespace FinanceOverhaul.Market
 
                 string[] f = line.Split('|');
                 OrderKind kind;
-                if (f.Length != 7)
+                float peak = 0f;
+                if (f.Length == 8 && f[0] == TrailingStopTag)
+                {
+                    kind = OrderKind.TrailingStopSell;
+                    if (
+                        !float.TryParse(
+                            f[7],
+                            NumberStyles.Float,
+                            CultureInfo.InvariantCulture,
+                            out peak
+                        )
+                        || float.IsNaN(peak)
+                        || float.IsInfinity(peak)
+                        || peak <= 0f
+                    )
+                    {
+                        continue;
+                    }
+                }
+                else if (f.Length != 7)
                 {
                     continue;
                 }
@@ -504,7 +713,36 @@ namespace FinanceOverhaul.Market
                     && key.Length > 0
                 )
                 {
-                    book.Restore(TradeOrder.Create(kind, id, key, shares, limit, placed, expires));
+                    if (kind == OrderKind.TrailingStopSell)
+                    {
+                        if (
+                            limit < OrderRules.MinTrailPercent
+                            || limit > OrderRules.MaxTrailPercent
+                        )
+                        {
+                            continue;
+                        }
+
+                        book.Restore(
+                            TradeOrder.Restore(
+                                kind,
+                                id,
+                                key,
+                                shares,
+                                0,
+                                placed,
+                                expires,
+                                limit,
+                                peak
+                            )
+                        );
+                    }
+                    else
+                    {
+                        book.Restore(
+                            TradeOrder.Create(kind, id, key, shares, limit, placed, expires)
+                        );
+                    }
                 }
             }
 
