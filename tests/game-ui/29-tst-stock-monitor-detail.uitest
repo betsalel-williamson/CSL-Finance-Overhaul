@@ -1,0 +1,33 @@
+# Needs the dev test stock (TST). UI only: no days advanced, no trades.
+name clicking a Stock Monitor row opens its detail: price, change vs yesterday, 7D/30D chart, stats, Buy opens the game's dialog, back returns to the list
+monitor close
+click FinanceOverhaulStockMonitorButton
+wait 1
+click FinanceOverhaulStockMonitorRow-TST
+wait 1
+expect-visible FinanceOverhaulStockMonitorDetail
+expect-hidden FinanceOverhaulStockMonitorRows
+expect-text-is FinanceOverhaulStockMonitorDetailSymbol TST
+expect-text FinanceOverhaulStockMonitorDetailName Test Stock
+expect-text FinanceOverhaulStockMonitorDetailPrice ₡
+expect-text FinanceOverhaulStockMonitorDetailYesterday Today
+expect-text FinanceOverhaulStockMonitorDetailFrom 30 days ago
+expect-text FinanceOverhaulStockMonitorDetailStat-0-1 ₡
+expect-no-overflow FinanceOverhaulStockMonitor
+capture stock-monitor-detail
+click FinanceOverhaulStockMonitorRange-7
+wait 1
+expect-text FinanceOverhaulStockMonitorDetailFrom 7 days ago
+expect-no-overflow FinanceOverhaulStockMonitor
+capture stock-monitor-detail-7d
+click FinanceOverhaulStockMonitorDetailBuy
+wait 1
+expect-text Button Buy
+close-dialog
+click FinanceOverhaulStockMonitorBack
+wait 1
+expect-visible FinanceOverhaulStockMonitorRows
+expect-hidden FinanceOverhaulStockMonitorDetail
+cleanup:
+close-dialog
+monitor close

@@ -13,12 +13,21 @@ namespace FinanceOverhaul.Market
         public const byte Baseline = 1;
         public const byte Line = 2;
 
+        /// <summary>Below the line (only with <c>fillArea</c>).</summary>
+        public const byte Area = 3;
+
         private const int DashOn = 3;
         private const int DashOff = 3;
 
         /// <param name="values">Daily prices, oldest first. Non-finite values are skipped.</param>
         /// <param name="thickness">Line thickness in pixels (1 or more).</param>
-        public static byte[] Render(float[] values, int width, int height, int thickness = 1)
+        public static byte[] Render(
+            float[] values,
+            int width,
+            int height,
+            int thickness = 1,
+            bool fillArea = false
+        )
         {
             if (width <= 0 || height <= 0)
             {
@@ -77,7 +86,59 @@ namespace FinanceOverhaul.Market
                 py = y;
             }
 
+            if (fillArea)
+            {
+                FillBelow(mask, width, height);
+            }
+
             return mask;
+        }
+
+        /// <summary>
+        /// Row (0 = top) a value lands on in a chart of this size over lo..hi — the same mapping
+        /// Render uses, for grid lines and axis labels.
+        /// </summary>
+        public static int RowOf(float value, float lo, float hi, int height, int thickness = 1)
+        {
+            thickness = Math.Max(1, thickness);
+            int pad = (thickness - 1) / 2;
+            int top = pad,
+                bottom = height - 1 - (thickness - 1 - pad);
+            if (hi - lo < 1e-6f)
+            {
+                return (top + bottom) / 2;
+            }
+
+            return bottom - (int)Math.Round((value - lo) / (hi - lo) * (bottom - top));
+        }
+
+        private static void FillBelow(byte[] mask, int w, int h)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                int y0 = -1;
+                for (int y = 0; y < h; y++)
+                {
+                    if (mask[y * w + x] == Line)
+                    {
+                        y0 = y;
+                        break;
+                    }
+                }
+
+                if (y0 < 0)
+                {
+                    continue;
+                }
+
+                for (int y = y0 + 1; y < h; y++)
+                {
+                    if (mask[y * w + x] == Empty || mask[y * w + x] == Baseline)
+                    {
+                        mask[y * w + x] = Area;
+                    }
+                }
+            }
         }
 
         private static float[] FiniteOnly(float[] values)

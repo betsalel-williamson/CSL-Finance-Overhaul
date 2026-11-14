@@ -279,3 +279,31 @@ namespace FinanceOverhaul.Market.Tests
         }
     }
 }
+
+namespace FinanceOverhaul.Market.Tests
+{
+    public class StockMonitorHoverTests
+    {
+        [Fact]
+        public void SolidWhileHoveredLikeCityVitals()
+        {
+            var m = new StockMonitorSettings();
+            Assert.True(m.TransparentUnhovered);
+            Assert.Equal(0.35f, m.BackgroundOpacity(false));
+            Assert.Equal(0.9f, m.BackgroundOpacity(true));
+            m.Opacity = 0f;
+            Assert.Equal(0f, m.BackgroundOpacity(false));
+            m.TransparentUnhovered = false;
+            Assert.Equal(0f, m.BackgroundOpacity(true));
+            Assert.False(
+                SettingsFile
+                    .Parse("monitor.transparentUnhovered=false")
+                    .Monitor.TransparentUnhovered
+            );
+            Assert.Contains(
+                "monitor.transparentUnhovered=true",
+                SettingsFile.Format(new ModSettings())
+            );
+        }
+    }
+}

@@ -16,7 +16,7 @@ namespace FinanceOverhaul
     /// Prices move once per game day, so rows are rebuilt only when a cheap signature
     /// (day, holdings, open orders, filter, sort) changes, checked twice a second.
     /// </summary>
-    public sealed class StockMonitorHost : MonoBehaviour
+    public sealed partial class StockMonitorHost : MonoBehaviour
     {
         public const string ButtonName = "FinanceOverhaulStockMonitorButton";
         public const string WindowName = "FinanceOverhaulStockMonitor";
@@ -72,6 +72,7 @@ namespace FinanceOverhaul
             public Texture2D Texture;
             public UILabel Price;
             public UILabel Change;
+            public int Id = -1;
         }
 
         private static StockMonitorSettings Settings
@@ -120,6 +121,7 @@ namespace FinanceOverhaul
             }
 
             DragButton();
+            FadeBackground();
             if (window == null || !window.isVisible || Time.unscaledTime < nextCheck)
             {
                 return;
@@ -148,9 +150,17 @@ namespace FinanceOverhaul
 
         // ---------- open / close ----------
 
-        /// <summary>Open or close outright (game UI tests; never toggles a player's window).</summary>
+        /// <summary>
+        /// Open or close outright (game UI tests; never toggles a player's window). Closing also
+        /// returns to the list, so a scenario starts from a known view.
+        /// </summary>
         public void SetOpen(bool open)
         {
+            if (!open && detailId >= 0)
+            {
+                ShowList();
+            }
+
             SetOpen(open, true);
         }
 
@@ -457,7 +467,25 @@ namespace FinanceOverhaul
         {
             if (background != null)
             {
-                background.opacity = Settings.Opacity;
+                background.opacity = Settings.BackgroundOpacity(
+                    window != null && window.containsMouse
+                );
+            }
+        }
+
+        /// <summary>City Vitals style: solid while the mouse is over the window, see-through otherwise (~0.15 s fade).</summary>
+        private void FadeBackground()
+        {
+            if (background == null || window == null || !window.isVisible)
+            {
+                return;
+            }
+
+            float target = Settings.BackgroundOpacity(window.containsMouse);
+            float now = background.opacity;
+            if (Mathf.Abs(now - target) > 0.005f)
+            {
+                background.opacity = Mathf.MoveTowards(now, target, Time.unscaledDeltaTime * 6f);
             }
         }
 
@@ -478,6 +506,12 @@ namespace FinanceOverhaul
         {
             if (window == null || !window.isVisible)
             {
+                return;
+            }
+
+            if (detailId >= 0)
+            {
+                RefreshDetail(force);
                 return;
             }
 
@@ -596,6 +630,13 @@ namespace FinanceOverhaul
             var r = new Row();
             r.Panel = list.AddUIComponent<UIPanel>();
             r.Panel.size = new Vector2(Width, RowHeight);
+            r.Panel.eventClick += (c, p) =>
+            {
+                if (r.Id >= 0)
+                {
+                    ShowDetail(r.Id);
+                }
+            };
 
             UIPanel line = r.Panel.AddUIComponent<UIPanel>();
             line.backgroundSprite = "EmptySprite"; // borderless: a true 1 px line
@@ -650,11 +691,17 @@ namespace FinanceOverhaul
             r.Change.backgroundSprite = "GenericPanelWhite";
             r.Change.padding = new RectOffset(0, 6, 2, 0);
             r.Change.relativePosition = new Vector3(Width - 82f, 27f);
+            foreach (UIComponent child in r.Panel.components)
+            {
+                child.isInteractive = false; // the whole row is one click target
+            }
+
             return r;
         }
 
         private static void Fill(Row r, MonitorQuote q)
         {
+            r.Id = q.Id;
             r.Panel.name = Prefix + "Row-" + q.Symbol;
             r.Symbol.name = Prefix + "Symbol-" + q.Symbol;
             r.Symbol.text = q.Symbol;
@@ -754,6 +801,7 @@ namespace FinanceOverhaul
             }
 
             rows.Clear();
+            DestroyDetail();
             filterTabs.Clear();
             if (buttonIcon != null && buttonIcon.texture != null)
             {

@@ -22,11 +22,22 @@ namespace FinanceOverhaul.Market
         public float WindowY = float.NaN;
         public float ButtonX = float.NaN;
         public float ButtonY = float.NaN;
+
+        /// <summary>
+        /// Like City Vitals' "Transparent Unhovered": the background sits at <see cref="Opacity"/>
+        /// and turns solid (<see cref="HoverOpacity"/>) while the mouse is over the window.
+        /// </summary>
+        public bool TransparentUnhovered = true;
+
+        public const float HoverOpacity = 0.9f;
         public MonitorFilter Filter = MonitorFilter.All;
         public MonitorSort Sort = MonitorSort.Change;
         private float opacity = DefaultOpacity;
 
-        /// <summary>Background darkness behind the rows, 0 (see-through) to 0.9.</summary>
+        /// <summary>
+        /// Background darkness, 0 (see-through) to 0.9: always, or only while the mouse is away
+        /// when <see cref="TransparentUnhovered"/> is on.
+        /// </summary>
         public float Opacity
         {
             get { return opacity; }
@@ -37,6 +48,12 @@ namespace FinanceOverhaul.Market
                         ? DefaultOpacity
                         : Math.Max(0f, Math.Min(MaxOpacity, value));
             }
+        }
+
+        /// <summary>Target background opacity for the window right now.</summary>
+        public float BackgroundOpacity(bool hovered)
+        {
+            return TransparentUnhovered && hovered ? Math.Max(Opacity, HoverOpacity) : Opacity;
         }
 
         private const string Prefix = "monitor.";
@@ -70,6 +87,9 @@ namespace FinanceOverhaul.Market
                 case "buttony":
                     ButtonY = ReadFloat(value);
                     break;
+                case "transparentunhovered":
+                    ReadBool(value, ref TransparentUnhovered);
+                    break;
                 case "opacity":
                     Opacity = ReadFloat(value);
                     break;
@@ -93,6 +113,7 @@ namespace FinanceOverhaul.Market
             Line(sb, "buttonX", Num(ButtonX));
             Line(sb, "buttonY", Num(ButtonY));
             Line(sb, "opacity", Num(Opacity));
+            Line(sb, "transparentUnhovered", TransparentUnhovered ? "true" : "false");
             Line(sb, "filter", Filter.ToString());
             Line(sb, "sort", Sort.ToString());
         }
