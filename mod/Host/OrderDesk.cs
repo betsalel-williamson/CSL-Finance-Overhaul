@@ -1,5 +1,6 @@
 #if HAS_CITIES
 using System;
+using System.Collections.Generic;
 using System.Text;
 using ColossalFramework;
 using FinanceOverhaul.Market;
@@ -226,11 +227,50 @@ namespace FinanceOverhaul
             {
                 book = null;
                 lastEvaluatedDay = -1;
+                Frozen.Clear();
+            }
+        }
+
+        // Game UI tests: orders a running scenario did not create (the player's) are frozen —
+        // no fill, no expiry, no trailing peak — even while the scenario advances days.
+        private static readonly HashSet<int> Frozen = new HashSet<int>();
+
+        /// <summary>Freezes these order ids until <see cref="UnfreezeAll"/> (game UI tests only).</summary>
+        public static void Freeze(IEnumerable<int> ids)
+        {
+            lock (Sync)
+            {
+                foreach (int id in ids)
+                {
+                    Frozen.Add(id);
+                }
+
+                ModLog.Info(
+                    "orders: " + Frozen.Count + " order(s) frozen while a game UI test runs"
+                );
+            }
+        }
+
+        public static void UnfreezeAll()
+        {
+            lock (Sync)
+            {
+                if (Frozen.Count > 0)
+                {
+                    ModLog.Info("orders: " + Frozen.Count + " frozen order(s) released");
+                }
+
+                Frozen.Clear();
             }
         }
 
         private static bool Evaluate(OrderBook b, TradeOrder order, int today)
         {
+            if (Frozen.Contains(order.Id))
+            {
+                return false;
+            }
+
             // Switched off in Options: kept as is (no fill, no expiry, no peak) until back on.
             if (!Mod.OrderKindEnabled(order.Kind))
             {

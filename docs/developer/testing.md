@@ -38,6 +38,12 @@ after `cleanup:` always run (cancel orders, sell back, close the dialog). Result
 `uitest: PASS|FAIL` in the mod log, captures as `FinanceOverhaul-uitest-*.png`. Scenarios trade
 small amounts in the loaded city and undo them in cleanup; use a test save.
 
+**Your orders are safe:** when a scenario starts, every order already open (the player's) is frozen
+— no fill, no expiry, no trailing peak — until the scenario ends, even when it runs days
+(`OrderDesk.Freeze`, logged as `orders: N order(s) frozen …`). `freeze-new-orders` freezes the
+scenario's own orders too (scenario `35-tst-player-orders-frozen` proves the rule). Days still pass
+for the city itself.
+
 Performance tests in `PriceBiasPerformanceTests` budget the equal-weight index (best of nine
 batches, so a busy machine cannot fail them) and assert it allocates nothing. They measure Market
 CPU only, not Cities frame time.

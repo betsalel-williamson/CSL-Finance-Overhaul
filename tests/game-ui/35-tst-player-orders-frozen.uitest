@@ -1,0 +1,22 @@
+# Needs the dev test stock (TST). Proves the runner's safety rule: orders a scenario did not create
+# (the player's) are frozen while it runs, even across advanced days.
+name orders a scenario did not create are frozen while it runs: a limit buy below the price stays open through a day
+set-price TST 100
+run-days 1
+remember TST
+show-buy TST
+click FinanceOverhaulOrderTab-Limit
+type FinanceOverhaulShareAmountField 5
+type FinanceOverhaulLimitPriceField 95
+click Button
+expect-orders-delta 1
+freeze-new-orders
+expect-log order(s) frozen while a game UI test runs
+set-price TST 90
+run-days 1
+expect-orders-delta 1
+expect-owned-delta TST 0
+cleanup:
+cancel-new-orders
+set-price TST 100
+close-dialog

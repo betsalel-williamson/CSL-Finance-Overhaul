@@ -85,6 +85,9 @@ namespace FinanceOverhaul
             }
 
             ctx.OrdersAtStart = ctx.OrdersBefore.Count;
+            // Everything already open is the player's: frozen until the scenario ends, so a
+            // scenario that advances days can never fill, expire or move it.
+            OrderDesk.Freeze(ctx.OrdersBefore);
             var steps = new List<string>();
             var cleanup = new List<string>();
             List<string> target = steps;
@@ -131,6 +134,7 @@ namespace FinanceOverhaul
                 );
             }
 
+            OrderDesk.UnfreezeAll();
             ModLog.Info(
                 failure == null
                     ? "uitest: PASS " + ctx.Name + " (" + steps.Count + " steps)"
@@ -1011,6 +1015,21 @@ namespace FinanceOverhaul
                     );
                     Application.CaptureScreenshot(file);
                     yield return new WaitForSeconds(0.5f);
+                    break;
+                }
+                case "freeze-new-orders":
+                {
+                    // Treat this scenario's open orders like the player's (proves freezing).
+                    var mine = new List<int>();
+                    foreach (TradeOrder o in OrderDesk.Snapshot())
+                    {
+                        if (!ctx.OrdersBefore.Contains(o.Id))
+                        {
+                            mine.Add(o.Id);
+                        }
+                    }
+
+                    OrderDesk.Freeze(mine);
                     break;
                 }
                 case "cancel-new-orders":
