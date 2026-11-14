@@ -89,7 +89,10 @@ namespace FinanceOverhaul
             "Hoefler Text",
             "Baskerville",
             "Georgia",
+            // Unity's font enumeration on macOS lists Palatino and Times but not the others.
+            "Palatino",
             "Times New Roman",
+            "Times",
         };
 
         private readonly Dictionary<ushort, GameObject> boards =
