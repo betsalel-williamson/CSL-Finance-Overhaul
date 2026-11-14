@@ -17,7 +17,7 @@ a phone stocks app, styled like the City Vitals window players already know.
 - **Rows:** ticker symbol (same as the LED board; unique per stock, see
   [Brokerage mechanics map](./brokerage-mechanics-map.md)) and name; a cyan dot when the city holds
   it and a gold "N orders" badge for open orders; a sparkline of the game's 30 daily prices with a
-  dashed line at yesterday's price, coloured by today's change; today's price in whole ₡; a change
+  dashed line at yesterday's price, coloured by the change rate; today's price in whole ₡; a change
   pill with the game's change rate (the same number as the Economy panel and the LED), green / red /
   grey for 0.00, black text.
 - Up to 10 rows show at once; the list scrolls with the mouse wheel. Footer: "Daily close · date".
@@ -27,9 +27,8 @@ a phone stocks app, styled like the City Vitals window players already know.
 Click a row: the window shows that stock in place of the list (**« All stocks** goes back; the
 window remembers which view was open).
 
-- **Header:** symbol and name; today's price with the change **vs yesterday** in ₡ and % (green /
-  red / grey), and "Today · yesterday ₡…". The row pill shows the game's change rate; the header is
-  day over day.
+- **Header:** symbol and name; today's price with its change in ₡ and % — the game's change rate,
+  the same measure as the row's pill — and "Today · yesterday ₡…" for reference.
 - **Chart:** **7D** or **30D** (the game keeps 30 daily prices) — line, shaded area, dashed line at
   yesterday's price, grid with ₡ labels at the high, the low and two steps between.
 - **Stats:** today, yesterday, the range's high and low; shares held, avg cost / share
@@ -70,8 +69,8 @@ All of it is kept per player in the settings file (`monitor.compact`, `monitor.s
 
 The game's own "Share value" charts — in the Invest dialog and in the Economy panel's hover tooltip
 — are drawn in the same style as the detail view (`ShareChartView`): line and shaded area coloured
-by today's change, dashed line at yesterday's price, ₡ grid on the right, "30 days ago … today", and
-the same hover (crosshair, dot, "Oil · 8 days ago · ₡925").
+by the change rate, dashed line at yesterday's price, ₡ grid on the right, "30 days ago … today",
+and the same hover (crosshair, dot, "Oil · 8 days ago · ₡925").
 
 - **Fit:** the vanilla `UIGraph` stays in place (layouts do not move), and so does the game's dark
   chart panel. Its `GraphParent` sliced sprite draws about 9 UI units wider than the graph on each
@@ -83,6 +82,14 @@ the same hover (crosshair, dot, "Oil · 8 days ago · ₡925").
 - **Flag:** **Share value charts in the Stock Monitor style (testing)** (`shareChartsEnabled`, on by
   default). Off — and on mod disable or hot reload — the overlay is removed and the game redraws its
   own chart on its next update.
+
+## One colour rule
+
+Green, red and grey everywhere — row pills (% and ₡), row sparklines, the detail header and chart,
+and the Invest dialog / tooltip charts — follow **one measure: the game's change rate**, the number
+the Economy panel shows as "Change rate" and the LED board shows (`CalculateChangeRate(…, 5)`, a
+short trend over the last few days, not just since yesterday). 0.00 is grey, as on the LED. The
+dashed line marks yesterday's price as a reference only.
 
 ## History limit
 

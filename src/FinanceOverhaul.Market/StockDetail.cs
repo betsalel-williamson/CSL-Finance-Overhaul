@@ -39,38 +39,17 @@ namespace FinanceOverhaul.Market
             return all.Length >= 2 ? all[all.Length - 2] : (float?)null;
         }
 
-        /// <summary>"+₡10 (+1.07%)", "−₡12 (−1.27%)", "₡0 (0.00%)"; "--" without yesterday.</summary>
-        public static string ChangeVsYesterday(float price, float? yesterday)
+        /// <summary>
+        /// The detail header's change: the game's change rate — the same measure as the list's
+        /// pills and line colour, the Economy panel and the LED — in ₡ and %, e.g.
+        /// "+₡4.03 (+0.29%)".
+        /// </summary>
+        public static string ChangeHeader(float price, float rate)
         {
-            if (!yesterday.HasValue || yesterday.Value <= 0f || float.IsNaN(price))
-            {
-                return "--";
-            }
-
-            long delta = (long)Math.Round(price) - (long)Math.Round(yesterday.Value);
-            double pct = Math.Round((price - yesterday.Value) / yesterday.Value * 100.0, 2);
-            string sign =
-                delta > 0 || (delta == 0 && pct > 0) ? "+"
-                : delta < 0 || pct < 0 ? "−"
-                : "";
-            return sign
-                + "₡"
-                + Math.Abs(delta).ToString("N0", CultureInfo.InvariantCulture)
-                + " ("
-                + sign
-                + Math.Abs(pct).ToString("0.00", CultureInfo.InvariantCulture)
-                + "%)";
-        }
-
-        /// <summary>Colour of the change vs yesterday (LED colour codes; flat when it rounds to 0.00%).</summary>
-        public static byte ChangeColourVsYesterday(float price, float? yesterday)
-        {
-            if (!yesterday.HasValue || yesterday.Value <= 0f || float.IsNaN(price))
-            {
-                return LedText.Flat;
-            }
-
-            return LedText.RateColour((float)((price - yesterday.Value) / yesterday.Value * 100.0));
+            string pct = StockMonitor.ChangeText(rate);
+            return pct == "--"
+                ? "--"
+                : StockMonitor.ChangeAmountFromRate(price, rate) + " (" + pct + ")";
         }
 
         public static string YesterdayLine(float? yesterday)

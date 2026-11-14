@@ -320,8 +320,14 @@ namespace FinanceOverhaul
             dName.text = ai.GetLocalizedName();
             dName.relativePosition = new Vector3(12f + dSymbol.width + 10f, 38f);
             dPrice.text = StockMonitor.PriceText(price);
-            Color32 colour = ColourOf(StockDetail.ChangeColourVsYesterday(price, yesterday));
-            dChange.text = StockDetail.ChangeVsYesterday(price, yesterday);
+            // One rule everywhere: the game's change rate (list, pills, Economy panel, LED).
+            float rate = ai.CalculateChangeRate(
+                (byte)detailId,
+                ref buffer[detailId],
+                TickerFeed.PanelChangeRateWindow
+            );
+            Color32 colour = ColourOf(StockMonitor.ChangeColour(rate));
+            dChange.text = StockDetail.ChangeHeader(price, rate);
             dChange.textColor = colour;
             dYesterday.text = StockDetail.YesterdayLine(yesterday);
 

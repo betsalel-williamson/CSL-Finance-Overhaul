@@ -27,17 +27,15 @@ namespace FinanceOverhaul.Market.Tests
         }
 
         [Fact]
-        public void ChangeVsYesterday()
+        public void YesterdayAndHeader()
         {
             Assert.Equal(128f, StockDetail.Yesterday(Days(30)));
             Assert.Null(StockDetail.Yesterday(new[] { 5f }));
-            Assert.Equal("+₡10 (+1.07%)", StockDetail.ChangeVsYesterday(942f, 932f));
-            Assert.Equal("−₡12 (−1.27%)", StockDetail.ChangeVsYesterday(932f, 944f));
-            Assert.Equal("₡0 (0.00%)", StockDetail.ChangeVsYesterday(932f, 932f));
-            Assert.Equal("--", StockDetail.ChangeVsYesterday(932f, null));
-            Assert.Equal(LedText.Gain, StockDetail.ChangeColourVsYesterday(942f, 932f));
-            Assert.Equal(LedText.Loss, StockDetail.ChangeColourVsYesterday(900f, 932f));
-            Assert.Equal(LedText.Flat, StockDetail.ChangeColourVsYesterday(932f, 932f));
+            // Header = the game's change rate, like the list pills (one rule everywhere).
+            Assert.Equal("+₡4.03 (+0.29%)", StockDetail.ChangeHeader(1394f, 0.29f));
+            Assert.Equal("−₡8.03 (-0.45%)", StockDetail.ChangeHeader(1776f, -0.45f));
+            Assert.Equal("₡0 (0.00%)", StockDetail.ChangeHeader(932f, 0.001f));
+            Assert.Equal("--", StockDetail.ChangeHeader(932f, float.NaN));
             Assert.Equal("Today · yesterday ₡932", StockDetail.YesterdayLine(932f));
         }
 

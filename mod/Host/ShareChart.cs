@@ -412,9 +412,16 @@ namespace FinanceOverhaul
                 var history = new float[Investment.kPastValueCount];
                 buffer[id].FillGraphValues(history);
                 float[] range = StockDetail.Range(history, StockDetail.LongRange);
-                float? yesterday = StockDetail.Yesterday(history);
+                // One rule everywhere: the game's change rate (list, pills, Economy panel, LED).
                 Color32 colour = StockMonitorHost.ColourOf(
-                    StockDetail.ChangeColourVsYesterday(buffer[id].value, yesterday)
+                    StockMonitor.ChangeColour(
+                        buffer[id]
+                            .Info.m_investmentAI.CalculateChangeRate(
+                                (byte)id,
+                                ref buffer[id],
+                                TickerFeed.PanelChangeRateWindow
+                            )
+                    )
                 );
                 view.Draw(range, colour, StockSymbols.For(buffer[id].Info));
 
