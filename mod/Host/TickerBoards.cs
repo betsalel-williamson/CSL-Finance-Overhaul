@@ -69,10 +69,17 @@ namespace FinanceOverhaul
     /// <summary>Per-frame driver on the overlay root (main thread).</summary>
     public class TickerOverlay : MonoBehaviour
     {
-        // First-guess placement (calibrate from screenshots).
-        internal const float FrontOffset = 0.6f; // metres in front of the mesh's front face
-        internal const float HeightFraction = 0.45f; // of the mesh height
-        internal const float RowHeight = 1.6f; // metres per row
+        // Placement calibrated from an in-game screenshot (2026-11-13): the vanilla facade
+        // has a centre board at ~9.6 m and two side boards at ~7.6 m, ~12.5 m either side,
+        // set back behind the columns. Offsets are metres in the building's frame.
+        internal const float Setback = 5f; // metres behind the mesh's front bound
+        internal static readonly Vector3[] BoardOffsets =
+        {
+            new Vector3(0f, 9.6f, 0f), // centre
+            new Vector3(-12.5f, 7.6f, 0f), // left
+            new Vector3(12.5f, 7.6f, 0f), // right
+        };
+        internal const float RowHeight = 1.2f; // metres per row
         internal const int FontSize = 64;
         internal const float RefreshSeconds = 1f;
 
@@ -125,13 +132,7 @@ namespace FinanceOverhaul
         {
             if (font == null)
             {
-                font = Font.CreateDynamicFontFromOSFont(SerifFonts, FontSize);
-                if (font == null)
-                {
-                    font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-                }
-
-                ModLog.Info("ticker: board font=" + (font == null ? "none" : font.name));
+                font = PickFont();
             }
 
             string[] rows = TickerFeed.CurrentRows;
@@ -180,10 +181,51 @@ namespace FinanceOverhaul
             }
         }
 
+        /// <summary>
+        /// CreateDynamicFontFromOSFont names the font after the first requested name even
+        /// when it is missing (and silently falls back to a sans), so pick from the fonts
+        /// that are actually installed and log the real choice.
+        /// </summary>
+        private static Font PickFont()
+        {
+            string[] installed = Font.GetOSInstalledFontNames() ?? new string[0];
+            var lookup = new HashSet<string>(installed, StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < SerifFonts.Length; i++)
+            {
+                if (lookup.Contains(SerifFonts[i]))
+                {
+                    Font f = Font.CreateDynamicFontFromOSFont(SerifFonts[i], FontSize);
+                    if (f != null)
+                    {
+                        ModLog.Info("ticker: board font=" + SerifFonts[i] + " (installed)");
+                        return f;
+                    }
+                }
+            }
+
+            ModLog.Warn(
+                "ticker: no preferred serif installed (" + installed.Length + " fonts); using Arial"
+            );
+            return Resources.GetBuiltinResource<Font>("Arial.ttf");
+        }
+
+        /// <summary>One group per Stock Exchange: centre, left and right boards.</summary>
         private GameObject CreateBoard(ushort id)
         {
-            var board = new GameObject("FO Ticker Board " + id);
-            board.transform.SetParent(transform, false);
+            var group = new GameObject("FO Ticker " + id);
+            group.transform.SetParent(transform, false);
+            for (int b = 0; b < BoardOffsets.Length; b++)
+            {
+                var board = new GameObject("Board" + b);
+                board.transform.SetParent(group.transform, false);
+                AddRows(board);
+            }
+
+            return group;
+        }
+
+        private void AddRows(GameObject board)
+        {
             for (int r = 0; r < 3; r++)
             {
                 var row = new GameObject("Row" + r);
@@ -203,59 +245,64 @@ namespace FinanceOverhaul
                     renderer.sharedMaterial = font.material;
                 }
             }
-
-            return board;
         }
 
-        private void Place(GameObject board, ref Building b, BuildingInfo info, ushort id)
+        private void Place(GameObject group, ref Building b, BuildingInfo info, ushort id)
         {
             Vector3 size = info.m_size;
-            var local = new Vector3(0f, size.y * HeightFraction, size.z * 0.5f + FrontOffset);
-            Vector3 pos = Building.CalculatePosition(b.m_position, b.m_angle, local);
             var front = new Vector3(-Mathf.Sin(b.m_angle), 0f, Mathf.Cos(b.m_angle));
-            board.transform.position = pos;
-            // TextMesh is readable when looking along its forward axis, so face into the building.
-            board.transform.rotation = Quaternion.LookRotation(-front, Vector3.up);
+            group.transform.position = b.m_position;
+            // TextMesh is readable when looking along its forward axis, so the group faces
+            // into the building; local −Z is therefore toward the street.
+            group.transform.rotation = Quaternion.LookRotation(-front, Vector3.up);
+            float faceZ = -(size.z * 0.5f - Setback);
+            for (int i = 0; i < BoardOffsets.Length; i++)
+            {
+                Vector3 o = BoardOffsets[i];
+                group.transform.GetChild(i).localPosition = new Vector3(o.x, o.y, faceZ);
+            }
+
             if (!placementLogged)
             {
                 placementLogged = true;
                 ModLog.Info(
-                    "ticker: board for building "
+                    "ticker: boards for building "
                         + id
-                        + " at "
-                        + pos
+                        + " origin="
+                        + b.m_position
                         + " angle="
                         + b.m_angle.ToString("0.###")
                         + " meshSize="
                         + size
-                        + " cells="
-                        + info.m_cellWidth
-                        + "x"
-                        + info.m_cellLength
-                        + " local="
-                        + local
+                        + " faceZ="
+                        + faceZ.ToString("0.0")
+                        + " centre="
+                        + group.transform.GetChild(0).position
                 );
             }
         }
 
-        private static void SetRows(GameObject board, string[] rows)
+        private static void SetRows(GameObject group, string[] rows)
         {
-            for (int r = 0; r < 3; r++)
+            for (int g = 0; g < group.transform.childCount; g++)
             {
-                Transform row = board.transform.GetChild(r);
-                TextMesh text = row.GetComponent<TextMesh>();
-                string value =
-                    rows == null
-                        ? (
-                            r == 1
-                                ? "<color=#9FB0C0>Waiting for market data…</color>"
-                                : string.Empty
-                        )
-                    : r < rows.Length ? rows[r]
-                    : string.Empty;
-                if (text.text != value)
+                Transform board = group.transform.GetChild(g);
+                for (int r = 0; r < board.childCount; r++)
                 {
-                    text.text = value;
+                    TextMesh text = board.GetChild(r).GetComponent<TextMesh>();
+                    string value =
+                        rows == null
+                            ? (
+                                r == 1
+                                    ? "<color=#9FB0C0>Waiting for market data…</color>"
+                                    : string.Empty
+                            )
+                        : r < rows.Length ? rows[r]
+                        : string.Empty;
+                    if (text.text != value)
+                    {
+                        text.text = value;
+                    }
                 }
             }
         }
