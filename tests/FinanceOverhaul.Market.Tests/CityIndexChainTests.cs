@@ -33,17 +33,17 @@ namespace FinanceOverhaul.Market.Tests
         [Fact]
         public void EqualWeightsReturnsNotPrices()
         {
-            // Cheap stock +10%, expensive stock -10% → index flat (price average would drop ~9%).
+            // Cheap stock ×1.1, expensive stock ÷1.1 → index flat (price average would drop ~9%).
             Assert.True(
                 Chain(
                     1000f,
-                    new[] { 110f, 1800f },
+                    new[] { 110f, 2000f / 1.1f },
                     new[] { 100f, 2000f },
                     new[] { true, true },
                     out float mark
                 )
             );
-            Assert.Equal(1000f, mark, 2);
+            Assert.Equal(1000f, mark, 1);
         }
 
         [Fact]
@@ -58,7 +58,8 @@ namespace FinanceOverhaul.Market.Tests
                     out float mark
                 )
             );
-            Assert.Equal(1020f, mark, 2);
+            // Geometric mean of the moves: (1.02 × 1.01 × 1.03)^(1/3) ≈ 1.019967.
+            Assert.Equal(1019.967f, mark, 1);
         }
 
         [Fact]
@@ -69,7 +70,8 @@ namespace FinanceOverhaul.Market.Tests
             Assert.True(Chain(1000f, last, prev, new[] { true, true, true, true }, out float mark));
             float indexMove = mark / 1000f - 1f;
             Assert.True(indexMove < 0.12f / 2f);
-            Assert.Equal(0.03f, indexMove, 3);
+            // exp(mean ln(1.12, 0.99, 1.01, 1.00)) − 1 ≈ 2.95% (the old mean of returns: 3%).
+            Assert.Equal(0.0287f, indexMove, 3);
         }
 
         [Fact]

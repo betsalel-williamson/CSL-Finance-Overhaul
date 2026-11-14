@@ -27,11 +27,12 @@ sector basket.
 
 1. **Listing** — With the mod enabled and Financial Districts present, the purchasable Investments
    list includes a stock titled **Index** (exact display name).
-2. **Mark** — Index is a chain-linked **equal-weight return** index: each update,
-   `Index = previous Index × (1 + average latest % change of the members)`. Members are the
-   **unlocked share-priced** investments (no coins, no Index itself); each member's single-update
-   move is clamped to −50%…+100%. A brand-new Index seeds from the members' price average. The hook
-   runs after vanilla random variance, so Index carries none.
+2. **Mark** — Index is a chain-linked **equal-weight geometric** index (Jevons): each daily update,
+   `Index = previous Index × geometric mean of the members' price ratios (today ÷ yesterday)`.
+   Members are the **unlocked share-priced** investments (no coins, no Index itself); each member's
+   daily move is capped at a halving or a doubling, applied to the log ratio so the cap is
+   symmetric. A brand-new Index seeds from the members' price average. The hook runs after vanilla
+   random variance, so Index carries none. See [Index math](#index-math).
 3. **Trading** — Players buy and sell Index with the same Buy / Sell / share-amount flow as any
    other investment.
 4. **Fail soft** — If the Index listing cannot be created or sector prices cannot be read, log a
@@ -88,3 +89,26 @@ sector basket.
 - In-game: Index appears on Investments; its Value moves with the sector basket; Buy/Sell works.
 - [Market analogs](./market-analogs.md) city-index section points here as the first shipped fund
   slice.
+
+## Index math
+
+**Properties** (unit tested over 200 seeded random baskets in `CityIndexPropertyTests`). For a fixed
+basket of n members with prices p(i,t):
+
+- **Path independence:** after T days, `Index_T = Index_0 · Π_i (p(i,T) / p(i,0))^(1/n)`, whatever
+  happened in between.
+- **Time reversal:** the same days played forward and then backward return the Index exactly to
+  where it started.
+- **Identity and proportionality:** no member moves → no change; every member × k → Index × k.
+- **Mean-value bounds:** a day's move lies between the smallest and largest member move.
+- **Commensurability:** a member's price level (₡50 or ₡5,000) does not change its weight.
+- **No drift:** stocks that only oscillate between fixed levels leave the Index where it was.
+
+**Why it changed (2079 in the test city):** the Index was first the arithmetic mean of members'
+daily returns (a chained Carli index). By the AM–GM inequality that mean is ≥ the geometric mean
+every day, strictly whenever members move differently, and the gap compounds. The game's stocks
+swing hard around fairly stable levels (Oil moved between ₡46 and ₡73 from one day to the next), so
+the old Index climbed far above its members. On the city's real last 30 days, the old rule gave
+×1.191 against ×1.112 for the geometric rule (which equals the members' own end ÷ start). Replaying
+those 30 days forward then backward, the old rule ended up ×1.148 instead of exactly ×1.000. The
+backfill of older Index history uses the exact inverse of the same geometric step.

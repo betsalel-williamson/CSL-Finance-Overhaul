@@ -76,17 +76,26 @@ namespace FinanceOverhaul.Market
             return true;
         }
 
-        /// <summary>Largest single-update loss / gain one member can contribute.</summary>
+        /// <summary>
+        /// Largest single-day move one member can contribute: halving or doubling. The cap
+        /// is applied to the log of the price ratio, so it is symmetric (a jump and its
+        /// reversal cancel exactly).
+        /// </summary>
         public const float MinMemberReturn = -0.5f;
         public const float MaxMemberReturn = 1.0f;
+        private static readonly double MaxLogMove = Math.Log(2.0);
 
         /// <summary>
-        /// Chain-linked equal-weight return index:
-        /// <c>mark = previous × (1 + mean(last_i / prev_i − 1))</c> over eligible members
-        /// (Index excluded) with finite, positive history. Each member's return is
-        /// clamped to [<see cref="MinMemberReturn"/>, <see cref="MaxMemberReturn"/>] so
-        /// one stock unlocking from ₡1 cannot spike the index. Returns false when there
-        /// is no previous level or no usable member, so callers can seed or hold.
+        /// Chain-linked equal-weight **geometric** index (Jevons):
+        /// <c>mark = previous × exp(mean ln(last_i / prev_i))</c> over eligible members
+        /// (Index excluded) with finite, positive history, each ln-ratio capped to ±ln 2.
+        /// For a fixed basket this telescopes to <c>I0 · Π (p_T / p_0)^(1/n)</c>: path
+        /// independent and time reversible, so stocks that only bounce around do not move
+        /// it. (The earlier mean of returns — Carli — is ≥ this every day by the AM–GM
+        /// inequality and drifted up without bound; see CityIndexPropertyTests.) Members
+        /// joining or leaving only change which ratios are averaged that day, so the level
+        /// never jumps. Returns false when there is no previous level or no usable member,
+        /// so callers can seed or hold.
         /// </summary>
         public static bool TryComputeChainedMark(
             float previousIndex,
@@ -132,17 +141,7 @@ namespace FinanceOverhaul.Market
                     continue;
                 }
 
-                double r = last / (double)prev - 1d;
-                if (r < MinMemberReturn)
-                {
-                    r = MinMemberReturn;
-                }
-                else if (r > MaxMemberReturn)
-                {
-                    r = MaxMemberReturn;
-                }
-
-                sum += r;
+                sum += CappedLogMove(last, prev);
                 count++;
             }
 
@@ -151,15 +150,15 @@ namespace FinanceOverhaul.Market
                 return false;
             }
 
-            mark = (float)(previousIndex * (1d + sum / count));
+            mark = (float)(previousIndex * Math.Exp(sum / count));
             return true;
         }
 
         /// <summary>
         /// Rebuilds Index levels older than its own history from the members' vanilla
         /// value histories (newest-first, like <c>Queue.GetFromTop</c>), running the
-        /// chain-linked equal-weight rule backwards:
-        /// <c>L(j+1) = L(j) / (1 + mean_i(h_i[j] / h_i[j+1] − 1))</c>.
+        /// chain-linked geometric rule backwards (its exact inverse):
+        /// <c>L(j+1) = L(j) / exp(mean_i ln(h_i[j] / h_i[j+1]))</c>.
         /// </summary>
         /// <param name="oldestOwnLevel">Index's oldest real value (step ownCount − 1).</param>
         /// <param name="ownCount">How many real Index points exist (steps 0..ownCount−1).</param>
@@ -224,21 +223,26 @@ namespace FinanceOverhaul.Market
                         continue;
                     }
 
-                    double r = newer / (double)older - 1d;
-                    r = Math.Max(MinMemberReturn, Math.Min(MaxMemberReturn, r));
-                    sum += r;
+                    sum += CappedLogMove(newer, older);
                     count++;
                 }
 
                 if (count > 0)
                 {
-                    level /= 1d + sum / count;
+                    level /= Math.Exp(sum / count);
                 }
 
                 result[step - ownCount] = (float)level;
             }
 
             return result;
+        }
+
+        /// <summary>ln(newer / older), capped to ±ln 2 (at most a halving or a doubling).</summary>
+        private static double CappedLogMove(float newer, float older)
+        {
+            double m = Math.Log(newer / (double)older);
+            return Math.Max(-MaxLogMove, Math.Min(MaxLogMove, m));
         }
 
         private static bool IsMember(string name, bool eligible, float[] history)

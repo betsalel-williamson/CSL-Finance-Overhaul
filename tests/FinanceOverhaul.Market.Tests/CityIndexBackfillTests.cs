@@ -45,8 +45,8 @@ namespace FinanceOverhaul.Market.Tests
         [Fact]
         public void EqualWeightsReturnsAcrossCheapAndExpensiveNames()
         {
-            // Cheap +10% and expensive −10% on the same day → index flat that day.
-            var histories = new[] { new[] { 110f, 100f }, new[] { 1800f, 2000f } };
+            // Cheap ×1.1 and expensive ÷1.1 on the same day → index flat that day.
+            var histories = new[] { new[] { 110f, 100f }, new[] { 2000f / 1.1f, 2000f } };
             float[] older = CityIndexBasket.BackfillOlder(
                 500f,
                 1,
