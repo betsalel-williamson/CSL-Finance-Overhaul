@@ -32,6 +32,7 @@ namespace FinanceOverhaul
                 DestroyAll();
                 root = new GameObject(RootName);
                 root.AddComponent<TickerOverlay>();
+                root.AddComponent<PortfolioOrders>();
                 if (BuildInfo.ShowDevBuildIdentity)
                 {
                     root.AddComponent<DevCapture>();

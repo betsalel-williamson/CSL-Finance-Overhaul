@@ -1,0 +1,25 @@
+# Needs the dev test stock (TST) in a test save.
+name a filled order leaves Open orders and the shares appear in Your Portfolio
+set-price TST 100
+run-days 1
+remember TST
+show-buy TST
+click FinanceOverhaulOrderTabLimit
+type FinanceOverhaulShareAmountField 6
+type FinanceOverhaulLimitPriceField 90
+click Button
+show-economy
+wait 1
+scroll-into-view FinanceOverhaulOpenOrderRow-$order
+expect-in-view FinanceOverhaulOpenOrderRow-$order OwnedInvestmentsPanel
+expect-text FinanceOverhaulOpenOrderDetail-$order 6 shares at or below ₡90
+set-price TST 85
+run-days 1
+wait 1
+expect-hidden FinanceOverhaulOpenOrderRow-$order
+expect-owned-delta TST 6
+capture portfolio-after-fill
+cleanup:
+cancel-new-orders
+sell-back TST 6
+set-price TST 100

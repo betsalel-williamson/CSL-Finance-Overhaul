@@ -1,0 +1,26 @@
+name an open order is an entry of Your Portfolio, under its holding, and can be cancelled there
+show-buy Oil
+click FinanceOverhaulOrderTabLimit
+type FinanceOverhaulShareAmountField 3
+type FinanceOverhaulLimitPriceField 1
+click Button
+expect-orders-delta 1
+show-economy
+wait 1
+scroll-into-view FinanceOverhaulOpenOrderRow-$order
+expect-in-view FinanceOverhaulOpenOrderRow-$order OwnedInvestmentsPanel
+expect-prev-has FinanceOverhaulOpenOrderRow-$order Oil Industry
+expect-text FinanceOverhaulOpenOrderText-$order Oil Industry
+expect-text FinanceOverhaulOpenOrderDetail-$order 3 shares at or below ₡1 · 60 days left
+expect-no-overflow FinanceOverhaulOpenOrderRow-$order
+capture portfolio-orders
+# Vanilla re-sorts the list periodically; the card must stay under its holding.
+wait 3
+expect-prev-has FinanceOverhaulOpenOrderRow-$order Oil Industry
+click FinanceOverhaulOpenOrderCancel-$order
+wait 1
+expect-orders-delta 0
+expect-hidden FinanceOverhaulOpenOrderRow-$order
+cleanup:
+cancel-new-orders
+close-dialog

@@ -70,6 +70,9 @@ namespace FinanceOverhaul
             public HashSet<int> OrdersBefore = new HashSet<int>();
             public readonly Dictionary<string, uint> Owned = new Dictionary<string, uint>();
             public long LogStart;
+
+            /// <summary>Newest order this scenario created; "$order" in a step expands to it.</summary>
+            public int LastOrderId;
         }
 
         private IEnumerator Run(string script)
@@ -143,6 +146,15 @@ namespace FinanceOverhaul
 
         private IEnumerator Step(string line, Context ctx, StepResult r)
         {
+            foreach (TradeOrder o in OrderDesk.Snapshot())
+            {
+                if (!ctx.OrdersBefore.Contains(o.Id) && o.Id > ctx.LastOrderId)
+                {
+                    ctx.LastOrderId = o.Id;
+                }
+            }
+
+            line = line.Replace("$order", ctx.LastOrderId.ToString(CultureInfo.InvariantCulture));
             string[] w = line.Split(new[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
             string cmd = w[0];
             string a = w.Length > 1 ? w[1] : null;
@@ -297,6 +309,18 @@ namespace FinanceOverhaul
                         r.Error = a + " chart ends at " + last + ", expected " + b;
                     }
 
+                    break;
+                }
+                case "dump":
+                {
+                    UIComponent c = FindControl(a, includeHidden: true);
+                    if (c == null)
+                    {
+                        r.Error = "no control " + a;
+                        break;
+                    }
+
+                    DevCapture.DumpTree(c, 0);
                     break;
                 }
                 case "inspect":
@@ -477,14 +501,26 @@ namespace FinanceOverhaul
                 }
                 case "expect-no-overflow":
                 {
-                    BuySellInvestmentPanel dialog = BuySellInvestmentPanel.instance;
-                    if (dialog == null || !dialog.component.isVisible)
+                    // Optional CONTROL: check inside that panel instead of the Invest dialog.
+                    UIComponent root;
+                    if (a != null)
                     {
-                        r.Error = "no open Invest dialog";
+                        root = FindControl(a);
+                    }
+                    else
+                    {
+                        BuySellInvestmentPanel dialog = BuySellInvestmentPanel.instance;
+                        root =
+                            dialog != null && dialog.component.isVisible ? dialog.component : null;
+                    }
+
+                    if (root == null)
+                    {
+                        r.Error = a == null ? "no open Invest dialog" : "no visible " + a;
                         break;
                     }
 
-                    UIComponent offender = FirstOverflow(dialog.component, dialog.component);
+                    UIComponent offender = FirstOverflow(root, root);
                     if (offender != null)
                     {
                         r.Error =
@@ -495,10 +531,137 @@ namespace FinanceOverhaul
                             + offender.absolutePosition
                             + " size "
                             + offender.size
-                            + " leaves the dialog at "
-                            + dialog.component.absolutePosition
+                            + " leaves "
+                            + root.name
+                            + " at "
+                            + root.absolutePosition
                             + " size "
-                            + dialog.component.size;
+                            + root.size;
+                    }
+
+                    break;
+                }
+                case "scroll-bottom":
+                {
+                    UIScrollablePanel scroll = FindControl(a) as UIScrollablePanel;
+                    if (scroll == null)
+                    {
+                        r.Error = "no scrolling list " + a;
+                        break;
+                    }
+
+                    scroll.ScrollToBottom();
+                    yield return new WaitForSeconds(0.3f);
+                    ModLog.Info(
+                        "uitest: "
+                            + a
+                            + " scrollPosition="
+                            + scroll.scrollPosition
+                            + " view="
+                            + scroll.CalculateViewSize()
+                            + " size="
+                            + scroll.size
+                    );
+                    break;
+                }
+                case "scroll-into-view":
+                {
+                    // Like a player scrolling Your Portfolio until CONTROL shows.
+                    UIComponent c = FindControl(a);
+                    UIScrollablePanel scroll = c == null ? null : c.parent as UIScrollablePanel;
+                    if (scroll == null)
+                    {
+                        r.Error = a + " is not an entry of a scrolling list";
+                        break;
+                    }
+
+                    // Scroll by exactly what is needed (the game's ScrollIntoView did not
+                    // move this list): bring the entry's bottom, or top, inside the view.
+                    float below = c.relativePosition.y + c.height - scroll.height;
+                    float above = c.relativePosition.y;
+                    Vector2 pos = scroll.scrollPosition;
+                    if (below > 0f)
+                    {
+                        pos.y += below;
+                    }
+                    else if (above < 0f)
+                    {
+                        pos.y += above;
+                    }
+
+                    scroll.scrollPosition = pos;
+                    yield return new WaitForSeconds(0.3f);
+                    break;
+                }
+                case "expect-prev-has":
+                {
+                    // The entry before CONTROL in its list contains a label with TEXT.
+                    UIComponent c = FindControl(a);
+                    UIComponent parent = c == null ? null : c.parent;
+                    if (parent == null)
+                    {
+                        r.Error = "no visible control " + a;
+                        break;
+                    }
+
+                    int index = -1;
+                    for (int k = 0; k < parent.components.Count; k++)
+                    {
+                        if (parent.components[k] == c)
+                        {
+                            index = k;
+                        }
+                    }
+
+                    UIComponent prev = index > 0 ? parent.components[index - 1] : null;
+                    bool has = false;
+                    if (prev != null)
+                    {
+                        foreach (UILabel l in prev.GetComponentsInChildren<UILabel>())
+                        {
+                            has |= l.text != null && l.text.Contains(b ?? string.Empty);
+                        }
+                    }
+
+                    if (!has)
+                    {
+                        r.Error = "the entry before " + a + " has no '" + b + "'";
+                    }
+
+                    break;
+                }
+                case "expect-in-view":
+                {
+                    // CONTROL's box must overlap CONTAINER's box (e.g. not scrolled out of a list).
+                    UIComponent c1 = FindControl(a);
+                    UIComponent c2 = FindControl(b);
+                    if (c1 == null || c2 == null)
+                    {
+                        r.Error = "need two visible controls";
+                        break;
+                    }
+
+                    Vector3 p1 = c1.absolutePosition,
+                        p2 = c2.absolutePosition;
+                    bool inView =
+                        p1.x < p2.x + c2.width
+                        && p2.x < p1.x + c1.width
+                        && p1.y < p2.y + c2.height
+                        && p2.y < p1.y + c1.height;
+                    if (!inView)
+                    {
+                        r.Error =
+                            a
+                            + " at "
+                            + p1
+                            + " "
+                            + c1.size
+                            + " is outside "
+                            + b
+                            + " at "
+                            + p2
+                            + " "
+                            + c2.size;
                     }
 
                     break;

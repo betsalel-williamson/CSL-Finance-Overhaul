@@ -702,15 +702,7 @@ namespace FinanceOverhaul
 
         private static void RemoveStale(UIComponent parent)
         {
-            foreach (string name in new[] { TabsName, PriceName })
-            {
-                UIComponent stale;
-                while ((stale = parent.Find(name)) != null)
-                {
-                    stale.name = name + " (stale)";
-                    UnityEngine.Object.Destroy(stale.gameObject);
-                }
-            }
+            UiCleanup.RemoveChildrenNamed(parent, TabsName, PriceName);
         }
 
         private static void Destroy(UIComponent c)

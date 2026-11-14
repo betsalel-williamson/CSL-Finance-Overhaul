@@ -217,6 +217,12 @@ namespace FinanceOverhaul
             );
             applied += TryPatch(
                 harmony,
+                AccessTools.Method(typeof(EconomyPanel), "UpdateInvestments"),
+                null,
+                nameof(PortfolioOrdersArrangePostfix)
+            );
+            applied += TryPatch(
+                harmony,
                 AccessTools.Method(typeof(BuySellInvestmentPanel), "UpdatePriceNumbers"),
                 null,
                 nameof(OrderTicketPricePostfix)
@@ -289,6 +295,19 @@ namespace FinanceOverhaul
             catch
             {
                 // fail soft
+            }
+        }
+
+        /// <summary>Right after vanilla sorts Your Portfolio, put order cards back in place.</summary>
+        private static void PortfolioOrdersArrangePostfix(EconomyPanel __instance)
+        {
+            try
+            {
+                PortfolioOrders.Arrange(__instance);
+            }
+            catch
+            {
+                // fail soft — vanilla list kept
             }
         }
 
