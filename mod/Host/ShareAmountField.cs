@@ -114,8 +114,15 @@ namespace FinanceOverhaul
                 field.readOnly = false;
                 field.horizontalAlignment = UIHorizontalAlignment.Center;
                 field.verticalAlignment = UIVerticalAlignment.Middle;
-                field.padding = new RectOffset(4, 4, 2, 2);
+                if (label.font != null)
+                {
+                    field.font = label.font;
+                }
+
                 field.textScale = label.textScale;
+                // UITextField draws text from padding.top (verticalAlignment is ignored),
+                // so center it from the rendered line height.
+                field.padding = CenteredPadding(field);
                 field.textColor = label.textColor;
                 field.normalBgSprite = "TextFieldPanel";
                 field.hoveredBgSprite = "TextFieldPanelHovered";
@@ -259,6 +266,13 @@ namespace FinanceOverhaul
             {
                 LogOnce("share field: revert failed: " + ex.Message);
             }
+        }
+
+        private static RectOffset CenteredPadding(UITextField f)
+        {
+            float lineHeight = f.font != null ? f.font.lineHeight * f.textScale : label.height;
+            int top = Mathf.Max(0, Mathf.RoundToInt((f.height - lineHeight) * 0.5f));
+            return new RectOffset(4, 4, top, 0);
         }
 
         private static void GetRange(out uint min, out uint max)
