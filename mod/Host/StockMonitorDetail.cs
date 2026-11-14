@@ -25,6 +25,8 @@ namespace FinanceOverhaul
 
         private int detailId = -1;
         private int detailDays = StockDetail.LongRange;
+        private float[] dRangeShown = new float[0];
+        private string dSymbolShown;
         private string detailSignature;
         private UIPanel detail;
         private UILabel dSymbol,
@@ -326,6 +328,8 @@ namespace FinanceOverhaul
             StyleRange(dRange7, detailDays == StockDetail.ShortRange);
             StyleRange(dRange30, detailDays == StockDetail.LongRange);
             dFromLabel.text = range.Length.ToString() + " days ago";
+            dRangeShown = range;
+            dSymbolShown = symbol;
             DrawChart(range, colour);
 
             SetStat(0, 0, "Today", StockMonitor.PriceText(price), White);
