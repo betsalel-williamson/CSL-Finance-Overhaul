@@ -22,7 +22,8 @@ namespace FinanceOverhaul
         private static InvestmentInfo indexInfo;
 
         private static readonly List<string> Names = new List<string>(16);
-        private static readonly List<float> Values = new List<float>(16);
+        private static readonly List<float> Last = new List<float>(16);
+        private static readonly List<float> Prev = new List<float>(16);
         private static readonly List<bool> Eligible = new List<bool>(16);
 
         private static bool markFailureLogged;
@@ -329,8 +330,13 @@ namespace FinanceOverhaul
             return ai != null && ai.m_info != null && CityIndexBasket.IsIndexName(ai.m_info.m_name);
         }
 
-        /// <summary>Overrides the Index mark with the equal-weight sector basket.</summary>
-        public static void ApplyMark(InvestmentAI ai, ref float value)
+        /// <summary>
+        /// Postfix target: InvestmentAI.SafeCalculateValue (after vanilla random
+        /// variance, so Index carries none). Index level is chain-linked:
+        /// previous level × (1 + mean latest return of unlocked share stocks).
+        /// Seeds from the price average when Index has no history yet.
+        /// </summary>
+        public static void ApplyMark(InvestmentAI ai, ref Investment data, ref float value)
         {
             if (!IsIndex(ai))
             {
@@ -339,15 +345,51 @@ namespace FinanceOverhaul
 
             try
             {
-                if (TryReadBasketMark(out float mark))
+                float previous =
+                    data.allValues != null && data.allValues.Count > 0 ? data.value : 0f;
+                ReadBasket();
+                float mark;
+                string mode;
+                if (
+                    CityIndexBasket.TryComputeChainedMark(
+                        previous,
+                        Names,
+                        Last,
+                        Prev,
+                        Eligible,
+                        out mark
+                    )
+                )
                 {
-                    value = mark;
+                    mode = "chain";
                 }
-                else if (!markFailureLogged)
+                else if (
+                    !(previous > 0f)
+                    && CityIndexBasket.TryComputeMark(Names, Last, Eligible, out mark)
+                )
                 {
-                    markFailureLogged = true;
-                    ModLog.Warn("index: no sector prices readable; keeping vanilla mark");
+                    mode = "seed";
                 }
+                else if (previous > 0f)
+                {
+                    mark = previous;
+                    mode = "hold";
+                }
+                else
+                {
+                    if (!markFailureLogged)
+                    {
+                        markFailureLogged = true;
+                        ModLog.Warn(
+                            "index: no unlocked share prices readable; keeping vanilla mark"
+                        );
+                    }
+
+                    return;
+                }
+
+                value = mark;
+                LogUpdate(mode, previous, mark);
             }
             catch (Exception ex)
             {
@@ -357,6 +399,34 @@ namespace FinanceOverhaul
                     ModLog.Warn("index: mark failed, keeping vanilla mark: " + ex.Message);
                 }
             }
+        }
+
+        private static int updateCount;
+
+        /// <summary>First 20 updates after (re)load, then every 30th, to keep the log small.</summary>
+        private static void LogUpdate(string mode, float previous, float mark)
+        {
+            updateCount++;
+            if (updateCount > 20 && updateCount % 30 != 0)
+            {
+                return;
+            }
+
+            float change = previous > 0f ? (mark / previous - 1f) * 100f : 0f;
+            ModLog.Info(
+                "index: update #"
+                    + updateCount
+                    + " mode="
+                    + mode
+                    + " "
+                    + previous.ToString("0.##")
+                    + " -> "
+                    + mark.ToString("0.##")
+                    + " ("
+                    + change.ToString("+0.00;-0.00")
+                    + "%) members="
+                    + CountEligible()
+            );
         }
 
         /// <summary>One-line readout for the log after a level loads.</summary>
@@ -407,10 +477,11 @@ namespace FinanceOverhaul
             }
         }
 
-        private static bool TryReadBasketMark(out float mark)
+        private static void ReadBasket()
         {
             Names.Clear();
-            Values.Clear();
+            Last.Clear();
+            Prev.Clear();
             Eligible.Clear();
 
             Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
@@ -427,12 +498,22 @@ namespace FinanceOverhaul
                     continue;
                 }
 
+                Investment.Queue<float> history = buffer[i].allValues;
+                int count = history == null ? 0 : history.Count;
                 Names.Add(info.m_name);
-                Values.Add(buffer[i].value);
-                Eligible.Add(IsSectorStock(info));
+                // GetFromTop(0) is the newest value, GetFromTop(1) the one before it.
+                Last.Add(count > 0 ? history.GetFromTop(0) : float.NaN);
+                Prev.Add(count > 1 ? history.GetFromTop(1) : float.NaN);
+                Eligible.Add(
+                    IsSectorStock(info) && info.m_investmentAI.IsAvailable((byte)i, ref buffer[i])
+                );
             }
+        }
 
-            return CityIndexBasket.TryComputeMark(Names, Values, Eligible, out mark);
+        private static bool TryReadBasketMark(out float mark)
+        {
+            ReadBasket();
+            return CityIndexBasket.TryComputeMark(Names, Last, Eligible, out mark);
         }
 
         private static int CountEligible()

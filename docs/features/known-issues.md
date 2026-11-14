@@ -5,6 +5,9 @@ check. Move an entry to its feature shard (or delete it) once fixed.
 
 ## Index is more volatile than its components
 
+- **Fix in progress (2026-11-13):** chain-linked equal-weight return mark, unlocked members only, no
+  vanilla variance. Close this entry once verified in game.
+
 - **Seen:** 2026-11-13, Index moved -11.91% and +2.5% between updates; sell-dialog chart spans
   ₡1,100–₡1,800, while individual stocks moved about ±1–2%.
 - **Likely causes:**

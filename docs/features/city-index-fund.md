@@ -27,9 +27,11 @@ sector basket.
 
 1. **Listing** — With the mod enabled and Financial Districts present, the purchasable Investments
    list includes a stock titled **Index** (exact display name).
-2. **Mark** — Index’s share price is the equal-weight average of the other listed sector stocks’
-   current prices (vanilla Financial Districts uses thirteen sector names; Index is the fourteenth
-   listing and is **not** included in its own basket).
+2. **Mark** — Index is a chain-linked **equal-weight return** index: each update,
+   `Index = previous Index × (1 + average latest % change of the members)`. Members are the
+   **unlocked share-priced** investments (no coins, no Index itself); each member's single-update
+   move is clamped to −50%…+100%. A brand-new Index seeds from the members' price average. The hook
+   runs after vanilla random variance, so Index carries none.
 3. **Trading** — Players buy and sell Index with the same Buy / Sell / share-amount flow as any
    other investment. Probe bias, when enabled, may affect hooked sector marks and therefore the
    Index mark.
@@ -41,13 +43,16 @@ sector basket.
 - **Market** — `CityIndexBasket.TryComputeMark` owns the basket rules: exclude Index, keep only
   eligible share stocks with finite positive marks, equal weight, and return `false` on an empty
   basket so the Host keeps the vanilla value.
-- **Host** — a Harmony postfix on `InvestmentCollection.Awake` clones the first share-based
-  `RandomRiskInvestmentAI` prefab, renames it **Index**, and registers it with
+- **Host** — a Harmony postfix on `InvestmentCollection.Awake` clones a share-priced investment
+  prefab (prefers one with no unlock milestone, clears the clone's milestone and relinks
+  `InvestmentAI.m_info`), renames it **Index**, and registers it with
   `PrefabCollection<InvestmentInfo>`. Vanilla `EconomyManager.LateUpdateData` then creates one
   investment per loaded prefab, so listing, saving, and Buy / Sell all stay vanilla.
-- **Mark** — a postfix on `RandomRiskInvestmentAI.CalculateValue` replaces the Index value with the
-  basket mark. Prefixes on `GetLocalizedName` / `GetLocalizedDescription` supply the display text.
-  `InvestmentCollection.OnDestroy` unregisters the prefab.
+- **Mark** — one postfix on `InvestmentAI.SafeCalculateValue` (base class, after variance) sets the
+  Index value from `CityIndexBasket.TryComputeChainedMark`, reading each member's last two values
+  from its vanilla history (`allValues.GetFromTop(0/1)`). Prefixes on `GetLocalizedName` /
+  `GetLocalizedDescription` supply the display text. `InvestmentCollection.OnDestroy` unregisters
+  the prefab.
 - **Removal** — if the mod is disabled, vanilla drops the investment whose prefab is missing on the
   next load. Index shares held at that point are lost and are not refunded.
 - **Mid-game / hot reload** — `IndexListing.EnsureInLoadedCity` adopts an Index prefab an older

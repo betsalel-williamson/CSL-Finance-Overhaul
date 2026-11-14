@@ -247,17 +247,14 @@ namespace FinanceOverhaul
                 nameof(IndexCollectionOnDestroyPrefix),
                 null
             );
-            // Index is a clone of whichever share stock is loaded, so its AI may be
-            // InvestmentAI or any subclass that overrides CalculateValue: patch them all.
-            foreach (Type aiType in InvestmentAiTypes())
-            {
-                applied += TryPatch(
-                    harmony,
-                    AccessTools.DeclaredMethod(aiType, "CalculateValue"),
-                    null,
-                    nameof(IndexCalculateValuePostfix)
-                );
-            }
+            // One hook for every investment type: SafeCalculateValue is declared on the
+            // base class and runs after vanilla random variance, so Index carries none.
+            applied += TryPatch(
+                harmony,
+                AccessTools.Method(typeof(InvestmentAI), "SafeCalculateValue"),
+                null,
+                nameof(IndexSafeCalculateValuePostfix)
+            );
             applied += TryPatch(
                 harmony,
                 AccessTools.Method(typeof(InvestmentAI), "GetLocalizedName"),
@@ -444,37 +441,15 @@ namespace FinanceOverhaul
             }
         }
 
-        private static System.Collections.Generic.IEnumerable<Type> InvestmentAiTypes()
-        {
-            Type[] types;
-            try
-            {
-                types = typeof(InvestmentAI).Assembly.GetTypes();
-            }
-            catch (ReflectionTypeLoadException ex)
-            {
-                types = ex.Types ?? new Type[0];
-            }
-
-            for (int i = 0; i < types.Length; i++)
-            {
-                Type t = types[i];
-                if (
-                    t != null
-                    && typeof(InvestmentAI).IsAssignableFrom(t)
-                    && AccessTools.DeclaredMethod(t, "CalculateValue") != null
-                )
-                {
-                    yield return t;
-                }
-            }
-        }
-
-        private static void IndexCalculateValuePostfix(InvestmentAI __instance, ref float __result)
+        private static void IndexSafeCalculateValuePostfix(
+            InvestmentAI __instance,
+            ref Investment data,
+            ref float __result
+        )
         {
             try
             {
-                IndexListing.ApplyMark(__instance, ref __result);
+                IndexListing.ApplyMark(__instance, ref data, ref __result);
             }
             catch
             {
