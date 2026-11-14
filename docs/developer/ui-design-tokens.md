@@ -39,31 +39,31 @@ annotation copy on the UI Map uses Inter so it never reads as game UI.
 
 ## Semantic inventory (v2)
 
-| Group      | Tokens                                                                                                                                                                            |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Surfaces   | `color/bg/header`, `panel`, `dialog`, `panel-alt`, `card`, `card-top`, `inset`, `field`, `track`, `gap`, `tab`, `tab-active`, `button`, `button-primary`                          |
-| Text       | `color/text/primary`, `label`, `muted`, `value` (blue ₡ marks), `accent`, `on-accent`, `icon`                                                                                     |
-| Strokes    | `color/stroke/default`, `strong`                                                                                                                                                  |
-| Market     | `color/market/gain`, `loss`, `price`, `total`, `bar`, `color/icon/sector`                                                                                                         |
-| Ticker     | `color/ticker/board` #1E303E, `board-lit` #38444B, `symbol` #EFB058, `gain` #4EF465, `loss` #E9424F, `unknown` (neutral, for `--`); sampled from the Stock Exchange facade boards |
-| Chart      | `color/chart/bg`, `grid`, `line`                                                                                                                                                  |
-| Annotation | `color/bg/page`, `color/bg/pin`, `color/doc/text`, `muted`, `stroke`, `color/pin/marker`, `color/status/shipped`, `vanilla-host`, `planned`                                       |
-| Spacing    | `space/xs` 4 · `sm` 8 · `md` 12 · `lg` 16 · `xl` 24                                                                                                                               |
-| Radius     | `radius/sm` 4 · `md` 6                                                                                                                                                            |
+| Group      | Tokens                                                                                                                                                                                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Surfaces   | `color/bg/header`, `panel`, `dialog`, `panel-alt`, `card`, `card-top`, `inset`, `field`, `track`, `gap`, `tab`, `tab-active`, `button`, `button-primary`                                                                                         |
+| Text       | `color/text/primary`, `label`, `muted`, `value` (blue ₡ marks), `accent`, `on-accent`, `icon`                                                                                                                                                    |
+| Strokes    | `color/stroke/default`, `strong`                                                                                                                                                                                                                 |
+| Market     | `color/market/gain`, `loss`, `price`, `total`, `bar`, `color/icon/sector`                                                                                                                                                                        |
+| Ticker     | `color/ticker/board` #1E303E, `board-lit` #38444B, `symbol` #EFB058, `gain` #4EF465, `loss` #E9424F, `unknown` (neutral, for `--`); sampled from the Stock Exchange facade boards. In game the LED scroller also uses an unlit-dot shade #293A46 |
+| Chart      | `color/chart/bg`, `grid`, `line`                                                                                                                                                                                                                 |
+| Annotation | `color/bg/page`, `color/bg/pin`, `color/doc/text`, `muted`, `stroke`, `color/pin/marker`, `color/status/shipped`, `vanilla-host`, `planned`                                                                                                      |
+| Spacing    | `space/xs` 4 · `sm` 8 · `md` 12 · `lg` 16 · `xl` 24                                                                                                                                                                                              |
+| Radius     | `radius/sm` 4 · `md` 6                                                                                                                                                                                                                           |
 
 ## Text styles
 
-| Style                  | Font                        | Use                                                                                              |
-| ---------------------- | --------------------------- | ------------------------------------------------------------------------------------------------ |
-| `FO/Game/Header`       | Open Sans SemiBold 18       | Modal title bar                                                                                  |
-| `FO/Game/Title`        | Open Sans SemiBold 16       | Row name                                                                                         |
-| `FO/Game/Tab`          | Open Sans SemiBold 13       | Economy tabs                                                                                     |
-| `FO/Game/Body`         | Open Sans SemiBold 13       | Label: value lines                                                                               |
-| `FO/Game/Section`      | Open Sans SemiBold 11       | Column headers                                                                                   |
-| `FO/Game/Button`       | Open Sans SemiBold 13       | Buy / Sell                                                                                       |
-| `FO/Game/Copy`         | Open Sans Regular 12        | Flavor text                                                                                      |
-| `FO/Ticker/Board`      | Sorts Mill Goudy Regular 26 | Facade ticker (closest to the board art: Goudy letterforms, old-style figures; slightly lighter) |
-| `FO/Doc/*`, `FO/PinId` | Inter                       | UI Map annotation only                                                                           |
+| Style                  | Font                        | Use                                                                                                                            |
+| ---------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `FO/Game/Header`       | Open Sans SemiBold 18       | Modal title bar                                                                                                                |
+| `FO/Game/Title`        | Open Sans SemiBold 16       | Row name                                                                                                                       |
+| `FO/Game/Tab`          | Open Sans SemiBold 13       | Economy tabs                                                                                                                   |
+| `FO/Game/Body`         | Open Sans SemiBold 13       | Label: value lines                                                                                                             |
+| `FO/Game/Section`      | Open Sans SemiBold 11       | Column headers                                                                                                                 |
+| `FO/Game/Button`       | Open Sans SemiBold 13       | Buy / Sell                                                                                                                     |
+| `FO/Game/Copy`         | Open Sans Regular 12        | Flavor text                                                                                                                    |
+| `FO/Ticker/Board`      | Sorts Mill Goudy Regular 26 | Facade ticker design reference (Goudy letterforms). In game the boards use the LED dot font `LedFont` (5×7, one descender row) |
+| `FO/Doc/*`, `FO/PinId` | Inter                       | UI Map annotation only                                                                                                         |
 
 ## Components (Components page)
 

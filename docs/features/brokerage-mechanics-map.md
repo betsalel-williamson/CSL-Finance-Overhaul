@@ -54,26 +54,34 @@ Order is the proposed build order: UI-only proofs first, then opt-in instruments
   for unlocked investments, formatted by `TickerLine` as `SYM ( +2.67 )` and never `NaN` (`( -- )`).
   Logged as `ticker: …` and kept in `TickerFeed.CurrentLine`.
 
-**Step 2a (shipped):** `TickerBoards` / `TickerOverlay` draw three live boards (three rich-text rows
-each, ticker token colors) exactly over the vanilla boards, read from the Stock Exchange's three
-`AnimUV` sub-meshes (centre x −7.7…7.7, y 15.2…18.6; sides x ±5.5…20.8, y 10.8…14.1; face z 23.6),
-0.5 m in front. Padding from the Figma board (0.4 m sides, 0.24 m top and bottom); rows shrink to
-fit and are centred on their visible glyphs. Depth-tested `UI/Default` material (hidden by
-geometry). OS serif: Palatino on macOS (Unity's font list). Options toggle **Live Stock Exchange
-ticker** (default on, save-neutral).
-
-**Performance:** visibility (LOD) every 0.25 s, so a board group is active only within 600 m of the
-camera; off-screen boards are also frustum-culled. Text work only when the daily rows change (plus
-two fit passes). Stock Exchange scan every 5 s, placement set once per building.
+**Step 2a (shipped):** `TickerBoards` / `TickerOverlay` draw three live boards exactly over the
+vanilla boards, read from the Stock Exchange's three `AnimUV` sub-meshes (centre x −7.7…7.7, y
+15.2…18.6; sides x ±5.5…20.8, y 10.8…14.1; face z 23.6). Entries are sorted alphabetically by symbol
+and split over three rows. Options toggle **Live Stock Exchange ticker** (default on, save-neutral).
 
 **Step 3 (shipped):** the baked boards are hidden by requiring `Building.Flags.Deleted` on the three
 `AnimUV` sub-meshes (`MeshInfo.m_flagsRequired`, honoured by `BuildingAI.RenderMeshes`): runtime
 only, restored on toggle-off, unload, disable and hot reload. The vanilla board meshes (frame, 0.3 m
 bezel, recess) are redrawn with a plain lit near-black material, and unlit screens
 (`Unlit/Transparent` with a 1×1 `ticker/board` texture, geometry queue) replace them and stay dark
-in daylight like the self-lit vanilla boards; text shares the panel plane (no parallax at steep
-angles); level-of-detail culls only the text. Verified 2026-11-13 with the dev in-game capture
-(`FinanceOverhaul.capture` trigger, `--dev` builds).
+in daylight like the self-lit vanilla boards.
 
-**Known limit:** text can still draw over a building that stands between the camera and the facade
-(it is culled by distance and facing, not by depth).
+**Step 4 (shipped): LED scroller.** Each screen shows three LED dot-matrix rows (`LedFont`, a
+proportional 5×7 font with one descender row; about 173 dots across at 0.083 m pitch). Every row is
+a traditional ring-buffer marquee (`LedMarquee`, Market, unit tested):
+
+- the window offset only moves forward, in whole dots (14 dots/s), and is never reset;
+- the next entry, with the newest values, is written into the ring just past the right edge;
+- columns inside the window are never redrawn, so values on screen never change and daily updates
+  never make the scroll jump; a changed list of investments simply scrolls in.
+
+Each row is one repeat-wrapped texture shared by every Stock Exchange (4×4 texels per dot with a
+dark gap, mipmapped), drawn on a depth-tested `Unlit/Transparent` quad (queue 2001, just after the
+panel, which sits 2 cm behind). Text therefore clips exactly at the screen edge and hides behind
+buildings in front of the facade. Only freshly written columns are repainted (one entry every few
+seconds per row); textures and materials are destroyed on hot reload.
+
+**Performance:** visibility (LOD) every 0.25 s; LED rows draw and scroll only within 600 m of the
+camera. When they come back into range the rows are refilled from today's values while still hidden.
+Stock Exchange scan every 5 s, placement set once per building. Verified 2026-11-13 with the dev
+in-game capture (`FinanceOverhaul.capture` trigger, `--dev` builds).
