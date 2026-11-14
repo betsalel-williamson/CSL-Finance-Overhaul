@@ -26,6 +26,22 @@ watching the Investments panel for a dip. Step 1 is the **limit buy**.
 9. **Hot-reload safe.** The order book is read from and written to the game's in-memory mod data on
    every change, so replacing the DLL keeps open orders.
 
+## Ticket (shipped)
+
+Buy mode of **Invest in: {name}** has **Buy now** (vanilla, unchanged) and **Limit** tabs above the
+share amount. Limit shows **Limit price (₡ per share)** (whole ₡, up to 7 digits, pre-filled with
+today's price), a hint that wraps inside the dialog, and the vanilla Price row as **Est. cost (at
+limit)**. The button reads **Place limit order**; it places the order and closes the dialog. An
+empty or invalid price shows an error and never buys. Sell mode is unchanged. Every open resets to
+Buy now with the vanilla labels.
+
+## Game UI tests
+
+`npm run test:game` drives the running game's UI (dev build, city with a Stock Exchange) through the
+scenarios in `tests/game-ui/`: ticket layout and labels, nothing overflowing the window, Buy now
+still a vanilla buy, invalid prices never buying, place and cancel, a fill on the next day, and Sell
+unchanged. See [Testing](../developer/testing.md).
+
 ## Later steps
 
 Stop-loss and take-profit sells, trailing stop, recurring monthly investment, an open-orders panel

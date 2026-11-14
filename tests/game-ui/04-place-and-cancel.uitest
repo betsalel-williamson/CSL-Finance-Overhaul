@@ -1,0 +1,14 @@
+name placing a limit order from the ticket, then cancelling it
+show-buy Oil
+click FinanceOverhaulOrderTabLimit
+type FinanceOverhaulShareAmountField 3
+type FinanceOverhaulLimitPriceField 1
+click Button
+expect-orders-delta 1
+expect-log orders: placed
+expect-hidden FinanceOverhaulOrderTabLimit
+cancel-new-orders
+expect-orders-delta 0
+cleanup:
+cancel-new-orders
+close-dialog

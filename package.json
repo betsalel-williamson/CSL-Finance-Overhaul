@@ -1,7 +1,7 @@
 {
   "name": "csl-finance-overhaul",
   "version": "0.1.0",
-  "description": "Cities: Skylines I mod — Financial Districts market overhaul (index funds, ETFs, bonds, automation, IPOs)",
+  "description": "Cities: Skylines I mod \u2014 Financial Districts market overhaul (index funds, ETFs, bonds, automation, IPOs)",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -31,7 +31,8 @@
     "hooks:agent-validate": "bash scripts/hooks-agent-validate.sh",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "commitlint": "commitlint --from HEAD~1 --to HEAD --verbose"
+    "commitlint": "commitlint --from HEAD~1 --to HEAD --verbose",
+    "test:game": "bash scripts/game-ui-test.sh"
   },
   "lint-staged": {
     "*.{json,jsonc,yml,yaml,md}": [

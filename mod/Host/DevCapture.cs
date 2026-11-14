@@ -114,6 +114,27 @@ namespace FinanceOverhaul
                 return;
             }
 
+            if (w[0] == "dialog" && w.Length >= 2)
+            {
+                int target = FindInvestment(text.Substring(text.IndexOf(' ') + 1).Trim());
+                if (target < 0)
+                {
+                    ModLog.Warn("orders: dev dialog: investment not found");
+                    return;
+                }
+
+                BuySellInvestmentPanel panel = BuySellInvestmentPanel.ShowPanel(
+                    (byte)target,
+                    BuySellInvestmentPanel.Mode.Buy
+                );
+                if (panel != null)
+                {
+                    DumpTree(panel.component, 0);
+                }
+
+                return;
+            }
+
             if (w[0] == "list")
             {
                 foreach (TradeOrder o in OrderDesk.Snapshot())
@@ -180,6 +201,66 @@ namespace FinanceOverhaul
             }
 
             ModLog.Warn("orders: dev command not understood: " + text);
+        }
+
+        private static int FindInvestment(string nameOrSymbol)
+        {
+            Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                InvestmentInfo info = buffer[i].Info;
+                if ((buffer[i].m_flags & Investment.Flags.Created) == 0 || info == null)
+                {
+                    continue;
+                }
+
+                string symbol = TickerSymbols.For(info.m_investmentAI.GetLocalizedName());
+                if (
+                    info.name == nameOrSymbol
+                    || string.Equals(symbol, nameOrSymbol, StringComparison.OrdinalIgnoreCase)
+                )
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        /// <summary>Dev: logs a UI subtree (name, type, position, size, visibility).</summary>
+        internal static void DumpTree(ColossalFramework.UI.UIComponent c, int depth)
+        {
+            if (c == null || depth > 6)
+            {
+                return;
+            }
+
+            ModLog.Info(
+                "ui: "
+                    + new string(' ', depth * 2)
+                    + c.name
+                    + " <"
+                    + c.GetType().Name
+                    + "> pos="
+                    + c.relativePosition
+                    + " size="
+                    + c.size
+                    + (c.isVisible ? "" : " hidden")
+                    + (
+                        c is ColossalFramework.UI.UILabel
+                            ? " text='" + ((ColossalFramework.UI.UILabel)c).text + "'"
+                            : ""
+                    )
+                    + (
+                        c is ColossalFramework.UI.UIButton
+                            ? " text='" + ((ColossalFramework.UI.UIButton)c).text + "'"
+                            : ""
+                    )
+            );
+            foreach (ColossalFramework.UI.UIComponent child in c.components)
+            {
+                DumpTree(child, depth + 1);
+            }
         }
 
         /// <summary>Frames Stock Exchange <paramref name="index"/> (1-based) of the city's n, if any.</summary>

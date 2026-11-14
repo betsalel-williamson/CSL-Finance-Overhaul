@@ -1,0 +1,12 @@
+name Buy now is still the vanilla market buy
+remember Oil
+show-buy Oil
+expect-text Button Buy
+type FinanceOverhaulShareAmountField 2
+click Button
+wait 1
+expect-owned-delta Oil 2
+expect-orders-delta 0
+cleanup:
+sell-back Oil 2
+close-dialog

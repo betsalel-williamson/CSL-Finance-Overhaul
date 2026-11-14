@@ -1,0 +1,16 @@
+name a limit at or above the price fills on the next daily price
+remember Oil
+show-buy Oil
+click FinanceOverhaulOrderTabLimit
+type FinanceOverhaulShareAmountField 3
+type FinanceOverhaulLimitPriceField 100000
+click Button
+expect-orders-delta 1
+run-days 2
+expect-log orders: filled
+expect-orders-delta 0
+expect-owned-delta Oil 3
+cleanup:
+cancel-new-orders
+sell-back Oil 3
+close-dialog

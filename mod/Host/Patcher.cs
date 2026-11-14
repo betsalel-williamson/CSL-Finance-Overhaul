@@ -70,6 +70,7 @@ namespace FinanceOverhaul
             try
             {
                 ShareAmountField.Detach();
+                OrderTicket.Detach();
             }
             catch
             {
@@ -199,6 +200,18 @@ namespace FinanceOverhaul
                 nameof(ShareFieldOnKeyDownPrefix),
                 null
             );
+            applied += TryPatch(
+                harmony,
+                AccessTools.Method(typeof(BuySellInvestmentPanel), "OnButtonClicked"),
+                nameof(OrderTicketButtonPrefix),
+                null
+            );
+            applied += TryPatch(
+                harmony,
+                AccessTools.Method(typeof(BuySellInvestmentPanel), "UpdatePriceNumbers"),
+                null,
+                nameof(OrderTicketPricePostfix)
+            );
             return applied;
         }
 
@@ -212,6 +225,15 @@ namespace FinanceOverhaul
             {
                 // fail soft — vanilla slider still works
             }
+
+            try
+            {
+                OrderTicket.Attach(__instance);
+            }
+            catch
+            {
+                // fail soft — vanilla Buy still works
+            }
         }
 
         private static void ShareFieldShowPanelPostfix(BuySellInvestmentPanel __result)
@@ -220,6 +242,15 @@ namespace FinanceOverhaul
             {
                 ShareAmountField.Attach(__result);
                 ShareAmountField.MirrorFromLabel();
+            }
+            catch
+            {
+                // fail soft
+            }
+
+            try
+            {
+                OrderTicket.Attach(__result);
             }
             catch
             {
@@ -244,10 +275,38 @@ namespace FinanceOverhaul
             try
             {
                 ShareAmountField.MirrorFromLabel();
+                OrderTicket.Refresh();
             }
             catch
             {
                 // fail soft
+            }
+        }
+
+        private static void OrderTicketPricePostfix()
+        {
+            try
+            {
+                OrderTicket.AfterVanillaPrice();
+            }
+            catch
+            {
+                // fail soft
+            }
+        }
+
+        /// <summary>Prefix: a limit order replaces the vanilla buy; otherwise vanilla runs.</summary>
+        private static bool OrderTicketButtonPrefix(BuySellInvestmentPanel __instance)
+        {
+            try
+            {
+                return !OrderTicket.HandleButton(__instance);
+            }
+            catch (Exception ex)
+            {
+                // Never market-buy when the player chose Limit and something broke.
+                ModLog.Warn("order ticket: place failed: " + ex.Message);
+                return !OrderTicket.LimitActive;
             }
         }
 
@@ -257,7 +316,7 @@ namespace FinanceOverhaul
         /// </summary>
         private static bool ShareFieldOnKeyDownPrefix()
         {
-            return !ShareAmountField.HasFocus;
+            return !ShareAmountField.HasFocus && !OrderTicket.PriceHasFocus;
         }
 
         private static int TryPatch(

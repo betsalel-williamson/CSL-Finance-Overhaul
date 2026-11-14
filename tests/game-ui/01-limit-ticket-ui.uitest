@@ -1,0 +1,31 @@
+name limit ticket: tabs, price field, estimate and button text
+show-buy Oil
+expect-visible FinanceOverhaulOrderTabBuyNow
+expect-visible FinanceOverhaulOrderTabLimit
+expect-hidden FinanceOverhaulLimitPrice
+expect-text Button Buy
+expect-text LabelPriceText Price:
+click FinanceOverhaulOrderTabLimit
+expect-visible FinanceOverhaulLimitPriceField
+expect-text Button Place limit order
+type FinanceOverhaulLimitPriceField 95
+expect-text FinanceOverhaulLimitHint at or below ₡95
+expect-text LabelPriceText Est. cost (at limit)
+type FinanceOverhaulShareAmountField 2
+type FinanceOverhaulLimitPriceField 50
+expect-text LabelPriceValue ₡100
+expect-no-overflow
+# Long numbers must still fit inside the window.
+type FinanceOverhaulShareAmountField 99999
+type FinanceOverhaulLimitPriceField 9999999
+expect-text FinanceOverhaulLimitPriceField 9999999
+expect-no-overflow
+capture limit-ticket
+click FinanceOverhaulOrderTabBuyNow
+expect-hidden FinanceOverhaulLimitPrice
+expect-text Button Buy
+expect-text LabelPriceText Price
+capture buy-now-after-limit
+expect-no-overflow
+cleanup:
+close-dialog

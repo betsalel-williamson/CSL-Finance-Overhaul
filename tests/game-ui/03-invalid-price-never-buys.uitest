@@ -1,0 +1,13 @@
+name an empty limit price never buys and keeps the dialog open
+remember Oil
+show-buy Oil
+click FinanceOverhaulOrderTabLimit
+type FinanceOverhaulLimitPriceField
+click Button
+expect-visible FinanceOverhaulLimitPriceField
+expect-no-overflow
+expect-text FinanceOverhaulLimitHint Enter a limit price
+expect-orders-delta 0
+expect-owned-delta Oil 0
+cleanup:
+close-dialog
