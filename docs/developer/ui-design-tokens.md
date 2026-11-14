@@ -67,29 +67,29 @@ annotation copy on the UI Map uses Inter so it never reads as game UI.
 
 ## Components (Components page)
 
-| Tier       | Component                                     | Variants / properties                               |
-| ---------- | --------------------------------------------- | --------------------------------------------------- |
-| Annotation | `FO/AnnotationPin`                            | Number=1…12                                         |
-| Atom       | `FO/EconomyTab`                               | State=Default/Active · Label                        |
-| Atom       | `FO/Button`                                   | Kind=Row/Primary × State=Default/Disabled · Label   |
-| Atom       | `FO/KeyValue`                                 | Tone=Default/Value/Gain/Loss/Price · Label, Value   |
-| Atom       | `FO/SectionLabel`                             | Label                                               |
-| Atom       | `FO/SectorIcon`                               | Glyph                                               |
-| Atom       | `FO/ModalHeader`                              | Title                                               |
-| Molecule   | `FO/InvestmentRow`                            | Kind=Purchasable/Portfolio × Trend=Gain/Loss · Name |
-| Molecule   | `FO/TotalBar`                                 | Amount                                              |
-| Molecule   | `FO/ShareChart`                               | —                                                   |
-| Molecule   | `FO/ShareAmount`                              | State=Default/Editing · Shares                      |
-| Molecule   | `FO/OrderTab`                                 | State=Default/Active · Label                        |
-| Molecule   | `FO/OrderPriceField`                          | Label, Value, Hint                                  |
-| Molecule   | `FO/OpenOrderRow`                             | Side, Order, Expiry · Cancel button                 |
-| Molecule   | `FO/OptionsCheckbox`, `FO/OptionsBuiltFooter` | Label                                               |
-| Organism   | `FO/OptionsPanel`                             | Title                                               |
-| Organism   | `FO/EconomyInvestmentsPanel`                  | Composed from the above                             |
-| Organism   | `FO/InvestDialog`                             | Composed from the above                             |
-| Organism   | `FO/InvestmentTooltip`                        | Description                                         |
-| Facade     | `FO/TickerEntry`                              | Tone=Gain/Loss/Flat/Unknown · Symbol, Change        |
-| Facade     | `FO/TickerBoard`                              | LED screen: three rows sorted by symbol, clipped    |
+| Tier       | Component                                     | Variants / properties                                   |
+| ---------- | --------------------------------------------- | ------------------------------------------------------- |
+| Annotation | `FO/AnnotationPin`                            | Number=1…12                                             |
+| Atom       | `FO/EconomyTab`                               | State=Default/Active · Label                            |
+| Atom       | `FO/Button`                                   | Kind=Row/Primary × State=Default/Disabled · Label       |
+| Atom       | `FO/KeyValue`                                 | Tone=Default/Value/Gain/Loss/Price · Label, Value       |
+| Atom       | `FO/SectionLabel`                             | Label                                                   |
+| Atom       | `FO/SectorIcon`                               | Glyph                                                   |
+| Atom       | `FO/ModalHeader`                              | Title                                                   |
+| Molecule   | `FO/InvestmentRow`                            | Kind=Purchasable/Portfolio × Trend=Gain/Loss · Name     |
+| Molecule   | `FO/TotalBar`                                 | Amount                                                  |
+| Molecule   | `FO/ShareChart`                               | —                                                       |
+| Molecule   | `FO/ShareAmount`                              | State=Default/Editing · Shares                          |
+| Molecule   | `FO/OrderTab`                                 | State=Default/Active · Label                            |
+| Molecule   | `FO/OrderPriceField`                          | Label, Value, Hint                                      |
+| Molecule   | `FO/OpenOrderRow`                             | Portfolio order card: Name, Side, Order, Expiry, Cancel |
+| Molecule   | `FO/OptionsCheckbox`, `FO/OptionsBuiltFooter` | Label                                                   |
+| Organism   | `FO/OptionsPanel`                             | Title                                                   |
+| Organism   | `FO/EconomyInvestmentsPanel`                  | Composed from the above                                 |
+| Organism   | `FO/InvestDialog`                             | Composed from the above                                 |
+| Organism   | `FO/InvestmentTooltip`                        | Description                                             |
+| Facade     | `FO/TickerEntry`                              | Tone=Gain/Loss/Flat/Unknown · Symbol, Change            |
+| Facade     | `FO/TickerBoard`                              | LED screen: three rows sorted by symbol, clipped        |
 
 ## Relationship to Trackpad
 

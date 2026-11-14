@@ -125,23 +125,23 @@ game).
 | 6   | `ticker.flat`      | Flat (no change) | `LedText.RateColour` (neutral when it prints `0.00`) |
 | 7   | `ticker.scroll`    | Scroll and clip  | `LedMarquee` (ring buffer, whole-dot steps)          |
 
-### Automated orders frame (`planned`, mockup)
+### Automated orders frame (limit buy `shipped`; sell types and recurring `planned`)
 
-Band 09 mocks up order tickets in the Invest dialog, the open orders list and a fill notice
-([Automated orders](../features/automated-orders.md)). Step 1 (limit buy) has its engine shipped;
-the dialog UI follows this mockup.
+Band 09: the limit buy ticket in the Invest dialog, a Sell ticket for the planned sell types, and
+Your Portfolio with an open order card right under its holding
+([Automated orders](../features/automated-orders.md)).
 
-| #   | Catalog id          | Title            | Code evidence / status                     |
-| --- | ------------------- | ---------------- | ------------------------------------------ |
-| 1   | `orders.type`       | Order type       | Planned (`FO/OrderTab`)                    |
-| 2   | `orders.price`      | Trigger price    | Planned (`FO/OrderPriceField`)             |
-| 3   | `orders.estimate`   | Estimate         | Planned                                    |
-| 4   | `orders.place`      | Place order      | Engine shipped: `OrderDesk.PlaceLimitBuy`  |
-| 5   | `orders.sell-types` | Sell order types | Planned (stop-loss, take-profit, trailing) |
-| 6   | `orders.open-list`  | Open orders      | Planned (`FO/OpenOrderRow`)                |
-| 7   | `orders.cancel`     | Cancel           | Logic shipped: `OrderDesk.Cancel`          |
-| 8   | `orders.recurring`  | Recurring buy    | Planned                                    |
-| 9   | `orders.notice`     | Fill notice      | Log only today (`OrderDesk`)               |
+| #   | Catalog id          | Title            | Code evidence / status                                  |
+| --- | ------------------- | ---------------- | ------------------------------------------------------- |
+| 1   | `orders.type`       | Order type       | Shipped: Buy now / Limit (`OrderTicket`); sells planned |
+| 2   | `orders.price`      | Trigger price    | Shipped (`OrderTicket`, `FO/OrderPriceField`)           |
+| 3   | `orders.estimate`   | Estimate         | Shipped: own row, red when unaffordable                 |
+| 4   | `orders.place`      | Place order      | Shipped: `OrderTicket` → `OrderDesk.PlaceLimitBuy`      |
+| 5   | `orders.sell-types` | Sell order types | Planned (stop-loss, take-profit, trailing)              |
+| 6   | `orders.open-list`  | Open orders      | Shipped: cards in Your Portfolio (`PortfolioOrders`)    |
+| 7   | `orders.cancel`     | Cancel           | Shipped: `PortfolioOrders` → `OrderDesk.Cancel`         |
+| 8   | `orders.recurring`  | Recurring buy    | Planned                                                 |
+| 9   | `orders.notice`     | Fill notice      | Log only today (`OrderDesk`)                            |
 
 ### Planned frame (`planned`)
 

@@ -35,6 +35,15 @@ limit)**. The button reads **Place limit order**; it places the order and closes
 empty or invalid price shows an error and never buys. Sell mode is unchanged. Every open resets to
 Buy now with the vanilla labels.
 
+## Open orders in Your Portfolio (shipped)
+
+Each open order is an entry of **Economy → Investments → Your Portfolio**: a card right under its
+stock's holding (or where that stock would be listed when not held), showing the stock, **Open order
+· BUY**, shares and limit, days left, and **Cancel**. Vanilla re-sorts the list periodically and
+only knows its own cards, so the mod re-places order cards right after each sort (postfix on
+`EconomyPanel.UpdateInvestments`). A filled, cancelled or expired order's card disappears at the
+next refresh.
+
 ## Game UI tests
 
 `npm run test:game` drives the running game's UI (dev build, city with a Stock Exchange) through the
