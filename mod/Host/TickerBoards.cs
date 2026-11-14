@@ -299,6 +299,7 @@ namespace FinanceOverhaul
 
             if (!placementLogged)
             {
+                LogAssetParts(info);
                 placementLogged = true;
                 ModLog.Info(
                     "ticker: boards for building "
@@ -315,6 +316,106 @@ namespace FinanceOverhaul
                         + group.transform.GetChild(0).position
                 );
             }
+        }
+
+        /// <summary>
+        /// One-time diagnostic: the vanilla ticker boards may be props or sub-meshes with
+        /// their own (scrolling) material. Their local positions would give exact board
+        /// placement and a way to hide the baked boards later.
+        /// </summary>
+        private static void LogAssetParts(BuildingInfo info)
+        {
+            try
+            {
+                ModLog.Info(
+                    "ticker: asset '"
+                        + info.name
+                        + "' material="
+                        + MaterialName(info.m_material)
+                        + " props="
+                        + (info.m_props == null ? 0 : info.m_props.Length)
+                        + " subMeshes="
+                        + (info.m_subMeshes == null ? 0 : info.m_subMeshes.Length)
+                );
+                if (info.m_props != null)
+                {
+                    for (int i = 0; i < info.m_props.Length; i++)
+                    {
+                        BuildingInfo.Prop p = info.m_props[i];
+                        PropInfo prop = p.m_finalProp ?? p.m_prop;
+                        ModLog.Info(
+                            "ticker:  prop["
+                                + i
+                                + "] "
+                                + (
+                                    prop != null
+                                        ? prop.name
+                                        : (p.m_tree != null ? "tree " + p.m_tree.name : "null")
+                                )
+                                + " pos="
+                                + p.m_position
+                                + " angle="
+                                + p.m_angle.ToString("0.#")
+                                + (
+                                    prop != null
+                                        ? " material=" + MaterialName(prop.m_material)
+                                        : string.Empty
+                                )
+                                + (
+                                    prop != null && prop.m_mesh != null
+                                        ? " meshBounds=" + prop.m_mesh.bounds.size
+                                        : string.Empty
+                                )
+                        );
+                    }
+                }
+
+                if (info.m_subMeshes != null)
+                {
+                    for (int i = 0; i < info.m_subMeshes.Length; i++)
+                    {
+                        BuildingInfo.MeshInfo m = info.m_subMeshes[i];
+                        BuildingInfoBase sub = m.m_subInfo;
+                        ModLog.Info(
+                            "ticker:  subMesh["
+                                + i
+                                + "] "
+                                + (sub != null ? sub.name : "null")
+                                + " pos="
+                                + m.m_position
+                                + " angle="
+                                + m.m_angle.ToString("0.#")
+                                + (
+                                    sub != null
+                                        ? " material=" + MaterialName(sub.m_material)
+                                        : string.Empty
+                                )
+                                + (
+                                    sub != null && sub.m_mesh != null
+                                        ? " meshBounds="
+                                            + sub.m_mesh.bounds.center
+                                            + "/"
+                                            + sub.m_mesh.bounds.size
+                                        : string.Empty
+                                )
+                        );
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("ticker: asset part log failed: " + ex.Message);
+            }
+        }
+
+        private static string MaterialName(Material m)
+        {
+            if (m == null)
+            {
+                return "null";
+            }
+
+            return m.name + "/" + (m.shader != null ? m.shader.name : "?");
         }
 
         private static void SetRows(GameObject group, string[] rows)
