@@ -247,12 +247,17 @@ namespace FinanceOverhaul
                 nameof(IndexCollectionOnDestroyPrefix),
                 null
             );
-            applied += TryPatch(
-                harmony,
-                AccessTools.Method(typeof(RandomRiskInvestmentAI), "CalculateValue"),
-                null,
-                nameof(IndexCalculateValuePostfix)
-            );
+            // Index is a clone of whichever share stock is loaded, so its AI may be
+            // InvestmentAI or any subclass that overrides CalculateValue: patch them all.
+            foreach (Type aiType in InvestmentAiTypes())
+            {
+                applied += TryPatch(
+                    harmony,
+                    AccessTools.DeclaredMethod(aiType, "CalculateValue"),
+                    null,
+                    nameof(IndexCalculateValuePostfix)
+                );
+            }
             applied += TryPatch(
                 harmony,
                 AccessTools.Method(typeof(InvestmentAI), "GetLocalizedName"),
@@ -439,10 +444,33 @@ namespace FinanceOverhaul
             }
         }
 
-        private static void IndexCalculateValuePostfix(
-            RandomRiskInvestmentAI __instance,
-            ref float __result
-        )
+        private static System.Collections.Generic.IEnumerable<Type> InvestmentAiTypes()
+        {
+            Type[] types;
+            try
+            {
+                types = typeof(InvestmentAI).Assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                types = ex.Types ?? new Type[0];
+            }
+
+            for (int i = 0; i < types.Length; i++)
+            {
+                Type t = types[i];
+                if (
+                    t != null
+                    && typeof(InvestmentAI).IsAssignableFrom(t)
+                    && AccessTools.DeclaredMethod(t, "CalculateValue") != null
+                )
+                {
+                    yield return t;
+                }
+            }
+        }
+
+        private static void IndexCalculateValuePostfix(InvestmentAI __instance, ref float __result)
         {
             try
             {

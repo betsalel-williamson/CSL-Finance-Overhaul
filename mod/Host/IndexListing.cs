@@ -146,6 +146,8 @@ namespace FinanceOverhaul
 
                 info.m_name = CityIndexBasket.IndexName;
                 info.m_investmentAI = clone.GetComponent<InvestmentAI>();
+                // Index is always purchasable; it does not inherit the source's unlock.
+                info.m_unlockingMilestone = null;
 
                 PrefabCollection<InvestmentInfo>.InitializePrefabs(
                     CollectionName,
@@ -409,24 +411,23 @@ namespace FinanceOverhaul
             return n;
         }
 
+        /// <summary>
+        /// Basket member: any share-priced investment (not coin-priced ones such as
+        /// crypto). Index itself is excluded by name in CityIndexBasket.
+        /// </summary>
         private static bool IsSectorStock(InvestmentInfo info)
         {
-            return info.m_investmentAI is RandomRiskInvestmentAI
+            return info.m_investmentAI != null
                 && info.m_investmentAI.m_unit == InvestmentAI.Unit.Share;
         }
 
+        /// <summary>
+        /// Picks a share-priced investment prefab to clone, preferring one with no
+        /// unlock milestone. Logs every candidate so a miss is diagnosable.
+        /// </summary>
         private static InvestmentInfo FindSectorSource(InvestmentInfo[] prefabs)
         {
-            for (int i = 0; i < prefabs.Length; i++)
-            {
-                InvestmentInfo p = prefabs[i];
-                if (p != null && CityIndexBasket.IsIndexName(p.name))
-                {
-                    ModLog.Warn("index: a prefab named Index already exists; not adding another");
-                    return null;
-                }
-            }
-
+            InvestmentInfo fallback = null;
             for (int i = 0; i < prefabs.Length; i++)
             {
                 InvestmentInfo p = prefabs[i];
@@ -436,13 +437,38 @@ namespace FinanceOverhaul
                 }
 
                 InvestmentAI ai = p.GetComponent<InvestmentAI>();
-                if (ai is RandomRiskInvestmentAI && ai.m_unit == InvestmentAI.Unit.Share)
+                ModLog.Info(
+                    "index: candidate '"
+                        + p.name
+                        + "' ai="
+                        + (ai == null ? "null" : ai.GetType().Name)
+                        + " unit="
+                        + (ai == null ? "?" : ai.m_unit.ToString())
+                        + " milestone="
+                        + (p.m_unlockingMilestone == null ? "none" : p.m_unlockingMilestone.name)
+                );
+                if (CityIndexBasket.IsIndexName(p.name))
+                {
+                    continue;
+                }
+
+                if (ai == null || ai.m_unit != InvestmentAI.Unit.Share)
+                {
+                    continue;
+                }
+
+                if (p.m_unlockingMilestone == null)
                 {
                     return p;
                 }
+
+                if (fallback == null)
+                {
+                    fallback = p;
+                }
             }
 
-            return null;
+            return fallback;
         }
 
         private static void DestroyHolder()
