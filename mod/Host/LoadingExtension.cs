@@ -10,6 +10,7 @@ namespace FinanceOverhaul
             try
             {
                 TickerBoards.DestroyAll();
+                OrderDesk.Reset();
             }
             catch
             {
@@ -22,6 +23,7 @@ namespace FinanceOverhaul
             try
             {
                 ModLog.Info("level loaded mode=" + mode);
+                OrderDesk.Reset();
                 IndexListing.EnsureInLoadedCity();
                 IndexListing.LogStatus();
                 TickerBoards.Ensure();

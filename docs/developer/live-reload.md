@@ -26,6 +26,7 @@ without touching the game window:
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `FinanceOverhaul.capture` | Saves the rendered frame to `FinanceOverhaul-capture.png`.                                                                                  |
 | `FinanceOverhaul.focus`   | Frames the facade of Stock Exchange _k_ of _n_ in the loaded city (text: optional `k`, default 1; add `capture` to save a frame after 3 s). |
+| `FinanceOverhaul.order`   | Order commands: `buy SHARES LIMIT NAME` (prefab name or ticker symbol, e.g. `buy 5 900 Oil`), `cancel ID`, `list`; results in the mod log.  |
 
 If the city has no Stock Exchange, `focus` logs `dev focus: this city has no Stock Exchange` and
 leaves the camera alone. Example:

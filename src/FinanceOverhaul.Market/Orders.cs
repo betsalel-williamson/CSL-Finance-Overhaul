@@ -106,13 +106,13 @@ namespace FinanceOverhaul.Market
         /// <param name="today">Absolute game day.</param>
         /// <param name="mark">The investment's value per share today.</param>
         /// <param name="availableShares">Vanilla <c>AvailableForBuyingCount</c>.</param>
-        /// <param name="cashCents">City cash in cents (vanilla <c>playerMoney</c>).</param>
+        /// <param name="cash">City cash in whole ₡ (vanilla <c>EconomyManager.playerMoney</c>).</param>
         public static OrderDecision Evaluate(
             TradeOrder order,
             int today,
             float mark,
             uint availableShares,
-            long cashCents
+            long cash
         )
         {
             if (today > order.ExpiresDay)
@@ -137,7 +137,7 @@ namespace FinanceOverhaul.Market
             }
 
             int cost = Price(mark, shares);
-            if ((long)cost * 100L > cashCents)
+            if (cost > cash)
             {
                 return Cancel(ReasonFunds);
             }

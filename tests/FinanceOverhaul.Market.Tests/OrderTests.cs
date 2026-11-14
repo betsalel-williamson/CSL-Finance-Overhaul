@@ -12,28 +12,28 @@ namespace FinanceOverhaul.Market.Tests
         [Fact]
         public void WaitsWhileTheMarkIsAboveTheLimit()
         {
-            OrderDecision d = OrderRules.Evaluate(Limit(), 11, 812.5f, 1000, 10_000_000);
+            OrderDecision d = OrderRules.Evaluate(Limit(), 11, 812.5f, 1000, 100_000);
             Assert.Equal(OrderAction.Wait, d.Action);
         }
 
         [Fact]
         public void FillsAtTheDailyMarkWhenAtOrBelowTheLimit()
         {
-            OrderDecision d = OrderRules.Evaluate(Limit(), 11, 793.4f, 1000, 10_000_000);
+            OrderDecision d = OrderRules.Evaluate(Limit(), 11, 793.4f, 1000, 100_000);
             Assert.Equal(OrderAction.Fill, d.Action);
             Assert.Equal(100u, d.Shares);
             Assert.Equal(79_340, d.Cost); // vanilla CalculatePrice: round(mark × shares)
 
             Assert.Equal(
                 OrderAction.Fill,
-                OrderRules.Evaluate(Limit(), 11, 800f, 1000, 10_000_000).Action
+                OrderRules.Evaluate(Limit(), 11, 800f, 1000, 100_000).Action
             );
         }
 
         [Fact]
         public void FillIsCappedByTheVanillaShareLimit()
         {
-            OrderDecision d = OrderRules.Evaluate(Limit(shares: 100), 11, 700f, 40, 10_000_000);
+            OrderDecision d = OrderRules.Evaluate(Limit(shares: 100), 11, 700f, 40, 100_000);
             Assert.Equal(OrderAction.Fill, d.Action);
             Assert.Equal(40u, d.Shares);
             Assert.Equal(28_000, d.Cost);
@@ -42,7 +42,7 @@ namespace FinanceOverhaul.Market.Tests
         [Fact]
         public void CancelsWhenNoSharesAreAvailable()
         {
-            OrderDecision d = OrderRules.Evaluate(Limit(), 11, 700f, 0, 10_000_000);
+            OrderDecision d = OrderRules.Evaluate(Limit(), 11, 700f, 0, 100_000);
             Assert.Equal(OrderAction.Cancel, d.Action);
             Assert.Equal(OrderRules.ReasonShareLimit, d.Reason);
         }
@@ -50,13 +50,13 @@ namespace FinanceOverhaul.Market.Tests
         [Fact]
         public void CancelsWhenTheCityCannotAffordIt()
         {
-            // 100 × ₡700 = ₡70,000 = 7,000,000 cents; one cent short.
-            OrderDecision d = OrderRules.Evaluate(Limit(), 11, 700f, 1000, 6_999_999);
+            // 100 × ₡700 = ₡70,000; cash is whole ₡ (vanilla playerMoney), ₡1 short.
+            OrderDecision d = OrderRules.Evaluate(Limit(), 11, 700f, 1000, 69_999);
             Assert.Equal(OrderAction.Cancel, d.Action);
             Assert.Equal(OrderRules.ReasonFunds, d.Reason);
             Assert.Equal(
                 OrderAction.Fill,
-                OrderRules.Evaluate(Limit(), 11, 700f, 1000, 7_000_000).Action
+                OrderRules.Evaluate(Limit(), 11, 700f, 1000, 70_000).Action
             );
         }
 
@@ -66,7 +66,7 @@ namespace FinanceOverhaul.Market.Tests
             TradeOrder o = Limit(placed: 10);
             Assert.Equal(70, o.ExpiresDay);
             Assert.Equal(OrderAction.Wait, OrderRules.Evaluate(o, 70, 900f, 1000, 1).Action);
-            OrderDecision d = OrderRules.Evaluate(o, 71, 700f, 1000, 10_000_000);
+            OrderDecision d = OrderRules.Evaluate(o, 71, 700f, 1000, 100_000);
             Assert.Equal(OrderAction.Cancel, d.Action);
             Assert.Equal(OrderRules.ReasonExpired, d.Reason);
         }
@@ -76,11 +76,11 @@ namespace FinanceOverhaul.Market.Tests
         {
             Assert.Equal(
                 OrderAction.Wait,
-                OrderRules.Evaluate(Limit(), 11, float.NaN, 1000, 10_000_000).Action
+                OrderRules.Evaluate(Limit(), 11, float.NaN, 1000, 100_000).Action
             );
             Assert.Equal(
                 OrderAction.Wait,
-                OrderRules.Evaluate(Limit(), 11, 0f, 1000, 10_000_000).Action
+                OrderRules.Evaluate(Limit(), 11, 0f, 1000, 100_000).Action
             );
         }
     }

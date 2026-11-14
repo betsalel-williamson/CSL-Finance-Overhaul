@@ -25,6 +25,7 @@ namespace FinanceOverhaul
     {
         public const string TriggerName = "FinanceOverhaul.capture";
         public const string FocusTriggerName = "FinanceOverhaul.focus";
+        public const string OrderTriggerName = "FinanceOverhaul.order";
         public const string OutputName = "FinanceOverhaul-capture.png";
 
         // Framing: aim a little below the centre board (building frame y 16.9, face z
@@ -73,6 +74,14 @@ namespace FinanceOverhaul
                     }
                 }
 
+                string orderTrigger = Path.Combine(Folder, OrderTriggerName);
+                if (File.Exists(orderTrigger))
+                {
+                    string text = File.ReadAllText(orderTrigger).Trim();
+                    File.Delete(orderTrigger);
+                    HandleOrderCommand(text);
+                }
+
                 string trigger = Path.Combine(Folder, TriggerName);
                 if (File.Exists(trigger))
                 {
@@ -91,6 +100,86 @@ namespace FinanceOverhaul
             string output = Path.Combine(Folder, OutputName);
             Application.CaptureScreenshot(output);
             ModLog.Info("dev capture: saved frame to " + output);
+        }
+
+        /// <summary>
+        /// Dev order commands: "buy SHARES LIMIT INVESTMENT NAME", "cancel ID" or "list".
+        /// INVESTMENT NAME is the prefab name (e.g. "Oil Industry") or a ticker symbol.
+        /// </summary>
+        private static void HandleOrderCommand(string text)
+        {
+            string[] w = text.Split(new[] { ' ' }, 4, StringSplitOptions.RemoveEmptyEntries);
+            if (w.Length == 0)
+            {
+                return;
+            }
+
+            if (w[0] == "list")
+            {
+                foreach (TradeOrder o in OrderDesk.Snapshot())
+                {
+                    ModLog.Info(
+                        "orders: open #"
+                            + o.Id
+                            + " limit buy "
+                            + o.Shares
+                            + " "
+                            + o.InvestmentKey
+                            + " <= "
+                            + o.LimitPrice
+                            + " expires day "
+                            + o.ExpiresDay
+                            + " (today "
+                            + OrderDesk.Today
+                            + ")"
+                    );
+                }
+
+                ModLog.Info("orders: " + OrderDesk.Snapshot().Length + " open");
+                return;
+            }
+
+            int id;
+            if (w[0] == "cancel" && w.Length >= 2 && int.TryParse(w[1], out id))
+            {
+                OrderDesk.Cancel(id);
+                return;
+            }
+
+            uint shares;
+            int limit;
+            if (
+                w[0] == "buy"
+                && w.Length == 4
+                && uint.TryParse(w[1], out shares)
+                && int.TryParse(w[2], out limit)
+            )
+            {
+                Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
+                for (int i = 0; i < buffer.Length; i++)
+                {
+                    InvestmentInfo info = buffer[i].Info;
+                    if ((buffer[i].m_flags & Investment.Flags.Created) == 0 || info == null)
+                    {
+                        continue;
+                    }
+
+                    string symbol = TickerSymbols.For(info.m_investmentAI.GetLocalizedName());
+                    if (
+                        info.name == w[3]
+                        || string.Equals(symbol, w[3], StringComparison.OrdinalIgnoreCase)
+                    )
+                    {
+                        OrderDesk.PlaceLimitBuy((byte)i, shares, limit);
+                        return;
+                    }
+                }
+
+                ModLog.Warn("orders: dev command: no investment named " + w[3]);
+                return;
+            }
+
+            ModLog.Warn("orders: dev command not understood: " + text);
         }
 
         /// <summary>Frames Stock Exchange <paramref name="index"/> (1-based) of the city's n, if any.</summary>

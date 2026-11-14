@@ -337,6 +337,15 @@ namespace FinanceOverhaul
             {
                 // fail soft — never break simulation ticks
             }
+
+            try
+            {
+                OrderDesk.OnInvestmentsStepped();
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("orders: daily check failed: " + ex.Message);
+            }
         }
 
         private static void IndexCreateInvestmentPostfix(
