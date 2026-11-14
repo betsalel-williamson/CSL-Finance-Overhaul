@@ -189,22 +189,54 @@ namespace FinanceOverhaul
         private static Font PickFont()
         {
             string[] installed = Font.GetOSInstalledFontNames() ?? new string[0];
-            var lookup = new HashSet<string>(installed, StringComparer.OrdinalIgnoreCase);
+            // Installed names can carry style suffixes ("Baskerville Regular"), so match by
+            // prefix in preference order.
             for (int i = 0; i < SerifFonts.Length; i++)
             {
-                if (lookup.Contains(SerifFonts[i]))
+                for (int j = 0; j < installed.Length; j++)
                 {
-                    Font f = Font.CreateDynamicFontFromOSFont(SerifFonts[i], FontSize);
-                    if (f != null)
+                    string name = installed[j];
+                    if (
+                        name != null
+                        && name.StartsWith(SerifFonts[i], StringComparison.OrdinalIgnoreCase)
+                    )
                     {
-                        ModLog.Info("ticker: board font=" + SerifFonts[i] + " (installed)");
-                        return f;
+                        Font f = Font.CreateDynamicFontFromOSFont(name, FontSize);
+                        if (f != null)
+                        {
+                            ModLog.Info("ticker: board font=" + name + " (installed)");
+                            return f;
+                        }
                     }
                 }
             }
 
+            var serifLike = new List<string>();
+            for (int j = 0; j < installed.Length && serifLike.Count < 15; j++)
+            {
+                string n = installed[j] ?? string.Empty;
+                if (
+                    n.IndexOf("Goudy", StringComparison.OrdinalIgnoreCase) >= 0
+                    || n.IndexOf("Baskerville", StringComparison.OrdinalIgnoreCase) >= 0
+                    || n.IndexOf("Georgia", StringComparison.OrdinalIgnoreCase) >= 0
+                    || n.IndexOf("Times", StringComparison.OrdinalIgnoreCase) >= 0
+                    || n.IndexOf("Hoefler", StringComparison.OrdinalIgnoreCase) >= 0
+                    || n.IndexOf("Garamond", StringComparison.OrdinalIgnoreCase) >= 0
+                    || n.IndexOf("Palatino", StringComparison.OrdinalIgnoreCase) >= 0
+                )
+                {
+                    serifLike.Add(n);
+                }
+            }
+
             ModLog.Warn(
-                "ticker: no preferred serif installed (" + installed.Length + " fonts); using Arial"
+                "ticker: no preferred serif matched ("
+                    + installed.Length
+                    + " fonts; serif-like: "
+                    + string.Join(", ", serifLike.ToArray())
+                    + "; first: "
+                    + string.Join(", ", installed, 0, Math.Min(8, installed.Length))
+                    + "); using Arial"
             );
             return Resources.GetBuiltinResource<Font>("Arial.ttf");
         }
