@@ -229,6 +229,12 @@ namespace FinanceOverhaul
 
         private static bool Evaluate(OrderBook b, TradeOrder order, int today)
         {
+            // Switched off in Options: kept as is (no fill, no expiry, no peak) until back on.
+            if (!Mod.OrderKindEnabled(order.Kind))
+            {
+                return false;
+            }
+
             EconomyManager economy = EconomyManager.instance;
             Investment[] buffer = economy.m_investments.m_buffer;
             int id = Find(buffer, order.InvestmentKey);

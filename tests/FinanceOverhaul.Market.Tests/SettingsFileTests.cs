@@ -68,3 +68,70 @@ namespace FinanceOverhaul.Market.Tests
         }
     }
 }
+
+namespace FinanceOverhaul.Market.Tests
+{
+    public class OrderFlagSettingsTests
+    {
+        [Fact]
+        public void EveryOrderTypeIsOnByDefault()
+        {
+            ModSettings s = SettingsFile.Parse("");
+            foreach (OrderKind kind in ModSettings.OrderKinds)
+            {
+                Assert.True(s.IsEnabled(kind));
+            }
+        }
+
+        [Fact]
+        public void EachFlagRoundTripsOnItsOwn()
+        {
+            foreach (OrderKind off in ModSettings.OrderKinds)
+            {
+                var s = new ModSettings();
+                s.SetEnabled(off, false);
+                ModSettings back = SettingsFile.Parse(SettingsFile.Format(s));
+                foreach (OrderKind kind in ModSettings.OrderKinds)
+                {
+                    Assert.Equal(kind != off, back.IsEnabled(kind));
+                }
+            }
+        }
+
+        [Fact]
+        public void KeysAreReadable()
+        {
+            Assert.Equal("ordersLimitBuyEnabled", SettingsFile.OrderKey(OrderKind.LimitBuy));
+            Assert.Equal("ordersStopLossEnabled", SettingsFile.OrderKey(OrderKind.StopLossSell));
+            Assert.Equal(
+                "ordersTakeProfitEnabled",
+                SettingsFile.OrderKey(OrderKind.TakeProfitSell)
+            );
+            Assert.Equal(
+                "ordersTrailingStopEnabled",
+                SettingsFile.OrderKey(OrderKind.TrailingStopSell)
+            );
+            Assert.False(SettingsFile.Parse("ordersTakeProfitEnabled=false\n").TakeProfitEnabled);
+        }
+
+        [Fact]
+        public void AnUnknownKindIsNeverEnabled()
+        {
+            Assert.False(new ModSettings().IsEnabled((OrderKind)99));
+        }
+
+        [Fact]
+        public void PausedCardsSaySo()
+        {
+            Assert.Equal(
+                "Open order · SELL (stop-loss) · paused in Options",
+                OrderText.CardSide(OrderKind.StopLossSell, true)
+            );
+            Assert.Equal("Open order · BUY", OrderText.CardSide(OrderKind.LimitBuy, false));
+            Assert.Equal(
+                "Orders: Trailing stop sells",
+                OrderText.OptionLabel(OrderKind.TrailingStopSell)
+            );
+        }
+    }
+}

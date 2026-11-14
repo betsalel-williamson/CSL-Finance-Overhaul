@@ -23,6 +23,7 @@ namespace FinanceOverhaul
         public const string RowPrefix = "FinanceOverhaulOpenOrderRow-";
         public const string TextPrefix = "FinanceOverhaulOpenOrderText-";
         public const string DetailPrefix = "FinanceOverhaulOpenOrderDetail-";
+        public const string SidePrefix = "FinanceOverhaulOpenOrderSide-";
         public const string CancelPrefix = "FinanceOverhaulOpenOrderCancel-";
 
         // An earlier build drew a header above the list and shifted the list down.
@@ -237,8 +238,13 @@ namespace FinanceOverhaul
 
             UILabel side = card.AddUIComponent<UILabel>();
             Style(side, bodyStyle, 1f);
-            side.textColor = order.IsSell ? SellColor : BuyColor;
-            side.text = OrderText.CardSide(order.Kind);
+            side.name = SidePrefix + order.Id;
+            bool paused = !Mod.OrderKindEnabled(order.Kind);
+            side.textColor =
+                paused ? MutedColor
+                : order.IsSell ? SellColor
+                : BuyColor;
+            side.text = OrderText.CardSide(order.Kind, paused);
             side.relativePosition = new Vector3(24f, 38f);
 
             UILabel detail = card.AddUIComponent<UILabel>();
@@ -363,7 +369,15 @@ namespace FinanceOverhaul
             var sb = new StringBuilder();
             foreach (TradeOrder o in orders)
             {
-                sb.Append(o.Id).Append(':').Append(o.ExpiresDay - today).Append(';');
+                // Anything the card shows: days left, today's trigger (a trailing stop rises),
+                // and whether its type is paused in Options.
+                sb.Append(o.Id)
+                    .Append(':')
+                    .Append(o.ExpiresDay - today)
+                    .Append(':')
+                    .Append(o.TriggerPrice)
+                    .Append(Mod.OrderKindEnabled(o.Kind) ? string.Empty : ":paused")
+                    .Append(';');
             }
 
             return sb.ToString();

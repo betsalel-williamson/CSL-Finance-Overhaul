@@ -17,12 +17,19 @@ table; [UI Figma map](../developer/ui-figma-map.md) pins map screens to this inv
 
 Section order: **Finance Overhaul** (single group today).
 
-| Field id      | Label                                                           | Control  | Host    | Status                 |
-| ------------- | --------------------------------------------------------------- | -------- | ------- | ---------------------- |
-| `live-ticker` | Live Stock Exchange ticker (visual only)                        | Checkbox | Options | shipped                |
-| `index-stock` | Experimental: Index stock (adds a mod-only investment to saves) | Checkbox | Options | experimental           |
-| `built-utc`   | Built (UTC): …                                                  | Footer   | Options | shipped (`--dev` only) |
-| `built-local` | Built (local): …                                                | Footer   | Options | shipped (`--dev` only) |
+| Field id               | Label                                                           | Control  | Host    | Status                 |
+| ---------------------- | --------------------------------------------------------------- | -------- | ------- | ---------------------- |
+| `live-ticker`          | Live Stock Exchange ticker (visual only)                        | Checkbox | Options | shipped                |
+| `index-stock`          | Experimental: Index stock (adds a mod-only investment to saves) | Checkbox | Options | experimental           |
+| `orders-limit-buy`     | Orders: Limit buys                                              | Checkbox | Options | temporary flag         |
+| `orders-stop-loss`     | Orders: Stop-loss sells                                         | Checkbox | Options | temporary flag         |
+| `orders-take-profit`   | Orders: Take-profit sells                                       | Checkbox | Options | temporary flag         |
+| `orders-trailing-stop` | Orders: Trailing stop sells                                     | Checkbox | Options | temporary flag         |
+| `built-utc`            | Built (UTC): …                                                  | Footer   | Options | shipped (`--dev` only) |
+| `built-local`          | Built (local): …                                                | Footer   | Options | shipped (`--dev` only) |
+
+The four order flags are on by default; see
+[Automated orders](./automated-orders.md#options-flags-temporary).
 
 Title chrome (`Finance Overhaul {version}`) is Content Manager / Options identity — see
 [Live reload](../developer/live-reload.md).

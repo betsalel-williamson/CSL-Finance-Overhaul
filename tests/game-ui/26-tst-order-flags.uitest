@@ -1,0 +1,52 @@
+# Needs the dev test stock (TST) in a test save.
+name Options flags: a switched-off order type hides its tab, pauses its open orders, and resumes when back on
+set-flag all on
+set-price TST 100
+run-days 1
+remember TST
+show-buy TST
+type FinanceOverhaulShareAmountField 10
+click Button
+wait 1
+show-sell TST
+click FinanceOverhaulOrderTab-StopLossSell
+type FinanceOverhaulShareAmountField 10
+type FinanceOverhaulLimitPriceField 90
+click Button
+expect-orders-delta 1
+set-flag StopLossSell off
+show-sell TST
+expect-hidden FinanceOverhaulOrderTab-StopLossSell
+expect-visible FinanceOverhaulOrderTab-TakeProfitSell
+expect-visible FinanceOverhaulOrderTab-TrailingStopSell
+expect-no-overflow
+close-dialog
+show-economy
+wait 1
+scroll-into-view FinanceOverhaulOpenOrderRow-$order
+expect-text FinanceOverhaulOpenOrderSide-$order paused in Options
+capture order-flag-paused-card
+set-price TST 80
+run-days 1
+expect-orders-delta 1
+expect-owned-delta TST 10
+set-flag StopLossSell on
+expect-text-is FinanceOverhaulOpenOrderSide-$order Open order · SELL (stop-loss)
+run-days 1
+expect-log sold 10 FinanceOverhaul Test Stock at 80 (stop 90) for 800
+expect-orders-delta 0
+expect-owned-delta TST 0
+set-flag TakeProfitSell off
+set-flag TrailingStopSell off
+set-flag StopLossSell off
+show-buy TST
+expect-visible FinanceOverhaulOrderTab-Limit
+show-sell TST
+expect-hidden FinanceOverhaulOrderTabs
+expect-text Button Sell
+capture order-flags-all-sells-off
+cleanup:
+set-flag all on
+cancel-new-orders
+set-price TST 100
+close-dialog

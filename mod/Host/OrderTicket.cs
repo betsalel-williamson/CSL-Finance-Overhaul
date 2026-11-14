@@ -153,6 +153,34 @@ namespace FinanceOverhaul
             get { return active.HasValue; }
         }
 
+        /// <summary>
+        /// Options flag changed: hide or show tabs at once; a dialog showing a type that was
+        /// just switched off goes back to the vanilla trade.
+        /// </summary>
+        public static void OnFlagsChanged()
+        {
+            try
+            {
+                if (owner == null || tabs == null)
+                {
+                    return;
+                }
+
+                if (active.HasValue && !Mod.OrderKindEnabled(active.Value))
+                {
+                    SetKind(null);
+                    return;
+                }
+
+                StyleTabs();
+                Relayout();
+            }
+            catch (Exception ex)
+            {
+                LogOnce("order ticket: flag refresh failed: " + ex.Message);
+            }
+        }
+
         /// <summary>Postfix targets: Awake and ShowPanel. Every open starts on the vanilla trade.</summary>
         public static void Attach(BuySellInvestmentPanel panel)
         {
@@ -186,6 +214,12 @@ namespace FinanceOverhaul
             if (!active.HasValue || panel != owner)
             {
                 return false;
+            }
+
+            if (!Mod.OrderKindEnabled(active.Value))
+            {
+                SetKind(null); // switched off while open: back to the vanilla trade, no trade now
+                return true;
             }
 
             int price;
@@ -665,7 +699,8 @@ namespace FinanceOverhaul
                     continue;
                 }
 
-                bool shown = t.Buy == buy;
+                bool shown =
+                    t.Buy == buy && (!t.Kind.HasValue || Mod.OrderKindEnabled(t.Kind.Value));
                 t.Button.isVisible = shown;
                 if (!shown)
                 {
@@ -694,9 +729,11 @@ namespace FinanceOverhaul
 
             bool buy = IsBuyMode(owner);
             UIComponent stats = buy ? buyStats : sellStats;
-            tabs.isVisible = true;
+            // With every order type of this mode switched off there is nothing to choose:
+            // no tabs row, the dialog is the vanilla one.
+            tabs.isVisible = AnyOrderTab(buy);
             pricePanel.isVisible = active.HasValue;
-            float wanted = tabs.height;
+            float wanted = tabs.isVisible ? tabs.height : 0f;
             if (active.HasValue)
             {
                 wanted += pricePanel.height;
@@ -709,6 +746,19 @@ namespace FinanceOverhaul
 
             Grow(wanted - addedHeight);
             addedHeight = wanted;
+        }
+
+        private static bool AnyOrderTab(bool buy)
+        {
+            foreach (Tab t in AllTabs)
+            {
+                if (t.Buy == buy && t.Kind.HasValue && Mod.OrderKindEnabled(t.Kind.Value))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static void Grow(float delta)

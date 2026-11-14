@@ -247,6 +247,17 @@ namespace FinanceOverhaul
                 OnIndexStockChanged
             );
 
+            // Temporary feature flags, one per order type (see ModSettings).
+            foreach (OrderKind kind in ModSettings.OrderKinds)
+            {
+                OrderKind k = kind;
+                group.AddCheckbox(
+                    OrderText.OptionLabel(k),
+                    Settings.IsEnabled(k),
+                    enabled => OnOrderKindChanged(k, enabled)
+                );
+            }
+
             if (BuildInfo.ShowDevBuildIdentity)
             {
                 group.AddCheckbox(
@@ -357,6 +368,31 @@ namespace FinanceOverhaul
             {
                 TestStockListing.EnsureInLoadedCity();
             }
+        }
+
+        /// <summary>Whether an order type's flag is on (on when settings aren't loaded yet).</summary>
+        internal static bool OrderKindEnabled(OrderKind kind)
+        {
+            return Settings == null || Settings.IsEnabled(kind);
+        }
+
+        /// <summary>Same as ticking the Options checkbox (used by the game UI tests).</summary>
+        internal static void SetOrderKindEnabled(OrderKind kind, bool enabled)
+        {
+            OnOrderKindChanged(kind, enabled);
+        }
+
+        private static void OnOrderKindChanged(OrderKind kind, bool enabled)
+        {
+            if (Settings == null)
+            {
+                Settings = new ModSettings();
+            }
+
+            Settings.SetEnabled(kind, enabled);
+            SaveSettings();
+            ModLog.Info("orders: " + SettingsFile.OrderKey(kind) + "=" + enabled);
+            OrderTicket.OnFlagsChanged();
         }
 
         private static void OnLiveTickerChanged(bool enabled)

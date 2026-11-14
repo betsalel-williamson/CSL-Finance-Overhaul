@@ -98,19 +98,36 @@ next refresh. Fills keep the game's average cost basis ([Cost basis](./cost-basi
 Known flaky interaction: right after a holding card is removed (a test selling all its shares), an
 order card was once reported not visible for under a second; not reproduced in normal play.
 
+## Options flags (temporary)
+
+While the order types are being tested, Options → **Finance Overhaul** has one checkbox per order
+type, all on by default: **Orders: Limit buys**, **Orders: Stop-loss sells**, **Orders: Take-profit
+sells**, **Orders: Trailing stop sells**. Switching one off:
+
+- hides that type's tab in the Invest dialog; when every order type of a mode (Buy or Sell) is off
+  the whole tabs row is hidden and the dialog is the vanilla trade. If the dialog was on that tab it
+  returns to the vanilla trade.
+- keeps that type's open orders but pauses them: the daily check skips them entirely (no fill, no
+  expiry countdown, no trailing peak update).
+- shows " · paused in Options" in grey on their Your Portfolio cards (**Cancel** still works).
+
+Switching it back on shows the tab again and the paused orders resume at the next daily check.
+Settings keys: `ordersLimitBuyEnabled`, `ordersStopLossEnabled`, `ordersTakeProfitEnabled`,
+`ordersTrailingStopEnabled` (`true`/`false`, missing means on).
+
 ## Game UI tests
 
 `npm run test:game` drives the running game's UI (dev build, city with a Stock Exchange) through the
 scenarios in `tests/game-ui/`: ticket layout and labels, nothing overflowing the window, Buy now
 still a vanilla buy, invalid prices never buying, place and cancel, a fill on the next day, Sell now
-still a vanilla sell, and stop-loss and take-profit placing, filling after a gap, and cancelling
-with no shares left. See [Testing](../developer/testing.md).
+still a vanilla sell, stop-loss and take-profit placing, filling after a gap, and cancelling with no
+shares left, and the Options flags hiding tabs and pausing orders. See
+[Testing](../developer/testing.md).
 
 ## Later steps
 
-Per-order-type Options toggles (feature flags while testing), recurring monthly investment, fill
-notifications in Chirper. Dividend reinvestment waits for dividend shares
-([Market analogs](./market-analogs.md)).
+Recurring monthly investment, fill notifications in Chirper. Dividend reinvestment waits for
+dividend shares ([Market analogs](./market-analogs.md)).
 
 ## Code
 

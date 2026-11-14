@@ -17,6 +17,12 @@ namespace FinanceOverhaul.Market
         private const string LiveTickerKey = "liveTickerEnabled";
         private const string DevTestStockKey = "devTestStockEnabled";
 
+        /// <summary>Settings key of an order type's flag, e.g. <c>ordersStopLossEnabled</c>.</summary>
+        public static string OrderKey(OrderKind kind)
+        {
+            return "orders" + kind.ToString().Replace("Sell", string.Empty) + "Enabled";
+        }
+
         public static ModSettings Parse(string text)
         {
             var settings = new ModSettings();
@@ -60,6 +66,16 @@ namespace FinanceOverhaul.Market
                 {
                     settings.DevTestStockEnabled = flag;
                 }
+                else
+                {
+                    foreach (OrderKind kind in ModSettings.OrderKinds)
+                    {
+                        if (string.Equals(key, OrderKey(kind), StringComparison.OrdinalIgnoreCase))
+                        {
+                            settings.SetEnabled(kind, flag);
+                        }
+                    }
+                }
             }
 
             return settings;
@@ -82,6 +98,14 @@ namespace FinanceOverhaul.Market
                 .Append('=')
                 .Append(settings.DevTestStockEnabled ? "true" : "false")
                 .Append('\n');
+            foreach (OrderKind kind in ModSettings.OrderKinds)
+            {
+                sb.Append(OrderKey(kind))
+                    .Append('=')
+                    .Append(settings.IsEnabled(kind) ? "true" : "false")
+                    .Append('\n');
+            }
+
             return sb.ToString();
         }
 

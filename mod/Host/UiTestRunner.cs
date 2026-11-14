@@ -464,6 +464,34 @@ namespace FinanceOverhaul
                 case "wait":
                     yield return new WaitForSeconds(ParseFloat(a, 1f));
                     break;
+                case "set-flag":
+                {
+                    // set-flag <OrderKind | all> on|off — flips the Options feature flag.
+                    bool on = b == "on";
+                    if (b != "on" && b != "off")
+                    {
+                        r.Error = "set-flag needs on or off";
+                        break;
+                    }
+
+                    bool found = false;
+                    foreach (OrderKind kind in ModSettings.OrderKinds)
+                    {
+                        if (a == "all" || kind.ToString() == a)
+                        {
+                            Mod.SetOrderKindEnabled(kind, on);
+                            found = true;
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        r.Error = "no order type " + a;
+                    }
+
+                    yield return new WaitForSeconds(0.6f); // cards refresh every 0.5 s
+                    break;
+                }
                 case "run-days":
                 {
                     int days = (int)ParseFloat(a, 1f);

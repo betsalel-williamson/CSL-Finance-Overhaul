@@ -175,6 +175,28 @@ namespace FinanceOverhaul.Market
             return null;
         }
 
+        /// <summary>Options toggle label for an order type's feature flag.</summary>
+        public static string OptionLabel(OrderKind kind)
+        {
+            switch (kind)
+            {
+                case OrderKind.StopLossSell:
+                    return "Orders: Stop-loss sells";
+                case OrderKind.TakeProfitSell:
+                    return "Orders: Take-profit sells";
+                case OrderKind.TrailingStopSell:
+                    return "Orders: Trailing stop sells";
+                default:
+                    return "Orders: Limit buys";
+            }
+        }
+
+        /// <summary>Side line of a card whose order type is switched off in Options.</summary>
+        public static string CardSide(OrderKind kind, bool paused)
+        {
+            return paused ? CardSide(kind) + " · paused in Options" : CardSide(kind);
+        }
+
         /// <summary>The Your Portfolio card's side line.</summary>
         public static string CardSide(OrderKind kind)
         {
