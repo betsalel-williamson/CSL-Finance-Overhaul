@@ -36,6 +36,35 @@ namespace FinanceOverhaul
 
         public const int BoardRows = 3;
 
+        private static readonly object BuildLock = new object();
+
+        /// <summary>
+        /// Builds today's entries now if there are none yet (level load, hot reload), so the
+        /// boards start full instead of "Waiting for market data" until the next game day.
+        /// Main thread; the same read-only calls as the daily build.
+        /// </summary>
+        public static void Prime()
+        {
+            if (Current != null)
+            {
+                return;
+            }
+
+            try
+            {
+                string line = Build();
+                if (Current != null && Current.Count > 0)
+                {
+                    CurrentLine = line;
+                    ModLog.Info("ticker: primed " + Current.Count + " entries at start");
+                }
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("ticker: prime failed: " + ex.Message);
+            }
+        }
+
         /// <summary>Postfix target: EconomyManager.SimulationStepInvestments (simulation thread).</summary>
         public static void OnInvestmentsStepped()
         {
@@ -66,6 +95,14 @@ namespace FinanceOverhaul
         }
 
         private static string Build()
+        {
+            lock (BuildLock)
+            {
+                return BuildLocked();
+            }
+        }
+
+        private static string BuildLocked()
         {
             Symbols.Clear();
             Rates.Clear();

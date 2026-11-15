@@ -693,6 +693,25 @@ namespace FinanceOverhaul
                     yield return new WaitForSeconds(0.6f);
                     break;
                 }
+                case "pause":
+                {
+                    // pause on|off — pauses or resumes the simulation (for tests that span a mod
+                    // reload; a second scenario must resume it).
+                    SimulationManager.instance.SimulationPaused = a == "on";
+                    yield return new WaitForSeconds(0.5f);
+                    break;
+                }
+                case "expect-ticker-full":
+                {
+                    // The facade boards have today's entries (no "Waiting for market data").
+                    TickerSnapshot snap = TickerFeed.Current;
+                    if (snap == null || snap.Count == 0)
+                    {
+                        r.Error = "the ticker has no entries yet";
+                    }
+
+                    break;
+                }
                 case "info-view-swap":
                 {
                     // info-view-swap traffic|none shown|hidden — switches the info view and checks,

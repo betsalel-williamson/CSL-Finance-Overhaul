@@ -27,8 +27,9 @@ npm run test:game              # game UI scenarios (running game, --dev build)
 window outright, never toggling a player's window), `monitor remember|restore` (snapshot and put
 back the player's monitor settings), `log-symbols` (logs every stock prefab with its ticker symbol
 and any clash), `info-view MODE` / `info-view-swap MODE shown|hidden` (switch the info view; the
-swap variant checks the boards inside the game's switch event), `live-ticker on|off`,
-`ticker-in-info-views on|off`, `expect-ticker shown|hidden`, `ticker-shows percent|price|restore`,
+swap variant checks the boards inside the game's switch event), `live-ticker on|off`, `pause on|off`
+(a later scenario must resume), `expect-ticker-full`, `ticker-in-info-views on|off`,
+`expect-ticker shown|hidden`, `ticker-shows percent|price|restore`,
 `ticker-brightness LEVEL|restore` (all put the player's choices back), `bonds-section show|auto`
 (shows the Loans tab's City bonds section and allows selling with the flag off), `bonds-term YEARS`
 / `bonds-amount TEXT` (fill the section), `$bond` (the newest bond the scenario sold),

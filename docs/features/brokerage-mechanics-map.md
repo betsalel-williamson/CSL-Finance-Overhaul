@@ -129,3 +129,10 @@ raised when the view actually switches and before that frame is drawn, so the va
 flash their baked scroll on the way back; scenario 43 checks the swap at that moment
 (`info-view-swap`). Game UI scenario 43 opens Traffic and Population with the option on and off; the
 player's info view, live-ticker toggle and checkbox are put back afterwards.
+
+**Step 4e (shipped): full boards at start.** On level load or a mod reload the boards no longer
+scroll "Waiting for market data" until the next game day: `TickerFeed.Prime` builds today's entries
+from the same read-only calls as soon as the boards appear (main thread; the daily build and the
+prime share a lock), and the first data fills every row's whole window at once. Checked in game with
+the simulation paused across a reload (`ticker: primed 10 entries at start`; test steps `pause` and
+`expect-ticker-full`). The waiting text remains only for a city with no unlocked investments.

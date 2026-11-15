@@ -350,12 +350,14 @@ namespace FinanceOverhaul
         /// </summary>
         private void RefreshContent()
         {
+            TickerFeed.Prime(); // first time: build today's entries instead of waiting a day
             TickerSnapshot snapshot = TickerFeed.Current;
             if (snapshot == null || ReferenceEquals(snapshot, appliedSnapshot))
             {
                 return;
             }
 
+            bool first = appliedSnapshot == null;
             appliedSnapshot = snapshot;
             for (int r = 0; r < RowCount; r++)
             {
@@ -368,6 +370,13 @@ namespace FinanceOverhaul
                 int count;
                 LedText.RowRange(snapshot.Count, RowCount, r, out start, out count);
                 marquees[r].SetContent(snapshot, start, count);
+            }
+
+            if (first)
+            {
+                // The rows were written with the waiting text: fill the whole screen with data
+                // now (nothing has been on show long enough to notice a jump).
+                RestartAll();
             }
         }
 
