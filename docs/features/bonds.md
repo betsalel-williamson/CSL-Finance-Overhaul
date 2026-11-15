@@ -11,8 +11,8 @@ Figma → docs), each behind its own Options flag, each stored in the mod's own 
    coupon every 30 game days, and repays the face at maturity; it can also redeem early. Cash moves
    through the game's own budget lines (`EconomyManager.AddResource(LoanAmount, …)` in,
    `FetchResource(LoanPayment, …)` out), so debt service shows up beside vanilla loans without using
-   the three vanilla loan slots. _Status: math, pricing, book and daily engine shipped (below); the
-   Economy → Loans UI is next._
+   the three vanilla loan slots. _Status: shipped behind the Options flag — math, pricing, book,
+   daily engine and the Economy → Loans section (below)._
 2. **Buy bonds (lend surplus)** — the same schedule from the holder's side, plus a price for selling
    before maturity (needs price/yield math with its own proofs).
 3. **Dividend investments** — holdings that pay a periodic cash dividend (which also makes dividend
@@ -96,7 +96,7 @@ round-trips and skips what it cannot read.
 100,000 cents; backdated 30 days, its first coupon (₡2.52) was paid on the next day; redeemed for
 ₡1,000.08 (face + one day's accrual).
 
-## UI design (Figma UI Map band 11)
+## UI (shipped: `CityBondsSection`; Figma UI Map band 11)
 
 A **City bonds** section on Economy → Loans, in the help strip plus the gap above the three vanilla
 loan cards (about 1230 × 312 UI units); the strip's "three loans" sentence becomes its header line.
@@ -107,6 +107,13 @@ reason and the button is disabled. Right, **bonds you owe** (`FO/BondRow`): term
 coupon, coupons left, repay date; **Repay ₡…** = face + interest accrued this period; footer with
 total owed and leverage vs the 3× cap; more rows scroll. Shown when the Options flag is on or while
 the city still owes a bond. Pins and catalog ids: [UI Figma map](../developer/ui-figma-map.md).
+
+In game it replaces the vanilla help strip (`LoanDesc`, hidden while the section shows and restored
+when it hides or the mod reloads) at 1108 × 271 UI units. The amount accepts whole ₡ with commas or
+spaces (`BondText.ParseAmountCents`); above one bond's ₡100,000,000 maximum the hint says so. The
+shown maximum is exactly the market's limit (`BondTextTests`, 5,000 random cities: that amount is
+offered, ₡1 more is refused). Game UI scenario 39 sells ₡1,000 through the button, checks the owed
+row and both refused states, and repays it with the row's Repay button (₡1,000.00 the same day).
 
 ## Decided for piece 1 (2026-11-14)
 

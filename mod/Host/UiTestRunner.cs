@@ -72,6 +72,9 @@ namespace FinanceOverhaul
 
             /// <summary>Bonds this scenario sold (cleanup redeems them).</summary>
             public readonly List<int> Bonds = new List<int>();
+
+            /// <summary>Bonds the city owed when the scenario started (the player's).</summary>
+            public readonly HashSet<int> BondsBefore = new HashSet<int>();
             public readonly Dictionary<string, uint> Owned = new Dictionary<string, uint>();
             public long LogStart;
 
@@ -89,6 +92,11 @@ namespace FinanceOverhaul
             }
 
             ctx.OrdersAtStart = ctx.OrdersBefore.Count;
+            foreach (IssuedBond b in BondDesk.Snapshot().Bonds)
+            {
+                ctx.BondsBefore.Add(b.Id);
+            }
+
             // Everything already open is the player's: frozen until the scenario ends, so a
             // scenario that advances days can never fill, expire or move it.
             OrderDesk.Freeze(ctx.OrdersBefore);
@@ -139,6 +147,7 @@ namespace FinanceOverhaul
             }
 
             OrderDesk.UnfreezeAll();
+            CityBondsSection.ForceShow = false;
             ModLog.Info(
                 failure == null
                     ? "uitest: PASS " + ctx.Name + " (" + steps.Count + " steps)"
@@ -163,6 +172,20 @@ namespace FinanceOverhaul
             }
 
             line = line.Replace("$order", ctx.LastOrderId.ToString(CultureInfo.InvariantCulture));
+            if (line.Contains("$bond"))
+            {
+                // "$bond" — the newest bond this scenario sold (through the desk or the UI).
+                int newest = 0;
+                foreach (IssuedBond owed in BondDesk.Snapshot().Bonds)
+                {
+                    if (!ctx.BondsBefore.Contains(owed.Id) && owed.Id > newest)
+                    {
+                        newest = owed.Id;
+                    }
+                }
+
+                line = line.Replace("$bond", newest.ToString(CultureInfo.InvariantCulture));
+            }
             line = OwnedTokens(line);
             string[] w = line.Split(new[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
             string cmd = w[0];
@@ -577,6 +600,36 @@ namespace FinanceOverhaul
                 case "log-symbols":
                     StockSymbols.Dump();
                     break;
+                case "bonds-section":
+                {
+                    // bonds-section show|auto — shows the Loans tab's City bonds section even
+                    // with the Options flag off (auto: back to the flag).
+                    CityBondsSection.ForceShow = a == "show";
+                    yield return new WaitForSeconds(0.8f);
+                    break;
+                }
+                case "bonds-amount":
+                case "bonds-term":
+                {
+                    // bonds-amount TEXT · bonds-term YEARS — fills the section's amount or term.
+                    if (CityBondsSection.Current == null)
+                    {
+                        r.Error = "no City bonds section";
+                        break;
+                    }
+
+                    if (cmd == "bonds-amount")
+                    {
+                        CityBondsSection.Current.SetAmount(a);
+                    }
+                    else
+                    {
+                        CityBondsSection.Current.SetTerm((BondTerm)(int)ParseFloat(a, 5f));
+                    }
+
+                    yield return new WaitForSeconds(0.3f);
+                    break;
+                }
                 case "bond-finances":
                 {
                     long debt,
@@ -665,9 +718,14 @@ namespace FinanceOverhaul
                     break;
                 }
                 case "redeem-new-bonds":
-                    foreach (int id in ctx.Bonds)
+                    // Repays every bond this scenario sold (by the desk or the UI), never the
+                    // player's.
+                    foreach (IssuedBond owed in BondDesk.Snapshot().Bonds)
                     {
-                        BondDesk.Redeem(id);
+                        if (!ctx.BondsBefore.Contains(owed.Id))
+                        {
+                            BondDesk.Redeem(owed.Id);
+                        }
                     }
 
                     ctx.Bonds.Clear();

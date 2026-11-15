@@ -26,16 +26,18 @@ npm run test:game              # game UI scenarios (running game, --dev build)
 (same as ticking an order type's Options checkbox), `monitor open|close` (sets the Stock Monitor
 window outright, never toggling a player's window), `monitor remember|restore` (snapshot and put
 back the player's monitor settings), `log-symbols` (logs every stock prefab with its ticker symbol
-and any clash), `bond-finances` (logs debt and annual income used for bond pricing),
-`issue-bond YEARS FACE` (sells a bond, simulation paused; cash must rise by exactly the face),
-`bond-backdate DAYS` and `expect-bond-coupons N` (the scenario's newest bond), `redeem-new-bonds`
-(cleanup: repays the scenario's own bonds — scenario 37), `money-probe AMOUNT` (adds AMOUNT cents
-through the loan-taken budget line and fetches it back, simulation paused; fails unless cash ends
-where it began — scenario 36), `hover CONTROL FX FY` / `hover off` (a simulated mouse at that
-fraction of a control, for the Stock Monitor hover), `log-basket` (every investment's daily history,
-for auditing the Index math offline), `inspect-parents CONTROL` (a control and every parent:
-absolute box, background, clipping — for measuring vanilla UI), `share-charts on|off` (the share
-chart flag, for before/after captures) — and checks `expect-visible`, `expect-text`,
+and any clash), `bonds-section show|auto` (shows the Loans tab's City bonds section and allows
+selling with the flag off), `bonds-term YEARS` / `bonds-amount TEXT` (fill the section), `$bond`
+(the newest bond the scenario sold), `bond-finances` (logs debt and annual income used for bond
+pricing), `issue-bond YEARS FACE` (sells a bond, simulation paused; cash must rise by exactly the
+face), `bond-backdate DAYS` and `expect-bond-coupons N` (the scenario's newest bond),
+`redeem-new-bonds` (cleanup: repays the scenario's own bonds — scenario 37), `money-probe AMOUNT`
+(adds AMOUNT cents through the loan-taken budget line and fetches it back, simulation paused; fails
+unless cash ends where it began — scenario 36), `hover CONTROL FX FY` / `hover off` (a simulated
+mouse at that fraction of a control, for the Stock Monitor hover), `log-basket` (every investment's
+daily history, for auditing the Index math offline), `inspect-parents CONTROL` (a control and every
+parent: absolute box, background, clipping — for measuring vanilla UI), `share-charts on|off` (the
+share chart flag, for before/after captures) — and checks `expect-visible`, `expect-text`,
 `expect-slider CONTROL [max]` (the slider's thumb is drawn where its value is; with `max`, the value
 is the maximum), `expect-no-overflow` (every visible part inside the dialog or the named control,
 and none of our fixed-width labels cutting its text off; inside a clipping, scrolling list only the

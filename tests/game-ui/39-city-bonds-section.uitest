@@ -1,0 +1,30 @@
+# City bonds section on Economy → Loans (Figma band 11). Sells a ₡1,000 1-year bond through
+# the section, checks its owed row and the refused state, then repays it with its Repay button.
+# Costs the city a few cents of accrued interest at most; cleanup repays anything left.
+name City bonds section: sell from the Loans tab, see the owed row, refused over the cap, repay
+show-economy loans
+bonds-section show
+expect-visible FinanceOverhaulBondsSection
+expect-hidden LoanDesc
+bonds-term 1
+bonds-amount 1,000
+expect-text FinanceOverhaulBondsRate a year (3.00% +
+expect-text FinanceOverhaulBondsSell Sell bond · receive ₡1,000
+click FinanceOverhaulBondsSell
+expect-log bonds: sold #
+wait 0.6
+expect-text FinanceOverhaulBondsOwedTitle Bonds you owe (
+expect-visible FinanceOverhaulBondsRow-$bond
+expect-text FinanceOverhaulBondsRepay-$bond Repay ₡1,000
+capture bonds-sold
+bonds-amount 60,000,000
+expect-text FinanceOverhaulBondsHint Refused: the city would owe more than 3×
+capture bonds-refused
+bonds-amount 200,000,000
+expect-text FinanceOverhaulBondsHint Refused: one bond can raise at most ₡100,000,000
+click FinanceOverhaulBondsRepay-$bond
+expect-log early from the Loans tab
+cleanup:
+redeem-new-bonds
+bonds-section auto
+close-dialog

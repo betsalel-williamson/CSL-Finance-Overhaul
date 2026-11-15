@@ -168,22 +168,22 @@ detail view, settings popover, Options flag ([Stock Monitor](../features/stock-m
 | 11  | `monitor.open`      | Toolbar button | Shipped (top-left mod row, right-drag to move)     |
 | 12  | `monitor.flag`      | Options flag   | Shipped: Stock Monitor window (testing)            |
 
-### City bonds frame (`designed`; engine shipped)
+### City bonds frame (`shipped`, behind the Options flag)
 
 Band 11: a "City bonds" section on Economy → Loans — placement on a real screenshot (the help strip
 plus the gap above the three loan cards, about 1230 × 312 UI units) and the section at 1:1, a
 refused state, and the Options flag ([Bonds](../features/bonds.md)). Component `FO/BondRow` is one
 owed bond.
 
-| #   | Catalog id                    | Title                  | Code evidence / status                          |
-| --- | ----------------------------- | ---------------------- | ----------------------------------------------- |
-| 1   | `bonds.section`               | City bonds section     | Planned                                         |
-| 2   | `bonds.term`                  | Term                   | Planned (`BondPricing.BaseRate`, `Periods`)     |
-| 3   | `bonds.amount`, `bonds.quote` | Amount + live quote    | Planned (`BondDesk.Quote`, `BondMath.Schedule`) |
-| 4   | `bonds.sell`                  | Sell bond              | Planned (`BondDesk.Issue`)                      |
-| 5   | `bonds.owed`                  | Bonds you owe          | Planned (`FO/BondRow`, `BondDesk.Redeem`)       |
-| 6   | `bonds.budget`                | Payments in the budget | Shipped engine (`BondDesk`, loan-payment line)  |
-| 7   | `opt.city-bonds`              | Options flag           | Shipped: City bonds (testing), off by default   |
+| #   | Catalog id                    | Title                  | Code evidence / status                         |
+| --- | ----------------------------- | ---------------------- | ---------------------------------------------- |
+| 1   | `bonds.section`               | City bonds section     | Shipped (`CityBondsSection`)                   |
+| 2   | `bonds.term`                  | Term                   | Shipped (`BondPricing.BaseRate`, `Periods`)    |
+| 3   | `bonds.amount`, `bonds.quote` | Amount + live quote    | Shipped (`BondText`, `BondMath.Schedule`)      |
+| 4   | `bonds.sell`                  | Sell bond              | Shipped (`BondDesk.Issue`)                     |
+| 5   | `bonds.owed`                  | Bonds you owe          | Shipped (`FO/BondRow`, `BondDesk.Redeem`)      |
+| 6   | `bonds.budget`                | Payments in the budget | Shipped engine (`BondDesk`, loan-payment line) |
+| 7   | `opt.city-bonds`              | Options flag           | Shipped: City bonds (testing), off by default  |
 
 ### Planned frame (`planned`)
 
