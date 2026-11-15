@@ -192,8 +192,12 @@ namespace FinanceOverhaul
                 }
                 case "show-economy":
                 {
-                    // Opens Economy on the Investments tab, like the toolbar button.
-                    FieldInfo tabField = AccessTools.Field(typeof(EconomyPanel), "kInvestmentTab");
+                    // Opens Economy on the Investments tab (or `show-economy loans`), like the
+                    // toolbar button.
+                    FieldInfo tabField = AccessTools.Field(
+                        typeof(EconomyPanel),
+                        a == "loans" ? "kLoansTab" : "kInvestmentTab"
+                    );
                     int tab = tabField == null ? 3 : (int)tabField.GetValue(null);
                     ToolsModifierControl.mainToolbar.ShowEconomyPanel(tab);
                     yield return new WaitForSeconds(1f);
