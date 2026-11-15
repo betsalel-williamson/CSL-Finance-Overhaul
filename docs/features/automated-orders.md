@@ -99,6 +99,11 @@ only knows its own cards, so the mod re-places order cards right after each sort
 `EconomyPanel.UpdateInvestments`). A filled, cancelled or expired order's card disappears at the
 next refresh. Fills keep the game's average cost basis ([Cost basis](./cost-basis.md)).
 
+The detail line (shares, price, days left) runs up to the **Cancel** button and is never cut off: a
+line that nearly fits is drawn slightly smaller (down to text scale 0.6, as in the Stock Monitor),
+and one too long even then wraps and the card grows (`LabelFit`; scenario
+`41-tst-portfolio-order-detail-fits`).
+
 Known flaky interaction: right after a holding card is removed (a test selling all its shares), an
 order card was once reported not visible for under a second; not reproduced in normal play.
 

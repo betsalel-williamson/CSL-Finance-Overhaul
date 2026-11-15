@@ -30,6 +30,11 @@ namespace FinanceOverhaul
         private const string LegacySectionName = "FinanceOverhaulOpenOrders";
 
         private const float CardHeight = 92f;
+        private const float DetailLeft = 24f;
+        private const float DetailHeight = 18f;
+        private const float DetailGap = 8f;
+        private const float DetailMinScale = 0.6f;
+        private const float CancelRight = 10f;
         private static readonly Color32 BuyColor = new Color32(78, 205, 96, 255);
         private static readonly Color32 MutedColor = new Color32(160, 172, 182, 255);
         private static readonly Color32 SellColor = new Color32(233, 150, 66, 255);
@@ -247,25 +252,30 @@ namespace FinanceOverhaul
             side.text = OrderText.CardSide(order.Kind, paused);
             side.relativePosition = new Vector3(24f, 38f);
 
+            Vector2 cancelSize =
+                sellStyle != null
+                    ? new Vector2(Mathf.Max(70f, sellStyle.width + 16f), sellStyle.height)
+                    : new Vector2(76f, 28f);
+
             UILabel detail = card.AddUIComponent<UILabel>();
             detail.name = DetailPrefix + order.Id;
             Style(detail, bodyStyle, 0.9f);
-            detail.autoSize = false;
-            detail.width = card.width - 140f;
-            detail.height = 18f;
-            detail.relativePosition = new Vector3(24f, 60f);
             detail.textColor = MutedColor;
-            detail.text = OrderText.CardDetail(order, today);
+            detail.relativePosition = new Vector3(DetailLeft, 60f);
+            // Up to the Cancel button: the whole line, scaled down or wrapped, never cut off.
+            FitDetail(
+                detail,
+                OrderText.CardDetail(order, today),
+                card.width - cancelSize.x - CancelRight - DetailGap - DetailLeft
+            );
+            card.height = CardHeight + Mathf.Max(0f, detail.height - DetailHeight);
 
             UIButton cancel = card.AddUIComponent<UIButton>();
             cancel.name = CancelPrefix + order.Id;
             cancel.text = "Cancel";
-            cancel.size =
-                sellStyle != null
-                    ? new Vector2(Mathf.Max(70f, sellStyle.width + 16f), sellStyle.height)
-                    : new Vector2(76f, 28f);
+            cancel.size = cancelSize;
             cancel.relativePosition = new Vector3(
-                card.width - cancel.width - 10f,
+                card.width - cancel.width - CancelRight,
                 card.height - cancel.height - 10f
             );
             if (sellStyle != null)
@@ -353,6 +363,46 @@ namespace FinanceOverhaul
             }
 
             return -1;
+        }
+
+        /// <summary>
+        /// One line in <paramref name="width"/>: scaled down when it nearly fits (like the
+        /// Stock Monitor's cells, never below <see cref="DetailMinScale"/>), otherwise wrapped
+        /// at its normal scale so the card grows instead of cutting text off.
+        /// </summary>
+        private static void FitDetail(UILabel label, string text, float width)
+        {
+            float baseScale = label.textScale;
+            label.wordWrap = false;
+            label.text = text;
+            LabelFit.Result fit = LabelFit.SingleLine(
+                baseScale,
+                DetailMinScale,
+                width,
+                scale =>
+                {
+                    label.autoSize = false;
+                    label.textScale = scale;
+                    label.autoSize = true;
+                    return label.width;
+                }
+            );
+            label.autoSize = false;
+            label.textScale = fit.Scale;
+            if (fit.Wrap)
+            {
+                label.wordWrap = true;
+                label.width = width;
+                label.autoHeight = true;
+                label.height = Mathf.Max(DetailHeight, label.height);
+            }
+            else
+            {
+                label.size = new Vector2(width, DetailHeight);
+                // A scaled-down line stays centred on the row's normal line.
+                label.verticalAlignment =
+                    fit.Scale < baseScale ? UIVerticalAlignment.Middle : UIVerticalAlignment.Top;
+            }
         }
 
         private static void Style(UILabel label, UILabel from, float scale)
