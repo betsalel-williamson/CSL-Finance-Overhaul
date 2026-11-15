@@ -17,19 +17,20 @@ table; [UI Figma map](../developer/ui-figma-map.md) pins map screens to this inv
 
 Section order: **Finance Overhaul** (single group today).
 
-| Field id               | Label                                                           | Control  | Host    | Status                 |
-| ---------------------- | --------------------------------------------------------------- | -------- | ------- | ---------------------- |
-| `live-ticker`          | Live Stock Exchange ticker (visual only)                        | Checkbox | Options | shipped                |
-| `index-stock`          | Experimental: Index stock (adds a mod-only investment to saves) | Checkbox | Options | experimental           |
-| `orders-limit-buy`     | Orders: Limit buys                                              | Checkbox | Options | temporary flag         |
-| `orders-stop-loss`     | Orders: Stop-loss sells                                         | Checkbox | Options | temporary flag         |
-| `orders-take-profit`   | Orders: Take-profit sells                                       | Checkbox | Options | temporary flag         |
-| `orders-trailing-stop` | Orders: Trailing stop sells                                     | Checkbox | Options | temporary flag         |
-| `orders-lifetime`      | Orders stay open for (new orders)                               | Dropdown | Options | shipped (default 90 d) |
-| `share-charts`         | Share value charts in the Stock Monitor style (testing)         | Checkbox | Options | temporary flag         |
-| `stock-monitor`        | Stock Monitor window (testing)                                  | Checkbox | Options | temporary flag         |
-| `built-utc`            | Built (UTC): …                                                  | Footer   | Options | shipped (`--dev` only) |
-| `built-local`          | Built (local): …                                                | Footer   | Options | shipped (`--dev` only) |
+| Field id               | Label                                                               | Control  | Host    | Status                 |
+| ---------------------- | ------------------------------------------------------------------- | -------- | ------- | ---------------------- |
+| `live-ticker`          | Live Stock Exchange ticker (visual only)                            | Checkbox | Options | shipped                |
+| `index-stock`          | Experimental: Index stock (adds a mod-only investment to saves)     | Checkbox | Options | experimental           |
+| `orders-limit-buy`     | Orders: Limit buys                                                  | Checkbox | Options | temporary flag         |
+| `orders-stop-loss`     | Orders: Stop-loss sells                                             | Checkbox | Options | temporary flag         |
+| `orders-take-profit`   | Orders: Take-profit sells                                           | Checkbox | Options | temporary flag         |
+| `orders-trailing-stop` | Orders: Trailing stop sells                                         | Checkbox | Options | temporary flag         |
+| `orders-lifetime`      | Orders stay open for (new orders)                                   | Dropdown | Options | shipped (default 90 d) |
+| `share-charts`         | Share value charts in the Stock Monitor style (testing)             | Checkbox | Options | temporary flag         |
+| `stock-monitor`        | Stock Monitor window (testing)                                      | Checkbox | Options | temporary flag         |
+| `city-bonds`           | City bonds: sell bonds to raise money (testing; adds mod save data) | Checkbox | Options | temporary flag (off)   |
+| `built-utc`            | Built (UTC): …                                                      | Footer   | Options | shipped (`--dev` only) |
+| `built-local`          | Built (local): …                                                    | Footer   | Options | shipped (`--dev` only) |
 
 The four order flags are on by default; see
 [Automated orders](./automated-orders.md#options-flags-temporary).

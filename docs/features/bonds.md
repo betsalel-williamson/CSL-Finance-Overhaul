@@ -96,6 +96,18 @@ round-trips and skips what it cannot read.
 100,000 cents; backdated 30 days, its first coupon (₡2.52) was paid on the next day; redeemed for
 ₡1,000.08 (face + one day's accrual).
 
+## UI design (Figma UI Map band 11)
+
+A **City bonds** section on Economy → Loans, in the help strip plus the gap above the three vanilla
+loan cards (about 1230 × 312 UI units); the strip's "three loans" sentence becomes its header line.
+Left, **sell a bond**: term tabs (1 / 2 / 5 years), amount field whose hint shows the most the city
+can raise before 3× income, a live quote (rate as base + premium, coupon every 30 days, total
+interest, repay date) and **Sell bond · receive ₡…**; over the cap the hint turns red with the
+reason and the button is disabled. Right, **bonds you owe** (`FO/BondRow`): term, rate, face; next
+coupon, coupons left, repay date; **Repay ₡…** = face + interest accrued this period; footer with
+total owed and leverage vs the 3× cap; more rows scroll. Shown when the Options flag is on or while
+the city still owes a bond. Pins and catalog ids: [UI Figma map](../developer/ui-figma-map.md).
+
 ## Decided for piece 1 (2026-11-14)
 
 - Terms and rates: 1/2/5 years, rate by debt (above).
