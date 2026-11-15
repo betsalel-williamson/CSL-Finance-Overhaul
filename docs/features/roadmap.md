@@ -4,7 +4,7 @@ Where the original ideas stand ([Market analogs](./market-analogs.md),
 [World dynamics](./world-dynamics.md), the Figma "Planned treasury" band) and what could come next.
 Status as of 2026-11-15. Figma: UI Map band 04 "Roadmap — status" shows the same cards.
 
-## Original ideas: 7 of 24 shipped, 1 partly, 16 not started
+## Original ideas: 8 of 24 shipped, 1 partly, 15 not started
 
 | #   | Idea                                                       | Group      | Status                                                                                |
 | --- | ---------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------- |
@@ -27,13 +27,13 @@ Status as of 2026-11-15. Figma: UI Map band 04 "Roadmap — status" shows the sa
 | 17  | Take-profit sells                                          | Automation | **Shipped**                                                                           |
 | 18  | Trailing stop sells                                        | Automation | **Shipped**                                                                           |
 | 19  | Dollar-cost averaging (recurring monthly buys)             | Automation | Not started                                                                           |
-| 20  | Fill notifications                                         | Automation | Not started (fills are only logged; Chirper planned)                                  |
+| 20  | Fill notifications                                         | Automation | **Shipped**: [Notices in Chirper](./notices.md), orders and bonds                     |
 | 21  | Ordinary market cycle (booms, corrections)                 | World      | Not started                                                                           |
 | 22  | Black swan events                                          | World      | Not started                                                                           |
 | 23  | External world pressure (demand spikes, rate shocks)       | World      | Not started                                                                           |
 | 24  | Live Stock Exchange ticker (stretch goal)                  | Facade     | **Shipped**: LED boards, % or price and ₡, brightness, info views, full at start      |
 
-Shipped: 1, 4, 15–18, 24. Partly: 14. Everything else is not started.
+Shipped: 1, 4, 15–18, 20, 24. Partly: 14. Everything else is not started.
 
 ## Shipped beyond the original list
 
@@ -57,7 +57,7 @@ game UI test → docs), each behind its own Options flag until proven.
 
 | Priority | Work                                                    | Ideas covered | Size | Notes                                                                                                                                                                                                           |
 | -------- | ------------------------------------------------------- | ------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1        | Fill notifications                                      | 20            | S    | Chirper message (or a toast) when an order fills, expires or is skipped, and when a bond coupon or repayment goes out. Today fills are only in the mod log.                                                     |
+| 1 ✓      | Fill notifications                                      | 20            | S    | **Shipped 2026-11-15** ([Notices](./notices.md)). Chirper message (or a toast) when an order fills, expires or is skipped, and when a bond coupon or repayment goes out.                                        |
 | 2        | Local company listings and local IPOs                   | 10, 11        | L    | Companies the city grew (large office, industry or commercial employers) list on the exchange through an IPO event. Needs new mod-owned listings in the save and, past a dozen names, the many-company UI (14). |
 | 3        | Dividend shares                                         | 12            | M    | Listings that pay a periodic cash dividend into the budget; unlocks dividend reinvestment as an order type. Overlaps high-dividend funds (3).                                                                   |
 | 4        | Recurring buys                                          | 19            | S    | A monthly automated buy (dollar-cost averaging) on the shipped order engine.                                                                                                                                    |
@@ -131,12 +131,48 @@ Each with what the player would see, what drives it, dependencies, size and save
 - **Size / save:** M; settings only (no save data).
 - **Suggestion:** build the first slice as part of priority 2.
 
-### Save compatibility matrix (loose end)
+### Save compatibility matrix (loose end) — likely next after notices (user, 2026-11-15)
 
-- **What:** load saves with Index shares and city bonds without the mod (and back) and record the
-  results; required by the save-compatibility contract before more state lands in saves.
-- **Size:** S, mostly manual play in game plus notes.
-- **Suggestion:** do it before priority 2, which adds new listings to saves.
+**Why it matters:** the contract in [Save compatibility](./save-compatibility.md) promises that a
+city saved with the mod still opens without it (mod disabled, uninstalled or an older version),
+losing only mod features, never the city. Every epic that stores something adds a way to break that
+promise, and priority 2 (local listings) adds the riskiest kind: new companies in the save.
+
+**What the mod writes into a city save today:**
+
+| Data                                  | Where                                                   | Risk without the mod                                                         |
+| ------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Index stock (flag)                    | A vanilla investment slot pointing at a mod-only prefab | Highest: vanilla must skip an unknown prefab (case 2 passed; 1, 3–5 not run) |
+| Test stock TST (dev, test saves only) | Same as the Index                                       | Same; dev builds only                                                        |
+| Open orders                           | Mod data `FinanceOverhaul.Orders` (vanilla ignores it)  | Low: orders vanish; holdings stay                                            |
+| City bonds (flag)                     | Mod data `FinanceOverhaul.Bonds`                        | Low for loading; gameplay: the debt vanishes, the cash already raised stays  |
+| Index rebase marker                   | Mod data `FinanceOverhaul.IndexRebase`                  | None                                                                         |
+| Settings, Stock Monitor, notices      | The player's settings file, not the save                | None                                                                         |
+
+**The checks** (on copies of a test city, never the player's own save):
+
+1. Saved with the mod, Index off → vanilla: loads, investments identical.
+2. Index on, no shares → vanilla: loads, Index absent (**passed 2026-11-13**).
+3. Index on with shares → vanilla: loads, other holdings intact.
+4. The save from 3 → mod again: Index relisted, no duplicate slots.
+5. Index on → mod with Index off: same as 3.
+6. Bonds owed → vanilla: loads; bonds gone; cash kept; nothing in the Loans tab breaks.
+7. The save from 6 played a few days, then → mod again: bonds come back. **Decision needed:** the
+   bond book catches up on missed days, so coupons missed while the mod was off would be paid in one
+   lump the first day back. Options: pay the catch-up (honest, could surprise), or skip coupons for
+   days the mod was absent (forgiving, needs a "last seen" day in the save).
+8. Open orders → vanilla → mod again: orders resume; ones past their lifetime expire (and are
+   chirped) on the first day.
+9. Saved by today's mod → loaded by an older build: unknown codec versions or lines are skipped
+   (covered by codec unit tests; confirm once in game).
+
+**How:** mostly manual game runs (switching the mod off needs a restart), with notes, log excerpts
+and screenshots recorded in the Results table of [Save compatibility](./save-compatibility.md); the
+game UI runner can still set up the city state before saving and verify after loading.
+
+**Size:** S–M (an afternoon of game restarts), plus the bond catch-up decision.
+
+**Suggestion:** do it before priority 2, which adds new listings to saves.
 
 ## Earlier next-step candidates (superseded by the priorities above)
 

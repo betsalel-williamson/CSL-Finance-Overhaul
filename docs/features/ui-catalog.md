@@ -31,6 +31,8 @@ Section order: **Finance Overhaul** (single group today).
 | `orders-lifetime`      | Orders stay open for (new orders)                                   | Dropdown | Options | shipped (default 90 d) |
 | `share-charts`         | Share value charts in the Stock Monitor style (testing)             | Checkbox | Options | temporary flag         |
 | `stock-monitor`        | Stock Monitor window (testing)                                      | Checkbox | Options | temporary flag         |
+| `notices`              | Order and bond notices in Chirper (testing)                         | Checkbox | Options | temporary flag (on)    |
+| `notices-coupons`      | Also chirp every bond coupon                                        | Checkbox | Options | shipped (off)          |
 | `city-bonds`           | City bonds: sell bonds to raise money (testing; adds mod save data) | Checkbox | Options | temporary flag (off)   |
 | `built-utc`            | Built (UTC): …                                                      | Footer   | Options | shipped (`--dev` only) |
 | `built-local`          | Built (local): …                                                    | Footer   | Options | shipped (`--dev` only) |

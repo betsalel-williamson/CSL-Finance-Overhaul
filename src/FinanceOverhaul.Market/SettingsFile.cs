@@ -21,6 +21,8 @@ namespace FinanceOverhaul.Market
         private const string TickerShowsKey = "tickerShows";
         private const string TickerBrightnessKey = "tickerBrightness";
         private const string TickerInInfoViewsKey = "tickerInInfoViews";
+        private const string NoticesKey = "noticesEnabled";
+        private const string NoticesCouponsKey = "noticesBondCoupons";
         private const string TickerPercent = "changePercent";
         private const string TickerPrice = "priceAndChange";
         private const string OrderLifetimeKey = "ordersLifetimeDays";
@@ -145,6 +147,14 @@ namespace FinanceOverhaul.Market
                 {
                     settings.ShareChartsEnabled = flag;
                 }
+                else if (string.Equals(key, NoticesKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.NoticesEnabled = flag;
+                }
+                else if (string.Equals(key, NoticesCouponsKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.NoticesBondCoupons = flag;
+                }
                 else if (
                     string.Equals(key, TickerInInfoViewsKey, StringComparison.OrdinalIgnoreCase)
                 )
@@ -198,6 +208,14 @@ namespace FinanceOverhaul.Market
             sb.Append(ShareChartsKey)
                 .Append('=')
                 .Append(settings.ShareChartsEnabled ? "true" : "false")
+                .Append('\n');
+            sb.Append(NoticesKey)
+                .Append('=')
+                .Append(settings.NoticesEnabled ? "true" : "false")
+                .Append('\n');
+            sb.Append(NoticesCouponsKey)
+                .Append('=')
+                .Append(settings.NoticesBondCoupons ? "true" : "false")
                 .Append('\n');
             sb.Append(TickerInInfoViewsKey)
                 .Append('=')

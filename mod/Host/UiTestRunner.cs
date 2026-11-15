@@ -112,6 +112,7 @@ namespace FinanceOverhaul
             // Everything already open is the player's: frozen until the scenario ends, so a
             // scenario that advances days can never fill, expire or move it.
             OrderDesk.Freeze(ctx.OrdersBefore);
+            ChirpNotices.Muted = true; // tests never chirp in the player's city
             var steps = new List<string>();
             var cleanup = new List<string>();
             List<string> target = steps;
@@ -160,6 +161,7 @@ namespace FinanceOverhaul
 
             OrderDesk.UnfreezeAll();
             CityBondsSection.ForceShow = false;
+            ChirpNotices.Muted = false;
             if (ctx.TickerBefore.HasValue && Mod.Settings != null)
             {
                 Mod.Settings.TickerShows = ctx.TickerBefore.Value; // the player's choice
@@ -866,6 +868,12 @@ namespace FinanceOverhaul
                             + want;
                     }
 
+                    break;
+                }
+                case "notices":
+                {
+                    // notices on|off — let this scenario's notices reach Chirper (muted by default).
+                    ChirpNotices.Muted = a != "on";
                     break;
                 }
                 case "pause":

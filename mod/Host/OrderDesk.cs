@@ -208,10 +208,13 @@ namespace FinanceOverhaul
                 }
 
                 bool changed = false;
+                DayNotices.Clear();
                 foreach (TradeOrder order in Snapshot(b))
                 {
                     changed |= Evaluate(b, order, today);
                 }
+
+                ChirpNotices.PostDay(new List<Notice>(DayNotices));
 
                 if (changed)
                 {
@@ -234,6 +237,14 @@ namespace FinanceOverhaul
         // Game UI tests: orders a running scenario did not create (the player's) are frozen —
         // no fill, no expiry, no trailing peak — even while the scenario advances days.
         private static readonly HashSet<int> Frozen = new HashSet<int>();
+
+        // Today's order notices (fills, expiries, cancellations), posted together at the end.
+        private static readonly List<Notice> DayNotices = new List<Notice>();
+
+        private static string SymbolOf(Investment[] buffer, int id, string key)
+        {
+            return id >= 0 && buffer[id].Info != null ? StockSymbols.For(buffer[id].Info) : key;
+        }
 
         /// <summary>Freezes these order ids until <see cref="UnfreezeAll"/> (game UI tests only).</summary>
         public static void Freeze(IEnumerable<int> ids)
@@ -304,7 +315,18 @@ namespace FinanceOverhaul
             switch (d.Action)
             {
                 case OrderAction.Fill when order.IsSell:
+                    int stop = order.TriggerPrice;
                     int proceeds = ai.SellShares((byte)id, ref buffer[id], d.Shares);
+                    DayNotices.Add(
+                        NoticeText.Filled(
+                            order.Kind,
+                            d.Shares,
+                            SymbolOf(buffer, id, order.InvestmentKey),
+                            mark,
+                            stop,
+                            proceeds
+                        )
+                    );
                     // Same bookkeeping as the vanilla Sell button.
                     economy.m_lastInvestmentSell = SimulationManager.instance.m_currentGameTime;
                     b.Cancel(order.Id);
@@ -332,6 +354,16 @@ namespace FinanceOverhaul
                     return true;
                 case OrderAction.Fill:
                     int cost = ai.BuyShares((byte)id, ref buffer[id], d.Shares);
+                    DayNotices.Add(
+                        NoticeText.Filled(
+                            order.Kind,
+                            d.Shares,
+                            SymbolOf(buffer, id, order.InvestmentKey),
+                            mark,
+                            order.TriggerPrice,
+                            cost
+                        )
+                    );
                     // Same bookkeeping as the vanilla Buy button.
                     economy.m_lastInvestmentBuy = SimulationManager.instance.m_currentGameTime;
                     economy.m_tempSpendOnInvestment += cost;
@@ -354,6 +386,23 @@ namespace FinanceOverhaul
                     return true;
                 case OrderAction.Cancel:
                     b.Cancel(order.Id);
+                    string symbol = SymbolOf(buffer, id, order.InvestmentKey);
+                    DayNotices.Add(
+                        d.Reason == OrderRules.ReasonExpired
+                            ? NoticeText.Expired(
+                                order.Kind,
+                                order.Shares,
+                                symbol,
+                                order.ExpiresDay - order.PlacedDay
+                            )
+                            : NoticeText.Cancelled(
+                                order.Kind,
+                                order.Shares,
+                                symbol,
+                                d.Reason,
+                                (long)Math.Round((double)mark * order.Shares)
+                            )
+                    );
                     ModLog.Info(
                         "orders: cancelled #"
                             + order.Id

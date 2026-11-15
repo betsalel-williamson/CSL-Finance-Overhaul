@@ -1,0 +1,14 @@
+# Notices (priority 1): a city bond repaid at maturity is chirped by City Treasury. Sells a ₡1,000
+# 1-year bond and backdates it a year so it matures on the next day (about ₡30 of interest).
+name notices: a city bond repaid at maturity is chirped by City Treasury
+issue-bond 1 1000
+notices on
+bond-backdate 360
+run-days 1
+wait 1
+expect-log notices: chirped [City Treasury] Bond #
+expect-log repaid at maturity: ₡1,000 plus the last ₡
+capture bond-notice
+cleanup:
+notices off
+redeem-new-bonds

@@ -166,7 +166,51 @@ namespace FinanceOverhaul
                 }
 
                 Save(b);
+                ChirpNotices.PostDay(DayNotices(b, due));
             }
+        }
+
+        /// <summary>
+        /// Notices for today's payments: a bond repaid at maturity (face plus its last coupon),
+        /// and each coupon only when Options → "Also chirp every bond coupon" is on.
+        /// </summary>
+        private static List<Notice> DayNotices(BondBook book, List<BondCash> due)
+        {
+            var notices = new List<Notice>();
+            bool coupons = Mod.Settings != null && Mod.Settings.NoticesBondCoupons;
+            foreach (BondCash c in due)
+            {
+                if (c.Kind == BondCashKind.Principal)
+                {
+                    long last = 0;
+                    foreach (BondCash x in due)
+                    {
+                        if (x.BondId == c.BondId && x.Day == c.Day && x.Kind == BondCashKind.Coupon)
+                        {
+                            last = x.Cents;
+                        }
+                    }
+
+                    notices.Add(NoticeText.BondMatured(c.BondId, c.Cents, last));
+                }
+                else if (c.Kind == BondCashKind.Coupon && coupons)
+                {
+                    IssuedBond bond = book.Find(c.BondId);
+                    if (bond != null) // matured bonds get the maturity notice instead
+                    {
+                        notices.Add(
+                            NoticeText.BondCoupon(
+                                c.BondId,
+                                c.Cents,
+                                bond.Terms.Periods - bond.CouponsPaid,
+                                bond.Terms.Periods
+                            )
+                        );
+                    }
+                }
+            }
+
+            return notices;
         }
 
         /// <summary>Game UI tests: moves a bond's schedule this many days earlier.</summary>

@@ -48,6 +48,12 @@ namespace FinanceOverhaul.Market
         /// </summary>
         public bool TickerInInfoViews { get; set; } = true;
 
+        /// <summary>Temporary feature flag: order and bond notices in Chirper (UI only, on).</summary>
+        public bool NoticesEnabled { get; set; } = true;
+
+        /// <summary>Also chirp every bond coupon (off: monthly per bond is chatty).</summary>
+        public bool NoticesBondCoupons { get; set; }
+
         /// <summary>Whether the live boards draw now (the ticker on, and not hidden by an info view).</summary>
         public bool TickerShownNow(bool infoViewOpen)
         {

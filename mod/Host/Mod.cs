@@ -300,6 +300,25 @@ namespace FinanceOverhaul
                 OnShareChartsChanged
             );
             group.AddCheckbox(
+                "Order and bond notices in Chirper (testing)",
+                Settings.NoticesEnabled,
+                v =>
+                {
+                    Settings.NoticesEnabled = v;
+                    SaveSettings();
+                    ModLog.Info("notices enabled=" + v);
+                }
+            );
+            group.AddCheckbox(
+                "Also chirp every bond coupon",
+                Settings.NoticesBondCoupons,
+                v =>
+                {
+                    Settings.NoticesBondCoupons = v;
+                    SaveSettings();
+                }
+            );
+            group.AddCheckbox(
                 "City bonds: sell bonds to raise money (testing; adds mod save data)",
                 Settings.CityBondsEnabled,
                 OnCityBondsChanged

@@ -1,0 +1,27 @@
+# Needs the dev test stock (TST). Notices (priority 1): a limit buy that fills is chirped by City
+# Brokerage. Notices are muted in tests; this scenario switches them on to check one chirp. The
+# shares bought are sold back in cleanup.
+name notices: a filled limit buy is chirped in Chirper by City Brokerage
+set-price TST 100
+run-days 1
+remember TST
+show-buy TST
+click FinanceOverhaulOrderTab-Limit
+type FinanceOverhaulShareAmountField 5
+type FinanceOverhaulLimitPriceField 95
+click Button
+close-dialog
+expect-orders-delta 1
+notices on
+set-price TST 90
+run-days 1
+wait 1
+expect-owned-delta TST 5
+expect-log notices: chirped [City Brokerage] Limit buy filled: bought 5 TST at ₡90 (limit ₡95) for ₡450. #orders
+capture fill-notice
+cleanup:
+notices off
+cancel-new-orders
+sell-back TST 5
+set-price TST 100
+close-dialog

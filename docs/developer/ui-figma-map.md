@@ -201,3 +201,19 @@ also gives context for the unranked ideas.
 | 5   | Commodities: resources, utilities, cargo | Resource commodities, Utility commodities, Cargo / freight |
 | 6   | External world and other exchanges       | External world, Other exchanges                            |
 | 7   | Buying external bonds                    | Buy / hold bonds                                           |
+
+### Notices frame (band 13, `shipped`)
+
+Order and bond notices in the game's Chirper ([Notices in Chirper](../features/notices.md));
+component `FO/ChirpNotice`.
+
+| #   | Catalog id              | Title         | Code evidence / status                         |
+| --- | ----------------------- | ------------- | ---------------------------------------------- |
+| 1   | `notices.fill`          | Fill (buy)    | Shipped (`NoticeText.Filled`, `OrderDesk`)     |
+| 2   | `notices.fill`          | Fill (sell)   | Shipped                                        |
+| 3   | `notices.expired`       | Expired       | Shipped                                        |
+| 4   | `notices.cancelled`     | Cancelled     | Shipped                                        |
+| 5   | `notices.batch`         | Daily summary | Shipped (`NoticeBatch`, more than three a day) |
+| 6   | `notices.bond-maturity` | Bond repaid   | Shipped (`BondDesk`)                           |
+| 7   | `notices.bond-coupon`   | Bond coupon   | Shipped, off by default                        |
+| 8   | `opt.notices`           | Options flags | Shipped: notices on, every bond coupon off     |

@@ -34,6 +34,7 @@ namespace FinanceOverhaul
                 root.AddComponent<TickerOverlay>();
                 root.AddComponent<PortfolioOrders>();
                 root.AddComponent<CityBondsSection>();
+                root.AddComponent<ChirpNoticePoster>();
                 root.AddComponent<StockMonitorHost>();
                 if (BuildInfo.ShowDevBuildIdentity)
                 {

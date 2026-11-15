@@ -9,6 +9,7 @@ Product and architecture contracts for Finance Overhaul.
 - [Automated orders](./automated-orders.md)
 - [Cost basis](./cost-basis.md)
 - [Stock Monitor](./stock-monitor.md)
+- [Notices in Chirper](./notices.md)
 - [Bonds and treasury instruments](./bonds.md)
 - [Save compatibility](./save-compatibility.md)
 - [Known issues](./known-issues.md)

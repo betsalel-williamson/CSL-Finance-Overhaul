@@ -12,6 +12,7 @@ namespace FinanceOverhaul
                 TickerBoards.DestroyAll();
                 OrderDesk.Reset();
                 BondDesk.Reset();
+                ChirpNotices.Reset();
                 StockSymbols.Reset();
                 IndexListing.ResetRebase();
             }
@@ -28,6 +29,7 @@ namespace FinanceOverhaul
                 ModLog.Info("level loaded mode=" + mode);
                 OrderDesk.Reset();
                 BondDesk.Reset();
+                ChirpNotices.Reset();
                 IndexListing.ResetRebase();
                 IndexListing.EnsureInLoadedCity();
                 IndexListing.LogStatus();
