@@ -124,6 +124,8 @@ level.
 population…)** (key `tickerInInfoViews`, default on: the boards stay). Off: while an info view is
 open the live boards hide and the vanilla board sub-meshes are restored, so the facade gets the
 game's own flat info-view look like the original; they come back when the view closes
-(`ModSettings.TickerShownNow`, `InfoManager.CurrentMode`). Game UI scenario 43 opens Traffic and
-Population with the option on and off; the player's info view, live-ticker toggle and checkbox are
-put back afterwards.
+(`ModSettings.TickerShownNow`). The swap runs inside the game's `InfoManager.EventInfoModeChanged`,
+raised when the view actually switches and before that frame is drawn, so the vanilla boards never
+flash their baked scroll on the way back; scenario 43 checks the swap at that moment
+(`info-view-swap`). Game UI scenario 43 opens Traffic and Population with the option on and off; the
+player's info view, live-ticker toggle and checkbox are put back afterwards.

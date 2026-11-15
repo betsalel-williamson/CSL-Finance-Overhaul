@@ -15,5 +15,9 @@ info-view none
 expect-ticker shown
 info-view population
 expect-ticker hidden
+# No flash: the swap happens inside the game's switch, before the frame is drawn.
+info-view-swap none shown
+info-view-swap traffic hidden
+info-view-swap none shown
 cleanup:
 info-view none

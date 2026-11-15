@@ -169,14 +169,8 @@ namespace FinanceOverhaul
                     InfoManager.exists
                     && InfoManager.instance.CurrentMode != InfoManager.InfoMode.None;
                 bool tickerOn = Mod.Settings == null || Mod.Settings.TickerShownNow(infoView);
-                if (tickerOn != lastShown)
-                {
-                    // Show or hide at once (e.g. an info view opened), not at the next rescan.
-                    lastShown = tickerOn;
-                    ShownNow = tickerOn;
-                    nextRescan = 0f;
-                    nextLod = 0f;
-                }
+                // Info views switch in OnInfoModeChanged; this catches Options changes.
+                ApplyShown(tickerOn);
 
                 if (now >= nextRescan)
                 {
@@ -736,6 +730,67 @@ namespace FinanceOverhaul
                         + b.m_angle.ToString("0.###")
                 );
             }
+        }
+
+        private void OnEnable()
+        {
+            if (InfoManager.exists)
+            {
+                InfoManager.instance.EventInfoModeChanged += OnInfoModeChanged;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (InfoManager.exists)
+            {
+                InfoManager.instance.EventInfoModeChanged -= OnInfoModeChanged;
+            }
+        }
+
+        /// <summary>
+        /// The game raises this when it actually switches the info view, before that frame is
+        /// drawn. Swapping between the live boards and the vanilla ones right here (instead of
+        /// in the next Update) means the vanilla boards never flash their baked scroll.
+        /// </summary>
+        private void OnInfoModeChanged(InfoManager.InfoMode mode, InfoManager.SubInfoMode subMode)
+        {
+            try
+            {
+                bool shown =
+                    Mod.Settings == null
+                    || Mod.Settings.TickerShownNow(mode != InfoManager.InfoMode.None);
+                ApplyShown(shown);
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("ticker: info view switch failed: " + ex.Message);
+            }
+        }
+
+        /// <summary>Shows or hides the live boards now, hiding or restoring the vanilla ones with them.</summary>
+        private void ApplyShown(bool shown)
+        {
+            if (shown == lastShown)
+            {
+                return;
+            }
+
+            lastShown = shown;
+            ShownNow = shown;
+            if (shown)
+            {
+                Rescan(); // hides the vanilla boards again
+            }
+            else
+            {
+                VanillaBoards.RestoreAll();
+            }
+
+            UpdateVisibility(shown);
+            float now = Time.unscaledTime;
+            nextRescan = now + RescanSeconds;
+            nextLod = now + LodSeconds;
         }
 
         private void OnDestroy()

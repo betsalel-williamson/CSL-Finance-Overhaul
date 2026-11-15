@@ -693,6 +693,47 @@ namespace FinanceOverhaul
                     yield return new WaitForSeconds(0.6f);
                     break;
                 }
+                case "info-view-swap":
+                {
+                    // info-view-swap traffic|none shown|hidden — switches the info view and checks,
+                    // inside the game's own "info view changed" event (before that frame is
+                    // drawn), that the live boards and the vanilla ones have already swapped.
+                    string seen = null;
+                    bool want = b == "shown";
+                    InfoManager.InfoModeChangedEventHandler probe = (m, s) =>
+                        seen =
+                            "live="
+                            + TickerOverlay.ShownNow
+                            + " vanillaHidden="
+                            + VanillaBoards.AnyHidden;
+                    if (!ctx.InfoBefore.HasValue)
+                    {
+                        ctx.InfoBefore = InfoManager.instance.CurrentMode;
+                        ctx.InfoSubBefore = InfoManager.instance.CurrentSubMode;
+                    }
+
+                    InfoManager.instance.EventInfoModeChanged += probe;
+                    InfoManager.instance.SetCurrentMode(
+                        a == "traffic" ? InfoManager.InfoMode.Traffic : InfoManager.InfoMode.None,
+                        InfoManager.SubInfoMode.Default
+                    );
+                    float until = Time.unscaledTime + 3f;
+                    while (seen == null && Time.unscaledTime < until)
+                    {
+                        yield return null;
+                    }
+
+                    InfoManager.instance.EventInfoModeChanged -= probe;
+                    ModLog.Info("uitest: at the switch " + seen);
+                    string expected = "live=" + want + " vanillaHidden=" + want;
+                    if (seen != expected)
+                    {
+                        r.Error =
+                            "at the switch " + (seen ?? "no event") + ", expected " + expected;
+                    }
+
+                    break;
+                }
                 case "expect-ticker":
                 {
                     // expect-ticker shown|hidden — the live LED boards right now.

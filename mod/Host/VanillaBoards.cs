@@ -85,6 +85,23 @@ namespace FinanceOverhaul
             logged = false;
         }
 
+        /// <summary>Whether the vanilla boards are hidden right now (game UI tests read it).</summary>
+        internal static bool AnyHidden
+        {
+            get
+            {
+                foreach (BuildingInfo.MeshInfo mesh in Originals.Keys)
+                {
+                    if (mesh != null && (mesh.m_flagsRequired & HideFlag) != 0)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
         internal static bool IsBoard(BuildingInfo.MeshInfo mesh)
         {
             BuildingInfoBase sub = mesh.m_subInfo;
