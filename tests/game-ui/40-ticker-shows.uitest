@@ -2,12 +2,18 @@
 # to change %, logging today's entries in each mode and capturing the screen (point the camera
 # at the Stock Exchange to see the boards). The player's choice is put back at the end.
 name ticker shows: change % with a % sign, or price and ₡ change, with + / − signs
+live-ticker on
 ticker-shows price
 expect-log ticker PriceAndChange: 
+# the whole screen is redrawn in the new style at once (never a mix)
+wait 1
+expect-ticker-style
 wait 25
 capture ticker-price
 ticker-shows percent
 expect-log ticker ChangePercent: 
+wait 1
+expect-ticker-style
 wait 25
 capture ticker-percent
 cleanup:

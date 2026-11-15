@@ -156,6 +156,10 @@ namespace FinanceOverhaul
         private float scrollDots;
         private bool placementLogged;
         private bool lastShown = true;
+        private TickerDisplay appliedDisplay = (TickerDisplay)(-1);
+
+        /// <summary>The style the boards' current screens were drawn in (game UI tests read it).</summary>
+        internal static TickerDisplay? DrawnStyle { get; private set; }
 
         /// <summary>Whether the live boards are drawn now (game UI tests read it).</summary>
         internal static bool ShownNow { get; private set; } = true;
@@ -395,6 +399,14 @@ namespace FinanceOverhaul
             }
 
             scrollDots -= steps;
+            TickerDisplay display = DisplayNow();
+            if (display != appliedDisplay)
+            {
+                // The style changed: redraw every row's whole screen in it, never a mix.
+                appliedDisplay = display;
+                RestartAll();
+            }
+
             bool recolour = UpdatePalette();
             for (int r = 0; r < RowCount; r++)
             {
@@ -405,8 +417,7 @@ namespace FinanceOverhaul
                 }
 
                 // Options → "Stock Exchange ticker shows": entries written from now on use it.
-                marquee.Display =
-                    Mod.Settings != null ? Mod.Settings.TickerShows : TickerDisplay.ChangePercent;
+                marquee.Display = DisplayNow();
                 long from;
                 long to;
                 marquee.Advance(steps, out from, out to);
@@ -435,6 +446,11 @@ namespace FinanceOverhaul
         /// Only while no board is visible: refill each window from the current values so
         /// the rows do not come back showing a stale day.
         /// </summary>
+        private static TickerDisplay DisplayNow()
+        {
+            return Mod.Settings != null ? Mod.Settings.TickerShows : TickerDisplay.ChangePercent;
+        }
+
         private void RestartAll()
         {
             for (int r = 0; r < RowCount; r++)
@@ -444,6 +460,8 @@ namespace FinanceOverhaul
                     continue;
                 }
 
+                marquees[r].Display = DisplayNow(); // every entry on the new screen in one style
+                DrawnStyle = marquees[r].Display;
                 marquees[r].Restart();
                 Paint(r, 0, marquees[r].RingDots);
                 rowTextures[r].SetPixels32(rowPixels[r]);
@@ -459,6 +477,7 @@ namespace FinanceOverhaul
         private void CreateRow(int r)
         {
             var marquee = new LedMarquee(ScreenDots, r == 1 ? "Waiting for market data" : null);
+            marquee.Display = DisplayNow(); // the first screen already in the chosen style
             int w = marquee.RingDots * TexelsPerDot;
             int h = LedFont.Height * TexelsPerDot;
             var texture = new Texture2D(w, h, TextureFormat.RGBA32, true);

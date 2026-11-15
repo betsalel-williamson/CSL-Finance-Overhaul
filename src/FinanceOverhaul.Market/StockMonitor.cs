@@ -225,7 +225,10 @@ namespace FinanceOverhaul.Market
             }
         }
 
-        /// <summary>The label, saying "Change ₡" when the Change sort follows the ₡ pills.</summary>
+        /// <summary>
+        /// The label, naming the unit the Change sort follows: "Change %" with % pills,
+        /// "Change ₡" with ₡ pills.
+        /// </summary>
         public static string SortLabel(MonitorSort sort, bool changeInCurrency)
         {
             return sort == MonitorSort.Change && changeInCurrency
@@ -270,7 +273,7 @@ namespace FinanceOverhaul.Market
                 case MonitorSort.ValueHeld:
                     return "Sort: Value held";
                 default:
-                    return "Sort: Change";
+                    return "Sort: Change %";
             }
         }
 
@@ -300,30 +303,25 @@ namespace FinanceOverhaul.Market
         /// </summary>
         public static string ChangeAmountFromRate(float price, float rate)
         {
-            if (
-                float.IsNaN(price)
-                || float.IsInfinity(price)
-                || float.IsNaN(rate)
-                || float.IsInfinity(rate)
-                || rate <= -100f
-            )
+            // The one ₡-change rule (ChangeAmount) — pills, detail header, LED, sort all use it.
+            double amount = ChangeAmount(price, rate);
+            if (amount == double.MinValue)
             {
                 return "--";
             }
 
-            if (ChangeColour(rate) == LedText.Flat)
+            if (amount == 0d)
             {
                 return "₡0"; // the % pill shows 0.00%: same here
             }
 
-            double r = rate / 100.0;
-            double amount = price * r / (1.0 + r);
-            double abs = Math.Abs(amount);
+            // Cents up to ₡9.99, whole ₡ from ₡10 — decided on the rounded value, so 9.996 shows
+            // "₡10", never "₡10.00".
+            double cents = Math.Max(0.01, Math.Round(Math.Abs(amount), 2));
             string digits =
-                abs < 10.0
-                    ? Math.Max(0.01, Math.Round(abs, 2))
-                        .ToString("0.00", CultureInfo.InvariantCulture)
-                    : Math.Round(abs).ToString("N0", CultureInfo.InvariantCulture);
+                cents < 10.0
+                    ? cents.ToString("0.00", CultureInfo.InvariantCulture)
+                    : Math.Round(Math.Abs(amount)).ToString("N0", CultureInfo.InvariantCulture);
             return (rate > 0 ? "+₡" : "−₡") + digits;
         }
 

@@ -195,7 +195,7 @@ namespace FinanceOverhaul.Market.Tests
                     .Select(q => q.Symbol)
             );
             Assert.Equal("Sort: Change ₡", StockMonitor.SortLabel(MonitorSort.Change, true));
-            Assert.Equal("Sort: Change", StockMonitor.SortLabel(MonitorSort.Change, false));
+            Assert.Equal("Sort: Change %", StockMonitor.SortLabel(MonitorSort.Change, false));
             Assert.Equal("Sort: Price", StockMonitor.SortLabel(MonitorSort.Price, true));
         }
 
@@ -256,6 +256,81 @@ namespace FinanceOverhaul.Market.Tests
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+namespace FinanceOverhaul.Market.Tests
+{
+    /// <summary>
+    /// One ₡-change rule everywhere: over 5,000 seeded quotes the Monitor's ₡ pill, the detail
+    /// header's ₡ part and the LED "price and ₡ change" entry all print the same text, built from
+    /// the one value the ₡ sort uses (StockMonitor.ChangeAmount), and that text's number is that
+    /// value rounded (cents under ₡10, whole ₡ above), with the same sign.
+    /// </summary>
+    public class OneCurrencyChangeRuleTests
+    {
+        [Theory]
+        [InlineData(1000f, 9.994, "+₡9.99")]
+        [InlineData(1000f, 9.995, "+₡10")]
+        [InlineData(1000f, 9.996, "+₡10")]
+        [InlineData(1000f, 10.4, "+₡10")]
+        [InlineData(1f, 0.004, "+₡0.01")] // 0.40% on ₡1: never rounded to ₡0
+        public void CentsUpTo999ThenWholeNumbers(float price, double amount, string expected)
+        {
+            // A rate giving exactly this ₡ change: price × r/(1+r) = amount.
+            float rate = (float)(100.0 * amount / (price - amount));
+            Assert.Equal(expected, StockMonitor.ChangeAmountFromRate(price, rate));
+        }
+
+        [Fact]
+        public void EveryCurrencyChangeAgrees()
+        {
+            var rng = new Random(5150);
+            for (int k = 0; k < 5000; k++)
+            {
+                float price = (float)Math.Exp(rng.NextDouble() * Math.Log(9_000_000)) + 0.5f;
+                float rate =
+                    k % 50 == 0
+                        ? float.NaN
+                        : (float)((rng.NextDouble() - 0.5) * (k % 5 == 0 ? 0.02 : 80));
+                string pill = StockMonitor.ChangeAmountFromRate(price, rate);
+                string header = StockDetail.ChangeHeader(price, rate);
+                string led = LedText.ChangePart(price, rate, TickerDisplay.PriceAndChange);
+                if (pill != "--")
+                {
+                    Assert.StartsWith(pill + " (", header);
+                }
+
+                Assert.EndsWith(" " + pill, led);
+
+                double amount = StockMonitor.ChangeAmount(price, rate);
+                if (amount == double.MinValue)
+                {
+                    Assert.Equal("--", pill);
+                    continue;
+                }
+
+                if (amount == 0d)
+                {
+                    Assert.Equal("₡0", pill);
+                    continue;
+                }
+
+                double shown = double.Parse(
+                    pill.Replace("+₡", "").Replace("−₡", "").Replace(",", ""),
+                    System.Globalization.CultureInfo.InvariantCulture
+                );
+                double abs = Math.Abs(amount);
+                double cents = Math.Max(0.01, Math.Round(abs, 2));
+                double expected = cents < 10 ? cents : Math.Round(abs);
+                Assert.Equal(expected, shown, 6);
+                // Two decimals only up to 9.99; whole numbers from 10.
+                string number = pill.Substring(2);
+                Assert.Equal(cents < 10, number.Contains("."));
+                Assert.False(number.StartsWith("10."), pill);
+                Assert.Equal(amount > 0, pill.StartsWith("+₡"));
             }
         }
     }

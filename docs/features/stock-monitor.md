@@ -99,10 +99,13 @@ Green, red and grey everywhere — row pills (% and ₡), row sparklines, the de
 and the Invest dialog / tooltip charts — follow **one measure: the game's change rate**, the number
 the Economy panel shows as "Change rate" and the LED board shows (`CalculateChangeRate(…, 5)`, a
 short trend over the last few days, not just since yesterday). 0.00 is grey, as on the LED. The
-dashed line marks yesterday's price as a reference only. The dashed line is drawn as thick as the
-price line (dash and gap 3× that thickness), stays on top of the shaded area and of the grid lines,
-so it survives the chart being scaled down in every view (sparklines, detail, share charts;
-`SparklineTests`).
+dashed line marks yesterday's price as a reference only. **One ₡-change rule everywhere:** every ₡
+change (Monitor pills, the detail header, the LED "price and ₡ change" mode, the ₡ sort) comes from
+`StockMonitor.ChangeAmount` = price × r / (1 + r), shown with cents up to ₡9.99 and whole ₡ from ₡10
+(decided on the rounded value, so never "₡10.00"); proved over 5,000 quotes in
+`OneCurrencyChangeRuleTests`. The dashed line is drawn as thick as the price line (dash and gap 3×
+that thickness), stays on top of the shaded area and of the grid lines, so it survives the chart
+being scaled down in every view (sparklines, detail, share charts; `SparklineTests`).
 
 ## History limit
 

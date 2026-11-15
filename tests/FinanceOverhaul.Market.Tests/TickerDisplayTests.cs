@@ -133,6 +133,52 @@ namespace FinanceOverhaul.Market.Tests
         }
 
         [Fact]
+        public void ARestartedScreenIsAllInOneStyle()
+        {
+            // Two entries, price style: after Restart the whole window is those entries tiled in
+            // that style (no leftover % entries), column for column.
+            var snap = new TickerSnapshot(
+                new[] { "DS", "HS" },
+                new[] { 3.22f, -2f },
+                new[] { 951f, 318f }
+            );
+            foreach (
+                TickerDisplay d in new[]
+                {
+                    TickerDisplay.ChangePercent,
+                    TickerDisplay.PriceAndChange,
+                }
+            )
+            {
+                var m = new LedMarquee(300, null);
+                m.SetContent(snap, 0, 2);
+                m.Display = TickerDisplay.ChangePercent;
+                m.Restart(); // a screen in the other style first
+                m.Display = d;
+                m.Restart();
+                LedStrip expected = LedText.RenderRow(
+                    snap.Symbols,
+                    snap.Prices,
+                    snap.Rates,
+                    0,
+                    2,
+                    d
+                );
+                int start = (int)(m.Offset % m.RingDots);
+                for (int x = 0; x < m.WindowDots; x++)
+                {
+                    for (int y = 0; y < LedFont.Height; y++)
+                    {
+                        Assert.Equal(
+                            expected.Get(x % expected.Width, y),
+                            m.Strip.Get((start + x) % m.RingDots, y)
+                        );
+                    }
+                }
+            }
+        }
+
+        [Fact]
         public void SettingRoundTripsAndDefaultsToPercent()
         {
             Assert.Equal(TickerDisplay.ChangePercent, SettingsFile.Parse("").TickerShows);

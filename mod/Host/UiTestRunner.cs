@@ -846,6 +846,28 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "expect-ticker-style":
+                {
+                    // expect-ticker-style — the boards' screens are drawn in the Options style.
+                    TickerDisplay want =
+                        Mod.Settings != null
+                            ? Mod.Settings.TickerShows
+                            : TickerDisplay.ChangePercent;
+                    if (TickerOverlay.DrawnStyle != want)
+                    {
+                        r.Error =
+                            "boards drawn as "
+                            + (
+                                TickerOverlay.DrawnStyle.HasValue
+                                    ? TickerOverlay.DrawnStyle.Value.ToString()
+                                    : "nothing"
+                            )
+                            + ", Options says "
+                            + want;
+                    }
+
+                    break;
+                }
                 case "pause":
                 {
                     // pause on|off — pauses or resumes the simulation (for tests that span a mod
