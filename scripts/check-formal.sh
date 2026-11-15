@@ -14,7 +14,8 @@ java -jar "$JAR" commands "$MODEL" 2>/dev/null | grep -E '^[0-9]+ *\.' >"$OUT/co
 failed=0
 while IFS= read -r line; do
   idx="${line%%.*}"; idx="${idx// /}"
-  name="$(echo "$line" | awk '{print $4}')"
+  # "0 . Check Name for …" or "10. Check Name for …": the word after Check/Run
+  name="$(echo "$line" | sed -E 's/^[0-9]+ *\. *(Check|Run) ([A-Za-z0-9_]+).*/\2/')"
   expect="$(grep -E "^(check|run) $name\b" -A6 "$MODEL" | grep -oE 'expect [01]' | head -1 | awk '{print $2}')"
   start=$SECONDS
   java --enable-native-access=ALL-UNNAMED -jar "$JAR" exec -f -q -s glucose -c "$idx" -t text \
