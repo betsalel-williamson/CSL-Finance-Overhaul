@@ -89,14 +89,27 @@ namespace FinanceOverhaul.Market
             return Rows(quotes, filter, sort, hidden, false);
         }
 
-        /// <param name="hidden">Prefab names the player chose not to show (may be null).</param>
-        /// <param name="reversed">Flip the sort's natural direction (the ▲/▼ button).</param>
         public static List<MonitorQuote> Rows(
             IEnumerable<MonitorQuote> quotes,
             MonitorFilter filter,
             MonitorSort sort,
             ICollection<string> hidden,
             bool reversed
+        )
+        {
+            return Rows(quotes, filter, sort, hidden, reversed, false);
+        }
+
+        /// <param name="hidden">Prefab names the player chose not to show (may be null).</param>
+        /// <param name="reversed">Flip the sort's natural direction (the ▲/▼ button).</param>
+        /// <param name="changeInCurrency">The pills show ₡: sort Change by that ₡ amount.</param>
+        public static List<MonitorQuote> Rows(
+            IEnumerable<MonitorQuote> quotes,
+            MonitorFilter filter,
+            MonitorSort sort,
+            ICollection<string> hidden,
+            bool reversed,
+            bool changeInCurrency
         )
         {
             var rows = new List<MonitorQuote>();
@@ -125,7 +138,7 @@ namespace FinanceOverhaul.Market
                 rows.Add(q);
             }
 
-            rows.Sort((a, b) => Compare(a, b, sort, reversed));
+            rows.Sort((a, b) => Compare(a, b, sort, reversed, changeInCurrency));
             return rows;
         }
 
@@ -149,11 +162,21 @@ namespace FinanceOverhaul.Market
             return what + " (click to flip)";
         }
 
-        private static int Compare(MonitorQuote a, MonitorQuote b, MonitorSort sort, bool reversed)
+        private static int Compare(
+            MonitorQuote a,
+            MonitorQuote b,
+            MonitorSort sort,
+            bool reversed,
+            bool changeInCurrency
+        )
         {
             int c;
             switch (sort)
             {
+                case MonitorSort.Change when changeInCurrency:
+                    c = ChangeAmount(b.Price, b.ChangeRate)
+                        .CompareTo(ChangeAmount(a.Price, a.ChangeRate));
+                    break;
                 case MonitorSort.Change:
                     c = Finite(b.ChangeRate).CompareTo(Finite(a.ChangeRate));
                     break;
@@ -200,6 +223,40 @@ namespace FinanceOverhaul.Market
                 default:
                     return "All";
             }
+        }
+
+        /// <summary>The label, saying "Change ₡" when the Change sort follows the ₡ pills.</summary>
+        public static string SortLabel(MonitorSort sort, bool changeInCurrency)
+        {
+            return sort == MonitorSort.Change && changeInCurrency
+                ? "Sort: Change ₡"
+                : SortLabel(sort);
+        }
+
+        /// <summary>
+        /// The ₡ change the ₡ pill shows, unrounded: <c>price × r / (1 + r)</c>; 0 when the %
+        /// pill shows 0.00%; the lowest value when unknown (sorted last).
+        /// </summary>
+        public static double ChangeAmount(float price, float rate)
+        {
+            if (
+                float.IsNaN(price)
+                || float.IsInfinity(price)
+                || float.IsNaN(rate)
+                || float.IsInfinity(rate)
+                || rate <= -100f
+            )
+            {
+                return double.MinValue;
+            }
+
+            if (ChangeColour(rate) == LedText.Flat)
+            {
+                return 0d;
+            }
+
+            double r = rate / 100.0;
+            return price * r / (1.0 + r);
         }
 
         public static string SortLabel(MonitorSort sort)

@@ -733,6 +733,74 @@ namespace FinanceOverhaul
                     yield return new WaitForSeconds(1.2f); // the window refreshes on its own tick
                     break;
                 }
+                case "monitor-change":
+                {
+                    // monitor-change percent|currency — what the pills show (monitor restore).
+                    Mod.Settings.Monitor.ChangeAsCurrency = a == "currency";
+                    yield return new WaitForSeconds(1.2f);
+                    break;
+                }
+                case "expect-monitor-pills-desc":
+                {
+                    // The visible ₡ pills, top to bottom, never increase (Sort: Change ₡).
+                    var pills = new List<UIComponent>();
+                    foreach (UIComponent c in UnityEngine.Object.FindObjectsOfType<UIComponent>())
+                    {
+                        if (
+                            c.name != null
+                            && c.name.StartsWith(
+                                "FinanceOverhaulStockMonitorChange-",
+                                StringComparison.Ordinal
+                            )
+                            && IsShown(c)
+                        )
+                        {
+                            pills.Add(c);
+                        }
+                    }
+
+                    pills.Sort((x, y) => x.absolutePosition.y.CompareTo(y.absolutePosition.y));
+                    var shown = new List<string>();
+                    double last = double.MaxValue;
+                    foreach (UIComponent c in pills)
+                    {
+                        string t = TextOf(c) ?? "";
+                        shown.Add(t);
+                        if (t == "--")
+                        {
+                            continue;
+                        }
+
+                        string digits = t.Replace("+", "")
+                            .Replace("−", "-")
+                            .Replace("₡", "")
+                            .Replace(",", "");
+                        double v;
+                        if (
+                            !double.TryParse(
+                                digits,
+                                System.Globalization.NumberStyles.Float,
+                                CultureInfo.InvariantCulture,
+                                out v
+                            )
+                        )
+                        {
+                            r.Error = "pill '" + t + "' is not ₡";
+                            break;
+                        }
+
+                        if (v > last + 1e-9)
+                        {
+                            r.Error = "pills rise: " + string.Join(" ", shown.ToArray());
+                            break;
+                        }
+
+                        last = v;
+                    }
+
+                    ModLog.Info("uitest: monitor pills " + string.Join(" ", shown.ToArray()));
+                    break;
+                }
                 case "expect-monitor-order":
                 {
                     // expect-monitor-order az|za — the visible rows' symbols, top to bottom.

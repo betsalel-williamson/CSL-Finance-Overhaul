@@ -588,7 +588,8 @@ namespace FinanceOverhaul
                 Settings.Filter,
                 Settings.Sort,
                 Settings.Hidden,
-                Settings.SortReversed
+                Settings.SortReversed,
+                Settings.ChangeAsCurrency
             );
             while (rows.Count < shown.Count)
             {
@@ -613,7 +614,7 @@ namespace FinanceOverhaul
             footer.text = StockMonitor.Footer(SimulationManager.instance.m_currentGameTime);
             empty.text = shown.Count == 0 ? StockMonitor.EmptyText(Settings.Filter) : "";
             empty.isVisible = shown.Count == 0;
-            sortLabel.text = StockMonitor.SortLabel(Settings.Sort);
+            sortLabel.text = StockMonitor.SortLabel(Settings.Sort, Settings.ChangeAsCurrency);
             bool down = StockMonitor.IsDescending(Settings.Sort, Settings.SortReversed);
             if (sortArrowDown != down || sortArrow.texture == null)
             {

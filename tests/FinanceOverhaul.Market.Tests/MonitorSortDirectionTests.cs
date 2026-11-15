@@ -155,3 +155,108 @@ namespace FinanceOverhaul.Market.Tests
         }
     }
 }
+
+namespace FinanceOverhaul.Market.Tests
+{
+    /// <summary>
+    /// Sort: Change follows what the pills show. With ₡ pills, over 2,000 seeded lists: rows run by
+    /// the ₡ amount (highest first, or lowest with the direction flipped), the amount agrees with
+    /// the pill's sign, and a cheap stock with a big % move sorts below an expensive one with a
+    /// bigger ₡ move. With % pills the order is unchanged (by rate).
+    /// </summary>
+    public class MonitorSortByShownChangeTests
+    {
+        [Fact]
+        public void CurrencyPillsSortByAmount()
+        {
+            var cheapBigPercent = new MonitorQuote
+            {
+                Symbol = "AAA",
+                Price = 70,
+                ChangeRate = 20,
+            }; // ≈ +₡11.67
+            var dearSmallPercent = new MonitorQuote
+            {
+                Symbol = "BBB",
+                Price = 6000,
+                ChangeRate = 2,
+            }; // ≈ +₡117.65
+            var quotes = new[] { cheapBigPercent, dearSmallPercent };
+            Assert.Equal(
+                new[] { "AAA", "BBB" },
+                StockMonitor
+                    .Rows(quotes, MonitorFilter.All, MonitorSort.Change, null, false, false)
+                    .Select(q => q.Symbol)
+            );
+            Assert.Equal(
+                new[] { "BBB", "AAA" },
+                StockMonitor
+                    .Rows(quotes, MonitorFilter.All, MonitorSort.Change, null, false, true)
+                    .Select(q => q.Symbol)
+            );
+            Assert.Equal("Sort: Change ₡", StockMonitor.SortLabel(MonitorSort.Change, true));
+            Assert.Equal("Sort: Change", StockMonitor.SortLabel(MonitorSort.Change, false));
+            Assert.Equal("Sort: Price", StockMonitor.SortLabel(MonitorSort.Price, true));
+        }
+
+        [Fact]
+        public void OrderFollowsTheShownAmount()
+        {
+            var rng = new Random(909);
+            for (int k = 0; k < 2000; k++)
+            {
+                var quotes = new List<MonitorQuote>();
+                int n = rng.Next(2, 14);
+                for (int i = 0; i < n; i++)
+                {
+                    quotes.Add(
+                        new MonitorQuote
+                        {
+                            Symbol = "S" + i.ToString("00"),
+                            Price = (float)Math.Exp(rng.NextDouble() * 9) + 1,
+                            ChangeRate =
+                                k % 7 == 0 && i == 0
+                                    ? float.NaN
+                                    : (float)((rng.NextDouble() - 0.5) * 40),
+                        }
+                    );
+                }
+
+                foreach (bool reversed in new[] { false, true })
+                {
+                    List<MonitorQuote> rows = StockMonitor.Rows(
+                        quotes,
+                        MonitorFilter.All,
+                        MonitorSort.Change,
+                        null,
+                        reversed,
+                        true
+                    );
+                    for (int i = 1; i < rows.Count; i++)
+                    {
+                        double a = StockMonitor.ChangeAmount(
+                                rows[i - 1].Price,
+                                rows[i - 1].ChangeRate
+                            ),
+                            b = StockMonitor.ChangeAmount(rows[i].Price, rows[i].ChangeRate);
+                        Assert.True(reversed ? a <= b : a >= b);
+                    }
+
+                    foreach (MonitorQuote q in rows)
+                    {
+                        double amount = StockMonitor.ChangeAmount(q.Price, q.ChangeRate);
+                        string pill = StockMonitor.ChangeAmountFromRate(q.Price, q.ChangeRate);
+                        if (amount > 0 && amount != double.MinValue)
+                        {
+                            Assert.StartsWith("+₡", pill);
+                        }
+                        else if (amount < 0 && amount != double.MinValue)
+                        {
+                            Assert.StartsWith("−₡", pill);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

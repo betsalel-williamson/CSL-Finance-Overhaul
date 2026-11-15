@@ -21,6 +21,12 @@ wait 1.2
 click FinanceOverhaulStockMonitorSort
 wait 1.2
 expect-text FinanceOverhaulStockMonitorSort Sort: Price
+# Sort: Change follows the pills: with ₡ pills it orders by the ₡ amount shown
+monitor-sort Change
+monitor-change currency
+expect-text FinanceOverhaulStockMonitorSort Sort: Change ₡
+expect-monitor-pills-desc
+capture monitor-sort-change-currency
 cleanup:
 monitor close
 monitor restore
