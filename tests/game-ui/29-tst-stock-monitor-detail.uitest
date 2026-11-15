@@ -4,6 +4,8 @@ monitor remember
 monitor close
 click FinanceOverhaulStockMonitorButton
 wait 1
+# the player's filter may be Portfolio or Orders; restored at the end
+click FinanceOverhaulStockMonitorFilter-All
 click FinanceOverhaulStockMonitorRow-TST
 wait 1
 expect-visible FinanceOverhaulStockMonitorDetail

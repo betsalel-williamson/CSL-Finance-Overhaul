@@ -484,7 +484,7 @@ namespace FinanceOverhaul
             }
 
             var px = new Color32[w * h];
-            var dash = new Color32(colour.r, colour.g, colour.b, 160);
+            var dash = new Color32(colour.r, colour.g, colour.b, 200);
             var gridColour = new Color32(255, 255, 255, 40);
             var clear = new Color32(0, 0, 0, 0);
             for (int y = 0; y < h; y++)
@@ -498,7 +498,7 @@ namespace FinanceOverhaul
                         : m == Sparkline.Baseline ? dash
                         : m == Sparkline.Area ? new Color32(colour.r, colour.g, colour.b, areaAlpha)
                         : clear;
-                    if (grid[y] && m != Sparkline.Line)
+                    if (grid[y] && m != Sparkline.Line && m != Sparkline.Baseline)
                     {
                         c = gridColour;
                     }

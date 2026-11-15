@@ -93,7 +93,10 @@ Green, red and grey everywhere — row pills (% and ₡), row sparklines, the de
 and the Invest dialog / tooltip charts — follow **one measure: the game's change rate**, the number
 the Economy panel shows as "Change rate" and the LED board shows (`CalculateChangeRate(…, 5)`, a
 short trend over the last few days, not just since yesterday). 0.00 is grey, as on the LED. The
-dashed line marks yesterday's price as a reference only.
+dashed line marks yesterday's price as a reference only. The dashed line is drawn as thick as the
+price line (dash and gap 3× that thickness), stays on top of the shaded area and of the grid lines,
+so it survives the chart being scaled down in every view (sparklines, detail, share charts;
+`SparklineTests`).
 
 ## History limit
 

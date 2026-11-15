@@ -228,6 +228,21 @@ namespace FinanceOverhaul
                     yield return new WaitForSeconds(1f);
                     break;
                 }
+                case "close-economy":
+                {
+                    // Closes the Economy panel a scenario opened with show-economy.
+                    EconomyPanel economy = UnityEngine.Object.FindObjectOfType<EconomyPanel>();
+                    if (economy != null && economy.component.isVisible)
+                    {
+                        // Same as the panel's close button (it animates out).
+                        AccessTools
+                            .Method(typeof(EconomyPanel), "OnCloseButton")
+                            .Invoke(economy, null);
+                    }
+
+                    yield return new WaitForSeconds(0.8f);
+                    break;
+                }
                 case "close-dialog":
                 {
                     BuySellInvestmentPanel panel = BuySellInvestmentPanel.instance;

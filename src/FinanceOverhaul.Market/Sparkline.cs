@@ -16,6 +16,8 @@ namespace FinanceOverhaul.Market
         /// <summary>Below the line (only with <c>fillArea</c>).</summary>
         public const byte Area = 3;
 
+        // Dash and gap lengths per unit of line thickness: the dashed line is as thick as the
+        // price line, so it stays visible after the texture is scaled down for display.
         private const int DashOn = 3;
         private const int DashOff = 3;
 
@@ -65,11 +67,22 @@ namespace FinanceOverhaul.Market
             if (v.Length >= 2)
             {
                 int yb = rowOf(v[v.Length - 2]);
+                int on = DashOn * thickness,
+                    period = (DashOn + DashOff) * thickness;
                 for (int x = 0; x < width; x++)
                 {
-                    if (x % (DashOn + DashOff) < DashOn)
+                    if (x % period >= on)
                     {
-                        Plot(mask, width, height, x, yb, 1, Baseline);
+                        continue;
+                    }
+
+                    // A vertical strip as thick as the line, centred like the line's pen.
+                    for (int y = yb - pad; y <= yb + (thickness - 1 - pad); y++)
+                    {
+                        if (y >= 0 && y < height)
+                        {
+                            mask[y * width + x] = Baseline;
+                        }
                     }
                 }
             }
@@ -156,7 +169,8 @@ namespace FinanceOverhaul.Market
 
                 for (int y = y0 + 1; y < h; y++)
                 {
-                    if (mask[y * w + x] == Empty || mask[y * w + x] == Baseline)
+                    // The dashed line stays on top of the shaded area.
+                    if (mask[y * w + x] == Empty)
                     {
                         mask[y * w + x] = Area;
                     }

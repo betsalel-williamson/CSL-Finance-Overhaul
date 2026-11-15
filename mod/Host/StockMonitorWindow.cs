@@ -792,7 +792,7 @@ namespace FinanceOverhaul
                 h = tex.height;
             byte[] mask = Sparkline.Render(history, w, h, SparkScale + 1);
             var px = new Color32[w * h];
-            var dash = new Color32(colour.r, colour.g, colour.b, 150);
+            var dash = new Color32(colour.r, colour.g, colour.b, 200);
             var clear = new Color32(0, 0, 0, 0);
             for (int y = 0; y < h; y++)
             {

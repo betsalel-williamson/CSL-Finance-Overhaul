@@ -25,3 +25,4 @@ cleanup:
 sell-back TST 8
 set-price TST 100
 close-dialog
+close-economy

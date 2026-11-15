@@ -4,6 +4,8 @@ monitor remember
 monitor close
 click FinanceOverhaulStockMonitorButton
 wait 1
+# the player's filter may be Portfolio or Orders; restored at the end
+click FinanceOverhaulStockMonitorFilter-All
 expect-visible FinanceOverhaulStockMonitor
 expect-text FinanceOverhaulStockMonitorTitle Stock Monitor
 expect-visible FinanceOverhaulStockMonitorClose

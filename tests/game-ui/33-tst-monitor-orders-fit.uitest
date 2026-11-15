@@ -57,3 +57,4 @@ set-price TST 100
 close-dialog
 monitor close
 monitor restore
+close-economy

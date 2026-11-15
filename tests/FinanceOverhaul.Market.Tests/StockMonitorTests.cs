@@ -186,6 +186,55 @@ namespace FinanceOverhaul.Market.Tests
             Assert.Equal(Sparkline.Empty, m[9 * 24 + 4]);
         }
 
+        [Theory]
+        [InlineData(1)]
+        [InlineData(3)]
+        [InlineData(4)]
+        public void TheDashedLineIsAsThickAsThePriceLine(int thickness)
+        {
+            // Yesterday (3rd of 4) is the low. Across a dash, the dashed line covers as many
+            // rows as the price line is thick, so it survives the chart being scaled down.
+            const int w = 96,
+                h = 40;
+            byte[] m = Sparkline.Render(new[] { 10f, 20f, 0f, 20f }, w, h, thickness);
+            int x = 0; // first dash starts at the left edge
+            int rows = 0;
+            for (int y = 0; y < h; y++)
+            {
+                if (m[y * w + x] == Sparkline.Baseline || m[y * w + x] == Sparkline.Line)
+                {
+                    rows++;
+                }
+            }
+
+            Assert.True(rows >= thickness, "dash covers " + rows + " rows, line is " + thickness);
+            // Dash and gap scale with the thickness: column 3·t starts a gap.
+            int yb = Sparkline.RowOf(0f, 0f, 20f, h, thickness);
+            Assert.Equal(Sparkline.Baseline, m[yb * w + 3 * thickness - 1]);
+            Assert.Equal(Sparkline.Empty, m[yb * w + 3 * thickness]);
+        }
+
+        [Fact]
+        public void TheShadedAreaNeverHidesTheDashedLine()
+        {
+            // Yesterday (5) is below most of the line, so the dash sits inside the shaded area.
+            const int w = 60,
+                h = 30;
+            byte[] m = Sparkline.Render(new[] { 9f, 10f, 5f, 9f }, w, h, 3, fillArea: true);
+            int yb = Sparkline.RowOf(5f, 5f, 10f, h, 3);
+            int dash = 0;
+            for (int x = 0; x < w; x++)
+            {
+                if (m[yb * w + x] == Sparkline.Baseline)
+                {
+                    dash++;
+                }
+            }
+
+            Assert.True(dash >= w / 3, "only " + dash + " dash pixels on yesterday's row");
+            Assert.Contains(Sparkline.Area, m);
+        }
+
         [Fact]
         public void ThickLinesStayInsideTheMask()
         {

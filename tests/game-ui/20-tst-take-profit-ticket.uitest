@@ -36,3 +36,4 @@ cancel-new-orders
 sell-back TST 10
 set-price TST 100
 close-dialog
+close-economy

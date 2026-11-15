@@ -50,3 +50,4 @@ set-flag all on
 cancel-new-orders
 set-price TST 100
 close-dialog
+close-economy

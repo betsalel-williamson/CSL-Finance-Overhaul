@@ -24,3 +24,4 @@ expect-hidden FinanceOverhaulOpenOrderRow-$order
 cleanup:
 cancel-new-orders
 close-dialog
+close-economy
