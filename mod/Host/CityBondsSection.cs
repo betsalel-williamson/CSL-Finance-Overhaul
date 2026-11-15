@@ -70,6 +70,8 @@ namespace FinanceOverhaul
         private UIFont font;
         private string shownRows;
         private float nextCheck;
+        private float nextBuild;
+        private bool wanted;
 
         public static CityBondsSection Current { get; private set; }
 
@@ -93,35 +95,99 @@ namespace FinanceOverhaul
                     economy = UnityEngine.Object.FindObjectOfType<EconomyPanel>();
                 }
 
+                wanted =
+                    ForceShow
+                    || (Mod.Settings != null && Mod.Settings.CityBondsEnabled)
+                    || BondDesk.Snapshot().Bonds.Count > 0;
                 if (economy == null || !economy.isLoansOpen)
                 {
                     return;
                 }
 
-                bool want =
-                    ForceShow
-                    || (Mod.Settings != null && Mod.Settings.CityBondsEnabled)
-                    || BondDesk.Snapshot().Bonds.Count > 0;
-                if (!want)
+                if (!wanted)
                 {
                     Hide();
                     return;
                 }
 
-                if (section == null && !Build())
+                if (section != null)
                 {
-                    nextCheck = Time.unscaledTime + 5f;
-                    return;
+                    Refresh(false);
                 }
-
-                section.isVisible = true;
-                strip.isVisible = false;
-                Refresh(false);
             }
             catch (Exception ex)
             {
                 ModLog.Warn("bonds section: update failed: " + ex);
                 nextCheck = Time.unscaledTime + 10f;
+            }
+        }
+
+        /// <summary>
+        /// Swaps the vanilla strip for the section every frame, after the game's own UI updates and
+        /// before drawing, so opening the Loans tab never shows the vanilla strip (not even for one
+        /// frame). The slower Update keeps the contents fresh.
+        /// </summary>
+        private void LateUpdate()
+        {
+            try
+            {
+                if (!wanted || economy == null)
+                {
+                    return;
+                }
+
+                // Build as soon as the city is loaded, while the Economy panel is still closed, so
+                // the first visit to the Loans tab has nothing left to build.
+                if (section == null)
+                {
+                    if (Time.unscaledTime < nextBuild)
+                    {
+                        return;
+                    }
+
+                    if (!Build())
+                    {
+                        nextBuild = Time.unscaledTime + 2f;
+                        return;
+                    }
+
+                    Refresh(false);
+                    ShowSection();
+                    return;
+                }
+
+                if (economy.isLoansOpen)
+                {
+                    ShowSection();
+                }
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("bonds section: swap failed: " + ex);
+                wanted = false;
+                nextCheck = Time.unscaledTime + 10f;
+            }
+        }
+
+        private void ShowSection()
+        {
+            if (!section.isVisible)
+            {
+                section.isVisible = true;
+            }
+
+            if (strip.isVisible)
+            {
+                strip.isVisible = false;
+            }
+        }
+
+        /// <summary>The game shows the strip again when the tab opens: hide it at once.</summary>
+        private void OnStripVisibility(UIComponent c, bool visible)
+        {
+            if (visible && wanted && section != null)
+            {
+                ShowSection();
             }
         }
 
@@ -175,6 +241,7 @@ namespace FinanceOverhaul
 
                 if (strip != null)
                 {
+                    strip.eventVisibilityChanged -= OnStripVisibility;
                     strip.isVisible = true;
                 }
             }
@@ -205,6 +272,11 @@ namespace FinanceOverhaul
             if (stale != null)
             {
                 Destroy(stale.gameObject);
+            }
+
+            if (strip != null)
+            {
+                strip.eventVisibilityChanged -= OnStripVisibility;
             }
 
             strip = null;
@@ -251,6 +323,7 @@ namespace FinanceOverhaul
             section.backgroundSprite = "GenericPanelWhite";
             section.color = Panel;
             BuildContents();
+            strip.eventVisibilityChanged += OnStripVisibility;
             ModLog.Info(
                 "bonds section: attached " + section.size + " in place of '" + strip.name + "'"
             );
