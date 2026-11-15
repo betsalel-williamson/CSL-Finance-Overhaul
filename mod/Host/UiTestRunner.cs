@@ -693,6 +693,26 @@ namespace FinanceOverhaul
                     yield return new WaitForSeconds(0.6f);
                     break;
                 }
+                case "expect-opacity":
+                {
+                    // expect-opacity CONTROL on|off — a fade or overlay is (fully) shown or hidden.
+                    UIComponent c = FindControl(a, includeHidden: true);
+                    if (c == null)
+                    {
+                        r.Error = "no control " + a;
+                        break;
+                    }
+
+                    bool on = c.isVisible && c.opacity > 0.99f;
+                    bool off = !c.isVisible || c.opacity < 0.01f;
+                    if (b == "on" ? !on : !off)
+                    {
+                        r.Error =
+                            a + " opacity is " + c.opacity.ToString("0.00") + ", expected " + b;
+                    }
+
+                    break;
+                }
                 case "pause":
                 {
                     // pause on|off — pauses or resumes the simulation (for tests that span a mod

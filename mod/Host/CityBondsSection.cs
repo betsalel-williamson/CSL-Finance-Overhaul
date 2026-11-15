@@ -32,6 +32,12 @@ namespace FinanceOverhaul
         public const string OwedListName = Prefix + "OwedList";
         public const string OwedScrollbarName = Prefix + "OwedScrollbar";
         private const float ScrollbarW = 12f;
+        public const string FadeTopName = Prefix + "FadeTop";
+        public const string FadeBottomName = Prefix + "FadeBottom";
+        private UITextureSprite fadeTop,
+            fadeBottom;
+        private Texture2D fadeTopTexture,
+            fadeBottomTexture;
 
         private static readonly Color32 Gold = new Color32(232, 214, 77, 255);
         private static readonly Color32 Text = new Color32(230, 236, 240, 255);
@@ -155,6 +161,16 @@ namespace FinanceOverhaul
                 if (section != null)
                 {
                     Destroy(section.gameObject);
+                }
+
+                if (fadeTopTexture != null)
+                {
+                    Destroy(fadeTopTexture);
+                }
+
+                if (fadeBottomTexture != null)
+                {
+                    Destroy(fadeBottomTexture);
                 }
 
                 if (strip != null)
@@ -377,6 +393,73 @@ namespace FinanceOverhaul
                 new Vector3(right + rightW - ScrollbarW, 68f),
                 owedList.height
             );
+
+            // Edge fades (scrolling-list rule, option A): rows dissolve into the panel at an
+            // edge with more rows past it.
+            fadeTopTexture = FadeTexture(Panel, true);
+            fadeBottomTexture = FadeTexture(Panel, false);
+            fadeTop = Fade(FadeTopName, fadeTopTexture, owedList.relativePosition.y);
+            fadeBottom = Fade(
+                FadeBottomName,
+                fadeBottomTexture,
+                owedList.relativePosition.y + owedList.height - ScrollFade.DefaultLength
+            );
+            owedList.eventScrollPositionChanged += (c, p) => UpdateFades();
+        }
+
+        private UITextureSprite Fade(string name, Texture2D texture, float y)
+        {
+            UITextureSprite s = section.AddUIComponent<UITextureSprite>();
+            s.name = name;
+            s.texture = texture;
+            s.size = new Vector2(owedList.width, ScrollFade.DefaultLength);
+            s.relativePosition = new Vector3(owedList.relativePosition.x, y);
+            s.isInteractive = false;
+            s.opacity = 0f;
+            return s;
+        }
+
+        /// <summary>Panel colour fading to clear; <paramref name="solidAtTop"/> for the top edge.</summary>
+        private static Texture2D FadeTexture(Color32 colour, bool solidAtTop)
+        {
+            const int h = 32;
+            var t = new Texture2D(1, h, TextureFormat.RGBA32, false);
+            t.name = "FinanceOverhaulBondsFade";
+            t.wrapMode = TextureWrapMode.Clamp;
+            for (int y = 0; y < h; y++)
+            {
+                float f = y / (float)(h - 1); // 0 = bottom row of the texture
+                float a = solidAtTop ? f : 1f - f;
+                a = a * a * (3f - 2f * a); // smoothstep: a soft feather
+                t.SetPixel(0, y, new Color32(colour.r, colour.g, colour.b, (byte)(255 * a)));
+            }
+
+            t.Apply();
+            return t;
+        }
+
+        /// <summary>Shows each fade only while there are more rows past its edge.</summary>
+        private void UpdateFades()
+        {
+            if (fadeTop == null || owedList == null)
+            {
+                return;
+            }
+
+            float top,
+                bottom;
+            ScrollFade.Alphas(
+                owedList.scrollPosition.y,
+                owedList.height,
+                owedList.CalculateViewSize().y,
+                ScrollFade.DefaultLength,
+                out top,
+                out bottom
+            );
+            fadeTop.opacity = top;
+            fadeBottom.opacity = bottom;
+            fadeTop.BringToFront();
+            fadeBottom.BringToFront();
         }
 
         /// <summary>
@@ -524,6 +607,8 @@ namespace FinanceOverhaul
                 RebuildRows(book, today);
                 shownRows = sig;
             }
+
+            UpdateFades(); // rows lay out after they are added; catch up on the next refresh
         }
 
         private void RebuildRows(BondBook book, int today)
@@ -539,6 +624,7 @@ namespace FinanceOverhaul
                     0.7f,
                     Muted
                 );
+                UpdateFades();
                 return;
             }
 
@@ -571,6 +657,8 @@ namespace FinanceOverhaul
                 repay.relativePosition = new Vector3(row.width - 178f, 8f);
                 repay.eventClick += (c, p) => OnRepay(id);
             }
+
+            UpdateFades();
         }
 
         private void OnSell()
