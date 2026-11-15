@@ -19,6 +19,15 @@ Figma → docs), each behind its own Options flag, each stored in the mod's own 
    reinvestment a real automated order).
 4. **IPOs** — city companies listing on the exchange (see [Market analogs](./market-analogs.md)).
 
+## Game money units (measured)
+
+The budget calls take **cents**, the same unit as `BondMath`, so bond cash flows need no conversion.
+Measured in a live city by game UI scenario 36 (`money-probe 100`, simulation paused):
+`AddResource(LoanAmount, 100, …)` raised the cash field `m_cashAmount` by exactly 100 and
+`EconomyManager.playerMoney` by ₡1; `FetchResource(LoanPayment, 100, …)` returned the cash field
+exactly to its start. `playerMoney` is whole ₡ (what the order desk compares prices against), so a
+bond of `F` cents moves it by about `F / 100`.
+
 ## Cash-flow math (shipped: `BondMath`)
 
 A fixed-rate **bullet** bond in integer **cents**: face `F`, annual rate `r` in basis points, `n`

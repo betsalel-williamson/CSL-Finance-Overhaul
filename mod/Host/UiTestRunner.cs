@@ -568,6 +568,66 @@ namespace FinanceOverhaul
                 case "log-symbols":
                     StockSymbols.Dump();
                     break;
+                case "money-probe":
+                {
+                    // money-probe AMOUNT — measures the unit of the game's budget calls: with the
+                    // simulation paused, adds AMOUNT through the loan-taken line, reads the city's
+                    // cash, then fetches the same AMOUNT back through the loan-payment line. Fails
+                    // unless cash returns exactly to where it started.
+                    int amount = (int)ParseFloat(a, 100f);
+                    SimulationManager sim = SimulationManager.instance;
+                    bool paused = sim.SimulationPaused;
+                    sim.SimulationPaused = true;
+                    yield return new WaitForSeconds(0.5f); // let a running step finish
+                    EconomyManager em = EconomyManager.instance;
+                    long cash0 = RawCash(em),
+                        money0 = EconomyManager.playerMoney;
+                    int added = em.AddResource(
+                        EconomyManager.Resource.LoanAmount,
+                        amount,
+                        ItemClass.Service.None,
+                        ItemClass.SubService.None,
+                        ItemClass.Level.None
+                    );
+                    long cash1 = RawCash(em),
+                        money1 = EconomyManager.playerMoney;
+                    int fetched = em.FetchResource(
+                        EconomyManager.Resource.LoanPayment,
+                        amount,
+                        ItemClass.Service.None,
+                        ItemClass.SubService.None,
+                        ItemClass.Level.None
+                    );
+                    long cash2 = RawCash(em),
+                        money2 = EconomyManager.playerMoney;
+                    sim.SimulationPaused = paused;
+                    ModLog.Info(
+                        "uitest: money-probe amount="
+                            + amount
+                            + " added="
+                            + added
+                            + " fetched="
+                            + fetched
+                            + " raw "
+                            + cash0
+                            + "→"
+                            + cash1
+                            + "→"
+                            + cash2
+                            + " playerMoney "
+                            + money0
+                            + "→"
+                            + money1
+                            + "→"
+                            + money2
+                    );
+                    if (cash2 != cash0)
+                    {
+                        r.Error = "cash did not return: " + cash0 + " → " + cash2;
+                    }
+
+                    break;
+                }
                 case "hover":
                 {
                     // hover CONTROL FX FY — simulated mouse at that fraction of the control
@@ -1292,6 +1352,16 @@ namespace FinanceOverhaul
         {
             Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
             return buffer[id].Info.m_investmentAI.OwnedCount(ref buffer[id]);
+        }
+
+        /// <summary>The city's cash field itself (LastCashAmount only updates on a sim step).</summary>
+        private static long RawCash(EconomyManager em)
+        {
+            FieldInfo f = typeof(EconomyManager).GetField(
+                "m_cashAmount",
+                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
+            );
+            return f == null ? long.MinValue : Convert.ToInt64(f.GetValue(em));
         }
 
         private static float ParseFloat(string s, float fallback)

@@ -1,0 +1,5 @@
+# Measures the unit of the game's budget calls (for city bonds): adds ₡1 worth through the
+# loan-taken line and fetches it back through loan payments; cash must end where it began.
+name budget calls: the loan lines move city cash in a known unit and the probe leaves no trace
+money-probe 100
+expect-log money-probe amount=100

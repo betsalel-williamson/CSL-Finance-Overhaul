@@ -26,17 +26,19 @@ npm run test:game              # game UI scenarios (running game, --dev build)
 (same as ticking an order type's Options checkbox), `monitor open|close` (sets the Stock Monitor
 window outright, never toggling a player's window), `monitor remember|restore` (snapshot and put
 back the player's monitor settings), `log-symbols` (logs every stock prefab with its ticker symbol
-and any clash), `hover CONTROL FX FY` / `hover off` (a simulated mouse at that fraction of a
-control, for the Stock Monitor hover), `log-basket` (every investment's daily history, for auditing
-the Index math offline), `inspect-parents CONTROL` (a control and every parent: absolute box,
-background, clipping — for measuring vanilla UI), `share-charts on|off` (the share chart flag, for
-before/after captures) — and checks `expect-visible`, `expect-text`, `expect-no-overflow` (every
-visible part inside the dialog or the named control, and none of our fixed-width labels cutting its
-text off; inside a clipping, scrolling list only the width is checked, against the list),
-`expect-owned-delta`, `expect-orders-delta` (orders this scenario created) and `expect-log`. Lines
-after `cleanup:` always run (cancel orders, sell back, close the dialog). Results:
-`uitest: PASS|FAIL` in the mod log, captures as `FinanceOverhaul-uitest-*.png`. Scenarios trade
-small amounts in the loaded city and undo them in cleanup; use a test save.
+and any clash), `money-probe AMOUNT` (adds AMOUNT cents through the loan-taken budget line and
+fetches it back, simulation paused; fails unless cash ends where it began — scenario 36),
+`hover CONTROL FX FY` / `hover off` (a simulated mouse at that fraction of a control, for the Stock
+Monitor hover), `log-basket` (every investment's daily history, for auditing the Index math
+offline), `inspect-parents CONTROL` (a control and every parent: absolute box, background, clipping
+— for measuring vanilla UI), `share-charts on|off` (the share chart flag, for before/after captures)
+— and checks `expect-visible`, `expect-text`, `expect-no-overflow` (every visible part inside the
+dialog or the named control, and none of our fixed-width labels cutting its text off; inside a
+clipping, scrolling list only the width is checked, against the list), `expect-owned-delta`,
+`expect-orders-delta` (orders this scenario created) and `expect-log`. Lines after `cleanup:` always
+run (cancel orders, sell back, close the dialog). Results: `uitest: PASS|FAIL` in the mod log,
+captures as `FinanceOverhaul-uitest-*.png`. Scenarios trade small amounts in the loaded city and
+undo them in cleanup; use a test save.
 
 **Your orders are safe:** when a scenario starts, every order already open (the player's) is frozen
 — no fill, no expiry, no trailing peak — until the scenario ends, even when it runs days
