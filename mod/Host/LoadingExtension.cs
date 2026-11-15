@@ -27,6 +27,7 @@ namespace FinanceOverhaul
             try
             {
                 ModLog.Info("level loaded mode=" + mode);
+                LogSaveData();
                 OrderDesk.Reset();
                 BondDesk.Reset();
                 ChirpNotices.Reset();
@@ -40,6 +41,31 @@ namespace FinanceOverhaul
             {
                 // fail soft
             }
+        }
+
+        /// <summary>
+        /// Lists the mod data blocks this save carries (every mod's, by key and size). The game keeps
+        /// them all when it saves without the mod (SimulationManager.Data writes the whole table
+        /// back), so after a city was saved with the mod off, the Finance Overhaul keys should
+        /// still be here. Read-only.
+        /// </summary>
+        private static void LogSaveData()
+        {
+            ISerializableData w = SimulationManager.instance.m_SerializableDataWrapper;
+            string[] keys = w.EnumerateData();
+            var parts = new System.Collections.Generic.List<string>();
+            foreach (string k in keys)
+            {
+                byte[] b = w.LoadData(k);
+                parts.Add(k + " (" + (b == null ? 0 : b.Length) + " B)");
+            }
+
+            ModLog.Info(
+                "save data: "
+                    + keys.Length
+                    + " block(s)"
+                    + (parts.Count > 0 ? ": " + string.Join(", ", parts.ToArray()) : "")
+            );
         }
     }
 }

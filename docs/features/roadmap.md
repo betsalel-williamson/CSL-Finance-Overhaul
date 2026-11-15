@@ -173,8 +173,8 @@ game UI runner can still set up the city state before saving and verify after lo
 **Size:** S–M (an afternoon of game restarts). The bond catch-up becomes a player choice in a simple
 **Welcome back** dialog (Figma band 14), and the situations and an Alloy model with its results are
 in [Save compatibility](./save-compatibility.md): P3 shows today's Index loss, fixed by keeping a
-copy of the holding in mod data, if the game keeps mod data when saving without the mod (the first
-thing to verify in game).
+copy of the holding in mod data. Verified in game: the game keeps mod data when saving without the
+mod, so bonds and orders already survive and the copy will bring Index shares back.
 
 **Suggestion:** do it before priority 2, which adds new listings to saves.
 

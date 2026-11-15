@@ -14,7 +14,8 @@
  * Behaviour of the game without the mod (assumptions; Policy switches let us check both ways):
  *   - DropsUnknownPrefab: a slot whose prefab is missing is cleared on load (seen in game,
  *     save case 2; the city loads, the Index disappears).
- *   - keepsModData: saving without the mod writes the mod's blobs back unchanged (to verify).
+ *   - keepsModData: saving without the mod writes the mod's blobs back unchanged (verified in game
+ *     and in SimulationManager.Data, 2026-11-15; the False branch is kept for future game patches).
  *
  * Abstractions: one bond paying one coupon per game day; "coupons due" = days played since the
  * bond was sold; one Index holding.
