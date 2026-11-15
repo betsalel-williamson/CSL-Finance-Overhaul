@@ -3,6 +3,7 @@
 Product and architecture contracts for Finance Overhaul.
 
 - [About this guide](./about-this-guide.md)
+- [Roadmap status](./roadmap.md)
 - [City index fund](./city-index-fund.md)
 - [Typed share amount](./share-amount-input.md)
 - [Automated orders](./automated-orders.md)

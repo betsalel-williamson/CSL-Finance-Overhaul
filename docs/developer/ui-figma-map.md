@@ -185,13 +185,17 @@ owed bond.
 | 6   | `bonds.budget`                | Payments in the budget | Shipped engine (`BondDesk`, loan-payment line) |
 | 7   | `opt.city-bonds`              | Options flag           | Shipped: City bonds (testing), off by default  |
 
-### Planned frame (`planned`)
+### Roadmap frame (band 04, status board)
 
-| #   | Catalog id         | Title            | Docs                                                                                             |
-| --- | ------------------ | ---------------- | ------------------------------------------------------------------------------------------------ |
-| 1   | `plan.city-index`  | City index fund  | [Market analogs](../features/market-analogs.md), [Index fund](../glossary/index-fund.md)         |
-| 2   | `plan.sector-etf`  | Sector ETFs      | [Market analogs](../features/market-analogs.md), [Sector ETF](../glossary/sector-etf.md)         |
-| 3   | `plan.bonds`       | Municipal bonds  | [Market analogs](../features/market-analogs.md), [Municipal bond](../glossary/municipal-bond.md) |
-| 4   | `plan.commodities` | Commodities      | [Market analogs](../features/market-analogs.md), [Commodity](../glossary/commodity.md)           |
-| 5   | `plan.orders`      | Automated orders | [Market analogs](../features/market-analogs.md)                                                  |
-| 6   | `plan.ipo`         | Listings / IPOs  | [Market analogs](../features/market-analogs.md), [IPO](../glossary/ipo.md)                       |
+Band 04 shows every original idea as a card grouped by area (Funds, Bonds, Commodities, Listings,
+Automation, World & facade), coloured shipped / partly / next / not started, matching
+[Roadmap status](../features/roadmap.md). Pins mark the next-step candidates:
+
+| #   | Candidate                 | Status today                                                                                   |
+| --- | ------------------------- | ---------------------------------------------------------------------------------------------- |
+| 1   | Buy bonds                 | Next treasury piece ([Bonds](../features/bonds.md))                                            |
+| 2   | Recurring buys (DCA)      | Not started ([Automated orders](../features/automated-orders.md))                              |
+| 3   | Fill notifications        | Not started (fills only logged)                                                                |
+| 4   | Dividend investments      | Not started ([Market analogs](../features/market-analogs.md))                                  |
+| 5   | Sector ETFs               | Not started (reuses the Index maths)                                                           |
+| 6   | Save compatibility matrix | Index cases 1, 3–5 and bonds not run ([Save compatibility](../features/save-compatibility.md)) |
