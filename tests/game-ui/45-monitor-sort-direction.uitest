@@ -1,0 +1,26 @@
+# Stock Monitor sort direction button (▲/▼ beside "Sort: …"). UI only; the player's monitor
+# settings (filter, sort, direction) are remembered and put back.
+name Stock Monitor: the direction button flips the sort and a new sort starts in its natural direction
+monitor remember
+monitor close
+click FinanceOverhaulStockMonitorButton
+wait 1
+click FinanceOverhaulStockMonitorFilter-All
+monitor-sort Symbol
+expect-monitor-order az
+expect-visible FinanceOverhaulStockMonitorSortDirection
+click FinanceOverhaulStockMonitorSortDirection
+wait 1.2
+expect-monitor-order za
+capture monitor-sort-za
+click FinanceOverhaulStockMonitorSortDirection
+wait 1.2
+expect-monitor-order az
+click FinanceOverhaulStockMonitorSortDirection
+wait 1.2
+click FinanceOverhaulStockMonitorSort
+wait 1.2
+expect-text FinanceOverhaulStockMonitorSort Sort: Price
+cleanup:
+monitor close
+monitor restore

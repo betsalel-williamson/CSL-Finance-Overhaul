@@ -47,6 +47,9 @@ namespace FinanceOverhaul.Market
 
         public MonitorFilter Filter = MonitorFilter.All;
         public MonitorSort Sort = MonitorSort.Change;
+
+        /// <summary>The sort runs opposite to its natural direction (▲/▼ button).</summary>
+        public bool SortReversed;
         private float opacity = DefaultOpacity;
 
         /// <summary>
@@ -139,6 +142,9 @@ namespace FinanceOverhaul.Market
                 case "sort":
                     ReadEnum(value, ref Sort);
                     break;
+                case "sortreversed":
+                    ReadBool(value, ref SortReversed);
+                    break;
             }
 
             return true; // a monitor key, even if its value was unusable
@@ -168,6 +174,7 @@ namespace FinanceOverhaul.Market
             Line(sb, "hidden", string.Join(";", parts));
             Line(sb, "filter", Filter.ToString());
             Line(sb, "sort", Sort.ToString());
+            Line(sb, "sortReversed", SortReversed ? "true" : "false");
         }
 
         private static string Escape(string s)

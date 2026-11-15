@@ -85,6 +85,8 @@ annotation copy on the UI Map uses Inter so it never reads as game UI.
 | Molecule   | `FO/OrderPriceField`                          | Label, Value, Hint                                                                   |
 | Molecule   | `FO/OpenOrderRow`                             | Portfolio order card: Name, Side, Order, Expiry, Cancel                              |
 | Molecule   | `FO/OptionsCheckbox`, `FO/OptionsBuiltFooter` | Label                                                                                |
+| Atom       | `FO/SortDirection`                            | Direction=Down/Up · Stock Monitor sort direction button                              |
+| Molecule   | `FO/ScrollHint`                               | Kind=EdgeFade (the rule)/ShadowLip/FadeChevron/MorePill · list mid-scroll            |
 | Atom       | `FO/Scrollbar`                                | State=Overflow/Fits (Fits is invisible); see the scrolling rule below                |
 | Molecule   | `FO/BondRow`                                  | Title, Next · Repay button (City bonds, Economy → Loans)                             |
 | Organism   | `FO/OptionsPanel`                             | Title                                                                                |
@@ -102,7 +104,8 @@ Every list that can hold more rows than it shows (`UIScrollablePanel`) gets:
    `ScrollbarTrack` / `ScrollbarThumb` sprites (`color/scroll/track`, `thumb`), shown only while the
    content overflows (`autoHide`). Rows narrow by the bar's width so nothing sits under it; the
    mouse wheel and dragging the thumb both scroll.
-2. **Edge fades** (UI Map band 12, option A chosen): a 22-unit feather from the panel colour to
+2. **Edge fades** (`FO/ScrollHint` Kind=EdgeFade; the compared alternatives ShadowLip, FadeChevron
+   and MorePill sit beside it on the Components page): a 22-unit feather from the panel colour to
    clear over the top and/or bottom of the list, shown only on an edge with more rows past it and
    easing in and out over the last 22 units of scrolling (`ScrollFade`, 1-unit dead zone at the
    ends; proved never to flicker or show when everything fits, `ScrollFadeTests`).

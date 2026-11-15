@@ -14,6 +14,10 @@ a phone stocks app, styled like the City Vitals window players already know.
   the title to move it; the position is remembered.
 - **Filters:** All · Portfolio (stocks the city holds) · Orders (stocks with open orders). **Sort**
   (click it) cycles Change (biggest gain first) → Symbol → Price → Value held.
+- **Sort direction:** a ▼/▲ button right of "Sort: …" flips the order (highest or Z first ↔ lowest
+  or A first). Each sort starts in its natural direction (Change, Price, Value held highest first;
+  Symbol A→Z); ties stay A→Z. Kept per player (`monitor.sortReversed`). Proved over 2,000 random
+  lists for every sort (`MonitorSortDirectionTests`); game UI scenario 45 flips it in game.
 - **Rows:** ticker symbol (same as the LED board; unique per stock, see
   [Brokerage mechanics map](./brokerage-mechanics-map.md)) and name; a cyan dot when the city holds
   it and a gold "N orders" badge for open orders; a sparkline of the game's 30 daily prices with a

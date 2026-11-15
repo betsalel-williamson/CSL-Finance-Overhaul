@@ -713,6 +713,71 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "monitor-sort":
+                {
+                    // monitor-sort Change|Symbol|Price|ValueHeld — natural direction (restore with
+                    // monitor restore).
+                    MonitorSort sort;
+                    try
+                    {
+                        sort = (MonitorSort)Enum.Parse(typeof(MonitorSort), a, true);
+                    }
+                    catch (ArgumentException)
+                    {
+                        r.Error = "no sort " + a;
+                        break;
+                    }
+
+                    Mod.Settings.Monitor.Sort = sort;
+                    Mod.Settings.Monitor.SortReversed = false;
+                    yield return new WaitForSeconds(1.2f); // the window refreshes on its own tick
+                    break;
+                }
+                case "expect-monitor-order":
+                {
+                    // expect-monitor-order az|za — the visible rows' symbols, top to bottom.
+                    var shown = new List<UILabel>();
+                    foreach (UILabel l in UnityEngine.Object.FindObjectsOfType<UILabel>())
+                    {
+                        if (
+                            l.name != null
+                            && l.name.StartsWith(
+                                "FinanceOverhaulStockMonitorSymbol-",
+                                StringComparison.Ordinal
+                            )
+                            && IsShown(l)
+                        )
+                        {
+                            shown.Add(l);
+                        }
+                    }
+
+                    shown.Sort((x, y) => x.absolutePosition.y.CompareTo(y.absolutePosition.y));
+                    var symbols = new List<string>();
+                    foreach (UILabel l in shown)
+                    {
+                        symbols.Add(l.text);
+                    }
+
+                    ModLog.Info("uitest: monitor order " + string.Join(" ", symbols.ToArray()));
+                    for (int i = 1; i < symbols.Count; i++)
+                    {
+                        int c = string.CompareOrdinal(symbols[i - 1], symbols[i]);
+                        if (a == "az" ? c > 0 : c < 0)
+                        {
+                            r.Error =
+                                "rows are not " + a + ": " + string.Join(" ", symbols.ToArray());
+                            break;
+                        }
+                    }
+
+                    if (symbols.Count < 2)
+                    {
+                        r.Error = "need at least two rows, got " + symbols.Count;
+                    }
+
+                    break;
+                }
                 case "pause":
                 {
                     // pause on|off — pauses or resumes the simulation (for tests that span a mod

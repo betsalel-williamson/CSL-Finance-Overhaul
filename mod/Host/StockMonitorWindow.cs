@@ -59,6 +59,9 @@ namespace FinanceOverhaul
         private UILabel footer;
         private UILabel empty;
         private UILabel sortLabel;
+        private UIButton sortDirection;
+        private UITextureSprite sortArrow;
+        private bool sortArrowDown;
         private readonly Dictionary<MonitorFilter, UIButton> filterTabs =
             new Dictionary<MonitorFilter, UIButton>();
         private readonly List<Row> rows = new List<Row>();
@@ -410,9 +413,24 @@ namespace FinanceOverhaul
             sortLabel.size = new Vector2(120f, 22f);
             sortLabel.textAlignment = UIHorizontalAlignment.Right;
             sortLabel.verticalAlignment = UIVerticalAlignment.Middle;
-            sortLabel.relativePosition = new Vector3(Width - 132f, TitleHeight + 6f);
+            sortLabel.relativePosition = new Vector3(Width - 158f, TitleHeight + 6f);
             sortLabel.isInteractive = true;
             sortLabel.eventClick += (c, p) => CycleSort();
+
+            // ▲/▼: flips the sort's direction (highest/lowest first, A→Z/Z→A).
+            sortDirection = window.AddUIComponent<UIButton>();
+            sortDirection.name = Prefix + "SortDirection";
+            sortDirection.size = new Vector2(22f, 22f);
+            sortDirection.relativePosition = new Vector3(Width - 32f, TitleHeight + 6f);
+            sortDirection.normalBgSprite = "ButtonMenu";
+            sortDirection.hoveredBgSprite = "ButtonMenuHovered";
+            sortDirection.pressedBgSprite = "ButtonMenuPressed";
+            sortDirection.eventClick += (c, p) => FlipSort();
+            sortArrow = sortDirection.AddUIComponent<UITextureSprite>();
+            sortArrow.name = Prefix + "SortArrow";
+            sortArrow.size = new Vector2(10f, 6f);
+            sortArrow.relativePosition = new Vector3(6f, 8f);
+            sortArrow.isInteractive = false;
 
             list = window.AddUIComponent<UIScrollablePanel>();
             list.name = Prefix + "Rows";
@@ -461,8 +479,44 @@ namespace FinanceOverhaul
             Refresh(true);
         }
 
+        private void FlipSort()
+        {
+            Settings.SortReversed = !Settings.SortReversed;
+            Mod.SaveSettings();
+            Refresh(true);
+        }
+
+        /// <summary>A small filled triangle, pointing down for highest/Z first, up for lowest/A first.</summary>
+        private static Texture2D ArrowTexture(bool down)
+        {
+            const int w = 10,
+                h = 6;
+            var t = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            t.name = "FinanceOverhaulSortArrow";
+            t.filterMode = FilterMode.Point;
+            for (int y = 0; y < h; y++)
+            {
+                // row y counted from the texture bottom; the wide edge is at the top for "down".
+                int fromWide = down ? h - 1 - y : y;
+                int half = w / 2 - fromWide * w / (2 * h);
+                for (int x = 0; x < w; x++)
+                {
+                    bool lit = x >= w / 2 - half && x < w / 2 + half;
+                    t.SetPixel(
+                        x,
+                        y,
+                        lit ? new Color32(230, 236, 240, 255) : new Color32(0, 0, 0, 0)
+                    );
+                }
+            }
+
+            t.Apply();
+            return t;
+        }
+
         private void CycleSort()
         {
+            Settings.SortReversed = false; // a new sort starts in its natural direction
             Settings.Sort = StockMonitor.NextSort(Settings.Sort);
             Mod.SaveSettings();
             Refresh(true);
@@ -533,7 +587,8 @@ namespace FinanceOverhaul
                 quotes,
                 Settings.Filter,
                 Settings.Sort,
-                Settings.Hidden
+                Settings.Hidden,
+                Settings.SortReversed
             );
             while (rows.Count < shown.Count)
             {
@@ -559,12 +614,33 @@ namespace FinanceOverhaul
             empty.text = shown.Count == 0 ? StockMonitor.EmptyText(Settings.Filter) : "";
             empty.isVisible = shown.Count == 0;
             sortLabel.text = StockMonitor.SortLabel(Settings.Sort);
+            bool down = StockMonitor.IsDescending(Settings.Sort, Settings.SortReversed);
+            if (sortArrowDown != down || sortArrow.texture == null)
+            {
+                if (sortArrow.texture != null)
+                {
+                    Destroy(sortArrow.texture);
+                }
+
+                sortArrow.texture = ArrowTexture(down);
+                sortArrowDown = down;
+            }
+
+            sortDirection.tooltip = StockMonitor.DirectionText(
+                Settings.Sort,
+                Settings.SortReversed
+            );
         }
 
         private static string Signature(List<MonitorQuote> quotes, int today)
         {
             var sb = new System.Text.StringBuilder();
-            sb.Append(today).Append('|').Append(Settings.Filter).Append('|').Append(Settings.Sort);
+            sb.Append(today)
+                .Append('|')
+                .Append(Settings.Filter)
+                .Append('|')
+                .Append(Settings.Sort)
+                .Append(Settings.SortReversed);
             sb.Append('|')
                 .Append(Settings.CompactRows)
                 .Append(Settings.ShowSparklines)

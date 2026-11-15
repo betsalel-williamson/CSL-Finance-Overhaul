@@ -79,12 +79,24 @@ namespace FinanceOverhaul.Market
             return Rows(quotes, filter, sort, null);
         }
 
-        /// <param name="hidden">Prefab names the player chose not to show (may be null).</param>
         public static List<MonitorQuote> Rows(
             IEnumerable<MonitorQuote> quotes,
             MonitorFilter filter,
             MonitorSort sort,
             ICollection<string> hidden
+        )
+        {
+            return Rows(quotes, filter, sort, hidden, false);
+        }
+
+        /// <param name="hidden">Prefab names the player chose not to show (may be null).</param>
+        /// <param name="reversed">Flip the sort's natural direction (the ▲/▼ button).</param>
+        public static List<MonitorQuote> Rows(
+            IEnumerable<MonitorQuote> quotes,
+            MonitorFilter filter,
+            MonitorSort sort,
+            ICollection<string> hidden,
+            bool reversed
         )
         {
             var rows = new List<MonitorQuote>();
@@ -113,11 +125,31 @@ namespace FinanceOverhaul.Market
                 rows.Add(q);
             }
 
-            rows.Sort((a, b) => Compare(a, b, sort));
+            rows.Sort((a, b) => Compare(a, b, sort, reversed));
             return rows;
         }
 
-        private static int Compare(MonitorQuote a, MonitorQuote b, MonitorSort sort)
+        /// <summary>
+        /// Whether the list runs highest (or Z) first: Change, Price and Value held naturally do,
+        /// Symbol naturally runs A→Z; the direction button flips it.
+        /// </summary>
+        public static bool IsDescending(MonitorSort sort, bool reversed)
+        {
+            return (sort != MonitorSort.Symbol) != reversed;
+        }
+
+        /// <summary>Tooltip for the direction button, e.g. "Highest first (click to flip)".</summary>
+        public static string DirectionText(MonitorSort sort, bool reversed)
+        {
+            bool desc = IsDescending(sort, reversed);
+            string what =
+                sort == MonitorSort.Symbol ? (desc ? "Z → A" : "A → Z")
+                : desc ? "Highest first"
+                : "Lowest first";
+            return what + " (click to flip)";
+        }
+
+        private static int Compare(MonitorQuote a, MonitorQuote b, MonitorSort sort, bool reversed)
         {
             int c;
             switch (sort)
@@ -136,7 +168,14 @@ namespace FinanceOverhaul.Market
                     break;
             }
 
-            return c != 0 ? c : string.CompareOrdinal(a.Symbol ?? "", b.Symbol ?? "");
+            int bySymbol = string.CompareOrdinal(a.Symbol ?? "", b.Symbol ?? "");
+            if (sort == MonitorSort.Symbol)
+            {
+                return reversed ? -bySymbol : bySymbol;
+            }
+
+            // Ties stay A→Z whichever way the main key runs.
+            return c != 0 ? (reversed ? -c : c) : bySymbol;
         }
 
         private static float Finite(float v)
