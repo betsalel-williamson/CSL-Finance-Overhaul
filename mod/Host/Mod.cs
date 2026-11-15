@@ -283,6 +283,11 @@ namespace FinanceOverhaul
                 OnShareChartsChanged
             );
             group.AddCheckbox(
+                "City bonds: sell bonds to raise money (testing; adds mod save data)",
+                Settings.CityBondsEnabled,
+                OnCityBondsChanged
+            );
+            group.AddCheckbox(
                 "Stock Monitor window (testing)",
                 Settings.Monitor.Enabled,
                 OnStockMonitorChanged
@@ -468,6 +473,18 @@ namespace FinanceOverhaul
             {
                 ShareChartOverlay.RemoveAll();
             }
+        }
+
+        private static void OnCityBondsChanged(bool enabled)
+        {
+            if (Settings == null)
+            {
+                Settings = new ModSettings();
+            }
+
+            Settings.CityBondsEnabled = enabled;
+            SaveSettings();
+            ModLog.Info("city bonds enabled=" + enabled);
         }
 
         private static void OnStockMonitorChanged(bool enabled)

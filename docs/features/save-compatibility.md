@@ -41,6 +41,12 @@ Until the matrix passes, the Index toggle stays off by default.
 The Index's one-time rebase marker lives in mod data (`FinanceOverhaul.IndexRebase`, text `v1`);
 vanilla ignores it, and without it the mod simply checks the level once more.
 
+## City bonds (experimental)
+
+The bond book lives only in mod data (`FinanceOverhaul.Bonds`, text `v1`), behind an Options flag
+that defaults to off. Without the mod the save loads as vanilla: the bonds and the payments they
+still owe disappear, and the cash already received stays. Not yet run through the matrix below.
+
 ## Test matrix (in game)
 
 | #   | Saved with                 | Loaded with            | Pass when                                 |

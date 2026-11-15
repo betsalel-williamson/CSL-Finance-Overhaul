@@ -68,6 +68,9 @@ namespace FinanceOverhaul
             public string Name = "scenario";
             public int OrdersAtStart;
             public HashSet<int> OrdersBefore = new HashSet<int>();
+
+            /// <summary>Bonds this scenario sold (cleanup redeems them).</summary>
+            public readonly List<int> Bonds = new List<int>();
             public readonly Dictionary<string, uint> Owned = new Dictionary<string, uint>();
             public long LogStart;
 
@@ -567,6 +570,101 @@ namespace FinanceOverhaul
                 }
                 case "log-symbols":
                     StockSymbols.Dump();
+                    break;
+                case "bond-finances":
+                {
+                    long debt,
+                        income;
+                    BondDesk.CityFinances(out debt, out income);
+                    ModLog.Info(
+                        "uitest: bond-finances debt="
+                            + debt
+                            + " annualIncome="
+                            + income
+                            + " (cents)"
+                    );
+                    break;
+                }
+                case "issue-bond":
+                {
+                    // issue-bond YEARS FACE₡ — sells a bond at the offered rate with the
+                    // simulation paused; the city's cash must rise by exactly the face.
+                    long face = (long)ParseFloat(b, 0f) * 100;
+                    SimulationManager sim = SimulationManager.instance;
+                    bool paused = sim.SimulationPaused;
+                    sim.SimulationPaused = true;
+                    yield return new WaitForSeconds(0.5f);
+                    long before = RawCash(EconomyManager.instance);
+                    BondOffer offer;
+                    IssuedBond bond = BondDesk.Issue(
+                        (BondTerm)(int)ParseFloat(a, 1f),
+                        face,
+                        out offer
+                    );
+                    long delta = RawCash(EconomyManager.instance) - before;
+                    sim.SimulationPaused = paused;
+                    if (bond == null)
+                    {
+                        r.Error = "bond refused: " + offer.Reason;
+                        break;
+                    }
+
+                    ctx.Bonds.Add(bond.Id);
+                    ModLog.Info(
+                        "uitest: issued bond #"
+                            + bond.Id
+                            + " at "
+                            + BondPricing.RateText(offer.RateBasisPoints)
+                            + ", cash +"
+                            + delta
+                            + " cents"
+                    );
+                    if (delta != face)
+                    {
+                        r.Error = "cash rose by " + delta + " cents, expected " + face;
+                    }
+
+                    break;
+                }
+                case "bond-backdate":
+                {
+                    // bond-backdate DAYS — moves this scenario's newest bond's schedule earlier,
+                    // so the next coupon falls due without waiting a game month.
+                    if (
+                        ctx.Bonds.Count == 0
+                        || !BondDesk.Backdate(
+                            ctx.Bonds[ctx.Bonds.Count - 1],
+                            (int)ParseFloat(a, 0f)
+                        )
+                    )
+                    {
+                        r.Error = "issue-bond first";
+                    }
+
+                    break;
+                }
+                case "expect-bond-coupons":
+                {
+                    // expect-bond-coupons N — coupons paid on this scenario's newest bond.
+                    IssuedBond bond =
+                        ctx.Bonds.Count == 0
+                            ? null
+                            : BondDesk.Snapshot().Find(ctx.Bonds[ctx.Bonds.Count - 1]);
+                    int paid = bond == null ? -1 : bond.CouponsPaid;
+                    if (paid != (int)ParseFloat(a, 0f))
+                    {
+                        r.Error = "bond has " + paid + " coupon(s) paid, expected " + a;
+                    }
+
+                    break;
+                }
+                case "redeem-new-bonds":
+                    foreach (int id in ctx.Bonds)
+                    {
+                        BondDesk.Redeem(id);
+                    }
+
+                    ctx.Bonds.Clear();
                     break;
                 case "money-probe":
                 {

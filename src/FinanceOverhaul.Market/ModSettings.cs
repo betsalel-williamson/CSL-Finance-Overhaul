@@ -29,6 +29,13 @@ namespace FinanceOverhaul.Market
         /// </summary>
         public bool ShareChartsEnabled { get; set; } = true;
 
+        /// <summary>
+        /// Temporary feature flag: the city may sell bonds (Economy → Loans). Off by default
+        /// while unproven. It gates new issues only — bonds already sold keep paying, so turning
+        /// it off never strands a debt.
+        /// </summary>
+        public bool CityBondsEnabled { get; set; }
+
         /// <summary>Stock Monitor flag and per-player window state (UI only, never in saves).</summary>
         public StockMonitorSettings Monitor { get; } = new StockMonitorSettings();
 

@@ -11,8 +11,8 @@ Figma → docs), each behind its own Options flag, each stored in the mod's own 
    coupon every 30 game days, and repays the face at maturity; it can also redeem early. Cash moves
    through the game's own budget lines (`EconomyManager.AddResource(LoanAmount, …)` in,
    `FetchResource(LoanPayment, …)` out), so debt service shows up beside vanilla loans without using
-   the three vanilla loan slots. _Status: cash-flow math and pricing shipped (below); book, engine
-   and UI next._
+   the three vanilla loan slots. _Status: math, pricing, book and daily engine shipped (below); the
+   Economy → Loans UI is next._
 2. **Buy bonds (lend surplus)** — the same schedule from the holder's side, plus a price for selling
    before maturity (needs price/yield math with its own proofs).
 3. **Dividend investments** — holdings that pay a periodic cash dividend (which also makes dividend
@@ -63,6 +63,38 @@ those at the period's ends; no overflow at the bounds; invalid terms are rejecte
 always lies between the base rate and base + 6.00% and under the 20% bond maximum; more existing
 debt, a bigger bond, less income or a longer term never gives a cheaper rate; the 3× cap is exact
 (at 3× offered, above refused); bad inputs never get a rate.
+
+## Bond book and daily engine (shipped: `BondBook`, host `BondDesk`)
+
+- **Book:** each sold bond keeps its terms, issue day and coupons paid. `Due(today)` pays every
+  coupon (and the face with the last one) whose day has come, catching up skipped days, then drops
+  matured bonds. `Redeem` pays anything already due, then the face plus interest accrued since the
+  last coupon.
+- **Saved** as versioned text in mod data `FinanceOverhaul.Bonds` (`v1`; one `issued|…` line per
+  bond). Unknown versions and bad lines are skipped; vanilla ignores mod data, so a city saved with
+  bonds still opens without the mod (the bonds, and what they owe, simply disappear; the cash
+  already received stays). Reloaded from mod data after a hot reload or level load.
+- **Cash:** once per game day, after the vanilla investment update, each due payment goes out
+  through `FetchResource(LoanPayment, …)` and a sale comes in through `AddResource(LoanAmount, …)`,
+  in cents, split into `int`-sized pieces. Payments are made even if cash goes below zero; a
+  short-paid amount is logged as a warning.
+- **City finances for pricing:** debt = vanilla loans' `m_amountLeft` + outstanding bond faces;
+  annual income = the game's weekly income total (`GetIncomeAndExpenses`, all services) × 52.
+  Checked in game: the weekly figure matched the Economy panel's total (residential ₡104,668 =
+  38.86% → about ₡269k a week; the mod read ₡264k a moment earlier).
+- **Flag:** Options → "City bonds: sell bonds to raise money (testing; adds mod save data)", off by
+  default. It gates new sales only; bonds already sold keep paying.
+
+**Proved properties** (`BondBookTests`, 500 seeded random books and day paths plus examples):
+everything paid over a bond's life is face + total interest to the cent on any path of checked days
+(daily, jumps, once at the end); what is paid by a day depends only on that day; checking a day
+twice pays nothing more; no payment is made before its due day; early redemption brings the total
+paid between face + coupons paid and face + total interest and removes only that bond; the codec
+round-trips and skips what it cannot read.
+
+**In game** (scenario 37, 2026-11-14): a ₡1,000 1-year bond sold at 3.02% raised cash by exactly
+100,000 cents; backdated 30 days, its first coupon (₡2.52) was paid on the next day; redeemed for
+₡1,000.08 (face + one day's accrual).
 
 ## Decided for piece 1 (2026-11-14)
 

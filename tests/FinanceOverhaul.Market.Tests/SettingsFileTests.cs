@@ -138,6 +138,18 @@ namespace FinanceOverhaul.Market.Tests
 
 namespace FinanceOverhaul.Market.Tests
 {
+    public class CityBondsFlagTests
+    {
+        [Fact]
+        public void OffByDefaultAndRoundTrips()
+        {
+            Assert.False(SettingsFile.Parse("").CityBondsEnabled);
+            var on = new ModSettings { CityBondsEnabled = true };
+            Assert.True(SettingsFile.Parse(SettingsFile.Format(on)).CityBondsEnabled);
+            Assert.True(SettingsFile.Parse("cityBondsEnabled=true\n").CityBondsEnabled);
+        }
+    }
+
     public class ShareChartsFlagTests
     {
         [Fact]

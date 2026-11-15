@@ -57,6 +57,14 @@ namespace FinanceOverhaul.Market.Tests
         }
 
         [Fact]
+        public void RateText()
+        {
+            Assert.Equal("4.50%", BondPricing.RateText(450));
+            Assert.Equal("0.05%", BondPricing.RateText(5));
+            Assert.Equal("20.00%", BondPricing.RateText(2000));
+        }
+
+        [Fact]
         public void BadInputsAreRefused()
         {
             Assert.False(BondPricing.Offer(BondTerm.OneYear, 0, Million, 0).Allowed);

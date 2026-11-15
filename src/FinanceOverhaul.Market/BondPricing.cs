@@ -64,6 +64,15 @@ namespace FinanceOverhaul.Market
             }
         }
 
+        /// <summary>Basis points as a rate, e.g. 450 → "4.50%".</summary>
+        public static string RateText(int basisPoints)
+        {
+            return (basisPoints / 100m).ToString(
+                    "0.00",
+                    System.Globalization.CultureInfo.InvariantCulture
+                ) + "%";
+        }
+
         public static int Periods(BondTerm term)
         {
             return (int)term * 12;

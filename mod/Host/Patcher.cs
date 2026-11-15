@@ -452,6 +452,15 @@ namespace FinanceOverhaul
             {
                 ModLog.Warn("orders: daily check failed: " + ex.Message);
             }
+
+            try
+            {
+                BondDesk.OnInvestmentsStepped();
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("bonds: daily payments failed: " + ex.Message);
+            }
         }
 
         private static void IndexCreateInvestmentPostfix(
