@@ -46,6 +46,7 @@ annotation copy on the UI Map uses Inter so it never reads as game UI.
 | Strokes    | `color/stroke/default`, `strong`                                                                                                                                                                                                                                          |
 | Market     | `color/market/gain`, `loss`, `price`, `total`, `bar`, `color/icon/sector`                                                                                                                                                                                                 |
 | Ticker     | `color/ticker/board` #1E303E, `board-lit` #38444B, `symbol` #EFB058, `gain` #4EF465, `loss` #E9424F, `unknown` (neutral, for `--`), `flat` (neutral, for `0.00`; aliases the same grey), `led-off` #293A46 (unlit LED dot); sampled from the Stock Exchange facade boards |
+| Scroll     | `color/scroll/track` (game sprite `ScrollbarTrack`), `color/scroll/thumb` (`ScrollbarThumb`); primitives `csl/scroll/track`, `csl/scroll/thumb`                                                                                                                           |
 | Chart      | `color/chart/bg`, `grid`, `line`                                                                                                                                                                                                                                          |
 | Annotation | `color/bg/page`, `color/bg/pin`, `color/doc/text`, `muted`, `stroke`, `color/pin/marker`, `color/status/shipped`, `vanilla-host`, `planned`                                                                                                                               |
 | Spacing    | `space/xs` 4 · `sm` 8 · `md` 12 · `lg` 16 · `xl` 24                                                                                                                                                                                                                       |
@@ -84,12 +85,23 @@ annotation copy on the UI Map uses Inter so it never reads as game UI.
 | Molecule   | `FO/OrderPriceField`                          | Label, Value, Hint                                                                   |
 | Molecule   | `FO/OpenOrderRow`                             | Portfolio order card: Name, Side, Order, Expiry, Cancel                              |
 | Molecule   | `FO/OptionsCheckbox`, `FO/OptionsBuiltFooter` | Label                                                                                |
+| Atom       | `FO/Scrollbar`                                | State=Overflow/Fits (Fits is invisible); see the scrolling rule below                |
+| Molecule   | `FO/BondRow`                                  | Title, Next · Repay button (City bonds, Economy → Loans)                             |
 | Organism   | `FO/OptionsPanel`                             | Title                                                                                |
 | Organism   | `FO/EconomyInvestmentsPanel`                  | Composed from the above                                                              |
 | Organism   | `FO/InvestDialog`                             | Composed from the above                                                              |
 | Organism   | `FO/InvestmentTooltip`                        | Description                                                                          |
 | Facade     | `FO/TickerEntry`                              | Tone=Gain/Loss/Flat/Unknown · Symbol, Change                                         |
 | Facade     | `FO/TickerBoard`                              | LED screen: three rows sorted by symbol, clipped                                     |
+
+## Rule: scrolling lists
+
+Every list that can hold more rows than it shows (`UIScrollablePanel`) gets a vertical scrollbar
+(`FO/Scrollbar`) at its right edge: 12 wide with a 4 gap, the game's `ScrollbarTrack` /
+`ScrollbarThumb` sprites, shown only while the content overflows (`autoHide`). Rows narrow by the
+bar's width so nothing sits under it; the mouse wheel and dragging the thumb both scroll. Text that
+follows a list (footers) sits below the list's box, never over its last row. First applied to City
+bonds → Bonds you owe (`CityBondsSection.Scrollbar`, game UI scenario 44).
 
 ## Relationship to Trackpad
 

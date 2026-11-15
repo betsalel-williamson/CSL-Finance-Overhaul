@@ -29,6 +29,9 @@ namespace FinanceOverhaul
         public const string RowPrefix = Prefix + "Row-";
         public const string RepayPrefix = Prefix + "Repay-";
         public const string TermPrefix = Prefix + "Term-";
+        public const string OwedListName = Prefix + "OwedList";
+        public const string OwedScrollbarName = Prefix + "OwedScrollbar";
+        private const float ScrollbarW = 12f;
 
         private static readonly Color32 Gold = new Color32(232, 214, 77, 255);
         private static readonly Color32 Text = new Color32(230, 236, 240, 255);
@@ -356,18 +359,57 @@ namespace FinanceOverhaul
             float rightW = w - right - pad;
             owedTitle = Label(section, OwedTitleName, "Bonds you owe", 0.875f, Text);
             owedTitle.relativePosition = new Vector3(right, 44f);
+            // The footer may wrap to two lines; the list ends above both.
             footer = Wrapped(section, FooterName, rightW, 0.7f, Muted);
-            footer.relativePosition = new Vector3(right, section.height - 24f);
+            footer.relativePosition = new Vector3(right, section.height - 36f);
             owedList = section.AddUIComponent<UIScrollablePanel>();
-            owedList.name = Prefix + "OwedList";
+            owedList.name = OwedListName;
             owedList.relativePosition = new Vector3(right, 68f);
-            owedList.size = new Vector2(rightW, footer.relativePosition.y - 74f);
+            owedList.size = new Vector2(rightW - ScrollbarW - 4f, footer.relativePosition.y - 74f);
             owedList.autoLayout = true;
             owedList.autoLayoutDirection = LayoutDirection.Vertical;
             owedList.autoLayoutPadding = new RectOffset(0, 0, 0, 6);
             owedList.clipChildren = true;
             owedList.scrollWheelDirection = UIOrientation.Vertical;
             owedList.builtinKeyNavigation = true;
+            owedList.verticalScrollbar = Scrollbar(
+                section,
+                new Vector3(right + rightW - ScrollbarW, 68f),
+                owedList.height
+            );
+        }
+
+        /// <summary>
+        /// A vertical scrollbar in the game's style (track and thumb sprites); it hides itself
+        /// while everything fits.
+        /// </summary>
+        private static UIScrollbar Scrollbar(UIComponent parent, Vector3 at, float height)
+        {
+            UIScrollbar bar = parent.AddUIComponent<UIScrollbar>();
+            bar.name = OwedScrollbarName;
+            bar.relativePosition = at;
+            bar.size = new Vector2(ScrollbarW, height);
+            bar.orientation = UIOrientation.Vertical;
+            bar.pivot = UIPivotPoint.TopLeft;
+            bar.minValue = 0f;
+            bar.value = 0f;
+            bar.incrementAmount = 50f;
+            bar.autoHide = true;
+            UISlicedSprite track = bar.AddUIComponent<UISlicedSprite>();
+            track.relativePosition = Vector3.zero;
+            track.autoSize = true;
+            track.size = bar.size;
+            track.fillDirection = UIFillDirection.Vertical;
+            track.spriteName = "ScrollbarTrack";
+            bar.trackObject = track;
+            UISlicedSprite thumb = track.AddUIComponent<UISlicedSprite>();
+            thumb.relativePosition = Vector3.zero;
+            thumb.fillDirection = UIFillDirection.Vertical;
+            thumb.autoSize = true;
+            thumb.width = ScrollbarW - 4f;
+            thumb.spriteName = "ScrollbarThumb";
+            bar.thumbObject = thumb;
+            return bar;
         }
 
         private UILabel Row(float left, ref float y, string label, string name)

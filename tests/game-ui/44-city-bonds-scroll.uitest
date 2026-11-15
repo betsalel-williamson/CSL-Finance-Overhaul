@@ -1,0 +1,27 @@
+# Many bonds: the "Bonds you owe" list gets a vertical scrollbar and scrolls to the last row; the
+# footer stays below the list. Sells five ₡1,000 1-year bonds through the section and repays them
+# in cleanup (a few cents of interest at most). Never touches the player's own bonds.
+name City bonds: many owed bonds show a scrollbar and scroll to the last row
+show-economy loans
+bonds-section show
+bonds-term 1
+bonds-amount 1,000
+click FinanceOverhaulBondsSell
+wait 0.4
+click FinanceOverhaulBondsSell
+wait 0.4
+click FinanceOverhaulBondsSell
+wait 0.4
+click FinanceOverhaulBondsSell
+wait 0.4
+click FinanceOverhaulBondsSell
+wait 0.8
+expect-visible FinanceOverhaulBondsOwedScrollbar
+expect-no-overlap FinanceOverhaulBondsOwedList FinanceOverhaulBondsFooter
+scroll-bottom FinanceOverhaulBondsOwedList
+expect-in-view FinanceOverhaulBondsRow-$bond FinanceOverhaulBondsOwedList
+capture bonds-scrolled
+cleanup:
+redeem-new-bonds
+bonds-section auto
+close-economy
