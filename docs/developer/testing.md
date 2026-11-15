@@ -36,12 +36,14 @@ fraction of a control, for the Stock Monitor hover), `log-basket` (every investm
 for auditing the Index math offline), `inspect-parents CONTROL` (a control and every parent:
 absolute box, background, clipping — for measuring vanilla UI), `share-charts on|off` (the share
 chart flag, for before/after captures) — and checks `expect-visible`, `expect-text`,
-`expect-no-overflow` (every visible part inside the dialog or the named control, and none of our
-fixed-width labels cutting its text off; inside a clipping, scrolling list only the width is
-checked, against the list), `expect-owned-delta`, `expect-orders-delta` (orders this scenario
-created) and `expect-log`. Lines after `cleanup:` always run (cancel orders, sell back, close the
-dialog). Results: `uitest: PASS|FAIL` in the mod log, captures as `FinanceOverhaul-uitest-*.png`.
-Scenarios trade small amounts in the loaded city and undo them in cleanup; use a test save.
+`expect-slider CONTROL [max]` (the slider's thumb is drawn where its value is; with `max`, the value
+is the maximum), `expect-no-overflow` (every visible part inside the dialog or the named control,
+and none of our fixed-width labels cutting its text off; inside a clipping, scrolling list only the
+width is checked, against the list), `expect-owned-delta`, `expect-orders-delta` (orders this
+scenario created) and `expect-log`. `$owned:SYMBOL` in any step becomes the shares owned now. Lines
+after `cleanup:` always run (cancel orders, sell back, close the dialog). Results:
+`uitest: PASS|FAIL` in the mod log, captures as `FinanceOverhaul-uitest-*.png`. Scenarios trade
+small amounts in the loaded city and undo them in cleanup; use a test save.
 
 **Your orders are safe:** when a scenario starts, every order already open (the player's) is frozen
 — no fill, no expiry, no trailing peak — until the scenario ends, even when it runs days

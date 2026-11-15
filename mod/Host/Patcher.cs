@@ -301,10 +301,11 @@ namespace FinanceOverhaul
             }
         }
 
-        private static void ShareFieldSetSliderValuePostfix()
+        private static void ShareFieldSetSliderValuePostfix(BuySellInvestmentPanel __instance)
         {
             try
             {
+                SliderThumbSync.Redraw(__instance);
                 ShareAmountField.MirrorFromLabel();
                 OrderTicket.Refresh();
             }

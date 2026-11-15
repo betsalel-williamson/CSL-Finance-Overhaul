@@ -1,0 +1,17 @@
+name Sell at the maximum draws the slider thumb at the right end
+# A Buy dialog leaves the slider at the owned count of another stock (mid-track);
+# Sell then keeps that value but shrinks the range to it. Vanilla UISlider skips the
+# thumb redraw when the value is unchanged, so the thumb stayed mid-track.
+show-buy IDX
+type FinanceOverhaulShareAmountField $owned:TVLC
+expect-slider PanelSlider
+show-sell TVLC
+expect-text FinanceOverhaulShareAmountField $owned:TVLC
+capture sell-slider-thumb
+expect-slider PanelSlider max
+show-buy TVLC
+expect-slider PanelSlider
+show-sell TVLC
+expect-slider PanelSlider max
+cleanup:
+close-dialog

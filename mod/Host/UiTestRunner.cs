@@ -23,6 +23,7 @@ namespace FinanceOverhaul
     /// <item>name NAME · show-buy SYMBOL · show-sell SYMBOL · close-dialog</item>
     /// <item>click CONTROL · type CONTROL TEXT · wait SECONDS · run-days N</item>
     /// <item>expect-visible CONTROL · expect-hidden CONTROL · expect-text CONTROL TEXT</item>
+    /// <item>expect-slider CONTROL [max] (thumb drawn at the value) · $owned:SYMBOL in any step</item>
     /// <item>remember SYMBOL · expect-owned-delta SYMBOL N · expect-orders-delta N</item>
     /// <item>expect-log TEXT · capture LABEL · cancel-new-orders · sell-back SYMBOL N</item>
     /// </list>
@@ -162,6 +163,7 @@ namespace FinanceOverhaul
             }
 
             line = line.Replace("$order", ctx.LastOrderId.ToString(CultureInfo.InvariantCulture));
+            line = OwnedTokens(line);
             string[] w = line.Split(new[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
             string cmd = w[0];
             string a = w.Length > 1 ? w[1] : null;
@@ -1085,6 +1087,62 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "expect-slider":
+                {
+                    // expect-slider CONTROL [max]: the thumb is drawn where the value is
+                    // (and, with max, the value is the slider's maximum).
+                    UIComponent c = FindControl(a);
+                    UISlider s = c as UISlider;
+                    if (s == null && c != null)
+                    {
+                        s = c.GetComponentInChildren<UISlider>();
+                    }
+
+                    if (s == null || s.thumbObject == null)
+                    {
+                        r.Error = "no visible slider in " + a;
+                        break;
+                    }
+
+                    float drawn = SliderThumb.DrawnFraction(
+                        s.thumbObject.absolutePosition.x - s.absolutePosition.x,
+                        s.thumbObject.width,
+                        s.thumbOffset.x,
+                        s.width
+                    );
+                    ModLog.Info(
+                        "uitest: slider value="
+                            + s.value
+                            + " min="
+                            + s.minValue
+                            + " max="
+                            + s.maxValue
+                            + " thumb="
+                            + drawn.ToString("0.000", CultureInfo.InvariantCulture)
+                    );
+                    if (!SliderThumb.Matches(drawn, s.value, s.minValue, s.maxValue))
+                    {
+                        r.Error =
+                            "thumb drawn at "
+                            + drawn.ToString("0.000", CultureInfo.InvariantCulture)
+                            + " of the track, value "
+                            + s.value
+                            + " in "
+                            + s.minValue
+                            + ".."
+                            + s.maxValue
+                            + " belongs at "
+                            + SliderThumb
+                                .Fraction(s.value, s.minValue, s.maxValue)
+                                .ToString("0.000", CultureInfo.InvariantCulture);
+                    }
+                    else if (b == "max" && !Mathf.Approximately(s.value, s.maxValue))
+                    {
+                        r.Error = "slider value " + s.value + " is not its maximum " + s.maxValue;
+                    }
+
+                    break;
+                }
                 case "expect-text-is":
                 {
                     UIComponent c = FindControl(a);
@@ -1448,6 +1506,24 @@ namespace FinanceOverhaul
             }
 
             return -1;
+        }
+
+        /// <summary>Replaces each <c>$owned:SYMBOL</c> with the shares owned now.</summary>
+        private static string OwnedTokens(string line)
+        {
+            const string Token = "$owned:";
+            int at;
+            while ((at = line.IndexOf(Token, StringComparison.Ordinal)) >= 0)
+            {
+                int end = line.IndexOf(' ', at);
+                end = end < 0 ? line.Length : end;
+                string symbol = line.Substring(at + Token.Length, end - at - Token.Length);
+                int id = Find(symbol);
+                string owned = id < 0 ? "0" : Owned(id).ToString(CultureInfo.InvariantCulture);
+                line = line.Substring(0, at) + owned + line.Substring(end);
+            }
+
+            return line;
         }
 
         private static uint Owned(int id)

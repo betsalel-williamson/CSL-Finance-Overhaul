@@ -25,19 +25,26 @@ first proof that Finance Overhaul can edit native Financial Districts UI safely.
 
    Enter and Escape are consumed while typing, so the dialog never buys or closes from them.
 
-6. **Fail soft.** If the vanilla members are missing, the mod logs once and leaves the slider-only
+6. **Thumb matches the value.** Colossal's `UISlider` only redraws its thumb when the value changes,
+   not when the range does, so Sell at the maximum (after a Buy left the same number on a wider
+   range) drew the thumb mid-track. After every `SetSliderValue` the mod redraws the thumb
+   (`SliderThumbSync`); `SliderThumb` holds the position math, and game UI scenario
+   `38-sell-slider-thumb-at-max` checks it with `expect-slider`.
+7. **Fail soft.** If the vanilla members are missing, the mod logs once and leaves the slider-only
    dialog untouched.
-7. **Hot-reload safe.** Replacing the DLL while the game runs never stacks fields: the old copy
+8. **Hot-reload safe.** Replacing the DLL while the game runs never stacks fields: the old copy
    detaches on disable (restoring the vanilla label), the new copy attaches on the next **Invest
    in** open, and any stale field is removed by name.
-8. **Save-neutral.** UI only; nothing is written to the save
+9. **Save-neutral.** UI only; nothing is written to the save
    ([Save compatibility](./save-compatibility.md)).
 
 ## Code
 
-- Rules: `ShareAmountInput.TryParse` and `ShareAmountEditor` in the Market library (unit tested).
-- Host: `mod/Host/ShareAmountField.cs` plus `Patcher` postfixes on `BuySellInvestmentPanel.Awake`,
-  `ShowPanel`, `SetSliderValue`, `Update` (click outside), and a prefix on `OnKeyDown`.
+- Rules: `ShareAmountInput.TryParse`, `ShareAmountEditor` and `SliderThumb` in the Market library
+  (unit tested).
+- Host: `mod/Host/ShareAmountField.cs`, `mod/Host/SliderThumbSync.cs` plus `Patcher` postfixes on
+  `BuySellInvestmentPanel.Awake`, `ShowPanel`, `SetSliderValue`, `Update` (click outside), and a
+  prefix on `OnKeyDown`.
 
 ## Acceptance
 
