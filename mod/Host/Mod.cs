@@ -247,6 +247,12 @@ namespace FinanceOverhaul
                 Settings.TickerShows == TickerDisplay.PriceAndChange ? 1 : 0,
                 OnTickerShowsChanged
             );
+            group.AddDropdown(
+                "LED ticker brightness",
+                new[] { "Classic", "Bright", "Brightest (daylight)" },
+                (int)Settings.TickerBrightness,
+                OnTickerBrightnessChanged
+            );
             group.AddCheckbox(
                 "Experimental: Index stock (adds a mod-only investment to saves)",
                 Settings.IndexStockEnabled,
@@ -445,6 +451,18 @@ namespace FinanceOverhaul
                     ? TradeOrder.DefaultLifetimeDays
                     : Settings.OrderLifetimeDays;
             }
+        }
+
+        private static void OnTickerBrightnessChanged(int index)
+        {
+            if (Settings == null)
+            {
+                Settings = new ModSettings();
+            }
+
+            Settings.TickerBrightness = (LedBrightness)Math.Max(0, Math.Min(2, index));
+            SaveSettings();
+            ModLog.Info("ticker: brightness " + Settings.TickerBrightness);
         }
 
         private static void OnTickerShowsChanged(int index)

@@ -19,6 +19,7 @@ namespace FinanceOverhaul.Market
         private const string ShareChartsKey = "shareChartsEnabled";
         private const string CityBondsKey = "cityBondsEnabled";
         private const string TickerShowsKey = "tickerShows";
+        private const string TickerBrightnessKey = "tickerBrightness";
         private const string TickerPercent = "changePercent";
         private const string TickerPrice = "priceAndChange";
         private const string OrderLifetimeKey = "ordersLifetimeDays";
@@ -56,6 +57,33 @@ namespace FinanceOverhaul.Market
                 string value = line.Substring(eq + 1).Trim();
                 if (settings.Monitor.TryRead(key, value))
                 {
+                    continue;
+                }
+
+                if (string.Equals(key, TickerBrightnessKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    // classic | bright | brightest; unknown values keep the default.
+                    foreach (
+                        LedBrightness level in new[]
+                        {
+                            LedBrightness.Classic,
+                            LedBrightness.Bright,
+                            LedBrightness.Brightest,
+                        }
+                    )
+                    {
+                        if (
+                            string.Equals(
+                                value,
+                                level.ToString(),
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
+                        {
+                            settings.TickerBrightness = level;
+                        }
+                    }
+
                     continue;
                 }
 
@@ -163,6 +191,10 @@ namespace FinanceOverhaul.Market
             sb.Append(ShareChartsKey)
                 .Append('=')
                 .Append(settings.ShareChartsEnabled ? "true" : "false")
+                .Append('\n');
+            sb.Append(TickerBrightnessKey)
+                .Append('=')
+                .Append(settings.TickerBrightness.ToString().ToLowerInvariant())
                 .Append('\n');
             sb.Append(TickerShowsKey)
                 .Append('=')

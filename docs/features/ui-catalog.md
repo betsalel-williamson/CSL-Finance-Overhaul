@@ -20,6 +20,7 @@ Section order: **Finance Overhaul** (single group today).
 | Field id               | Label                                                               | Control  | Host    | Status                 |
 | ---------------------- | ------------------------------------------------------------------- | -------- | ------- | ---------------------- |
 | `live-ticker`          | Live Stock Exchange ticker (visual only)                            | Checkbox | Options | shipped                |
+| `ticker-brightness`    | LED ticker brightness                                               | Dropdown | Options | shipped (Bright)       |
 | `ticker-shows`         | Stock Exchange ticker shows                                         | Dropdown | Options | shipped (Change %)     |
 | `index-stock`          | Experimental: Index stock (adds a mod-only investment to saves)     | Checkbox | Options | experimental           |
 | `orders-limit-buy`     | Orders: Limit buys                                                  | Checkbox | Options | temporary flag         |

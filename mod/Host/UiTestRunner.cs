@@ -76,6 +76,9 @@ namespace FinanceOverhaul
             /// <summary>The player's ticker choice, kept while a scenario switches it.</summary>
             public TickerDisplay? TickerBefore;
 
+            /// <summary>The player's LED brightness, kept while a scenario switches it.</summary>
+            public LedBrightness? BrightnessBefore;
+
             /// <summary>Bonds the city owed when the scenario started (the player's).</summary>
             public readonly HashSet<int> BondsBefore = new HashSet<int>();
             public readonly Dictionary<string, uint> Owned = new Dictionary<string, uint>();
@@ -154,6 +157,11 @@ namespace FinanceOverhaul
             if (ctx.TickerBefore.HasValue && Mod.Settings != null)
             {
                 Mod.Settings.TickerShows = ctx.TickerBefore.Value; // the player's choice
+            }
+
+            if (ctx.BrightnessBefore.HasValue && Mod.Settings != null)
+            {
+                Mod.Settings.TickerBrightness = ctx.BrightnessBefore.Value;
             }
             ModLog.Info(
                 failure == null
@@ -622,6 +630,48 @@ namespace FinanceOverhaul
                 case "log-symbols":
                     StockSymbols.Dump();
                     break;
+                case "ticker-brightness":
+                {
+                    // ticker-brightness classic|bright|brightest|restore — the LED boards'
+                    // Options brightness (the player's choice is put back at the end).
+                    if (Mod.Settings == null)
+                    {
+                        r.Error = "no settings";
+                        break;
+                    }
+
+                    if (a == "restore")
+                    {
+                        if (ctx.BrightnessBefore.HasValue)
+                        {
+                            Mod.Settings.TickerBrightness = ctx.BrightnessBefore.Value;
+                            ctx.BrightnessBefore = null;
+                        }
+
+                        break;
+                    }
+
+                    if (!ctx.BrightnessBefore.HasValue)
+                    {
+                        ctx.BrightnessBefore = Mod.Settings.TickerBrightness;
+                    }
+
+                    Mod.Settings.TickerBrightness =
+                        a == "classic" ? LedBrightness.Classic
+                        : a == "brightest" ? LedBrightness.Brightest
+                        : LedBrightness.Bright;
+                    LedRgb gain = LedPalette.Colour(LedText.Gain, Mod.Settings.TickerBrightness);
+                    ModLog.Info(
+                        "uitest: ticker brightness "
+                            + Mod.Settings.TickerBrightness
+                            + " gain=#"
+                            + gain.R.ToString("X2")
+                            + gain.G.ToString("X2")
+                            + gain.B.ToString("X2")
+                    );
+                    yield return new WaitForSeconds(0.5f); // boards repaint on the next scroll
+                    break;
+                }
                 case "ticker-shows":
                 {
                     // ticker-shows percent|price|restore — switches Options → "Stock Exchange

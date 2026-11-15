@@ -39,6 +39,9 @@ namespace FinanceOverhaul.Market
         /// <summary>How the Stock Exchange LED ticker shows the change (visual only).</summary>
         public TickerDisplay TickerShows { get; set; }
 
+        /// <summary>LED board brightness (visual only); Bright by default for daylight.</summary>
+        public LedBrightness TickerBrightness { get; set; } = LedBrightness.Bright;
+
         /// <summary>Stock Monitor flag and per-player window state (UI only, never in saves).</summary>
         public StockMonitorSettings Monitor { get; } = new StockMonitorSettings();
 

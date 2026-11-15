@@ -133,15 +133,11 @@ namespace FinanceOverhaul
         // Figma tokens color/ticker/*: board, symbol, gain, loss, unknown; plus a dim
         // unlit-dot shade between board and board-lit.
         private static readonly Color32 BoardColour = new Color32(0x1E, 0x30, 0x3E, 0xFF);
-        private static readonly Color32[] Palette =
-        {
-            new Color32(0x29, 0x3A, 0x46, 0xFF), // LedText.Off
-            new Color32(0xEF, 0xB0, 0x58, 0xFF), // LedText.Symbol
-            new Color32(0x4E, 0xF4, 0x65, 0xFF), // LedText.Gain
-            new Color32(0xE9, 0x42, 0x4F, 0xFF), // LedText.Loss
-            new Color32(0x9F, 0xB0, 0xC0, 0xFF), // LedText.Unknown
-            new Color32(0x9F, 0xB0, 0xC0, 0xFF), // LedText.Flat (color/ticker/flat)
-        };
+
+        // Dot colours for the chosen Options brightness (LedPalette, Market); rebuilt on change.
+        private Color32[] palette;
+        private Color32[] gaps;
+        private LedBrightness paletteLevel = (LedBrightness)(-1);
 
         private readonly Dictionary<ushort, GameObject> boards =
             new Dictionary<ushort, GameObject>();
@@ -380,6 +376,7 @@ namespace FinanceOverhaul
             }
 
             scrollDots -= steps;
+            bool recolour = UpdatePalette();
             for (int r = 0; r < RowCount; r++)
             {
                 LedMarquee marquee = marquees[r];
@@ -394,6 +391,13 @@ namespace FinanceOverhaul
                 long from;
                 long to;
                 marquee.Advance(steps, out from, out to);
+                if (recolour)
+                {
+                    // New brightness: repaint the whole ring (same dots, new colours).
+                    from = Math.Max(0L, marquee.Head - marquee.RingDots);
+                    to = from + marquee.RingDots;
+                }
+
                 if (to > from)
                 {
                     Paint(r, from, to);
@@ -462,8 +466,41 @@ namespace FinanceOverhaul
         /// dot is a lit block with a 1-texel dark gap on its right and bottom (LED look);
         /// dot row 0 is the top.
         /// </summary>
+        /// <summary>Rebuilds the dot colours when Options → LED brightness changed; true if it did.</summary>
+        private bool UpdatePalette()
+        {
+            LedBrightness level =
+                Mod.Settings != null ? Mod.Settings.TickerBrightness : LedBrightness.Bright;
+            if (palette != null && level == paletteLevel)
+            {
+                return false;
+            }
+
+            var colours = new Color32[LedPalette.Count];
+            var gapColours = new Color32[LedPalette.Count];
+            for (int i = 0; i < colours.Length; i++)
+            {
+                LedRgb c = LedPalette.Colour((byte)i, level);
+                colours[i] = new Color32(c.R, c.G, c.B, 0xFF);
+                LedRgb g = LedPalette.Gap((byte)i, level);
+                gapColours[i] = new Color32(g.R, g.G, g.B, 0xFF);
+            }
+
+            gaps = gapColours;
+
+            bool changed = palette != null;
+            palette = colours;
+            paletteLevel = level;
+            return changed;
+        }
+
         private void Paint(int r, long from, long to)
         {
+            if (palette == null)
+            {
+                UpdatePalette();
+            }
+
             LedStrip strip = marquees[r].Strip;
             Color32[] pixels = rowPixels[r];
             int t = TexelsPerDot;
@@ -474,14 +511,15 @@ namespace FinanceOverhaul
                 for (int dy = 0; dy < strip.Height; dy++)
                 {
                     byte cell = strip.Get(dx, dy);
-                    Color32 lit = cell < Palette.Length ? Palette[cell] : Palette[0];
+                    Color32 lit = cell < palette.Length ? palette[cell] : palette[0];
+                    Color32 gapColour = cell < gaps.Length ? gaps[cell] : gaps[0];
                     for (int ty = 0; ty < t; ty++)
                     {
                         int texY = (strip.Height - 1 - dy) * t + (t - 1 - ty);
                         for (int tx = 0; tx < t; tx++)
                         {
                             bool gap = tx == t - 1 || ty == t - 1;
-                            pixels[texY * w + dx * t + tx] = gap ? BoardColour : lit;
+                            pixels[texY * w + dx * t + tx] = gap ? gapColour : lit;
                         }
                     }
                 }

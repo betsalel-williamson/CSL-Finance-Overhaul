@@ -1,0 +1,14 @@
+# Options → "LED ticker brightness". Captures the Stock Exchange boards at each level (point the
+# camera at the Stock Exchange, ideally in daylight). The player's choice is put back at the end.
+name LED ticker brightness: Classic, Bright and Brightest repaint the boards at once
+ticker-brightness classic
+expect-log ticker brightness Classic gain=#4EF465
+capture ticker-classic
+ticker-brightness bright
+expect-log ticker brightness Bright
+capture ticker-bright
+ticker-brightness brightest
+expect-log ticker brightness Brightest
+capture ticker-brightest
+cleanup:
+ticker-brightness restore

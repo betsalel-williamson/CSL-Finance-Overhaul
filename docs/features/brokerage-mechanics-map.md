@@ -109,3 +109,13 @@ character has a glyph, the text equals the Monitor's pill text, the printed sign
 colour in both modes, and moves within ±50% fit the marquee slot (wilder ones are clipped). Game UI
 scenario 40 switches modes and logs the entries. The daily log line keeps the older `SYM ( +2.67 )`
 form.
+
+**Step 4c (shipped): brightness.** Options → **LED ticker brightness** (`LedBrightness`, key
+`tickerBrightness`, visual only): **Classic** (the Figma tokens), **Bright** (default: every lit
+colour scaled to full strength, darker unlit dots, lit dots glow 30% into the 1-texel gap around
+them) and **Brightest (daylight)** (also lifted 30% toward white, near-black unlit dots, 55% glow).
+The gap matters most: it is about 40% of each dot, and the game blends it with the dot at a
+distance. Proved in `LedPaletteTests`: a brighter level never lowers a lit dot's perceived
+brightness, keeps its hue family, grows lit-to-unlit contrast, and the glowing gap stays dimmer than
+its dot. A change repaints the boards on the next scroll step; game UI scenario 42 captures each
+level.
