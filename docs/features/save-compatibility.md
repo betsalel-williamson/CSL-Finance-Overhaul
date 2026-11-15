@@ -47,6 +47,117 @@ The bond book lives only in mod data (`FinanceOverhaul.Bonds`, text `v1`), behin
 that defaults to off. Without the mod the save loads as vanilla: the bonds and the payments they
 still owe disappear, and the cash already received stays. Not yet run through the matrix below.
 
+## Situations
+
+Who loads a Finance Overhaul save without the mod, and what they keep. "Mod data" means the blocks
+the mod writes beside the city (orders, bonds, markers), which the game ignores.
+
+### 1. Retiring the mod (the player is done with it)
+
+- **Expect:** every old save opens; the city, money, loans and vanilla holdings are intact.
+- **Lost by design:** Index shares (their slot points at a stock only the mod provides; the game
+  drops it, no refund), open orders, and city bonds (the debt vanishes; the cash raised stays, a
+  windfall).
+- **After the first save without the mod** the file is plain vanilla; the mod's blocks may stay
+  inside, unused.
+- **Idea:** an Options button "Prepare to remove Finance Overhaul" that sells Index shares at the
+  daily price, repays or lists the bonds, and cancels open orders, so nothing is lost unfairly.
+
+### 2. Forgot to turn the mod on (will turn it back on soon)
+
+- **Expect:** nothing is lost when the mod comes back.
+- **Today:** orders and bonds come back only if the game keeps the mod's blocks when it saves
+  without the mod (to verify in game). **Index shares are lost**: the game drops the slot on load
+  and saving makes that permanent (Alloy check P3 finds this trace).
+- **Fixes:** keep a copy of the Index holding in mod data and restore it on load; keep a "last seen"
+  game day so the mod knows days were played without it, and ask the player once how to handle the
+  missed bond payments (the **Welcome back** dialog below). Orders past their lifetime expire on the
+  first day back and are chirped.
+- **Autosaves** while the mod is off overwrite the good save, so the fix must not depend on the
+  player reloading an older file.
+
+### 3. Tester switching things on and off
+
+- **Mod off and on**, as in 2.
+- **Index flag off** while holding shares: the mod runs but does not register the Index, so the game
+  drops the slot just like case 2; the same copy-and-restore fix covers it.
+- **City bonds flag off:** only stops new sales; existing bonds keep paying (by design).
+- **Hot reload** of the mod: state is re-read from mod data; no save involved.
+- **Dev test stock (TST):** test saves only; same rules as the Index.
+
+### 4. Other situations
+
+- **Sharing a save** (Steam Workshop, a friend) with someone who does not have the mod: case 1 for
+  them.
+- **Older mod opens a newer save** (downgrade): unknown codec versions and lines are skipped (unit
+  tested); confirm once in game.
+- **Newer mod opens an older save** (upgrade): one-time migrations, like the Index rebase marker.
+- **Game update** changes how unknown prefabs or investments load: re-run the checks after big game
+  patches.
+- **Crash or power loss while saving:** a cut-off mod block parses as empty or skips bad lines; the
+  game handles its own data.
+- **Loading an older save of the same city:** mod data travels with each save, so it always matches
+  that city state; player settings (Options, Stock Monitor) are shared across cities.
+- **Other mods** that change investments or Chirper: out of scope, note conflicts when reported.
+
+## Welcome back dialog (designed, Figma band 14)
+
+Shown once, the first time a city loads with the mod after game days were played without it, and
+only if a bond payment was missed. Very simple wording:
+
+> **Welcome back**
+>
+> Finance Overhaul was off for 23 days in this city. Your city bonds did not make their payments
+> while it was off. How do you want to handle them?
+>
+> **[Pay what was missed (₡44,000)]** Pays the 23 days of bond payments today, as if the mod had
+> been on.
+>
+> **[Start fresh from today]** Skips the missed payments. Payments carry on as normal from today.
+>
+> This choice only affects this city.
+
+If the Index copy restored shares, one line says so ("Your Index shares (120) are back.").
+
+## Formal model (Alloy)
+
+`formal/saves.als` models the save file, the running game and every order of player actions (load
+with the mod, with the Index flag off, or without the mod; play a day; buy Index shares; save; quit)
+and checks each promise above against every trace up to the bound. Policies are switches, so the
+same model shows today's behaviour and the proposed fixes: mirror the Index holding, bond catch-up
+versus skip, and whether the game keeps mod data when saving without the mod. Results: see
+[Formal results](#formal-results).
+
+## Formal results
+
+Run with `scripts/check-formal.sh` (Alloy 6, Glucose solver; every trace up to 10 actions). "Holds"
+means Alloy found no counterexample; "gap" means it found one, as expected for today's design.
+
+| #   | Promise                                                     | Situation        | Today                                                    | With the fixes                                                                     |
+| --- | ----------------------------------------------------------- | ---------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| P1  | A vanilla load never keeps a reference to the missing Index | all              | **holds**                                                | holds                                                                              |
+| P2  | Once saved without the mod, the file is plain vanilla       | retire           | **holds**                                                | holds                                                                              |
+| P3  | Index shares saved with the mod come back with the mod      | forgot to enable | **gap**: lost (trace below)                              | holds with the Index copy, if the game keeps mod data; still lost if it drops it   |
+| P4  | The bond book comes back with the mod                       | forgot to enable | holds if the game keeps mod data; **gap** if it drops it | same: depends on the game (verify in game)                                         |
+| P5  | The city never pays a coupon that is not due                | all              | **holds**                                                | holds                                                                              |
+| P6  | Coming back never pays more than one coupon in a day        | forgot / tester  | **gap** with catch-up (two coupons on day one back)      | holds when skipping; with the dialog, a lump is paid only if the player chooses it |
+| P7  | Index flag off and on keeps saved shares                    | tester           | **gap** (same as P3)                                     | holds with the Index copy                                                          |
+
+A reachability run confirms the "forgot to enable" situation is possible in the model, so the passes
+are not vacuous.
+
+**Today's P3 trace (shortest found):** load with the mod → buy Index shares → save → quit → load
+with the Index flag off (or without the mod) → save. The slot was dropped on load and the save made
+it permanent; loading with the mod again shows no shares.
+
+**Alloy also caught a wording mistake:** the first P3 said shares bought with the mod always come
+back; Alloy answered with "buy, quit without saving, reload". Those shares were never saved, so the
+promise now speaks of shares that were saved.
+
+**What the model does not cover:** the real save file format, other mods, crashes mid-save, and the
+game's actual behaviour. Its two assumptions about the game (an unknown prefab is dropped on load;
+mod data is kept or dropped on save) are exactly what the in-game checks below must confirm.
+
 ## Test matrix (in game)
 
 | #   | Saved with                 | Loaded with            | Pass when                                 |

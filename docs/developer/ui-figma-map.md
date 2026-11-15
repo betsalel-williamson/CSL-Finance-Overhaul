@@ -217,3 +217,15 @@ component `FO/ChirpNotice`.
 | 6   | `notices.bond-maturity` | Bond repaid   | Shipped (`BondDesk`)                           |
 | 7   | `notices.bond-coupon`   | Bond coupon   | Shipped, off by default                        |
 | 8   | `opt.notices`           | Options flags | Shipped: notices on, every bond coupon off     |
+
+### Welcome back frame (band 14, `designed`)
+
+Shown once when a city loads with the mod after days played without it
+([Save compatibility](../features/save-compatibility.md#welcome-back-dialog-designed-figma-band-14)).
+
+| #   | Catalog id         | Title               | Status                                     |
+| --- | ------------------ | ------------------- | ------------------------------------------ |
+| 1   | `welcome.dialog`   | When it shows       | Planned (save-checks work)                 |
+| 2   | `welcome.catch-up` | Pay what was missed | Planned                                    |
+| 3   | `welcome.skip`     | Start fresh         | Planned                                    |
+| 4   | `welcome.index`    | Index shares back   | Planned (Index copy in mod data, Alloy P3) |

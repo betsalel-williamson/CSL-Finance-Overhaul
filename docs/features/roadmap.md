@@ -170,7 +170,11 @@ promise, and priority 2 (local listings) adds the riskiest kind: new companies i
 and screenshots recorded in the Results table of [Save compatibility](./save-compatibility.md); the
 game UI runner can still set up the city state before saving and verify after loading.
 
-**Size:** S–M (an afternoon of game restarts), plus the bond catch-up decision.
+**Size:** S–M (an afternoon of game restarts). The bond catch-up becomes a player choice in a simple
+**Welcome back** dialog (Figma band 14), and the situations and an Alloy model with its results are
+in [Save compatibility](./save-compatibility.md): P3 shows today's Index loss, fixed by keeping a
+copy of the holding in mod data, if the game keeps mod data when saving without the mod (the first
+thing to verify in game).
 
 **Suggestion:** do it before priority 2, which adds new listings to saves.
 

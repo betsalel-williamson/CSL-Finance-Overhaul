@@ -66,3 +66,12 @@ CPU only, not Cities frame time.
 
 `src/FinanceOverhaul.Market` must not reference Cities types — see
 [ADR 0003](../features/adr/0003-market-library-vs-mod-surface.md) and `npm run layer:lint`.
+
+## Formal models (Alloy)
+
+`formal/saves.als` models save and load safety (situations in
+[Save compatibility](../features/save-compatibility.md)). `scripts/check-formal.sh` runs every
+command with the Glucose solver and compares the outcome with the command's `expect` (0 = the
+promise holds, 1 = a known gap or a reachability run); it exits 1 on any surprise. Needs Java and
+the Alloy 6 jar (`FO_ALLOY_JAR`, default `~/.cache/factory/org.alloytools.alloy.dist.jar`). About
+eight minutes, so it is not part of `hooks:agent-validate`; run it whenever the save design changes.
