@@ -50,7 +50,95 @@ player's own orders.
 - Esc to close the Stock Monitor; exact alignment of our chart grid with the vanilla grid.
 - Parked by choice: price history longer than 30 days (6M–10Y).
 
-## Next-step candidates
+## Priorities (set 2026-11-15)
+
+Worked one at a time in this order (single-piece flow: maths with proofs → engine → Figma → UI →
+game UI test → docs), each behind its own Options flag until proven.
+
+| Priority | Work                                                    | Ideas covered | Size | Notes                                                                                                                                                                                                           |
+| -------- | ------------------------------------------------------- | ------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1        | Fill notifications                                      | 20            | S    | Chirper message (or a toast) when an order fills, expires or is skipped, and when a bond coupon or repayment goes out. Today fills are only in the mod log.                                                     |
+| 2        | Local company listings and local IPOs                   | 10, 11        | L    | Companies the city grew (large office, industry or commercial employers) list on the exchange through an IPO event. Needs new mod-owned listings in the save and, past a dozen names, the many-company UI (14). |
+| 3        | Dividend shares                                         | 12            | M    | Listings that pay a periodic cash dividend into the budget; unlocks dividend reinvestment as an order type. Overlaps high-dividend funds (3).                                                                   |
+| 4        | Recurring buys                                          | 19            | S    | A monthly automated buy (dollar-cost averaging) on the shipped order engine.                                                                                                                                    |
+| 5        | Commodities market: resources, utilities, cargo/freight | 7, 8, 9       | L    | Marks priced from Industry production, storage, power and water supply, and outbound freight; mirrors vanilla mechanics for the treasury UI.                                                                    |
+| 6        | External world and other exchanges                      | 21, 13        | L    | Light outside pressure (demand spikes, rate shocks) on existing prices, and neighbour or regional boards beside the local exchange.                                                                             |
+| 7        | Buying external bonds                                   | 5             | M    | Lend surplus cash to outside issuers for a fixed term at a quoted rate; coupons into the budget; sell early at a price. The bond schedule maths already covers the holder's side.                               |
+
+## Unranked ideas: context for choosing
+
+Each with what the player would see, what drives it, dependencies, size and save impact.
+
+### Sector ETFs (idea 2)
+
+- **Player sees:** a few basket listings, e.g. "Industrial & Cargo" (oil, ore, forestry, farming,
+  freight) and "Civic & Utilities" (healthcare, deathcare, transit), tradable like a stock, smoother
+  than any single name.
+- **Driven by:** the member stocks' prices, combined with the same geometric (Jevons) chain the
+  Index uses, so the maths and its proofs carry over.
+- **Depends on:** nothing new; benefits from commodities (5) if baskets should include them.
+- **Size / save:** M. Adds listings to the save like the Index (same experimental-flag pattern and
+  save matrix).
+- **Why unranked might be fine:** the Index already gives a diversified option; ETFs matter more
+  once local listings (2) add many names.
+
+### High-dividend funds (idea 3)
+
+- **Player sees:** a fund that pays cash into the budget every month or week, with slow price
+  growth.
+- **Driven by:** mature service sectors; payout from a yield on the holding's value.
+- **Depends on:** dividend shares (3) build the payout engine; a dividend fund is then a basket of
+  dividend payers (shares the ETF work above).
+- **Size / save:** S once 3 and ETFs exist; otherwise M.
+- **Suggestion:** fold into priority 3 as a follow-up rather than a separate epic.
+
+### Infrastructure bond series (idea 6)
+
+- **Player sees:** when issuing a city bond, an optional "series" (transit, utilities, education)
+  whose rate moves with how well that service performs (coverage, budget, upkeep).
+- **Driven by:** service coverage and budget in that category; a better-run service borrows cheaper.
+- **Depends on:** issued city bonds (shipped); pricing gains a service-quality premium with its own
+  proofs (bounded, monotone).
+- **Size / save:** S–M. One more field per bond in the existing bond book (versioned codec).
+
+### Ordinary market cycle (idea 19)
+
+- **Player sees:** slow booms and mild corrections across the board, visible in the Stock Monitor
+  and LED; the Index smoother than single names, bonds steady.
+- **Driven by:** city-wide production, cargo throughput and service coverage, as a gentle modifier
+  on vanilla price movement (never a casino).
+- **Depends on:** a safe hook into the vanilla price step (the share-price hooks exist); pairs
+  naturally with external world (6).
+- **Size / save:** M; no save data (derived each day).
+- **Risk:** changes vanilla balance, so it needs its own flag and a strength setting.
+
+### Black swan events (idea 20)
+
+- **Player sees:** rare shocks (cascading industry shutdowns, disasters, liquidity freezes) that
+  drop correlated stocks and commodities together, announced through Chirper (uses priority 1).
+- **Driven by:** real city events (disasters, large closures), not pure chance.
+- **Depends on:** fill notifications (1) for the announcement; commodities (5) for correlation;
+  stop-loss orders (shipped) as the intended hedge.
+- **Size / save:** M; a small event log in mod data so a shock isn't replayed on load.
+- **Risk:** frustrating if too frequent; needs an Options off switch and a frequency setting.
+
+### Interface for many companies (idea 14, partly)
+
+- **Player sees:** search, sector grouping and a watchlist in the Investments panel and the Stock
+  Monitor once listings grow beyond the vanilla thirteen.
+- **Driven by:** UI only.
+- **Depends on:** becomes necessary with local listings (2) and other exchanges (6).
+- **Size / save:** M; settings only (no save data).
+- **Suggestion:** build the first slice as part of priority 2.
+
+### Save compatibility matrix (loose end)
+
+- **What:** load saves with Index shares and city bonds without the mod (and back) and record the
+  results; required by the save-compatibility contract before more state lands in saves.
+- **Size:** S, mostly manual play in game plus notes.
+- **Suggestion:** do it before priority 2, which adds new listings to saves.
+
+## Earlier next-step candidates (superseded by the priorities above)
 
 1. **Buy bonds** — the natural next treasury piece: lend surplus cash for a fixed term at a quoted
    rate, coupons into the budget, sell early at a price (needs price/yield maths with proofs).

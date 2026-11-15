@@ -188,14 +188,16 @@ owed bond.
 ### Roadmap frame (band 04, status board)
 
 Band 04 shows every original idea as a card grouped by area (Funds, Bonds, Commodities, Listings,
-Automation, World & facade), coloured shipped / partly / next / not started, matching
-[Roadmap status](../features/roadmap.md). Pins mark the next-step candidates:
+Automation, World & facade), coloured shipped / partly / prioritised / not started, matching
+[Roadmap status](../features/roadmap.md). Pins mark the priority order set on 2026-11-15; the legend
+also gives context for the unranked ideas.
 
-| #   | Candidate                 | Status today                                                                                   |
-| --- | ------------------------- | ---------------------------------------------------------------------------------------------- |
-| 1   | Buy bonds                 | Next treasury piece ([Bonds](../features/bonds.md))                                            |
-| 2   | Recurring buys (DCA)      | Not started ([Automated orders](../features/automated-orders.md))                              |
-| 3   | Fill notifications        | Not started (fills only logged)                                                                |
-| 4   | Dividend investments      | Not started ([Market analogs](../features/market-analogs.md))                                  |
-| 5   | Sector ETFs               | Not started (reuses the Index maths)                                                           |
-| 6   | Save compatibility matrix | Index cases 1, 3–5 and bonds not run ([Save compatibility](../features/save-compatibility.md)) |
+| #   | Priority                                 | Cards                                                      |
+| --- | ---------------------------------------- | ---------------------------------------------------------- |
+| 1   | Fill notifications                       | Fill notifications                                         |
+| 2   | Local company listings and local IPOs    | Local IPOs, Company listings & IPOs                        |
+| 3   | Dividend shares                          | Dividend shares                                            |
+| 4   | Recurring buys                           | Recurring buys (DCA)                                       |
+| 5   | Commodities: resources, utilities, cargo | Resource commodities, Utility commodities, Cargo / freight |
+| 6   | External world and other exchanges       | External world, Other exchanges                            |
+| 7   | Buying external bonds                    | Buy / hold bonds                                           |
