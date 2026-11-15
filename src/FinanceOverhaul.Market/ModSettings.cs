@@ -42,6 +42,18 @@ namespace FinanceOverhaul.Market
         /// <summary>LED board brightness (visual only); Bright by default for daylight.</summary>
         public LedBrightness TickerBrightness { get; set; } = LedBrightness.Bright;
 
+        /// <summary>
+        /// Keep the live LED boards while an info view (traffic, population…) is open. Off: they
+        /// hide there and the facade shows the game's own info-view look, like the original.
+        /// </summary>
+        public bool TickerInInfoViews { get; set; } = true;
+
+        /// <summary>Whether the live boards draw now (the ticker on, and not hidden by an info view).</summary>
+        public bool TickerShownNow(bool infoViewOpen)
+        {
+            return LiveTickerEnabled && (TickerInInfoViews || !infoViewOpen);
+        }
+
         /// <summary>Stock Monitor flag and per-player window state (UI only, never in saves).</summary>
         public StockMonitorSettings Monitor { get; } = new StockMonitorSettings();
 

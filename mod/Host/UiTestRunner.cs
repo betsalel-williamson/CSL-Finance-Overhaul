@@ -76,6 +76,12 @@ namespace FinanceOverhaul
             /// <summary>The player's ticker choice, kept while a scenario switches it.</summary>
             public TickerDisplay? TickerBefore;
 
+            /// <summary>The player's info view and "ticker in info views", kept while a scenario changes them.</summary>
+            public InfoManager.InfoMode? InfoBefore;
+            public InfoManager.SubInfoMode InfoSubBefore;
+            public bool? InInfoViewsBefore;
+            public bool? LiveTickerBefore;
+
             /// <summary>The player's LED brightness, kept while a scenario switches it.</summary>
             public LedBrightness? BrightnessBefore;
 
@@ -157,6 +163,21 @@ namespace FinanceOverhaul
             if (ctx.TickerBefore.HasValue && Mod.Settings != null)
             {
                 Mod.Settings.TickerShows = ctx.TickerBefore.Value; // the player's choice
+            }
+
+            if (ctx.LiveTickerBefore.HasValue && Mod.Settings != null)
+            {
+                Mod.Settings.LiveTickerEnabled = ctx.LiveTickerBefore.Value;
+            }
+
+            if (ctx.InInfoViewsBefore.HasValue && Mod.Settings != null)
+            {
+                Mod.Settings.TickerInInfoViews = ctx.InInfoViewsBefore.Value;
+            }
+
+            if (ctx.InfoBefore.HasValue && InfoManager.exists)
+            {
+                InfoManager.instance.SetCurrentMode(ctx.InfoBefore.Value, ctx.InfoSubBefore);
             }
 
             if (ctx.BrightnessBefore.HasValue && Mod.Settings != null)
@@ -630,6 +651,63 @@ namespace FinanceOverhaul
                 case "log-symbols":
                     StockSymbols.Dump();
                     break;
+                case "info-view":
+                {
+                    // info-view traffic|population|none — opens or closes an info view (the
+                    // player's own view comes back at the end).
+                    if (!ctx.InfoBefore.HasValue)
+                    {
+                        ctx.InfoBefore = InfoManager.instance.CurrentMode;
+                        ctx.InfoSubBefore = InfoManager.instance.CurrentSubMode;
+                    }
+
+                    InfoManager.InfoMode mode =
+                        a == "traffic" ? InfoManager.InfoMode.Traffic
+                        : a == "population" ? InfoManager.InfoMode.Density
+                        : InfoManager.InfoMode.None;
+                    InfoManager.instance.SetCurrentMode(mode, InfoManager.SubInfoMode.Default);
+                    yield return new WaitForSeconds(1f);
+                    break;
+                }
+                case "live-ticker":
+                {
+                    // live-ticker on|off — the Options ticker toggle (restored at the end).
+                    if (!ctx.LiveTickerBefore.HasValue)
+                    {
+                        ctx.LiveTickerBefore = Mod.Settings.LiveTickerEnabled;
+                    }
+
+                    Mod.Settings.LiveTickerEnabled = a == "on";
+                    yield return new WaitForSeconds(0.6f);
+                    break;
+                }
+                case "ticker-in-info-views":
+                {
+                    // ticker-in-info-views on|off — Options checkbox (restored at the end).
+                    if (!ctx.InInfoViewsBefore.HasValue)
+                    {
+                        ctx.InInfoViewsBefore = Mod.Settings.TickerInInfoViews;
+                    }
+
+                    Mod.Settings.TickerInInfoViews = a == "on";
+                    yield return new WaitForSeconds(0.6f);
+                    break;
+                }
+                case "expect-ticker":
+                {
+                    // expect-ticker shown|hidden — the live LED boards right now.
+                    bool want = a == "shown";
+                    if (TickerOverlay.ShownNow != want)
+                    {
+                        r.Error =
+                            "ticker is "
+                            + (TickerOverlay.ShownNow ? "shown" : "hidden")
+                            + ", expected "
+                            + a;
+                    }
+
+                    break;
+                }
                 case "ticker-brightness":
                 {
                     // ticker-brightness classic|bright|brightest|restore — the LED boards'

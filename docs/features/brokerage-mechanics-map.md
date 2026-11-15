@@ -119,3 +119,11 @@ distance. Proved in `LedPaletteTests`: a brighter level never lowers a lit dot's
 brightness, keeps its hue family, grows lit-to-unlit contrast, and the glowing gap stays dimmer than
 its dot. A change repaints the boards on the next scroll step; game UI scenario 42 captures each
 level.
+
+**Step 4d (shipped): info views.** Options → **Show the LED ticker in info views (traffic,
+population…)** (key `tickerInInfoViews`, default on: the boards stay). Off: while an info view is
+open the live boards hide and the vanilla board sub-meshes are restored, so the facade gets the
+game's own flat info-view look like the original; they come back when the view closes
+(`ModSettings.TickerShownNow`, `InfoManager.CurrentMode`). Game UI scenario 43 opens Traffic and
+Population with the option on and off; the player's info view, live-ticker toggle and checkbox are
+put back afterwards.

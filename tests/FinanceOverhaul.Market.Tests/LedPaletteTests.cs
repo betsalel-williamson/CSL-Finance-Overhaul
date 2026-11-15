@@ -132,6 +132,22 @@ namespace FinanceOverhaul.Market.Tests
             );
         }
 
+        [Fact]
+        public void InfoViewsShowTheTickerUnlessThePlayerHidesIt()
+        {
+            var s = new ModSettings();
+            Assert.True(s.TickerInInfoViews); // default: as today, always shown
+            Assert.True(s.TickerShownNow(false));
+            Assert.True(s.TickerShownNow(true));
+            s.TickerInInfoViews = false;
+            Assert.True(s.TickerShownNow(false));
+            Assert.False(s.TickerShownNow(true)); // like the original in info views
+            s.LiveTickerEnabled = false;
+            Assert.False(s.TickerShownNow(false));
+            Assert.False(SettingsFile.Parse(SettingsFile.Format(s)).TickerInInfoViews);
+            Assert.True(SettingsFile.Parse("").TickerInInfoViews);
+        }
+
         private static char Dominant(LedRgb c)
         {
             return c.R >= c.G && c.R >= c.B ? 'R'

@@ -247,6 +247,11 @@ namespace FinanceOverhaul
                 Settings.TickerShows == TickerDisplay.PriceAndChange ? 1 : 0,
                 OnTickerShowsChanged
             );
+            group.AddCheckbox(
+                "Show the LED ticker in info views (traffic, population…)",
+                Settings.TickerInInfoViews,
+                OnTickerInInfoViewsChanged
+            );
             group.AddDropdown(
                 "LED ticker brightness",
                 new[] { "Classic", "Bright", "Brightest (daylight)" },
@@ -451,6 +456,18 @@ namespace FinanceOverhaul
                     ? TradeOrder.DefaultLifetimeDays
                     : Settings.OrderLifetimeDays;
             }
+        }
+
+        private static void OnTickerInInfoViewsChanged(bool shown)
+        {
+            if (Settings == null)
+            {
+                Settings = new ModSettings();
+            }
+
+            Settings.TickerInInfoViews = shown;
+            SaveSettings();
+            ModLog.Info("ticker: in info views=" + shown);
         }
 
         private static void OnTickerBrightnessChanged(int index)

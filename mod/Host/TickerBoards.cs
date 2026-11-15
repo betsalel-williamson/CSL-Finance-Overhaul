@@ -155,13 +155,29 @@ namespace FinanceOverhaul
         private bool anyNear;
         private float scrollDots;
         private bool placementLogged;
+        private bool lastShown = true;
+
+        /// <summary>Whether the live boards are drawn now (game UI tests read it).</summary>
+        internal static bool ShownNow { get; private set; } = true;
 
         private void Update()
         {
             float now = Time.unscaledTime;
             try
             {
-                bool tickerOn = Mod.Settings == null || Mod.Settings.LiveTickerEnabled;
+                bool infoView =
+                    InfoManager.exists
+                    && InfoManager.instance.CurrentMode != InfoManager.InfoMode.None;
+                bool tickerOn = Mod.Settings == null || Mod.Settings.TickerShownNow(infoView);
+                if (tickerOn != lastShown)
+                {
+                    // Show or hide at once (e.g. an info view opened), not at the next rescan.
+                    lastShown = tickerOn;
+                    ShownNow = tickerOn;
+                    nextRescan = 0f;
+                    nextLod = 0f;
+                }
+
                 if (now >= nextRescan)
                 {
                     nextRescan = now + RescanSeconds;

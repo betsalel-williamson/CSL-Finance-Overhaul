@@ -1,0 +1,19 @@
+# Options → "Show the LED ticker in info views". On (default): the boards stay in an info view.
+# Off: they hide there (the facade gets the game's own info-view look) and come back when the
+# view closes. The player's info view and checkbox are put back at the end.
+name ticker in info views: shown by default, hidden in info views when the option is off
+live-ticker on
+info-view none
+ticker-in-info-views on
+info-view traffic
+expect-ticker shown
+capture ticker-info-on
+ticker-in-info-views off
+expect-ticker hidden
+capture ticker-info-off
+info-view none
+expect-ticker shown
+info-view population
+expect-ticker hidden
+cleanup:
+info-view none

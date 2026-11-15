@@ -20,6 +20,7 @@ namespace FinanceOverhaul.Market
         private const string CityBondsKey = "cityBondsEnabled";
         private const string TickerShowsKey = "tickerShows";
         private const string TickerBrightnessKey = "tickerBrightness";
+        private const string TickerInInfoViewsKey = "tickerInInfoViews";
         private const string TickerPercent = "changePercent";
         private const string TickerPrice = "priceAndChange";
         private const string OrderLifetimeKey = "ordersLifetimeDays";
@@ -144,6 +145,12 @@ namespace FinanceOverhaul.Market
                 {
                     settings.ShareChartsEnabled = flag;
                 }
+                else if (
+                    string.Equals(key, TickerInInfoViewsKey, StringComparison.OrdinalIgnoreCase)
+                )
+                {
+                    settings.TickerInInfoViews = flag;
+                }
                 else if (string.Equals(key, CityBondsKey, StringComparison.OrdinalIgnoreCase))
                 {
                     settings.CityBondsEnabled = flag;
@@ -191,6 +198,10 @@ namespace FinanceOverhaul.Market
             sb.Append(ShareChartsKey)
                 .Append('=')
                 .Append(settings.ShareChartsEnabled ? "true" : "false")
+                .Append('\n');
+            sb.Append(TickerInInfoViewsKey)
+                .Append('=')
+                .Append(settings.TickerInInfoViews ? "true" : "false")
                 .Append('\n');
             sb.Append(TickerBrightnessKey)
                 .Append('=')
