@@ -388,6 +388,9 @@ namespace FinanceOverhaul
                     continue;
                 }
 
+                // Options → "Stock Exchange ticker shows": entries written from now on use it.
+                marquee.Display =
+                    Mod.Settings != null ? Mod.Settings.TickerShows : TickerDisplay.ChangePercent;
                 long from;
                 long to;
                 marquee.Advance(steps, out from, out to);

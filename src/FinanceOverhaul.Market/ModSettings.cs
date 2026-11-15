@@ -36,6 +36,9 @@ namespace FinanceOverhaul.Market
         /// </summary>
         public bool CityBondsEnabled { get; set; }
 
+        /// <summary>How the Stock Exchange LED ticker shows the change (visual only).</summary>
+        public TickerDisplay TickerShows { get; set; }
+
         /// <summary>Stock Monitor flag and per-player window state (UI only, never in saves).</summary>
         public StockMonitorSettings Monitor { get; } = new StockMonitorSettings();
 

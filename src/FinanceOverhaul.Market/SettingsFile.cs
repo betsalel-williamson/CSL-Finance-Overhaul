@@ -18,6 +18,9 @@ namespace FinanceOverhaul.Market
         private const string DevTestStockKey = "devTestStockEnabled";
         private const string ShareChartsKey = "shareChartsEnabled";
         private const string CityBondsKey = "cityBondsEnabled";
+        private const string TickerShowsKey = "tickerShows";
+        private const string TickerPercent = "changePercent";
+        private const string TickerPrice = "priceAndChange";
         private const string OrderLifetimeKey = "ordersLifetimeDays";
 
         /// <summary>Settings key of an order type's flag, e.g. <c>ordersStopLossEnabled</c>.</summary>
@@ -53,6 +56,23 @@ namespace FinanceOverhaul.Market
                 string value = line.Substring(eq + 1).Trim();
                 if (settings.Monitor.TryRead(key, value))
                 {
+                    continue;
+                }
+
+                if (string.Equals(key, TickerShowsKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Unknown values keep the default (a newer build's choice).
+                    if (string.Equals(value, TickerPrice, StringComparison.OrdinalIgnoreCase))
+                    {
+                        settings.TickerShows = TickerDisplay.PriceAndChange;
+                    }
+                    else if (
+                        string.Equals(value, TickerPercent, StringComparison.OrdinalIgnoreCase)
+                    )
+                    {
+                        settings.TickerShows = TickerDisplay.ChangePercent;
+                    }
+
                     continue;
                 }
 
@@ -143,6 +163,14 @@ namespace FinanceOverhaul.Market
             sb.Append(ShareChartsKey)
                 .Append('=')
                 .Append(settings.ShareChartsEnabled ? "true" : "false")
+                .Append('\n');
+            sb.Append(TickerShowsKey)
+                .Append('=')
+                .Append(
+                    settings.TickerShows == TickerDisplay.PriceAndChange
+                        ? TickerPrice
+                        : TickerPercent
+                )
                 .Append('\n');
             sb.Append(CityBondsKey)
                 .Append('=')

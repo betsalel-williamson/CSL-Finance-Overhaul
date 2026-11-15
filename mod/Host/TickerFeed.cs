@@ -24,6 +24,10 @@ namespace FinanceOverhaul
 
         private static readonly List<string> Symbols = new List<string>(20);
         private static readonly List<float> Rates = new List<float>(20);
+        private static readonly Dictionary<string, float> PriceBySymbol = new Dictionary<
+            string,
+            float
+        >(20);
 
         public static string CurrentLine { get; private set; }
 
@@ -65,6 +69,7 @@ namespace FinanceOverhaul
         {
             Symbols.Clear();
             Rates.Clear();
+            PriceBySymbol.Clear();
             Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
             for (int i = 0; i < buffer.Length; i++)
             {
@@ -80,12 +85,21 @@ namespace FinanceOverhaul
                     continue;
                 }
 
-                Symbols.Add(StockSymbols.For(info));
+                string symbol = StockSymbols.For(info);
+                Symbols.Add(symbol);
+                PriceBySymbol[symbol] = buffer[i].value; // the game's "Value", whole ₡
                 Rates.Add(ai.CalculateChangeRate((byte)i, ref buffer[i], PanelChangeRateWindow));
             }
 
             TickerLine.SortBySymbol(Symbols, Rates);
-            Current = new TickerSnapshot(Symbols.ToArray(), Rates.ToArray());
+            var prices = new float[Symbols.Count];
+            for (int k = 0; k < prices.Length; k++)
+            {
+                float p;
+                prices[k] = PriceBySymbol.TryGetValue(Symbols[k], out p) ? p : float.NaN;
+            }
+
+            Current = new TickerSnapshot(Symbols.ToArray(), Rates.ToArray(), prices);
             return TickerLine.Format(Symbols, Rates);
         }
 

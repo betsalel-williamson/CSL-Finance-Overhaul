@@ -155,6 +155,11 @@ namespace FinanceOverhaul.Market
             add(')', new[] { "#..", ".#.", "..#", "..#", "..#", ".#.", "#.." });
             add(' ', new[] { "..", "..", "..", "..", "..", "..", ".." });
             add('?', new[] { ".###.", "#...#", "....#", "...#.", "..#..", ".....", "..#.." });
+            add('%', new[] { "##...", "##..#", "...#.", "..#..", ".#...", "#..##", "...##" });
+            add(',', new[] { "..", "..", "..", "..", "..", ".#", "#." });
+            // ₡ (colón): a C crossed by a stroke; "−" (minus sign) draws like "-".
+            add('₡', new[] { ".####", "#.#..", "#.#..", "#.#..", "#.#..", "#.#..", ".####" });
+            add('−', new[] { "....", "....", "....", "####", "....", "....", "...." });
             return d;
         }
     }
@@ -232,7 +237,39 @@ namespace FinanceOverhaul.Market
 
         public static int MeasureEntry(string symbol, float rate)
         {
-            return MeasureText(symbol + RatePart(rate)) + EntryGap;
+            return MeasureEntry(symbol, float.NaN, rate, TickerDisplay.ChangePercent);
+        }
+
+        public static int MeasureEntry(
+            string symbol,
+            float price,
+            float rate,
+            TickerDisplay display
+        )
+        {
+            return MeasureText(symbol + ChangePart(price, rate, display)) + EntryGap;
+        }
+
+        /// <summary>
+        /// What follows the symbol (with its leading space): <c>" +3.22%"</c> in
+        /// <see cref="TickerDisplay.ChangePercent"/>, <c>" ₡951 +₡30"</c> in
+        /// <see cref="TickerDisplay.PriceAndChange"/> (the same change rate in ₡, the Stock
+        /// Monitor's rule), <c>" --"</c> when unknown. Signs are + and −, never arrows.
+        /// </summary>
+        public static string ChangePart(float price, float rate, TickerDisplay display)
+        {
+            if (display == TickerDisplay.PriceAndChange)
+            {
+                string priceText = StockMonitor.PriceText(price);
+                if (priceText == "--")
+                {
+                    return " --";
+                }
+
+                return " " + priceText + " " + StockMonitor.ChangeAmountFromRate(price, rate);
+            }
+
+            return " " + StockMonitor.ChangeText(rate);
         }
 
         public static LedStrip RenderRow(
@@ -240,6 +277,18 @@ namespace FinanceOverhaul.Market
             IList<float> changeRates,
             int start,
             int count
+        )
+        {
+            return RenderRow(symbols, null, changeRates, start, count, TickerDisplay.ChangePercent);
+        }
+
+        public static LedStrip RenderRow(
+            IList<string> symbols,
+            IList<float> prices,
+            IList<float> changeRates,
+            int start,
+            int count,
+            TickerDisplay display
         )
         {
             if (symbols == null || changeRates == null)
@@ -251,7 +300,7 @@ namespace FinanceOverhaul.Market
             int width = 0;
             for (int i = start; i < end; i++)
             {
-                width += MeasureEntry(symbols[i], changeRates[i]);
+                width += MeasureEntry(symbols[i], PriceAt(prices, i), changeRates[i], display);
             }
 
             var strip = new LedStrip(width, LedFont.Height);
@@ -262,7 +311,7 @@ namespace FinanceOverhaul.Market
                 byte rateColour = RateColour(rate);
                 x = Draw(strip, x, symbols[i], Symbol);
                 x += LedFont.Spacing;
-                x = Draw(strip, x, RatePart(rate), rateColour);
+                x = Draw(strip, x, ChangePart(PriceAt(prices, i), rate, display), rateColour);
                 x += EntryGap;
             }
 
@@ -306,9 +355,9 @@ namespace FinanceOverhaul.Market
             return result;
         }
 
-        internal static string RatePart(float rate)
+        private static float PriceAt(IList<float> prices, int i)
         {
-            return " ( " + TickerLine.FormatRate(rate) + " )";
+            return prices != null && i < prices.Count ? prices[i] : float.NaN;
         }
 
         internal static int MeasureText(string text)
@@ -368,14 +417,21 @@ namespace FinanceOverhaul.Market
     public sealed class TickerSnapshot
     {
         public TickerSnapshot(string[] symbols, float[] rates)
+            : this(symbols, rates, null) { }
+
+        public TickerSnapshot(string[] symbols, float[] rates, float[] prices)
         {
             Symbols = symbols ?? new string[0];
             Rates = rates ?? new float[0];
+            Prices = prices ?? new float[0];
         }
 
         public string[] Symbols { get; private set; }
 
         public float[] Rates { get; private set; }
+
+        /// <summary>Daily prices (whole ₡ values), same order; may be shorter (then unknown).</summary>
+        public float[] Prices { get; private set; }
 
         public int Count
         {
@@ -398,7 +454,13 @@ namespace FinanceOverhaul.Market
 
         /// <summary>Widest entry a slot of the ring reserves room for; wider entries are clipped.</summary>
         public static readonly int MaxEntryDots =
-            LedText.MeasureText("WWWW ( -999.99 )") + LedText.EntryGap;
+            Math.Max(
+                LedText.MeasureText("WWWW +999.99%"),
+                LedText.MeasureText("WWWW ₡9,999,999 +₡9,999,999")
+            ) + LedText.EntryGap;
+
+        /// <summary>How entries written from now on show the change (Options → Ticker shows).</summary>
+        public TickerDisplay Display { get; set; }
 
         private readonly string idleText;
         private TickerSnapshot content;
@@ -512,7 +574,14 @@ namespace FinanceOverhaul.Market
 
             int i = start + cursor;
             cursor = (cursor + 1) % count;
-            LedStrip entry = LedText.RenderRow(content.Symbols, content.Rates, i, 1);
+            LedStrip entry = LedText.RenderRow(
+                content.Symbols,
+                content.Prices,
+                content.Rates,
+                i,
+                1,
+                Display
+            );
             if (entry.Width > MaxEntryDots)
             {
                 // Clip absurd rates, keeping the trailing gap.

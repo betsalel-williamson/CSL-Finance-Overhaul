@@ -5,6 +5,16 @@ using System.Text;
 
 namespace FinanceOverhaul.Market
 {
+    /// <summary>How the Stock Exchange LED ticker shows each stock's change (Options).</summary>
+    public enum TickerDisplay
+    {
+        /// <summary>"DS +3.22%": the game's change rate with a % sign (default).</summary>
+        ChangePercent = 0,
+
+        /// <summary>"DS ₡951 +₡30": price and the same change in ₡, like an exchange tape.</summary>
+        PriceAndChange = 1,
+    }
+
     /// <summary>
     /// Ticker symbols for the Stock Exchange boards. Uses the symbols the vanilla
     /// facade artwork already shows where an investment clearly matches, plus new

@@ -241,6 +241,12 @@ namespace FinanceOverhaul
                 Settings.LiveTickerEnabled,
                 OnLiveTickerChanged
             );
+            group.AddDropdown(
+                "Stock Exchange ticker shows",
+                new[] { "Change % (+3.22%)", "Price and ₡ change (₡951 +₡30)" },
+                Settings.TickerShows == TickerDisplay.PriceAndChange ? 1 : 0,
+                OnTickerShowsChanged
+            );
             group.AddCheckbox(
                 "Experimental: Index stock (adds a mod-only investment to saves)",
                 Settings.IndexStockEnabled,
@@ -439,6 +445,19 @@ namespace FinanceOverhaul
                     ? TradeOrder.DefaultLifetimeDays
                     : Settings.OrderLifetimeDays;
             }
+        }
+
+        private static void OnTickerShowsChanged(int index)
+        {
+            if (Settings == null)
+            {
+                Settings = new ModSettings();
+            }
+
+            Settings.TickerShows =
+                index == 1 ? TickerDisplay.PriceAndChange : TickerDisplay.ChangePercent;
+            SaveSettings();
+            ModLog.Info("ticker: shows " + Settings.TickerShows);
         }
 
         private static void OnOrderLifetimeChanged(int index)

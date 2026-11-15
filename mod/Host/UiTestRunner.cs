@@ -73,6 +73,9 @@ namespace FinanceOverhaul
             /// <summary>Bonds this scenario sold (cleanup redeems them).</summary>
             public readonly List<int> Bonds = new List<int>();
 
+            /// <summary>The player's ticker choice, kept while a scenario switches it.</summary>
+            public TickerDisplay? TickerBefore;
+
             /// <summary>Bonds the city owed when the scenario started (the player's).</summary>
             public readonly HashSet<int> BondsBefore = new HashSet<int>();
             public readonly Dictionary<string, uint> Owned = new Dictionary<string, uint>();
@@ -148,6 +151,10 @@ namespace FinanceOverhaul
 
             OrderDesk.UnfreezeAll();
             CityBondsSection.ForceShow = false;
+            if (ctx.TickerBefore.HasValue && Mod.Settings != null)
+            {
+                Mod.Settings.TickerShows = ctx.TickerBefore.Value; // the player's choice
+            }
             ModLog.Info(
                 failure == null
                     ? "uitest: PASS " + ctx.Name + " (" + steps.Count + " steps)"
@@ -615,6 +622,53 @@ namespace FinanceOverhaul
                 case "log-symbols":
                     StockSymbols.Dump();
                     break;
+                case "ticker-shows":
+                {
+                    // ticker-shows percent|price|restore — switches Options → "Stock Exchange
+                    // ticker shows" (the player's choice is put back by restore and at the end)
+                    // and logs today's entries as the boards will draw them.
+                    if (Mod.Settings == null)
+                    {
+                        r.Error = "no settings";
+                        break;
+                    }
+
+                    if (a == "restore")
+                    {
+                        if (ctx.TickerBefore.HasValue)
+                        {
+                            Mod.Settings.TickerShows = ctx.TickerBefore.Value;
+                            ctx.TickerBefore = null;
+                        }
+
+                        break;
+                    }
+
+                    if (!ctx.TickerBefore.HasValue)
+                    {
+                        ctx.TickerBefore = Mod.Settings.TickerShows;
+                    }
+
+                    Mod.Settings.TickerShows =
+                        a == "price" ? TickerDisplay.PriceAndChange : TickerDisplay.ChangePercent;
+                    TickerSnapshot snap = TickerFeed.Current;
+                    var sb = new System.Text.StringBuilder();
+                    for (int i = 0; snap != null && i < snap.Count; i++)
+                    {
+                        sb.Append(snap.Symbols[i])
+                            .Append(
+                                LedText.ChangePart(
+                                    i < snap.Prices.Length ? snap.Prices[i] : float.NaN,
+                                    snap.Rates[i],
+                                    Mod.Settings.TickerShows
+                                )
+                            )
+                            .Append("  ");
+                    }
+
+                    ModLog.Info("uitest: ticker " + Mod.Settings.TickerShows + ": " + sb);
+                    break;
+                }
                 case "bonds-section":
                 {
                     // bonds-section show|auto — shows the Loans tab's City bonds section even

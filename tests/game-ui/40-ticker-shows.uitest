@@ -1,0 +1,14 @@
+# Options → "Stock Exchange ticker shows". Switches the LED boards to price and ₡ change, then
+# to change %, logging today's entries in each mode and capturing the screen (point the camera
+# at the Stock Exchange to see the boards). The player's choice is put back at the end.
+name ticker shows: change % with a % sign, or price and ₡ change, with + / − signs
+ticker-shows price
+expect-log ticker PriceAndChange: 
+wait 25
+capture ticker-price
+ticker-shows percent
+expect-log ticker ChangePercent: 
+wait 25
+capture ticker-percent
+cleanup:
+ticker-shows restore

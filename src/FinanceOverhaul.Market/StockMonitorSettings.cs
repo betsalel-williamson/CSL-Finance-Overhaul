@@ -37,7 +37,7 @@ namespace FinanceOverhaul.Market
 
         public bool ShowSparklines = true;
 
-        /// <summary>The change pill shows ₡ vs yesterday instead of the game's % change rate.</summary>
+        /// <summary>The change pill shows the game's change rate in ₡ (price × r / (1 + r)) instead of %.</summary>
         public bool ChangeAsCurrency;
 
         /// <summary>Prefab names of stocks the player chose not to show.</summary>

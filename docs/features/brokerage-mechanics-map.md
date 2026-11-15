@@ -93,3 +93,19 @@ seconds per row); textures and materials are destroyed on hot reload.
 camera. When they come back into range the rows are refilled from today's values while still hidden.
 Stock Exchange scan every 5 s, placement set once per building. Verified 2026-11-13 with the dev
 in-game capture (`FinanceOverhaul.capture` trigger, `--dev` builds).
+
+**Step 4b (shipped): what each entry shows.** Options → **Stock Exchange ticker shows**
+(`TickerDisplay`, settings key `tickerShows`, visual only):
+
+- **Change % (default):** `DS +3.22%`, the game's change rate with a % sign, the same text as the
+  Stock Monitor's % pill.
+- **Price and ₡ change:** `DS ₡951 +₡30`, like an exchange tape. The ₡ change is the same rate in ₡
+  (`price × r / (1 + r)`), the Monitor's ₡ pill.
+
+Signs are + and − (no arrows), colour green, red or grey by the one rule (`LedText.RateColour`), and
+the glyphs `% , ₡ −` were added to `LedFont`. A switch applies to entries written from then on;
+nothing on screen is redrawn. Proved over 5,000 seeded quotes (`TickerDisplayTests`): every
+character has a glyph, the text equals the Monitor's pill text, the printed sign agrees with the
+colour in both modes, and moves within ±50% fit the marquee slot (wilder ones are clipped). Game UI
+scenario 40 switches modes and logs the entries. The daily log line keeps the older `SYM ( +2.67 )`
+form.
