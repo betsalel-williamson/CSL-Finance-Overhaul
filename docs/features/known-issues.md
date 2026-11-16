@@ -3,15 +3,15 @@
 Open bugs to investigate, newest first. Each entry says what was seen, what we know, and the next
 check. Move an entry to its feature shard (or delete it) once fixed.
 
-### Long frame stall with 254 listed stocks
+### One 11.9 s frame during a 254-stock run (not reproduced)
 
-Scenario 51 (2026-11-15): with 254 investments listed, one frame took 11.9 s (frames averaged 463 ms
-over 10 s; an earlier run at 254 saw 1.7 s). The game's daily investment update stays tiny (0.004
-ms), so the cost is on the UI side: likely the mod rebuilding ticker symbols, the LED marquee or
-Stock Monitor rows for 254 names, or the Investments panel rebuilding 240 rows. Not an issue at 33
-(worst frame 0.9 s, the same as without extra stocks in this busy test city). **Next check:**
-profile the 254 step by turning the live ticker and Stock Monitor off in turn, before local listings
-go past a few dozen names.
+Scenario 51 (2026-11-15): one frame took 11.9 s just after 221 stress stocks were added. A follow-up
+run measured separately: adding 239 stocks costs a one-off 43 ms spike in the daily investment
+update and a few seconds of slightly slower frames; 20 s later, 254 stocks run like 15 (frames
+127–142 ms vs 114 ms in this busy test city, worst frames 400–850 ms vs 934 ms; update 0.004–0.017
+ms). The stall did not come back, so it was most likely unrelated (an autosave or a garbage
+collection pause). **Next check:** only if it reappears; note the time and look at `Player.log` for
+a save or GC at that moment.
 
 ## Resolved
 

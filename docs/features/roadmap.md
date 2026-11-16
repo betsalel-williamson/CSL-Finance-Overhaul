@@ -134,8 +134,8 @@ Each with what the player would see, what drives it, dependencies, size and save
   slots; slot 0 is an empty placeholder that is never saved). The `MAX_INVESTMENT_COUNT = 32`
   constant limits nothing. At 33 and at 254 every stock gets a slot and shows in Economy →
   Investments and the Stock Monitor; a 255th and 256th get no slot and are simply not listed (no
-  error, nothing overwritten). The daily investment update costs about 0.005 ms at any size. With
-  254 names the UI stalls (see Known issues), so local listings start small.
+  error, nothing overwritten). The daily investment update costs about 0.005 ms at any size; adding
+  many at once costs a one-off spike (43 ms for 239), and 254 run like 15 once settled.
 
 ### Save compatibility matrix (loose end) — likely next after notices (user, 2026-11-15)
 
