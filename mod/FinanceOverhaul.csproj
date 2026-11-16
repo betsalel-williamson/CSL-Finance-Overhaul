@@ -88,6 +88,13 @@
       SkipUnchangedFiles="true"
       Condition="Exists('$(TargetDir)CitiesHarmony.API.dll')"
     />
+    <!-- Content Manager and Workshop thumbnail (512x512), beside the DLL. -->
+    <Copy
+      SourceFiles="$(MSBuildThisFileDirectory)PreviewImage.png"
+      DestinationFolder="$(ModDeployDir)"
+      SkipUnchangedFiles="true"
+      Condition="Exists('$(MSBuildThisFileDirectory)PreviewImage.png')"
+    />
     <Message Importance="high" Text="Deployed → $(ModDeployDir)/FinanceOverhaul.dll" />
   </Target>
   <ItemGroup>

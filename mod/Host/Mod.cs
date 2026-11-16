@@ -17,7 +17,7 @@ namespace FinanceOverhaul
         public string Name => OptionsTitle;
 
         public string Description =>
-            "Financial Districts market overhaul — MVP stock hook, live reload, future index funds & automation.";
+            "Stock Exchange overhaul for Financial Districts: limit, stop-loss, take-profit and trailing stop orders, a Stock Monitor, a live LED ticker and Chirper notices. Experimental: Index stock and city bonds.";
 
         public static ModSettings Settings { get; private set; }
 
@@ -295,12 +295,12 @@ namespace FinanceOverhaul
                 OnOrderLifetimeChanged
             );
             group.AddCheckbox(
-                "Share value charts in the Stock Monitor style (testing)",
+                "Share value charts in the Stock Monitor style",
                 Settings.ShareChartsEnabled,
                 OnShareChartsChanged
             );
             group.AddCheckbox(
-                "Order and bond notices in Chirper (testing)",
+                "Order and bond notices in Chirper",
                 Settings.NoticesEnabled,
                 v =>
                 {
@@ -319,12 +319,12 @@ namespace FinanceOverhaul
                 }
             );
             group.AddCheckbox(
-                "City bonds: sell bonds to raise money (testing; adds mod save data)",
+                "Experimental: City bonds (sell bonds to raise money; adds mod save data)",
                 Settings.CityBondsEnabled,
                 OnCityBondsChanged
             );
             group.AddCheckbox(
-                "Stock Monitor window (testing)",
+                "Stock Monitor window",
                 Settings.Monitor.Enabled,
                 OnStockMonitorChanged
             );

@@ -90,9 +90,9 @@ and the same hover (crosshair, dot, "Oil · 8 days ago · ₡925").
 - **Updates:** after each vanilla update (`BuySellInvestmentPanel.UpdateBindings`,
   `InvestmentTooltip.Update`) the mod draws its chart and clears the curve the game just added. The
   tooltip updates every frame, so the chart redraws only when its stock or prices change.
-- **Flag:** **Share value charts in the Stock Monitor style (testing)** (`shareChartsEnabled`, on by
-  default). Off — and on mod disable or hot reload — the overlay is removed and the game redraws its
-  own chart on its next update.
+- **Flag:** **Share value charts in the Stock Monitor style** (`shareChartsEnabled`, on by default).
+  Off — and on mod disable or hot reload — the overlay is removed and the game redraws its own chart
+  on its next update.
 
 ## One colour rule
 
@@ -123,7 +123,7 @@ is removed by name. Prices move once per game day, so rows are rebuilt only when
 
 ## Options flag (temporary)
 
-**Stock Monitor window (testing)** — on by default. Off removes the button and the window at once.
+**Stock Monitor window** — on by default. Off removes the button and the window at once.
 
 ## Later steps
 
