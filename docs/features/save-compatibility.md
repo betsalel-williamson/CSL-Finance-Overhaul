@@ -141,12 +141,16 @@ If the Index copy restored shares, one line says so ("Your Index shares (120) ar
 ## Index copy
 
 Mod data `FinanceOverhaul.IndexCopy` (text `v1`, `shares=`, `spent=` in cents) holds the city's
-Index holding. Written at every save while the Index is listed (and just before the mod unregisters
-it); left alone when the Index is not listed, so a city loaded with the Index flag off keeps the
-copy. On a city load, if the Index slot had to be created again (the game dropped it), the copy's
-shares and money spent are put back and City Brokerage chirps "Your Index shares (120) are back." A
-slot that came back with the save always wins, so an old copy can never add shares; the copy is
-never used mid-session or on hot reload.
+Index holding. Written at every save while the Index is listed, and just before the mod unregisters
+the Index (quit to menu, hot reload). Left alone when the Index is not listed, so a city loaded
+without the mod or with the Index flag off keeps the copy.
+
+Whenever an Index slot is created (by the game while loading such a city, or by the mod), the copy's
+shares and money spent are put back into the new, empty slot, and City Brokerage chirps "Your Index
+shares (120) are back." once the city has loaded. A slot that already holds shares is never touched,
+and the copy always equals the holding at the last moment the Index was listed, so it cannot add
+shares. Verified in game 2026-11-15: 10 Index shares saved with the mod, city loaded and saved with
+the mod off (Index gone), loaded with the mod: `index: restored 10 share(s) from the copy`.
 
 ## Formal model (Alloy)
 

@@ -233,8 +233,8 @@ namespace FinanceOverhaul.Market
     /// <summary>
     /// The Index copy (save compatibility P3/P7). The Index lives in a vanilla investment slot that
     /// the game drops when it loads a city without the mod (or with the mod's Index flag off). The
-    /// mod keeps a copy of the holding in its own save data, written at every save while the Index
-    /// is listed, and puts it back only when the Index had to be listed again on load.
+    /// mod keeps a copy of the holding in its own save data, written at every save (and quit or hot
+    /// reload) while the Index is listed, and puts it back when an Index slot is created again.
     /// </summary>
     public static class IndexCopyCodec
     {
@@ -310,13 +310,12 @@ namespace FinanceOverhaul.Market
         }
 
         /// <summary>
-        /// What to put back: only when the Index slot had to be created on this load (so the
-        /// game dropped it) and the copy holds shares. A slot that came back with the save always
-        /// wins, so an out-of-date copy can never add shares.
+        /// What to put back into a newly created Index slot: the copy, when the slot is empty and
+        /// the copy holds shares. Never touches a slot that already holds shares.
         /// </summary>
-        public static IndexHolding? ToRestore(bool slotRecreated, IndexHolding? copy)
+        public static IndexHolding? ToRestore(bool slotEmpty, IndexHolding? copy)
         {
-            if (!slotRecreated || copy == null || copy.Value.Shares <= 0)
+            if (!slotEmpty || copy == null || copy.Value.Shares <= 0)
             {
                 return null;
             }

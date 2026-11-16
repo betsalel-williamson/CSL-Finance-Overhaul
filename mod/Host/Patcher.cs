@@ -474,6 +474,7 @@ namespace FinanceOverhaul
                 if (IndexListing.IsIndex(__instance))
                 {
                     IndexListing.BackfillHistory(ref data);
+                    IndexListing.RestoreInto(ref data);
                 }
             }
             catch

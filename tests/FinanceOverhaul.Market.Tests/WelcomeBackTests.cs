@@ -171,11 +171,11 @@ namespace FinanceOverhaul.Market.Tests
         }
 
         [Fact]
-        public void RestoreOnlyWhenTheSlotWasDropped()
+        public void RestoreOnlyIntoAnEmptySlot()
         {
             var held = new IndexHolding { Shares = 120, SpentCents = 1 };
             Assert.Equal(120, IndexCopyCodec.ToRestore(true, held).Value.Shares);
-            Assert.Null(IndexCopyCodec.ToRestore(false, held)); // the save kept the slot: it wins
+            Assert.Null(IndexCopyCodec.ToRestore(false, held)); // a slot holding shares is never touched
             Assert.Null(IndexCopyCodec.ToRestore(true, null)); // no copy (older save)
             Assert.Null(
                 IndexCopyCodec.ToRestore(true, new IndexHolding { Shares = 0, SpentCents = 0 })

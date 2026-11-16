@@ -34,7 +34,7 @@ namespace FinanceOverhaul
                 ChirpNotices.Reset();
                 StockSymbols.Reset();
                 IndexListing.ResetRebase();
-                IndexListing.DisarmRestore();
+                IndexListing.ResetRestored();
             }
             catch
             {
@@ -51,8 +51,8 @@ namespace FinanceOverhaul
                 OrderDesk.Reset();
                 BondDesk.Reset();
                 ChirpNotices.Reset();
+                IndexListing.PostRestoredNoticeIfDue();
                 IndexListing.ResetRebase();
-                IndexListing.ArmRestore();
                 IndexListing.EnsureInLoadedCity();
                 IndexListing.LogStatus();
                 TestStockListing.EnsureInLoadedCity();
