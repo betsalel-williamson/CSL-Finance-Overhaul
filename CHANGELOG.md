@@ -43,5 +43,5 @@ First public release. Player guide: https://betsalel-williamson.github.io/CSL-Fi
 
 - Cities always open without the mod. Orders and bonds stay in the save; Index shares come back when
   the mod returns. A Welcome back window handles bond payments missed while the mod was off.
-- Fixes a game bug where loading a city marks used investment slots as free, so a later investment
-  could overwrite one the city holds.
+- Room for up to 254 investments, with every listing kept safe: new listings never take a slot the
+  city already holds.
