@@ -1,4 +1,5 @@
-# Publishes the player guide (docs/client) to GitHub Pages.
+# Publishes the player guide to GitHub Pages with Astro Starlight (site/).
+# Pages come from docs/client, synced by site/scripts/sync-docs.mjs during the build.
 name: Player guide (Pages)
 
 on:
@@ -6,6 +7,7 @@ on:
     branches: [main]
     paths:
       - "docs/client/**"
+      - "site/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -23,12 +25,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/jekyll-build-pages@v1
+      - uses: actions/setup-node@v4
         with:
-          source: ./docs/client
-          destination: ./_site
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci
+        working-directory: site
+      - run: npm run build
+        working-directory: site
+      - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
 
   deploy:
     needs: build

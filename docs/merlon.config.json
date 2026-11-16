@@ -44,6 +44,7 @@
       "src/**",
       "tests/**",
       "scripts/**",
+      "site/**",
       "AGENTS.md",
       ".github/**",
       ".changeset/**",

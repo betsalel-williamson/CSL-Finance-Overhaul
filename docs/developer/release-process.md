@@ -31,7 +31,8 @@ charts, Index stock, city bonds), the test stock off.
    city loads with no mod warnings.
 4. `mod/PreviewImage.png` is 512×512 (at most 644×644) and shows the current build.
 5. The player guide (`docs/client`) matches the release; it publishes to
-   [GitHub Pages](https://betsalel-williamson.github.io/CSL-Finance-Overhaul/) on push.
+   [GitHub Pages](https://betsalel-williamson.github.io/CSL-Finance-Overhaul/) on push (Astro
+   Starlight in `site/`; preview locally with `npm --prefix site run dev`).
 
 ## 1. GitHub Release (the build we share)
 
@@ -65,8 +66,10 @@ The first upload creates the Workshop item. After that, always **Update** the sa
 
 1. Step 2 (release installed locally).
 2. Cities → Content Manager → Mods → **Finance Overhaul** (local) → **Share**.
-3. Title, description and tags from [Workshop storefront](./workshop-storefront.md); the preview is
-   taken from `PreviewImage.png`. Publish.
+3. The dialog fills the title from the folder name (`FinanceOverhaul`): change it to **Finance
+   Overhaul**. Description (plain text), change note and tags from
+   [Workshop storefront](./workshop-storefront.md); the preview is taken from `PreviewImage.png`.
+   Publish.
 4. On the Steam page: set visibility (hidden or friends only for the soft launch), add **Harmony**
    as a required item, check the description renders.
 5. Record the published file ID in [Workshop storefront](./workshop-storefront.md) and commit.

@@ -26,6 +26,40 @@ Finance Overhaul
 Stock Exchange overhaul for Financial Districts: limit, stop-loss, take-profit and trailing stop orders, a Stock Monitor, an Index stock, city bonds, a live LED ticker and Chirper notices.
 ```
 
+## Plain text description
+
+For the Share dialog's description field (plain text, no formatting):
+
+```text
+Finance Overhaul turns the Financial Districts Stock Exchange into a trading desk for your city's treasury.
+
+Place limit buy, stop-loss, take-profit and trailing stop orders and let the city trade while you build. Follow every stock in the Stock Monitor window, watch live prices scroll on the Stock Exchange's LED boards, buy the Index stock to own the whole market at once, and sell city bonds on the Loans tab to raise money. Chirper tells you when orders fill and bonds are repaid.
+
+Your city always opens without the mod. Orders, bonds and Index shares stay in the save and come back when the mod is turned on again.
+
+Requires Financial Districts and Harmony.
+Player guide: https://betsalel-williamson.github.io/CSL-Finance-Overhaul/
+Source and issues: https://github.com/betsalel-williamson/CSL-Finance-Overhaul
+```
+
+## Change notes
+
+For the Workshop change note on each Share or Update (plain text).
+
+### 0.1.0
+
+```text
+First release.
+- Orders: limit buy, stop-loss, take-profit and trailing stop, checked once a day.
+- Open orders and average cost per share in Your Portfolio.
+- Stock Monitor window with charts, filters and sorting.
+- Live LED ticker on the Stock Exchange.
+- Index stock that follows the whole market.
+- City bonds on the Loans tab.
+- Chirper notices for orders and bonds.
+- Saves stay safe without the mod; a Welcome back window handles missed bond payments.
+```
+
 ## Long description
 
 ```text

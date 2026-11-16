@@ -1,9 +1,0 @@
-# GitHub Pages site for the player guide only (docs/client). Built by .github/workflows/pages.yml.
-title: Finance Overhaul
-description: Player guide for the Cities Skylines Stock Exchange mod
-theme: jekyll-theme-cayman
-plugins:
-  - jekyll-relative-links
-relative_links:
-  enabled: true
-  collections: false
