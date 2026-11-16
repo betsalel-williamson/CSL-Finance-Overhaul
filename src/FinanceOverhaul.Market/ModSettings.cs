@@ -6,6 +6,28 @@ namespace FinanceOverhaul.Market
     public sealed class ModSettings
     {
         /// <summary>
+        /// Feature flags (whether a feature exists at all) are dev-only: release builds hide them
+        /// and use these values, so a player never meets a half-finished feature or gets stuck
+        /// with a hidden flag switched off. Preferences (how a shipped feature looks or behaves)
+        /// stay in Options in every build. See docs/features/ui-catalog.md.
+        /// </summary>
+        public void PinReleaseFlags()
+        {
+            // Shipped and proven: on.
+            LimitBuyEnabled = true;
+            StopLossEnabled = true;
+            TakeProfitEnabled = true;
+            TrailingStopEnabled = true;
+            Monitor.Enabled = true;
+            ShareChartsEnabled = true;
+
+            // Experimental or dev-only: off until proven.
+            IndexStockEnabled = false;
+            CityBondsEnabled = false;
+            DevTestStockEnabled = false;
+        }
+
+        /// <summary>
         /// Experimental Index stock. Off by default because it adds a mod-only
         /// investment to the save; see docs/features/save-compatibility.md.
         /// Read when the investment collection loads, so toggle before loading a city.

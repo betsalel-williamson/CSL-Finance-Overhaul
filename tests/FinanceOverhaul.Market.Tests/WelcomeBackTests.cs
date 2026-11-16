@@ -231,3 +231,52 @@ namespace FinanceOverhaul.Market.Tests
         }
     }
 }
+
+namespace FinanceOverhaul.Market.Tests
+{
+    /// <summary>
+    /// Release builds: feature flags take their release values whatever the settings file says;
+    /// preferences are the player's and stay as saved.
+    /// </summary>
+    public class ReleaseFlagsTests
+    {
+        [Fact]
+        public void FlagsPinnedPreferencesKept()
+        {
+            var s = new ModSettings
+            {
+                LimitBuyEnabled = false,
+                StopLossEnabled = false,
+                TakeProfitEnabled = false,
+                TrailingStopEnabled = false,
+                ShareChartsEnabled = false,
+                IndexStockEnabled = true,
+                CityBondsEnabled = true,
+                DevTestStockEnabled = true,
+                LiveTickerEnabled = false,
+                TickerShows = TickerDisplay.PriceAndChange,
+                TickerInInfoViews = false,
+                TickerBrightness = LedBrightness.Classic,
+                NoticesEnabled = false,
+                NoticesBondCoupons = true,
+            };
+            s.Monitor.Enabled = false;
+            s.OrderLifetimeDays = 30;
+
+            s.PinReleaseFlags();
+
+            Assert.True(s.LimitBuyEnabled && s.StopLossEnabled);
+            Assert.True(s.TakeProfitEnabled && s.TrailingStopEnabled);
+            Assert.True(s.Monitor.Enabled && s.ShareChartsEnabled);
+            Assert.False(s.IndexStockEnabled || s.CityBondsEnabled || s.DevTestStockEnabled);
+
+            Assert.False(s.LiveTickerEnabled);
+            Assert.Equal(TickerDisplay.PriceAndChange, s.TickerShows);
+            Assert.False(s.TickerInInfoViews);
+            Assert.Equal(LedBrightness.Classic, s.TickerBrightness);
+            Assert.False(s.NoticesEnabled);
+            Assert.True(s.NoticesBondCoupons);
+            Assert.Equal(30, s.OrderLifetimeDays);
+        }
+    }
+}

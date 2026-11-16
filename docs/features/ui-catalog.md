@@ -15,30 +15,38 @@ table; [UI Figma map](../developer/ui-figma-map.md) pins map screens to this inv
 
 ## Options sections (shipped)
 
-Section order: **Finance Overhaul** (single group today).
+Two sections. **Preferences** (how a shipped feature looks or behaves) show in every build under
+**Finance Overhaul**. **Feature flags** (whether a feature exists at all) show only in `--dev`
+builds under **Feature flags (dev builds only)**; release builds hide them and use the release value
+(`ModSettings.PinReleaseFlags`, unit test `ReleaseFlagsTests`).
 
-| Field id               | Label                                                                    | Control  | Host    | Status                 |
-| ---------------------- | ------------------------------------------------------------------------ | -------- | ------- | ---------------------- |
-| `live-ticker`          | Live Stock Exchange ticker (visual only)                                 | Checkbox | Options | shipped                |
-| `ticker-info-views`    | Show the LED ticker in info views (traffic, population…)                 | Checkbox | Options | shipped (on)           |
-| `ticker-brightness`    | LED ticker brightness                                                    | Dropdown | Options | shipped (Bright)       |
-| `ticker-shows`         | Stock Exchange ticker shows                                              | Dropdown | Options | shipped (Change %)     |
-| `index-stock`          | Experimental: Index stock (adds a mod-only investment to saves)          | Checkbox | Options | experimental           |
-| `orders-limit-buy`     | Orders: Limit buys                                                       | Checkbox | Options | temporary flag         |
-| `orders-stop-loss`     | Orders: Stop-loss sells                                                  | Checkbox | Options | temporary flag         |
-| `orders-take-profit`   | Orders: Take-profit sells                                                | Checkbox | Options | temporary flag         |
-| `orders-trailing-stop` | Orders: Trailing stop sells                                              | Checkbox | Options | temporary flag         |
-| `orders-lifetime`      | Orders stay open for (new orders)                                        | Dropdown | Options | shipped (default 90 d) |
-| `share-charts`         | Share value charts in the Stock Monitor style                            | Checkbox | Options | temporary flag         |
-| `stock-monitor`        | Stock Monitor window                                                     | Checkbox | Options | temporary flag         |
-| `notices`              | Order and bond notices in Chirper                                        | Checkbox | Options | temporary flag (on)    |
-| `notices-coupons`      | Also chirp every bond coupon                                             | Checkbox | Options | shipped (off)          |
-| `city-bonds`           | Experimental: City bonds (sell bonds to raise money; adds mod save data) | Checkbox | Options | temporary flag (off)   |
-| `built-utc`            | Built (UTC): …                                                           | Footer   | Options | shipped (`--dev` only) |
-| `built-local`          | Built (local): …                                                         | Footer   | Options | shipped (`--dev` only) |
+### Preferences (every build)
 
-The four order flags are on by default; see
-[Automated orders](./automated-orders.md#options-flags-temporary).
+| Field id            | Label                                                    | Control  | Default                        |
+| ------------------- | -------------------------------------------------------- | -------- | ------------------------------ |
+| `live-ticker`       | Live Stock Exchange ticker (visual only)                 | Checkbox | on                             |
+| `ticker-shows`      | Stock Exchange ticker shows                              | Dropdown | Change %                       |
+| `ticker-info-views` | Show the LED ticker in info views (traffic, population…) | Checkbox | on                             |
+| `ticker-brightness` | LED ticker brightness                                    | Dropdown | Bright                         |
+| `orders-lifetime`   | Orders stay open for (new orders)                        | Dropdown | 90 days                        |
+| `notices`           | Order and bond notices in Chirper                        | Checkbox | on                             |
+| `notices-coupons`   | Also chirp every bond coupon                             | Checkbox | off (shown only with bonds on) |
+| `built-utc`         | Built (UTC): …                                           | Footer   | `--dev` only                   |
+| `built-local`       | Built (local): …                                         | Footer   | `--dev` only                   |
+
+### Feature flags (dev builds only)
+
+| Field id               | Label                                                                    | Release value |
+| ---------------------- | ------------------------------------------------------------------------ | ------------- |
+| `orders-limit-buy`     | Orders: Limit buys                                                       | on            |
+| `orders-stop-loss`     | Orders: Stop-loss sells                                                  | on            |
+| `orders-take-profit`   | Orders: Take-profit sells                                                | on            |
+| `orders-trailing-stop` | Orders: Trailing stop sells                                              | on            |
+| `stock-monitor`        | Stock Monitor window                                                     | on            |
+| `share-charts`         | Share value charts in the Stock Monitor style                            | on            |
+| `index-stock`          | Experimental: Index stock (adds a mod-only investment to saves)          | off           |
+| `city-bonds`           | Experimental: City bonds (sell bonds to raise money; adds mod save data) | off           |
+| `dev-test-stock`       | Dev: Test Stock (TST) for game UI tests                                  | off           |
 
 Title chrome (`Finance Overhaul {version}`) is Content Manager / Options identity — see
 [Live reload](../developer/live-reload.md).

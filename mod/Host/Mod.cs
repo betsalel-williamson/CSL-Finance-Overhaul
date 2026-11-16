@@ -17,7 +17,7 @@ namespace FinanceOverhaul
         public string Name => OptionsTitle;
 
         public string Description =>
-            "Stock Exchange overhaul for Financial Districts: limit, stop-loss, take-profit and trailing stop orders, a Stock Monitor, a live LED ticker and Chirper notices. Experimental: Index stock and city bonds.";
+            "Stock Exchange overhaul for Financial Districts: limit, stop-loss, take-profit and trailing stop orders, a Stock Monitor, a live LED ticker and Chirper notices.";
 
         public static ModSettings Settings { get; private set; }
 
@@ -152,7 +152,7 @@ namespace FinanceOverhaul
                 string path = SettingsPath;
                 if (File.Exists(path))
                 {
-                    return SettingsFile.Parse(File.ReadAllText(path));
+                    return ForBuild(SettingsFile.Parse(File.ReadAllText(path)));
                 }
             }
             catch (Exception ex)
@@ -160,7 +160,18 @@ namespace FinanceOverhaul
                 ModLog.Warn("settings: read failed, using defaults: " + ex.Message);
             }
 
-            return new ModSettings();
+            return ForBuild(new ModSettings());
+        }
+
+        /// <summary>Release builds use the release value of every feature flag.</summary>
+        private static ModSettings ForBuild(ModSettings s)
+        {
+            if (!BuildInfo.ShowDevBuildIdentity)
+            {
+                s.PinReleaseFlags();
+            }
+
+            return s;
         }
 
         internal static void SaveSettings()
@@ -235,6 +246,7 @@ namespace FinanceOverhaul
                 Settings = LoadSettings();
             }
 
+            // Preferences: how shipped features look and behave. Every build.
             UIHelperBase group = helper.AddGroup(OptionsTitle);
             group.AddCheckbox(
                 "Live Stock Exchange ticker (visual only)",
@@ -258,22 +270,6 @@ namespace FinanceOverhaul
                 (int)Settings.TickerBrightness,
                 OnTickerBrightnessChanged
             );
-            group.AddCheckbox(
-                "Experimental: Index stock (adds a mod-only investment to saves)",
-                Settings.IndexStockEnabled,
-                OnIndexStockChanged
-            );
-
-            // Temporary feature flags, one per order type (see ModSettings).
-            foreach (OrderKind kind in ModSettings.OrderKinds)
-            {
-                OrderKind k = kind;
-                group.AddCheckbox(
-                    OrderText.OptionLabel(k),
-                    Settings.IsEnabled(k),
-                    enabled => OnOrderKindChanged(k, enabled)
-                );
-            }
 
             // How long new orders stay open (a game, so the player chooses; default 90 days).
             int[] lifetimes = TradeOrder.LifetimeChoices;
@@ -295,11 +291,6 @@ namespace FinanceOverhaul
                 OnOrderLifetimeChanged
             );
             group.AddCheckbox(
-                "Share value charts in the Stock Monitor style",
-                Settings.ShareChartsEnabled,
-                OnShareChartsChanged
-            );
-            group.AddCheckbox(
                 "Order and bond notices in Chirper",
                 Settings.NoticesEnabled,
                 v =>
@@ -309,29 +300,55 @@ namespace FinanceOverhaul
                     ModLog.Info("notices enabled=" + v);
                 }
             );
-            group.AddCheckbox(
-                "Also chirp every bond coupon",
-                Settings.NoticesBondCoupons,
-                v =>
-                {
-                    Settings.NoticesBondCoupons = v;
-                    SaveSettings();
-                }
-            );
-            group.AddCheckbox(
-                "Experimental: City bonds (sell bonds to raise money; adds mod save data)",
-                Settings.CityBondsEnabled,
-                OnCityBondsChanged
-            );
-            group.AddCheckbox(
-                "Stock Monitor window",
-                Settings.Monitor.Enabled,
-                OnStockMonitorChanged
-            );
-
-            if (BuildInfo.ShowDevBuildIdentity)
+            if (BuildInfo.ShowDevBuildIdentity || Settings.CityBondsEnabled)
             {
                 group.AddCheckbox(
+                    "Also chirp every bond coupon",
+                    Settings.NoticesBondCoupons,
+                    v =>
+                    {
+                        Settings.NoticesBondCoupons = v;
+                        SaveSettings();
+                    }
+                );
+            }
+
+            // Feature flags: whether a feature exists at all. Dev builds only; release builds
+            // use ModSettings.PinReleaseFlags.
+            if (BuildInfo.ShowDevBuildIdentity)
+            {
+                UIHelperBase flags = helper.AddGroup("Feature flags (dev builds only)");
+                foreach (OrderKind kind in ModSettings.OrderKinds)
+                {
+                    OrderKind k = kind;
+                    flags.AddCheckbox(
+                        OrderText.OptionLabel(k),
+                        Settings.IsEnabled(k),
+                        enabled => OnOrderKindChanged(k, enabled)
+                    );
+                }
+
+                flags.AddCheckbox(
+                    "Stock Monitor window",
+                    Settings.Monitor.Enabled,
+                    OnStockMonitorChanged
+                );
+                flags.AddCheckbox(
+                    "Share value charts in the Stock Monitor style",
+                    Settings.ShareChartsEnabled,
+                    OnShareChartsChanged
+                );
+                flags.AddCheckbox(
+                    "Experimental: Index stock (adds a mod-only investment to saves)",
+                    Settings.IndexStockEnabled,
+                    OnIndexStockChanged
+                );
+                flags.AddCheckbox(
+                    "Experimental: City bonds (sell bonds to raise money; adds mod save data)",
+                    Settings.CityBondsEnabled,
+                    OnCityBondsChanged
+                );
+                flags.AddCheckbox(
                     "Dev: Test Stock (TST) for game UI tests (adds a listing; use a test save)",
                     Settings.DevTestStockEnabled,
                     OnDevTestStockChanged

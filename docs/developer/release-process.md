@@ -14,14 +14,20 @@ Camera Control release process (same author, same Mac setup). Paste-ready store 
 
 Release builds (`./scripts/install-mod-local.sh` without `--dev`) never include the dev-only pieces:
 the game UI test runner, frame capture, the Test Stock (TST) option and the many-stocks stress test.
-Experimental features ship off by default: Index stock and city bonds.
+
+Options are split in two. **Preferences** (how a shipped feature looks or behaves: ticker style,
+brightness, info views, order lifetime, Chirper notices) show in every build. **Feature flags**
+(whether a feature exists at all: each order type, the Stock Monitor, share charts, Index stock,
+city bonds, the test stock) show only in dev builds under "Feature flags (dev builds only)"; release
+builds use `ModSettings.PinReleaseFlags` (shipped features on; Index stock, city bonds and the test
+stock off).
 
 ## Pre-ship checklist
 
 1. `npm run hooks:agent-validate` passes (layer lint, Market and Mod tests, csharpier, docs).
 2. Release install: `./scripts/install-mod-local.sh` (no `--dev`).
-3. In game: Options title reads **Finance Overhaul 0.1.0**, no Built footer, no "Dev: Test Stock"
-   option; Content Manager shows the preview image; a city loads with no mod warnings.
+3. In game: Options title reads **Finance Overhaul 0.1.0**, no Built footer, no feature-flags group
+   (preferences only); Content Manager shows the preview image; a city loads with no mod warnings.
 4. `mod/PreviewImage.png` is 512×512 (at most 644×644) and shows the current build.
 
 ## First publish (Share), done once
