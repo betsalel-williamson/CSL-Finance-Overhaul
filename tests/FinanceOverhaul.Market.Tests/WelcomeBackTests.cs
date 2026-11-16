@@ -195,3 +195,39 @@ namespace FinanceOverhaul.Market.Tests
         }
     }
 }
+
+namespace FinanceOverhaul.Market.Tests
+{
+    public class StressStockTests
+    {
+        [Fact]
+        public void Names()
+        {
+            Assert.Equal("FinanceOverhaul Stress Stock 007", StressStock.PrefabName(7));
+            Assert.True(StressStock.IsStressName(StressStock.PrefabName(254)));
+            Assert.False(StressStock.IsStressName(TestStock.PrefabName));
+            Assert.False(StressStock.IsStressName(null));
+            Assert.Equal("Stress 007 (dev)", StressStock.DisplayName(StressStock.PrefabName(7)));
+        }
+
+        [Fact]
+        public void SymbolsAreLettersAndDigitsOnly()
+        {
+            // Found by scenario 51: "Stress 001 (dev)" became "S0(".
+            Assert.Equal("S0D", TickerSymbols.For("Stress 001 (dev)"));
+            Assert.Equal("JBB", TickerSymbols.For("Joe's (Big) Bakery"));
+            Assert.Equal("?", TickerSymbols.For("(( ))"));
+            var names = new List<KeyValuePair<string, string>>();
+            for (int i = 1; i <= StressStock.GameSlotLimit; i++)
+            {
+                string p = StressStock.PrefabName(i);
+                names.Add(new KeyValuePair<string, string>(p, StressStock.DisplayName(p)));
+            }
+
+            Dictionary<string, string> symbols = SymbolBook.Assign(names);
+            Assert.Equal(StressStock.GameSlotLimit, symbols.Count);
+            Assert.Empty(SymbolBook.Clashes(symbols));
+            Assert.All(symbols.Values, v => Assert.True(v.All(char.IsLetterOrDigit), v));
+        }
+    }
+}

@@ -67,22 +67,48 @@ namespace FinanceOverhaul.Market
                 return known;
             }
 
-            string[] words = trimmed.Split(
-                new[] { ' ', '\t', '-', '_', '.', ',', '&' },
-                StringSplitOptions.RemoveEmptyEntries
-            );
-            if (words.Length >= 2)
+            // Symbols use letters and digits only: punctuation such as "(dev)" or "Joe's" is
+            // dropped, and a word with neither counts for nothing.
+            var kept = new List<string>();
+            foreach (
+                string raw in trimmed.Split(
+                    new[] { ' ', '\t', '-', '_', '.', ',', '&' },
+                    StringSplitOptions.RemoveEmptyEntries
+                )
+            )
+            {
+                var clean = new StringBuilder(raw.Length);
+                foreach (char c in raw)
+                {
+                    if (char.IsLetterOrDigit(c))
+                    {
+                        clean.Append(c);
+                    }
+                }
+
+                if (clean.Length > 0)
+                {
+                    kept.Add(clean.ToString());
+                }
+            }
+
+            if (kept.Count == 0)
+            {
+                return "?";
+            }
+
+            if (kept.Count >= 2)
             {
                 var sb = new StringBuilder(4);
-                for (int i = 0; i < words.Length && sb.Length < 4; i++)
+                for (int i = 0; i < kept.Count && sb.Length < 4; i++)
                 {
-                    sb.Append(char.ToUpperInvariant(words[i][0]));
+                    sb.Append(char.ToUpperInvariant(kept[i][0]));
                 }
 
                 return sb.ToString();
             }
 
-            string word = words[0];
+            string word = kept[0];
             for (int i = 1; i < word.Length; i++)
             {
                 if (char.IsUpper(word[i]))

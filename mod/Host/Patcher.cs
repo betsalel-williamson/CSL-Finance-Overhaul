@@ -36,6 +36,19 @@ namespace FinanceOverhaul
                     null,
                     nameof(TickerSimulationStepPostfix)
                 );
+                TryPatch(
+                    harmony,
+                    AccessTools.Method(typeof(EconomyManager), "SimulationStepInvestments"),
+                    nameof(StressStepPrefix),
+                    nameof(StressStepPostfix)
+                );
+                // Game bug: a loaded investment table lists used slots as free (scenario 51).
+                TryPatch(
+                    harmony,
+                    AccessTools.Method(typeof(EconomyManager), "DeserializeInvestments"),
+                    null,
+                    nameof(RepairFreeSlotsPostfix)
+                );
                 patched = true;
                 ModLog.Info(
                     "harmony patched index=" + index + " shareField=" + ui + " ticker=" + ticker
@@ -530,8 +543,36 @@ namespace FinanceOverhaul
             }
         }
 
+        private static void RepairFreeSlotsPostfix()
+        {
+            try
+            {
+                StressStocks.RepairFreeSlots();
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("investments: free-slot repair failed: " + ex.Message);
+            }
+        }
+
+        private static void StressStepPrefix()
+        {
+            StressStocks.StepBegin();
+        }
+
+        private static void StressStepPostfix()
+        {
+            StressStocks.StepEnd();
+        }
+
         private static bool IndexLocalizedNamePrefix(InvestmentAI __instance, ref string __result)
         {
+            if (StressStocks.IsStress(__instance))
+            {
+                __result = StressStock.DisplayName(__instance.m_info.m_name);
+                return false;
+            }
+
             if (TestStockListing.IsTest(__instance))
             {
                 __result = TestStock.DisplayName;

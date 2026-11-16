@@ -868,7 +868,8 @@ namespace FinanceOverhaul
         {
             return info.m_investmentAI != null
                 && info.m_investmentAI.m_unit == InvestmentAI.Unit.Share
-                && !TestStock.IsTestName(info.m_name); // the dev test listing never counts
+                && !TestStock.IsTestName(info.m_name) // the dev test listing never counts
+                && !StressStock.IsStressName(info.m_name);
         }
 
         /// <summary>A share-priced prefab to clone (also used by the dev test listing).</summary>
@@ -908,7 +909,11 @@ namespace FinanceOverhaul
                         + " milestone="
                         + (p.m_unlockingMilestone == null ? "none" : p.m_unlockingMilestone.name)
                 );
-                if (CityIndexBasket.IsIndexName(p.name) || TestStock.IsTestName(p.name))
+                if (
+                    CityIndexBasket.IsIndexName(p.name)
+                    || TestStock.IsTestName(p.name)
+                    || StressStock.IsStressName(p.name)
+                )
                 {
                     continue;
                 }

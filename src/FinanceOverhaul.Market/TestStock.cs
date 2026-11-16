@@ -34,3 +34,34 @@ namespace FinanceOverhaul.Market
         }
     }
 }
+
+namespace FinanceOverhaul.Market
+{
+    /// <summary>
+    /// Dev-only stress listings ("Stress 001 (dev)" …) for measuring how many stocks the game
+    /// handles (docs/developer/testing.md, many-stocks limit). Never part of the Index basket.
+    /// </summary>
+    public static class StressStock
+    {
+        public const string Prefix = "FinanceOverhaul Stress Stock ";
+
+        /// <summary>The game's investment table has 255 slots; slot 0 is a placeholder, so 254 investments.</summary>
+        public const int GameSlotLimit = 254;
+
+        public static string PrefabName(int n)
+        {
+            return Prefix + n.ToString("000", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        public static bool IsStressName(string name)
+        {
+            return name != null && name.StartsWith(Prefix, System.StringComparison.Ordinal);
+        }
+
+        /// <summary>"FinanceOverhaul Stress Stock 007" → "Stress 007 (dev)".</summary>
+        public static string DisplayName(string prefabName)
+        {
+            return "Stress " + prefabName.Substring(Prefix.Length) + " (dev)";
+        }
+    }
+}

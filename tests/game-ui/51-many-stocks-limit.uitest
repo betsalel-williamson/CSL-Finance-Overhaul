@@ -1,0 +1,49 @@
+# Many stocks: how many investments the game handles (dev, TEST SAVE ONLY: needs the dev test
+# stock option). Adds dev "Stress NNN" copies of a share stock to 33 investments (one past the
+# game's MAX_INVESTMENT_COUNT constant of 32) and checks they show in Economy → Investments and the
+# Stock Monitor; then fills to 254 (the game's limit: 255 slots, slot 0 unused) and tries to list
+# a 255th and 256th, which should get no slot. Never overwrites a held investment (guarded). Logs
+# frame time, the daily investment update and the Investments panel open time; removes every
+# stress listing at the end.
+name many stocks: 33 listed and visible, 254 listed, 255th and 256th get no slot
+stress-stocks slots
+stress-stocks clear
+pause off
+stress-measure 10
+stress-stocks fill 33
+expect-log slots used 33/254
+stress-measure 10
+stress-panel
+count-investment-rows
+expect-log investments panel: 33 visible row(s) for 33 investments
+scroll-investments bottom
+wait 1
+capture many-stocks-33-investments
+close-economy
+monitor remember
+monitor close
+click FinanceOverhaulStockMonitorButton
+wait 1
+click FinanceOverhaulStockMonitorFilter-All
+scroll-bottom FinanceOverhaulStockMonitorRows
+wait 1
+capture many-stocks-33-monitor
+click FinanceOverhaulStockMonitorClose
+stress-stocks fill 254
+expect-log slots used 254/254
+stress-measure 10
+stress-panel
+count-investment-rows
+expect-log investments panel: 254 visible row(s) for 254 investments
+scroll-investments bottom
+wait 1
+capture many-stocks-254-investments
+close-economy
+stress-stocks add 1
+expect-log stress: added 1 (listed 0, no slot 1
+stress-stocks add 1
+stress-stocks slots
+cleanup:
+close-economy
+monitor restore
+stress-stocks clear

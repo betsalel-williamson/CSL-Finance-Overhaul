@@ -36,8 +36,11 @@ swap variant checks the boards inside the game's switch event), `live-ticker on|
 `bond-finances` (logs debt and annual income used for bond pricing), `issue-bond YEARS FACE` (sells
 a bond, simulation paused; cash must rise by exactly the face), `bond-backdate DAYS` and
 `expect-bond-coupons N` (the scenario's newest bond), `away DAYS` (pretends the mod was off: the
-scenario's bonds miss DAYS of payments and the bookmark goes back), `welcome-back pay|skip` and
-`expect-welcome-back shown|hidden` (scenarios 48–49), `redeem-new-bonds` (cleanup: repays the
+scenario's bonds miss DAYS of payments and the bookmark goes back),
+`stress-stocks add N|fill TOTAL|slots|clear`, `stress-measure SECONDS`, `stress-panel`,
+`scroll-investments bottom` and `count-investment-rows` (dev many-stocks test, scenario 51: test
+save with the dev test stock option; never overwrites a held investment), `welcome-back pay|skip`
+and `expect-welcome-back shown|hidden` (scenarios 48–49), `redeem-new-bonds` (cleanup: repays the
 scenario's own bonds — scenario 37), `money-probe AMOUNT` (adds AMOUNT cents through the loan-taken
 budget line and fetches it back, simulation paused; fails unless cash ends where it began — scenario
 36), `hover CONTROL FX FY` / `hover off` (a simulated mouse at that fraction of a control, for the

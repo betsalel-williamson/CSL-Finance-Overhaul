@@ -3,7 +3,33 @@
 Open bugs to investigate, newest first. Each entry says what was seen, what we know, and the next
 check. Move an entry to its feature shard (or delete it) once fixed.
 
+### Long frame stall with 254 listed stocks
+
+Scenario 51 (2026-11-15): with 254 investments listed, one frame took 11.9 s (frames averaged 463 ms
+over 10 s; an earlier run at 254 saw 1.7 s). The game's daily investment update stays tiny (0.004
+ms), so the cost is on the UI side: likely the mod rebuilding ticker symbols, the LED marquee or
+Stock Monitor rows for 254 names, or the Investments panel rebuilding 240 rows. Not an issue at 33
+(worst frame 0.9 s, the same as without extra stocks in this busy test city). **Next check:**
+profile the 254 step by turning the live ticker and Stock Monitor off in turn, before local listings
+go past a few dozen names.
+
 ## Resolved
+
+### Game bug: loading a city lists used investment slots as free (worked around)
+
+`EconomyManager.DeserializeInvestments` builds a new investment table with every slot on the free
+list, including the slots the save uses. The game never adds investments after loading, so it never
+notices; anything that does (the Index, the test stock, local listings) gets a used slot once the
+free top slots run out and overwrites a held investment. Scenario 51 found it by overwriting a test
+city's 13 vanilla stocks (only in memory; the save was reloaded). **Fix:** a postfix on
+`DeserializeInvestments` rebuilds the free list from the slots in use
+(`StressStocks.RepairFreeSlots`); the stress test also copies every slot first and puts back any
+that is handed out while in use.
+
+### Ticker symbols could contain punctuation
+
+"Stress 001 (dev)" became `S0(`: symbols took the first character of each word, punctuation
+included. Symbols now use letters and digits only (unit test `SymbolsAreLettersAndDigitsOnly`).
 
 ### KTM shows `NaN` on the Stock Exchange ticker: not a bug (baked art)
 
