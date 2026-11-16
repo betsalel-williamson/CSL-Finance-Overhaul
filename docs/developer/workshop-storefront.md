@@ -5,10 +5,10 @@ Paste-ready Steam Workshop text for Finance Overhaul. How to publish:
 
 ## Workshop item
 
-| Field                 | Value                              |
-| --------------------- | ---------------------------------- |
-| **Published file ID** | not published yet (record it here) |
-| **URL**               | —                                  |
+| Field                 | Value                                                               |
+| --------------------- | ------------------------------------------------------------------- |
+| **Published file ID** | `3840721874` (first published 2026-11-15, 0.1.0)                    |
+| **URL**               | <https://steamcommunity.com/sharedfiles/filedetails/?id=3840721874> |
 
 Keep this ID for every Update. Never create a second item.
 

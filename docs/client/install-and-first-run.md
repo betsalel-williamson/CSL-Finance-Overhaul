@@ -6,7 +6,8 @@
    Investments).
 2. [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=2040656402), subscribed and
    enabled.
-3. Finance Overhaul from the Steam Workshop, enabled in Content Manager → Mods.
+3. [Finance Overhaul on the Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3840721874):
+   subscribe, then enable it in Content Manager → Mods.
 
 ## First run
 

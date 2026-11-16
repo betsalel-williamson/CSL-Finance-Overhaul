@@ -4,15 +4,28 @@
 management — index funds, sector ETFs, dividend funds, municipal bonds, commodities, automated
 orders, and IPOs.
 
-> Status: **MVP** — experimental Index stock, typed share amount, live LED Stock Exchange ticker,
-> and live reload. Broader instruments are documented under `docs/features/` and not shipped yet.
+> **0.1.0 is out.**
+> [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3840721874) ·
+> [Player guide](https://betsalel-williamson.github.io/CSL-Finance-Overhaul/) ·
+> [Release notes](https://github.com/betsalel-williamson/CSL-Finance-Overhaul/releases/tag/v0.1.0)
+>
+> Orders (limit, stop-loss, take-profit, trailing stop), Stock Monitor, live LED ticker, Index
+> stock, city bonds and Chirper notices. Sector ETFs, dividends, commodities and IPOs are planned
+> ([roadmap](docs/features/roadmap.md)).
 
 ## Why this exists
 
 Vanilla Financial Districts asks you to babysit thirteen volatile stocks. This mod aims for a
 passive treasury layer that still ties returns to how you build the city.
 
-## Getting started (MVP)
+## Play it
+
+Subscribe on the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3840721874)
+together with [Harmony](https://steamcommunity.com/sharedfiles/filedetails/?id=2040656402), enable
+both in Content Manager, and load a city with a Stock Exchange. The
+[player guide](https://betsalel-williamson.github.io/CSL-Finance-Overhaul/) covers every feature.
+
+## Developing (local build)
 
 Cloud agents can land docs and unit tests. **Building against Cities and loading the mod into the
 game requires a local clone** on a machine with the game installed — see
