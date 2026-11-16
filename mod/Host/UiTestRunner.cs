@@ -1142,6 +1142,45 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "away":
+                {
+                    // away DAYS — pretends the mod was off this many days: this scenario's bonds
+                    // missed their payments and the Welcome back dialog should ask.
+                    if (ctx.Bonds.Count == 0)
+                    {
+                        r.Error = "issue-bond first";
+                        break;
+                    }
+
+                    BondDesk.SimulateAway((int)ParseFloat(a, 0f), ctx.Bonds);
+                    yield return new WaitForSeconds(1f);
+                    break;
+                }
+                case "welcome-back":
+                {
+                    // welcome-back pay|skip — answers the Welcome back dialog.
+                    if (WelcomeBackDialog.Current == null || !WelcomeBackDialog.Current.IsShown)
+                    {
+                        r.Error = "Welcome back dialog not shown";
+                        break;
+                    }
+
+                    WelcomeBackDialog.Current.Choose(a == "pay");
+                    yield return new WaitForSeconds(0.5f);
+                    break;
+                }
+                case "expect-welcome-back":
+                {
+                    // expect-welcome-back shown|hidden
+                    bool shown =
+                        WelcomeBackDialog.Current != null && WelcomeBackDialog.Current.IsShown;
+                    if (shown != (a == "shown"))
+                    {
+                        r.Error = "Welcome back dialog " + (shown ? "shown" : "hidden");
+                    }
+
+                    break;
+                }
                 case "expect-bond-coupons":
                 {
                     // expect-bond-coupons N — coupons paid on this scenario's newest bond.

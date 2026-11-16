@@ -3,6 +3,25 @@ using ICities;
 
 namespace FinanceOverhaul
 {
+    /// <summary>
+    /// Save time: keeps the Index copy current (save compatibility). Bonds, orders and the "last
+    /// seen" bookmark are written as they change, so they need nothing here.
+    /// </summary>
+    public class SaveDataExtension : SerializableDataExtensionBase
+    {
+        public override void OnSaveData()
+        {
+            try
+            {
+                IndexListing.SaveCopy();
+            }
+            catch
+            {
+                // fail soft: never break a save
+            }
+        }
+    }
+
     public class LoadingExtension : LoadingExtensionBase
     {
         public override void OnLevelUnloading()
@@ -15,6 +34,7 @@ namespace FinanceOverhaul
                 ChirpNotices.Reset();
                 StockSymbols.Reset();
                 IndexListing.ResetRebase();
+                IndexListing.DisarmRestore();
             }
             catch
             {
@@ -32,6 +52,7 @@ namespace FinanceOverhaul
                 BondDesk.Reset();
                 ChirpNotices.Reset();
                 IndexListing.ResetRebase();
+                IndexListing.ArmRestore();
                 IndexListing.EnsureInLoadedCity();
                 IndexListing.LogStatus();
                 TestStockListing.EnsureInLoadedCity();

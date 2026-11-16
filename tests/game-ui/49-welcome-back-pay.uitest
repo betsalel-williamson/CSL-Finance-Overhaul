@@ -1,0 +1,12 @@
+# Save compatibility: Welcome back. Same 60 days away as scenario 48; "Pay what was missed" pays
+# both coupons today.
+name welcome back: pay what was missed pays both coupons today
+issue-bond 1 1000
+away 60
+expect-welcome-back shown
+welcome-back pay
+expect-welcome-back hidden
+expect-bond-coupons 2
+expect-log bonds: welcome back after 60 day(s) away: paid what was missed (2 payment(s) moved)
+cleanup:
+redeem-new-bonds

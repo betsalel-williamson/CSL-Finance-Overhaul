@@ -8,8 +8,10 @@
  *
  * What the mod puts in a save (docs/features/roadmap.md, save compatibility):
  *   - Index shares: a VANILLA investment slot pointing at a mod-only prefab (dIndex).
- *   - Mod data blobs the game itself ignores: Orders, Bonds (with coupons paid), Mirror (proposed:
- *     a copy of the Index holding, so it can come back).
+ *   - Mod data blobs the game itself ignores: Orders, Bonds (with coupons paid), Mirror (built
+ *     2026-11-15 as FinanceOverhaul.IndexCopy: a copy of the Index holding, so it can come back).
+ *   - catchUp = False is the built behaviour: missed coupons wait for the Welcome back dialog,
+ *     and a lump is paid only if the player picks "Pay what was missed".
  *
  * Behaviour of the game without the mod (assumptions; Policy switches let us check both ways):
  *   - DropsUnknownPrefab: a slot whose prefab is missing is cleared on load (seen in game,

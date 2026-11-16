@@ -14,6 +14,9 @@ namespace FinanceOverhaul.Market
         Summary,
         BondMatured,
         BondCoupon,
+
+        /// <summary>Index shares lost while the mod was off, restored from the mod's copy.</summary>
+        IndexRestored,
     }
 
     /// <summary>One chirp: who says it and what (the host posts it to Chirper, UI only).</summary>
@@ -157,6 +160,21 @@ namespace FinanceOverhaul.Market
                 Kind = NoticeKind.BondMatured,
                 Sender = Treasury,
                 Text = text,
+            };
+        }
+
+        /// <summary>"Your Index shares (120) are back. They were kept safe while Finance Overhaul was off."</summary>
+        public static Notice IndexRestored(long shares)
+        {
+            return new Notice
+            {
+                Kind = NoticeKind.IndexRestored,
+                Sender = Brokerage,
+                Text =
+                    WelcomeText.IndexBack(shares)
+                    + " They were kept safe while Finance Overhaul was off."
+                    + OrdersTag,
+                Symbol = "IDX",
             };
         }
 

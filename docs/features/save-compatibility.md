@@ -66,15 +66,14 @@ the mod writes beside the city (orders, bonds, markers), which the game ignores.
 ### 2. Forgot to turn the mod on (will turn it back on soon)
 
 - **Expect:** nothing is lost when the mod comes back.
-- **Today:** orders and bonds come back: the game keeps the mod's blocks when it saves without the
-  mod (verified, see
-  [Mod data survives a save without the mod](#mod-data-survives-a-save-without-the-mod)). **Index
-  shares are lost**: the game drops the slot on load and saving makes that permanent (Alloy check P3
-  finds this trace).
-- **Fixes:** keep a copy of the Index holding in mod data and restore it on load; keep a "last seen"
-  game day so the mod knows days were played without it, and ask the player once how to handle the
-  missed bond payments (the **Welcome back** dialog below). Orders past their lifetime expire on the
-  first day back and are chirped.
+- **Orders and bonds come back:** the game keeps the mod's blocks when it saves without the mod
+  (verified, see
+  [Mod data survives a save without the mod](#mod-data-survives-a-save-without-the-mod)).
+- **Index shares come back** from the [Index copy](#index-copy) (built 2026-11-15). Before it, the
+  game dropped the slot on load and saving made that permanent (Alloy check P3 found this trace).
+- **Missed bond payments:** the "last seen" bookmark tells the mod days were played without it, and
+  the [Welcome back dialog](#welcome-back-dialog) asks the player once how to handle them (built
+  2026-11-15). Orders past their lifetime expire on the first day back and are chirped.
 - **Autosaves** while the mod is off overwrite the good save, so the fix must not depend on the
   player reloading an older file.
 
@@ -102,10 +101,22 @@ the mod writes beside the city (orders, bonds, markers), which the game ignores.
   that city state; player settings (Options, Stock Monitor) are shared across cities.
 - **Other mods** that change investments or Chirper: out of scope, note conflicts when reported.
 
-## Welcome back dialog (designed, Figma band 14)
+## Last seen bookmark
 
-Shown once, the first time a city loads with the mod after game days were played without it, and
-only if a bond payment was missed. Very simple wording:
+Mod data `FinanceOverhaul.Seen` (text `v1`, `day=N`) holds the game day. The mod rewrites it once
+per game day, after that day's bond payments, so a hot reload or a save always carries yesterday or
+today. A city saved without the mod keeps the old day. On load, bond payments due after the bookmark
+are "missed" if the bookmark is at least 2 days old (`WelcomeBack.MinDaysAway`; one day behind is
+normal and paid as usual). Older saves without the block: no question, the bookmark starts now.
+
+While a choice is waiting, the bonds pay nothing and the bookmark is not moved, so saving without
+answering asks again on the next load.
+
+## Welcome back dialog
+
+Built 2026-11-15 (Figma band 14, `WelcomeBackDialog`). Shown once, the first time a city loads with
+the mod after game days were played without it, and only if a bond payment was missed. No close
+button: the bonds wait for an answer. Very simple wording:
 
 > **Welcome back**
 >
@@ -121,6 +132,22 @@ only if a bond payment was missed. Very simple wording:
 
 If the Index copy restored shares, one line says so ("Your Index shares (120) are back.").
 
+- **Pay what was missed:** every missed payment is made today.
+- **Start fresh from today:** missed coupons are marked done without paying. A bond that reached its
+  end while the mod was off still repays its face today (one extra line says so), so a bond can
+  never become free money. Later payments are unchanged either way (unit tested).
+- Game UI scenarios 48 (start fresh) and 49 (pay) use the `away DAYS` step.
+
+## Index copy
+
+Mod data `FinanceOverhaul.IndexCopy` (text `v1`, `shares=`, `spent=` in cents) holds the city's
+Index holding. Written at every save while the Index is listed (and just before the mod unregisters
+it); left alone when the Index is not listed, so a city loaded with the Index flag off keeps the
+copy. On a city load, if the Index slot had to be created again (the game dropped it), the copy's
+shares and money spent are put back and City Brokerage chirps "Your Index shares (120) are back." A
+slot that came back with the save always wins, so an old copy can never add shares; the copy is
+never used mid-session or on hot reload.
+
 ## Formal model (Alloy)
 
 `formal/saves.als` models the save file, the running game and every order of player actions (load
@@ -135,15 +162,15 @@ versus skip, and whether the game keeps mod data when saving without the mod. Re
 Run with `scripts/check-formal.sh` (Alloy 6, Glucose solver; every trace up to 10 actions). "Holds"
 means Alloy found no counterexample; "gap" means it found one, as expected for today's design.
 
-| #   | Promise                                                     | Situation        | Today                                               | With the fixes                                                                     |
-| --- | ----------------------------------------------------------- | ---------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| P1  | A vanilla load never keeps a reference to the missing Index | all              | **holds**                                           | holds                                                                              |
-| P2  | Once saved without the mod, the file is plain vanilla       | retire           | **holds**                                           | holds                                                                              |
-| P3  | Index shares saved with the mod come back with the mod      | forgot to enable | **gap**: lost (trace below)                         | holds with the Index copy (the game keeps mod data, verified)                      |
-| P4  | The bond book comes back with the mod                       | forgot to enable | **holds** (the game keeps mod data, verified)       | holds                                                                              |
-| P5  | The city never pays a coupon that is not due                | all              | **holds**                                           | holds                                                                              |
-| P6  | Coming back never pays more than one coupon in a day        | forgot / tester  | **gap** with catch-up (two coupons on day one back) | holds when skipping; with the dialog, a lump is paid only if the player chooses it |
-| P7  | Index flag off and on keeps saved shares                    | tester           | **gap** (same as P3)                                | holds with the Index copy                                                          |
+| #   | Promise                                                     | Situation        | Today                                               | With the fixes                                                       |
+| --- | ----------------------------------------------------------- | ---------------- | --------------------------------------------------- | -------------------------------------------------------------------- |
+| P1  | A vanilla load never keeps a reference to the missing Index | all              | **holds**                                           | holds                                                                |
+| P2  | Once saved without the mod, the file is plain vanilla       | retire           | **holds**                                           | holds                                                                |
+| P3  | Index shares saved with the mod come back with the mod      | forgot to enable | **gap**: lost (trace below)                         | holds with the Index copy (built; the game keeps mod data, verified) |
+| P4  | The bond book comes back with the mod                       | forgot to enable | **holds** (the game keeps mod data, verified)       | holds                                                                |
+| P5  | The city never pays a coupon that is not due                | all              | **holds**                                           | holds                                                                |
+| P6  | Coming back never pays more than one coupon in a day        | forgot / tester  | **gap** with catch-up (two coupons on day one back) | built: a lump is paid only if the player chooses it in the dialog    |
+| P7  | Index flag off and on keeps saved shares                    | tester           | **gap** (same as P3)                                | holds with the Index copy (built)                                    |
 
 A reachability run confirms the "forgot to enable" situation is possible in the model, so the passes
 are not vacuous.

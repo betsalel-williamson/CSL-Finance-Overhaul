@@ -20,6 +20,10 @@ namespace FinanceOverhaul
         private static BondBook book;
         private static int lastPaidDay = -1;
 
+        // Welcome back: payments that fell due while the mod was off. While set, the daily step
+        // pays nothing and leaves the "last seen" bookmark alone until the player chooses.
+        private static MissedPayments pending;
+
         /// <summary>Annual income is the game's weekly income figure × 52.</summary>
         public const int WeeksPerYear = 52;
 
@@ -145,28 +149,121 @@ namespace FinanceOverhaul
                 return;
             }
 
-            lastPaidDay = today;
             lock (Sync)
             {
                 BondBook b = Book();
-                if (b.Bonds.Count == 0)
+                if (pending != null)
+                {
+                    return; // waiting for the player's choice in the Welcome back dialog
+                }
+
+                lastPaidDay = today;
+                List<BondCash> due = b.Bonds.Count == 0 ? null : b.Due(today);
+                if (due != null && due.Count > 0)
+                {
+                    foreach (BondCash c in due)
+                    {
+                        Move(c);
+                    }
+
+                    Save(b);
+                    ChirpNotices.PostDay(DayNotices(b, due));
+                }
+
+                WriteSeen(today);
+            }
+        }
+
+        /// <summary>Payments missed while the mod was off, waiting for the player; null if none.</summary>
+        public static MissedPayments Pending
+        {
+            get
+            {
+                lock (Sync)
+                {
+                    Book();
+                    return pending;
+                }
+            }
+        }
+
+        /// <summary>
+        /// The player's Welcome back choice: pay every missed payment today, or skip the missed
+        /// coupons (a face that fell due is still repaid). Then payments carry on as normal.
+        /// </summary>
+        public static void SettleMissed(bool pay)
+        {
+            lock (Sync)
+            {
+                BondBook b = Book();
+                if (pending == null)
                 {
                     return;
                 }
 
-                List<BondCash> due = b.Due(today);
-                if (due.Count == 0)
-                {
-                    return;
-                }
-
-                foreach (BondCash c in due)
+                int today = OrderDesk.Today;
+                List<BondCash> cash = WelcomeBack.Settle(b, today, pay);
+                foreach (BondCash c in cash)
                 {
                     Move(c);
                 }
 
+                ModLog.Info(
+                    "bonds: welcome back after "
+                        + pending.DaysAway
+                        + " day(s) away: "
+                        + (pay ? "paid what was missed" : "started fresh")
+                        + " ("
+                        + cash.Count
+                        + " payment(s) moved)"
+                );
+                pending = null;
                 Save(b);
-                ChirpNotices.PostDay(DayNotices(b, due));
+                WriteSeen(today);
+                lastPaidDay = -1;
+            }
+        }
+
+        /// <summary>
+        /// Game UI tests: pretends the mod was off for <paramref name="days"/> days. The given
+        /// bonds' schedules move that many days earlier (so those payments are now due and unpaid)
+        /// and the bookmark goes back as far; the next look at the book finds them missed. The
+        /// player's own bonds are untouched (their past payments were made).
+        /// </summary>
+        public static void SimulateAway(int days, IEnumerable<int> bondIds)
+        {
+            lock (Sync)
+            {
+                BondBook b = Book();
+                foreach (int id in bondIds)
+                {
+                    IssuedBond bond = b.Find(id);
+                    if (bond != null)
+                    {
+                        bond.IssueDay -= days;
+                    }
+                }
+
+                Save(b);
+                WriteSeen(OrderDesk.Today - days);
+                book = null;
+                pending = null;
+                lastPaidDay = -1;
+            }
+        }
+
+        private static void WriteSeen(int day)
+        {
+            try
+            {
+                SimulationManager.instance.m_SerializableDataWrapper.SaveData(
+                    SeenCodec.DataId,
+                    Encoding.UTF8.GetBytes(SeenCodec.Format(day))
+                );
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("bonds: bookmark save failed: " + ex.Message);
             }
         }
 
@@ -238,6 +335,7 @@ namespace FinanceOverhaul
             lock (Sync)
             {
                 book = null;
+                pending = null;
                 lastPaidDay = -1;
             }
         }
@@ -323,6 +421,34 @@ namespace FinanceOverhaul
             catch (Exception ex)
             {
                 ModLog.Warn("bonds: load failed, starting empty: " + ex.Message);
+            }
+
+            pending = null;
+            try
+            {
+                byte[] seen = SimulationManager.instance.m_SerializableDataWrapper.LoadData(
+                    SeenCodec.DataId
+                );
+                int lastSeen =
+                    seen == null ? SeenCodec.None : SeenCodec.Parse(Encoding.UTF8.GetString(seen));
+                MissedPayments m = WelcomeBack.Missed(book, lastSeen, OrderDesk.Today);
+                if (m.Any)
+                {
+                    pending = m;
+                    ModLog.Info(
+                        "bonds: mod was off for "
+                            + m.DaysAway
+                            + " day(s); "
+                            + m.Payments.Count
+                            + " payment(s) missed ("
+                            + Money(m.TotalCents)
+                            + "), waiting for the player"
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("bonds: bookmark read failed: " + ex.Message);
             }
 
             return book;

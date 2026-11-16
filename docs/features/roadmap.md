@@ -174,7 +174,8 @@ game UI runner can still set up the city state before saving and verify after lo
 **Welcome back** dialog (Figma band 14), and the situations and an Alloy model with its results are
 in [Save compatibility](./save-compatibility.md): P3 shows today's Index loss, fixed by keeping a
 copy of the holding in mod data. Verified in game: the game keeps mod data when saving without the
-mod, so bonds and orders already survive and the copy will bring Index shares back.
+mod. Built 2026-11-15: the "last seen" bookmark, the Welcome back dialog and the Index copy. Left:
+the in-game matrix runs (cases 1 and 5, a real mod-off stretch, and an Index copy restore).
 
 **Suggestion:** do it before priority 2, which adds new listings to saves.
 

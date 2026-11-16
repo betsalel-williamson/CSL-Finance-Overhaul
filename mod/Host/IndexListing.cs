@@ -219,9 +219,91 @@ namespace FinanceOverhaul
             );
         }
 
+        // Index copy (save compatibility): armed by each city load; the first listing after it
+        // may put back shares the game dropped. Never armed mid-session or on hot reload.
+        private static volatile bool restoreArmed;
+
+        /// <summary>Shares restored from the copy on this load (0 if none), for the Welcome back dialog.</summary>
+        public static long RestoredShares { get; private set; }
+
+        public static void ArmRestore()
+        {
+            restoreArmed = true;
+            RestoredShares = 0;
+        }
+
+        public static void DisarmRestore()
+        {
+            restoreArmed = false;
+            RestoredShares = 0;
+        }
+
+        /// <summary>
+        /// Save time (and any time the holding should be remembered): copies the city's Index
+        /// holding into mod data. Leaves the copy alone when the Index is not listed (for example
+        /// the city was loaded with the Index flag off), so the copy outlives a dropped slot.
+        /// </summary>
+        public static void SaveCopy()
+        {
+            try
+            {
+                int id = FindIndexInvestment();
+                if (id < 0)
+                {
+                    return;
+                }
+
+                Investment slot = EconomyManager.instance.m_investments.m_buffer[id];
+                var h = new IndexHolding
+                {
+                    Shares = slot.m_playerOwnedShareCount,
+                    SpentCents = slot.m_playerSpentMoney,
+                };
+                SimulationManager.instance.m_SerializableDataWrapper.SaveData(
+                    IndexCopyCodec.DataId,
+                    System.Text.Encoding.UTF8.GetBytes(IndexCopyCodec.Format(h))
+                );
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("index: copy save failed: " + ex.Message);
+            }
+        }
+
+        private static void RestoreFromCopy(byte id)
+        {
+            byte[] data = SimulationManager.instance.m_SerializableDataWrapper.LoadData(
+                IndexCopyCodec.DataId
+            );
+            IndexHolding? copy =
+                data == null
+                    ? null
+                    : IndexCopyCodec.Parse(System.Text.Encoding.UTF8.GetString(data));
+            IndexHolding? back = IndexCopyCodec.ToRestore(true, copy);
+            if (back == null)
+            {
+                return;
+            }
+
+            // The game's own field types: shares uint, money spent int (cents).
+            EconomyManager.instance.m_investments.m_buffer[id].m_playerOwnedShareCount = (uint)
+                Math.Min(back.Value.Shares, uint.MaxValue);
+            EconomyManager.instance.m_investments.m_buffer[id].m_playerSpentMoney = (int)
+                Math.Min(back.Value.SpentCents, int.MaxValue);
+            RestoredShares = back.Value.Shares;
+            ModLog.Info(
+                "index: restored "
+                    + back.Value.Shares
+                    + " share(s) from the copy (the game had dropped the Index slot)"
+            );
+            ChirpNotices.PostDay(new List<Notice> { NoticeText.IndexRestored(back.Value.Shares) });
+        }
+
         /// <summary>Simulation thread.</summary>
         private static void CreateInvestmentIfMissing(InvestmentInfo info)
         {
+            bool restore = restoreArmed;
+            restoreArmed = false;
             try
             {
                 if (info == null)
@@ -252,6 +334,11 @@ namespace FinanceOverhaul
 
                 // Idempotent with the CreateInvestment postfix (no-op once history is full).
                 BackfillHistory(ref EconomyManager.instance.m_investments.m_buffer[id]);
+                if (restore)
+                {
+                    RestoreFromCopy(id);
+                }
+
                 InvestmentInfo bound = EconomyManager.instance.m_investments.m_buffer[id].Info;
                 ModLog.Info(
                     "index: created investment id="
@@ -416,6 +503,8 @@ namespace FinanceOverhaul
             {
                 return;
             }
+
+            SaveCopy(); // remember the holding before the slot loses its prefab
 
             try
             {
