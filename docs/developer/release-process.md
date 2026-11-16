@@ -19,8 +19,8 @@ Options are split in two. **Preferences** (how a shipped feature looks or behave
 brightness, info views, order lifetime, Chirper notices) show in every build. **Feature flags**
 (whether a feature exists at all: each order type, the Stock Monitor, share charts, Index stock,
 city bonds, the test stock) show only in dev builds under "Feature flags (dev builds only)"; release
-builds use `ModSettings.PinReleaseFlags` (shipped features on; Index stock, city bonds and the test
-stock off).
+builds use `ModSettings.PinReleaseFlags`: every shipped feature on (orders, Stock Monitor, share
+charts, Index stock, city bonds), the test stock off.
 
 ## Pre-ship checklist
 

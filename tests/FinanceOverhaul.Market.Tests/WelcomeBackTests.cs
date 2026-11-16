@@ -250,8 +250,8 @@ namespace FinanceOverhaul.Market.Tests
                 TakeProfitEnabled = false,
                 TrailingStopEnabled = false,
                 ShareChartsEnabled = false,
-                IndexStockEnabled = true,
-                CityBondsEnabled = true,
+                IndexStockEnabled = false,
+                CityBondsEnabled = false,
                 DevTestStockEnabled = true,
                 LiveTickerEnabled = false,
                 TickerShows = TickerDisplay.PriceAndChange,
@@ -268,7 +268,8 @@ namespace FinanceOverhaul.Market.Tests
             Assert.True(s.LimitBuyEnabled && s.StopLossEnabled);
             Assert.True(s.TakeProfitEnabled && s.TrailingStopEnabled);
             Assert.True(s.Monitor.Enabled && s.ShareChartsEnabled);
-            Assert.False(s.IndexStockEnabled || s.CityBondsEnabled || s.DevTestStockEnabled);
+            Assert.True(s.IndexStockEnabled && s.CityBondsEnabled);
+            Assert.False(s.DevTestStockEnabled);
 
             Assert.False(s.LiveTickerEnabled);
             Assert.Equal(TickerDisplay.PriceAndChange, s.TickerShows);

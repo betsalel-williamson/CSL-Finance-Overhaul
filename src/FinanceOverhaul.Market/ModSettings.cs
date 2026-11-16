@@ -13,17 +13,17 @@ namespace FinanceOverhaul.Market
         /// </summary>
         public void PinReleaseFlags()
         {
-            // Shipped and proven: on.
+            // Shipped in 0.1 (confirmed with the player-facing owner, 2026-11-15): on.
             LimitBuyEnabled = true;
             StopLossEnabled = true;
             TakeProfitEnabled = true;
             TrailingStopEnabled = true;
             Monitor.Enabled = true;
             ShareChartsEnabled = true;
+            IndexStockEnabled = true;
+            CityBondsEnabled = true;
 
-            // Experimental or dev-only: off until proven.
-            IndexStockEnabled = false;
-            CityBondsEnabled = false;
+            // Dev only.
             DevTestStockEnabled = false;
         }
 

@@ -23,7 +23,7 @@ Finance Overhaul
 `IUserMod.Description` (Content Manager) and the first line of the Workshop page:
 
 ```text
-Stock Exchange overhaul for Financial Districts: limit, stop-loss, take-profit and trailing stop orders, a Stock Monitor, a live LED ticker and Chirper notices.
+Stock Exchange overhaul for Financial Districts: limit, stop-loss, take-profit and trailing stop orders, a Stock Monitor, an Index stock, city bonds, a live LED ticker and Chirper notices.
 ```
 
 ## Long description
@@ -41,15 +41,19 @@ What you get
 • Live LED ticker: the Stock Exchange boards scroll real prices. Choose percent or price and change, set the brightness, and choose whether it stays on in info views.
 • Chirper notices from City Brokerage when an order fills, expires or is cancelled.
 
+• Index stock: one stock that tracks all of the city's share stocks, so you can own the whole market at once.
+• City bonds: raise money on Economy → Loans. The rate rises with your debt, coupons go out every 30 days, and you can repay early.
+• Chirper notices from City Treasury when a bond matures.
+
 Coming later
-• An Index stock that tracks the whole market, city bonds, and companies from your own city going public.
+• Companies from your own city going public (local IPOs).
 
 Requires
 • Cities: Skylines with the Financial Districts DLC
 • Harmony (2.2+), required item
 
 Saves
-• Your city always opens without the mod. Open orders are kept in the save and come back when the mod is enabled again.
+• Your city always opens without the mod. Orders, bonds and Index shares are kept in the save and come back when the mod is enabled again. If bond payments were missed while the mod was off, a Welcome back window asks how to handle them.
 
 Known limits
 • Prices follow the game's own investment rules; your trades never move them.
@@ -60,7 +64,8 @@ Source and issues: https://github.com/betsalel-williamson/CSL-Finance-Overhaul
 
 ## Tags
 
-`economy` · `stocks` · `finance` · `investments` · `Financial Districts` · `stock exchange` · `UI`
+`economy` · `stocks` · `finance` · `investments` · `Financial Districts` · `stock exchange` ·
+`bonds` · `UI`
 
 ## Share dialog and Steam page
 

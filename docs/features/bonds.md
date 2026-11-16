@@ -82,7 +82,7 @@ debt, a bigger bond, less income or a longer term never gives a cheaper rate; th
   annual income = the game's weekly income total (`GetIncomeAndExpenses`, all services) × 52.
   Checked in game: the weekly figure matched the Economy panel's total (residential ₡104,668 =
   38.86% → about ₡269k a week; the mod read ₡264k a moment earlier).
-- **Flag:** Options → "Experimental: City bonds (sell bonds to raise money; adds mod save data)",
+- **Flag:** Options → "City bonds (sell bonds to raise money; adds mod save data)",
   off by default. It gates new sales only; bonds already sold keep paying.
 
 **Proved properties** (`BondBookTests`, 500 seeded random books and day paths plus examples):

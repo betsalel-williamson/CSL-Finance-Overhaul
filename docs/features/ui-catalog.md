@@ -22,31 +22,31 @@ builds under **Feature flags (dev builds only)**; release builds hide them and u
 
 ### Preferences (every build)
 
-| Field id            | Label                                                    | Control  | Default                        |
-| ------------------- | -------------------------------------------------------- | -------- | ------------------------------ |
-| `live-ticker`       | Live Stock Exchange ticker (visual only)                 | Checkbox | on                             |
-| `ticker-shows`      | Stock Exchange ticker shows                              | Dropdown | Change %                       |
-| `ticker-info-views` | Show the LED ticker in info views (traffic, population…) | Checkbox | on                             |
-| `ticker-brightness` | LED ticker brightness                                    | Dropdown | Bright                         |
-| `orders-lifetime`   | Orders stay open for (new orders)                        | Dropdown | 90 days                        |
-| `notices`           | Order and bond notices in Chirper                        | Checkbox | on                             |
-| `notices-coupons`   | Also chirp every bond coupon                             | Checkbox | off (shown only with bonds on) |
-| `built-utc`         | Built (UTC): …                                           | Footer   | `--dev` only                   |
-| `built-local`       | Built (local): …                                         | Footer   | `--dev` only                   |
+| Field id            | Label                                                    | Control  | Default                       |
+| ------------------- | -------------------------------------------------------- | -------- | ----------------------------- |
+| `live-ticker`       | Live Stock Exchange ticker (visual only)                 | Checkbox | on                            |
+| `ticker-shows`      | Stock Exchange ticker shows                              | Dropdown | Change %                      |
+| `ticker-info-views` | Show the LED ticker in info views (traffic, population…) | Checkbox | on                            |
+| `ticker-brightness` | LED ticker brightness                                    | Dropdown | Bright                        |
+| `orders-lifetime`   | Orders stay open for (new orders)                        | Dropdown | 90 days                       |
+| `notices`           | Order and bond notices in Chirper                        | Checkbox | on                            |
+| `notices-coupons`   | Also chirp every bond coupon                             | Checkbox | off (shown when bonds are on) |
+| `built-utc`         | Built (UTC): …                                           | Footer   | `--dev` only                  |
+| `built-local`       | Built (local): …                                         | Footer   | `--dev` only                  |
 
 ### Feature flags (dev builds only)
 
-| Field id               | Label                                                                    | Release value |
-| ---------------------- | ------------------------------------------------------------------------ | ------------- |
-| `orders-limit-buy`     | Orders: Limit buys                                                       | on            |
-| `orders-stop-loss`     | Orders: Stop-loss sells                                                  | on            |
-| `orders-take-profit`   | Orders: Take-profit sells                                                | on            |
-| `orders-trailing-stop` | Orders: Trailing stop sells                                              | on            |
-| `stock-monitor`        | Stock Monitor window                                                     | on            |
-| `share-charts`         | Share value charts in the Stock Monitor style                            | on            |
-| `index-stock`          | Experimental: Index stock (adds a mod-only investment to saves)          | off           |
-| `city-bonds`           | Experimental: City bonds (sell bonds to raise money; adds mod save data) | off           |
-| `dev-test-stock`       | Dev: Test Stock (TST) for game UI tests                                  | off           |
+| Field id               | Label                                                      | Release value |
+| ---------------------- | ---------------------------------------------------------- | ------------- |
+| `orders-limit-buy`     | Orders: Limit buys                                         | on            |
+| `orders-stop-loss`     | Orders: Stop-loss sells                                    | on            |
+| `orders-take-profit`   | Orders: Take-profit sells                                  | on            |
+| `orders-trailing-stop` | Orders: Trailing stop sells                                | on            |
+| `stock-monitor`        | Stock Monitor window                                       | on            |
+| `share-charts`         | Share value charts in the Stock Monitor style              | on            |
+| `index-stock`          | Index stock (adds an investment to saves)                  | on            |
+| `city-bonds`           | City bonds (sell bonds to raise money; adds mod save data) | on            |
+| `dev-test-stock`       | Dev: Test Stock (TST) for game UI tests                    | off           |
 
 Title chrome (`Finance Overhaul {version}`) is Content Manager / Options identity — see
 [Live reload](../developer/live-reload.md).

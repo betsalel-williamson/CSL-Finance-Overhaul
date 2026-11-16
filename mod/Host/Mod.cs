@@ -17,7 +17,7 @@ namespace FinanceOverhaul
         public string Name => OptionsTitle;
 
         public string Description =>
-            "Stock Exchange overhaul for Financial Districts: limit, stop-loss, take-profit and trailing stop orders, a Stock Monitor, a live LED ticker and Chirper notices.";
+            "Stock Exchange overhaul for Financial Districts: limit, stop-loss, take-profit and trailing stop orders, a Stock Monitor, an Index stock, city bonds, a live LED ticker and Chirper notices.";
 
         public static ModSettings Settings { get; private set; }
 
@@ -339,12 +339,12 @@ namespace FinanceOverhaul
                     OnShareChartsChanged
                 );
                 flags.AddCheckbox(
-                    "Experimental: Index stock (adds a mod-only investment to saves)",
+                    "Index stock (adds an investment to saves)",
                     Settings.IndexStockEnabled,
                     OnIndexStockChanged
                 );
                 flags.AddCheckbox(
-                    "Experimental: City bonds (sell bonds to raise money; adds mod save data)",
+                    "City bonds (sell bonds to raise money; adds mod save data)",
                     Settings.CityBondsEnabled,
                     OnCityBondsChanged
                 );
