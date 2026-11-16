@@ -1,18 +1,21 @@
 # City Index stock
 
-**Index** is a single stock on the Economy → Investments board that tracks all other sector stocks
-together (equal weight) — similar in spirit to a Vanguard total-market fund for your city.
+**Index** (symbol IDX) is one stock that tracks all of the city's share stocks together, like a
+total-market fund for your city. Buy it to own the whole market at once: one bad day in a single
+industry hurts Index much less than holding that industry alone.
 
-## How to use it
+## How it moves
 
-1. Open Options → **Finance Overhaul** and tick **Experimental: Index stock**. It is off by default
-   because it adds a mod-only investment to your save. The setting is remembered. You can tick it
-   with a city already loaded; close and reopen **Economy** to see Index.
-2. Place or open a Stock Exchange and open **Economy → Investments**.
-3. Find **Index** under Purchasable Investments (with Finance Overhaul enabled).
-4. Buy shares as you would any other name. The Value is the average of the other listed sector
-   prices, so one disaster in a single industry hurts Index less than holding that industry alone.
-5. Sell from Your Portfolio when you want cash back.
+Each game day Index moves by the average daily change of the unlocked share stocks (coins such as
+ChirperCrypto are left out). As more sectors unlock, more stocks join. Its 30-day chart is filled in
+from the first day, so you can judge it straight away.
 
-Sell your Index shares before disabling Finance Overhaul. Without the mod the game drops the Index
-listing on the next load, and any shares still held are lost.
+## Using it
+
+Buy and sell Index like any other stock in **Economy → Investments**, place orders on it, and follow
+it in the [Stock Monitor](./stock-monitor.md) and on the [LED ticker](./led-ticker.md).
+
+![Index shares back after time without the mod](./img/index-shares-back.jpg)
+
+If you play a while without the mod, the game drops Index from Investments; your shares come back
+when you turn the mod on again (see [Saves](./saves.md)).
