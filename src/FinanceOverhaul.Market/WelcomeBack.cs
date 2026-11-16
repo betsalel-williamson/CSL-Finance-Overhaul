@@ -170,6 +170,9 @@ namespace FinanceOverhaul.Market
             "Skips the missed payments. Payments carry on as normal from today.";
         public const string Footer = "This choice only affects this city.";
 
+        /// <summary>Tooltip on ×: closing picks the default.</summary>
+        public const string CloseTip = "Close: start fresh from today (the default)";
+
         public const string Ask =
             "Your city bonds did not make their payments while it was off. How do you want to handle them?";
 

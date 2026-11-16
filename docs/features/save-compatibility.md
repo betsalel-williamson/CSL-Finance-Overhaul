@@ -115,8 +115,8 @@ answering asks again on the next load.
 ## Welcome back dialog
 
 Built 2026-11-15 (Figma band 14, `WelcomeBackDialog`). Shown once, the first time a city loads with
-the mod after game days were played without it, and only if a bond payment was missed. No close
-button: the bonds wait for an answer. Very simple wording:
+the mod after game days were played without it, and only if a bond payment was missed. × does the
+default, **Start fresh from today** (its tooltip says so). Very simple wording:
 
 > **Welcome back**
 >
@@ -136,7 +136,7 @@ If the Index copy restored shares, one line says so ("Your Index shares (120) ar
 - **Start fresh from today:** missed coupons are marked done without paying. A bond that reached its
   end while the mod was off still repays its face today (one extra line says so), so a bond can
   never become free money. Later payments are unchanged either way (unit tested).
-- Game UI scenarios 48 (start fresh) and 49 (pay) use the `away DAYS` step.
+- Game UI scenarios 48 (start fresh), 49 (pay) and 50 (× starts fresh) use the `away DAYS` step.
 
 ## Index copy
 

@@ -1,0 +1,12 @@
+# Save compatibility: Welcome back. Closing the dialog with × does the default, "Start fresh from
+# today": both missed coupons are skipped without paying them.
+name welcome back: × starts fresh
+issue-bond 1 1000
+away 60
+expect-welcome-back shown
+welcome-back close
+expect-welcome-back hidden
+expect-bond-coupons 2
+expect-log bonds: welcome back after 60 day(s) away: started fresh (0 payment(s) moved)
+cleanup:
+redeem-new-bonds

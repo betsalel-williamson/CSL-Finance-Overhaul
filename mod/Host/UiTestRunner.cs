@@ -1158,14 +1158,23 @@ namespace FinanceOverhaul
                 }
                 case "welcome-back":
                 {
-                    // welcome-back pay|skip — answers the Welcome back dialog.
+                    // welcome-back pay|skip|close — answers the Welcome back dialog (close clicks
+                    // ×, which starts fresh).
                     if (WelcomeBackDialog.Current == null || !WelcomeBackDialog.Current.IsShown)
                     {
                         r.Error = "Welcome back dialog not shown";
                         break;
                     }
 
-                    WelcomeBackDialog.Current.Choose(a == "pay");
+                    if (a == "close")
+                    {
+                        WelcomeBackDialog.Current.ClickClose();
+                    }
+                    else
+                    {
+                        WelcomeBackDialog.Current.Choose(a == "pay");
+                    }
+
                     yield return new WaitForSeconds(0.5f);
                     break;
                 }

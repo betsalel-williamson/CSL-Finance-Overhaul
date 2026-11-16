@@ -8,8 +8,8 @@ namespace FinanceOverhaul
 {
     /// <summary>
     /// Welcome back (Figma band 14, docs/features/save-compatibility.md): shown once after a city
-    /// is loaded with the mod when bond payments fell due while the mod was off. Two choices, no
-    /// close button: the bonds wait for an answer. Answering settles the book through
+    /// is loaded with the mod when bond payments fell due while the mod was off. Two choices;
+    /// × does the default, "Start fresh from today". Answering settles the book through
     /// <see cref="BondDesk.SettleMissed"/>; saving without answering keeps the question for the
     /// next load.
     /// </summary>
@@ -72,6 +72,16 @@ namespace FinanceOverhaul
             Close();
         }
 
+        /// <summary>Game UI tests: clicks × like the player.</summary>
+        public void ClickClose()
+        {
+            UIButton close = panel == null ? null : panel.Find<UIButton>(PanelName + "Close");
+            if (close != null)
+            {
+                close.SimulateClick();
+            }
+        }
+
         private void Close()
         {
             if (panel != null)
@@ -123,8 +133,19 @@ namespace FinanceOverhaul
             header.color = Header;
             header.size = new Vector2(Width, 36f);
             header.relativePosition = Vector3.zero;
-            UILabel title = Label(header, WelcomeText.Title, 1.1f, White, Width - 24f);
+            UILabel title = Label(header, WelcomeText.Title, 1.1f, White, Width - 60f);
             title.relativePosition = new Vector3(12f, 8f);
+
+            // × does the default: start fresh from today.
+            UIButton close = header.AddUIComponent<UIButton>();
+            close.name = PanelName + "Close";
+            close.size = new Vector2(30f, 30f);
+            close.normalBgSprite = "buttonclose";
+            close.hoveredBgSprite = "buttonclosehover";
+            close.pressedBgSprite = "buttonclosepressed";
+            close.relativePosition = new Vector3(Width - 34f, 3f);
+            close.tooltip = WelcomeText.CloseTip;
+            close.eventClick += (c, p) => Choose(false);
 
             float y = 48f;
             float inner = Width - 2 * Pad;
