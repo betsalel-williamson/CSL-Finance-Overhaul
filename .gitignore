@@ -26,3 +26,4 @@ coverage*.xml
 coverage*.cobertura.xml
 tools/
 .probe/
+dist/
