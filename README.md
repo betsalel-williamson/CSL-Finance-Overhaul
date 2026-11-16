@@ -7,7 +7,8 @@ orders, and IPOs.
 > **0.1.0 is out.**
 > [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3840721874) ·
 > [Player guide](https://betsalel-williamson.github.io/CSL-Finance-Overhaul/) ·
-> [Release notes](https://github.com/betsalel-williamson/CSL-Finance-Overhaul/releases/tag/v0.1.0)
+> [Release notes](https://github.com/betsalel-williamson/CSL-Finance-Overhaul/releases/tag/v0.1.0) ·
+> [Community discussion (Discord)](https://discord.com/channels/1024242828114673724/1571077936797192243)
 >
 > Orders (limit, stop-loss, take-profit, trailing stop), Stock Monitor, live LED ticker, Index
 > stock, city bonds and Chirper notices. Sector ETFs, dividends, commodities and IPOs are planned

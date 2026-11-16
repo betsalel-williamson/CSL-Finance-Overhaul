@@ -39,6 +39,7 @@ Your city always opens without the mod. Orders, bonds and Index shares stay in t
 
 Requires Financial Districts and Harmony.
 Player guide: https://betsalel-williamson.github.io/CSL-Finance-Overhaul/
+Community discussion (Discord): https://discord.com/channels/1024242828114673724/1571077936797192243
 Source and issues: https://github.com/betsalel-williamson/CSL-Finance-Overhaul
 ```
 
@@ -93,6 +94,7 @@ Known limits
 • Prices follow the game's own investment rules; your trades never move them.
 • One Workshop item, early version: please report problems with your mod list and the log file finance-overhaul.log from your temp folder.
 
+Community discussion (Discord): https://discord.com/channels/1024242828114673724/1571077936797192243
 Source and issues: https://github.com/betsalel-williamson/CSL-Finance-Overhaul
 ```
 

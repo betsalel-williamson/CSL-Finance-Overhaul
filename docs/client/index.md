@@ -15,3 +15,6 @@ treasury. Version 0.1.
 - [Chirper notices](./notices.md)
 - [Saves and turning the mod off](./saves.md)
 - [Options](./options.md)
+
+Questions, ideas or problems? Join the
+[community discussion on Discord](https://discord.com/channels/1024242828114673724/1571077936797192243).
