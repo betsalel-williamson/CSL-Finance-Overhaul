@@ -12,6 +12,13 @@ npm run hooks:agent-validate
 That runs layer lint, Market unit+perf tests, Mod host tests (no Cities), csharpier check, and
 Merlon docs. Do **not** claim merge-ready without it.
 
+## Changesets
+
+Every player-visible change since the last release (`v0.1.0`) gets a `.changeset/*.md` in the same
+commit: `patch` for a bug fix, `minor` for a feature. One short paragraph in player terms (what was
+wrong, what happens now). They become the next release's `CHANGELOG.md` section and are deleted when
+it ships.
+
 ## Test layers
 
 | Command             | Layer                                     | Cities assemblies              |

@@ -1,7 +1,7 @@
 {
   "name": "csl-finance-overhaul",
-  "version": "0.1.0",
-  "description": "Cities: Skylines I mod \u2014 Financial Districts market overhaul (index funds, ETFs, bonds, automation, IPOs)",
+  "version": "0.2.0",
+  "description": "Cities: Skylines I mod — Financial Districts market overhaul (index funds, ETFs, bonds, automation, IPOs)",
   "license": "MIT",
   "repository": {
     "type": "git",
