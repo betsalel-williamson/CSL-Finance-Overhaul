@@ -4,11 +4,12 @@ namespace FinanceOverhaul.Core
 {
     /// <summary>
     /// What a local company lists at and where it opens. The game has no share count or volume:
-    /// a stock is a price and the city's own holding, at most
-    /// <see cref="HoldingCap"/> shares. So the offering price is set so that the full holding is
-    /// worth the whole company (annual earnings × the price-to-earnings multiple): the cap reads
-    /// as "the city can own the company". Prices are whole ₡ a share, in cents, kept inside the
-    /// range of the game's own stocks.
+    /// a stock is a price and the city's own holding, at most <see cref="HoldingCap"/> shares.
+    /// The city is a passive investor with no say in the company, so it may hold only a stake
+    /// (<see cref="IpoRules.CityStakePercent"/>, 10%): the offering price is set so that the full
+    /// holding is worth that stake of the company (annual earnings × the price-to-earnings
+    /// multiple). Prices are whole ₡ a share, in cents, kept inside the range of the game's own
+    /// stocks.
     /// </summary>
     public static class IpoPricing
     {
@@ -25,25 +26,41 @@ namespace FinanceOverhaul.Core
         public const double MaxPop = 3.0;
 
         /// <summary>
-        /// Offering price a share: annual earnings × multiple ÷ <see cref="HoldingCap"/>, rounded
-        /// down to a whole ₡, never outside ₡1 to ₡100,000. A business with no earnings lists at
-        /// the floor.
+        /// Offering price a share: annual earnings × multiple × the city's stake ÷
+        /// <see cref="HoldingCap"/>, rounded down to a whole ₡, never outside ₡1 to ₡100,000. A
+        /// business with no earnings lists at the floor.
         /// </summary>
         public static long OfferingPriceCents(long annualEarningsCents, IpoRules rules)
         {
-            if (annualEarningsCents <= 0 || rules == null || rules.PriceToEarnings <= 0)
+            if (
+                annualEarningsCents <= 0
+                || rules == null
+                || rules.PriceToEarnings <= 0
+                || rules.CityStakePercent <= 0
+            )
             {
                 return MinPriceCents;
             }
 
-            decimal value = (decimal)annualEarningsCents * rules.PriceToEarnings;
-            decimal share = Math.Floor(value / HoldingCap / 100m) * 100m; // whole ₡
+            decimal stake =
+                (decimal)annualEarningsCents
+                * rules.PriceToEarnings
+                * Math.Min(100, rules.CityStakePercent)
+                / 100m;
+            decimal share = Math.Floor(stake / HoldingCap / 100m) * 100m; // whole ₡
             if (share <= MinPriceCents)
             {
                 return MinPriceCents;
             }
 
             return share >= MaxPriceCents ? MaxPriceCents : (long)share;
+        }
+
+        /// <summary>The company's whole value at a share price: what a 100% stake would cost.</summary>
+        public static long CompanyValueCents(long sharePriceCents, IpoRules rules)
+        {
+            int stake = Math.Max(1, Math.Min(100, rules.CityStakePercent));
+            return sharePriceCents * HoldingCap * 100 / stake;
         }
 
         /// <summary>

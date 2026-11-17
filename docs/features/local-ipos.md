@@ -103,14 +103,18 @@ level-3 businesses that stay healthy never gets one.
 From what the business earns: the game books income to the city by category only, so the mod
 measures the building's own income (the game's income formula for its type and level × its activity,
 or the city's income just before and after the building's step). Offering price = annual earnings ×
-a price-to-earnings multiple ÷ 1,000, in whole ₡, kept inside ₡1 to ₡100,000 (the range of the
-game's own stocks).
+a price-to-earnings multiple × the city's stake (10%) ÷ 1,000, in whole ₡, kept inside ₡1 to
+₡100,000 (the range of the game's own stocks).
 
-**Why ÷ 1,000 (decided 2026-11-17):** the game has no share count and no volume. A stock is its last
-30 daily prices plus the city's own holding (shares owned, money spent), and each stock type caps
-that holding (`InvestmentAI.m_maximumShareCount`, 1,000). The city is the only trader. So the price
-is set so that the full 1,000-share holding is worth the whole company: a business earning ₡26,000 a
-year is worth ₡520,000 and lists at ₡520 a share (`IpoPricing.OfferingPriceCents`).
+**Why a 10% stake over 1,000 shares (decided 2026-11-17):** the game has no share count and no
+volume. A stock is its last 30 daily prices plus the city's own holding (shares owned, money spent),
+and each stock type caps that holding (`InvestmentAI.m_maximumShareCount`, 1,000). The city is the
+only trader, and it owns nothing in the corporate sense: no votes, no meetings, no control. That is
+a passive public investor, and real ones are capped (Norway's sovereign fund holds at most 10% of a
+company's voting shares). So the full 1,000-share holding is a 10% stake: a business earning ₡26,000
+a year is worth ₡520,000, the city can put in at most ₡52,000, and it lists at ₡52 a share
+(`IpoPricing.OfferingPriceCents`; the stake is the option "City's largest stake", default 10%). The
+game's own stocks have no company value behind them and stay as they are.
 
 **First-day pop (built):** a log-normal jump with the two options as its average (+15%) and standard
 deviation (25%), cut off at −50% and +300%. In 400,000 simulated listings about 3 in 10 open below
@@ -268,6 +272,7 @@ settings.
 | Offering window (days)             | 7         | Days to buy at the offering price                     |
 | First-day pop: average / spread    | 15% / 25% | The first-day jump and how varied it is               |
 | Price-to-earnings multiple         | 20        | Offering price from measured earnings                 |
+| City's largest stake               | 10%       | What the full 1,000-share holding is of the company   |
 | New-listing volatility             | 2×        | Extra swing in the first year (settles to normal)     |
 | Local listing cap                  | 12        | Most local companies listed at once                   |
 | Acquisitions at the cap            | Off       | Free a slot by taking a company private               |

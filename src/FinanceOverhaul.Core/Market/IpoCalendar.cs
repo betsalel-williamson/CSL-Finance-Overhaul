@@ -32,6 +32,12 @@ namespace FinanceOverhaul.Core
         /// <summary>Company value = annual earnings × this multiple.</summary>
         public int PriceToEarnings = 20;
 
+        /// <summary>
+        /// The most of a local company the city may hold, in percent: a passive public investor,
+        /// like a sovereign fund's 10% limit. The game's full holding is this stake.
+        /// </summary>
+        public int CityStakePercent = 10;
+
         /// <summary>The first-day jump on average, in percent.</summary>
         public int PopAveragePercent = 15;
 

@@ -7,22 +7,35 @@ namespace FinanceOverhaul.Core.Tests
     public class IpoPricingTests
     {
         [Fact]
-        public void TheFullHoldingIsWorthTheCompany()
+        public void TheFullHoldingIsATenPercentStake()
         {
-            // ₡26,000 a year × 20 = ₡520,000; over the 1,000 shares the city may hold: ₡520.
+            // ₡26,000 a year × 20 = ₡520,000; a 10% stake is ₡52,000 over the 1,000 shares the
+            // city may hold: ₡52 a share.
             var rules = new IpoRules();
             long price = IpoPricing.OfferingPriceCents(2_600_000, rules);
-            Assert.Equal(52_000, price);
-            Assert.Equal(2_600_000L * 20, price * IpoPricing.HoldingCap);
+            Assert.Equal(5_200, price);
+            Assert.Equal(2_600_000L * 20 / 10, price * IpoPricing.HoldingCap);
+            Assert.Equal(2_600_000L * 20, IpoPricing.CompanyValueCents(price, rules));
+        }
+
+        [Fact]
+        public void ABiggerStakeMeansADearerShare()
+        {
+            var whole = new IpoRules { CityStakePercent = 100 };
+            Assert.Equal(52_000, IpoPricing.OfferingPriceCents(2_600_000, whole));
+            var over = new IpoRules { CityStakePercent = 250 }; // more than all of it: all of it
+            Assert.Equal(52_000, IpoPricing.OfferingPriceCents(2_600_000, over));
+            var none = new IpoRules { CityStakePercent = 0 };
+            Assert.Equal(IpoPricing.MinPriceCents, IpoPricing.OfferingPriceCents(2_600_000, none));
         }
 
         [Theory]
         [InlineData(0L, 100L)] // no earnings: the floor
         [InlineData(-500L, 100L)]
-        [InlineData(4_999L, 100L)] // under ₡1 a share: the floor
-        [InlineData(10_000L, 200L)] // ₡100 a year → ₡2
-        [InlineData(1_234_567L, 24_600L)] // ₡246.91 → whole ₡, rounded down
-        [InlineData(900_000_000_000L, 10_000_000L)] // the ceiling
+        [InlineData(49_999L, 100L)] // under ₡1 a share: the floor
+        [InlineData(100_000L, 200L)] // ₡1,000 a year → ₡2
+        [InlineData(12_345_678L, 24_600L)] // ₡246.91 → whole ₡, rounded down
+        [InlineData(9_000_000_000_000L, 10_000_000L)] // the ceiling
         public void PricesAreWholeAndInsideTheGamesRange(long earnings, long price)
         {
             Assert.Equal(price, IpoPricing.OfferingPriceCents(earnings, new IpoRules()));
@@ -34,7 +47,7 @@ namespace FinanceOverhaul.Core.Tests
             var rules = new IpoRules();
             var richer = new IpoRules { PriceToEarnings = 30 };
             long last = 0;
-            for (long earnings = 0; earnings < 80_000_000; earnings += 37_337)
+            for (long earnings = 0; earnings < 800_000_000; earnings += 373_337)
             {
                 long price = IpoPricing.OfferingPriceCents(earnings, rules);
                 Assert.True(price >= last);
