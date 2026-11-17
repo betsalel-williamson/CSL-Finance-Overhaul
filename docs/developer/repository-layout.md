@@ -29,7 +29,8 @@ One flat namespace, `FinanceOverhaul.Core`; the folders only group files.
 
 | Folder         | Holds                                                                                                                             |
 | -------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| (root)         | What Cities calls: `Mod`, Options page, settings file, build info, `Patcher.*` hooks                                              |
+| (root)         | What Cities calls: `Mod`, Options page, settings file, build info, loading extension                                              |
+| `Harmony/`     | Every Harmony patch: `Patcher` applies and removes them, `Patcher.*` hold the hooks by feature                                    |
 | `Kit/`         | Reusable UI components, one per component in the Figma library; knows no feature                                                  |
 | `Exchange/`    | The Stock Exchange building: LED boards and the ticker feed                                                                       |
 | `Windows/`     | The mod's own windows: Stock Monitor, Welcome back                                                                                |
