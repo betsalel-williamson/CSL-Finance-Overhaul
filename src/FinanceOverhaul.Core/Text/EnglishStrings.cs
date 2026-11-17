@@ -92,6 +92,20 @@ namespace FinanceOverhaul.Core
             { "detail.trade.tip", "Buy / Sell open the game's Invest dialog (with order tabs)" },
             { "detail.sell.none", "The city holds no shares of {0}" },
             { "detail.history.limit", "the game keeps 30 daily prices" },
+            // More than one copy of the mod switched on. The game's Yes / No dialog shows about
+            // five short lines, so these stay brief.
+            { "duplicate.title", "Finance Overhaul is switched on twice" },
+            { "duplicate.copy.workshop", "{0} (Workshop)" },
+            { "duplicate.copy.local", "{0} (local)" },
+            { "duplicate.copy.unnamed", "unknown version" },
+            {
+                "duplicate.ask.two",
+                "Two copies are switched on and both would act on your city.\n\nYes: keep {0}\nNo: keep {1}"
+            },
+            {
+                "duplicate.ask.many",
+                "{0} copies are switched on and all would act on your city.\n\nYes: keep only {1}\nNo: leave them all on"
+            },
             // Stock Monitor: settings
             { "monitor.settings.title", "Stock Monitor settings" },
             { "monitor.settings.opacity", "Window opacity" },

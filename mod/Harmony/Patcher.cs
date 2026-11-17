@@ -104,6 +104,14 @@ namespace FinanceOverhaul
             patched = false;
         }
 
+        /// <summary>Removes this copy's hooks and applies them again.</summary>
+        public static void Reapply()
+        {
+            UnpatchAll();
+            patched = false;
+            PatchAll();
+        }
+
         public static void LogHarmonyMissingOnce()
         {
             LogHarmonyMissingOnce(null);

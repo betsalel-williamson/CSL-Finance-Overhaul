@@ -16,5 +16,12 @@
 3. Open **Economy → Investments**. The game's stocks are all there, plus **Index**.
 4. Click the round **Stock Monitor** button in the top-left row of mod buttons.
 
+## One copy at a time
+
+If two copies of Finance Overhaul are switched on (the Workshop one and one in your local Mods
+folder, say), both would act on your city. The mod notices and asks which to keep: **Yes** keeps the
+newer one, **No** keeps the other, and the one not kept is switched off in Content Manager. You can
+switch between them there at any time.
+
 Everything works in saves you already have, and the city still opens if you turn the mod off later
 (see [Saves](./saves.md)).

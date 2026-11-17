@@ -74,7 +74,8 @@ The first upload creates the Workshop item. After that, always **Update** the sa
    as a required item, check the description renders.
 5. Record the published file ID in [Workshop storefront](./workshop-storefront.md) and commit.
 6. Subscribe to the item, then move the local `Addons/Mods/FinanceOverhaul` folder aside so only the
-   Workshop copy loads (two copies of the same mod conflict).
+   Workshop copy loads (two copies of the same mod conflict; from 0.2.0 the mod asks which to keep
+   when both are switched on, `DuplicateCopyAlert`).
 
 ## 4. Later releases: Update the same item
 

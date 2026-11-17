@@ -143,6 +143,31 @@ namespace FinanceOverhaul
                     );
                     break;
                 }
+                case "duplicate-alert":
+                {
+                    // duplicate-alert preview|close — shows the "switched on twice" dialog for
+                    // every installed copy (it changes nothing), or closes it.
+                    if (a == "close")
+                    {
+                        ConfirmPanel panel = UIView.library.Get<ConfirmPanel>("ConfirmPanel");
+                        if (panel != null && panel.component.isVisible)
+                        {
+                            panel.OnNo();
+                        }
+                    }
+                    else
+                    {
+                        int copies = DuplicateCopyAlert.Preview();
+                        ModLog.Info("uitest: duplicate-alert copies installed=" + copies);
+                        if (copies < 2)
+                        {
+                            r.Error = "only " + copies + " copy installed: nothing to show";
+                        }
+                    }
+
+                    yield return new WaitForSeconds(0.6f);
+                    break;
+                }
                 case "log-fonts":
                 {
                     // Every UI font the game has loaded, for choosing a weight.
