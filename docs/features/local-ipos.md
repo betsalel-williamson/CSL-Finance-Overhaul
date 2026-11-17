@@ -85,6 +85,54 @@ level-3 businesses that stay healthy never gets one.
   never more than one IPO in progress at a time.
 - A unit test simulates thousands of city-years to check the average matches the target.
 
+## Unlocking, slots and pacing (proposed 2026-11-17)
+
+Replaces the fixed "one every ten years" target once agreed. The player builds towards a sector's
+first listing, sees the progress in Economy → Investments, and is never flooded.
+
+1. **Gate:** a kind of business (commercial, office, industry, and each specialisation: IT cluster,
+   leisure, tourism, organic, farming, forestry, oil, ore) can list only once the city has enough of
+   it: 200 squares of its buildings, the size the game asks for its Forestry, Oil and Ore stocks.
+2. **Slots:** past the gate, a kind earns one listing slot per so many top-level buildings (25
+   offices, 40 shops, 30 industrial buildings; one per 15 for a specialisation). A listing uses a
+   slot; a buy-out or a delisting gives it back.
+3. **Chance:** only a kind with an open slot and at least one candidate can list. Each candidate
+   then has the daily chance from [How often](#how-often-rare-by-design), set so an open slot is
+   filled in about one to two game years.
+4. **Pacing:** at most 2 IPOs in a game year, and never two offering windows at once, so switching
+   the feature on in a large city fills the board over years, not in one week.
+5. **Overall cap:** 2 listings per map tile the city owns, at most 12.
+
+### In Economy → Investments
+
+Figma: UI Map band 16 (proposal). Under "Purchasable Investments", one card per kind of business, in
+the style of the game's locked stocks (name, requirement, a bar and "N / target"):
+
+| State            | The card shows                                                                         |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| Locked           | "Build 200 squares of offices to unlock office listings", bar and "132 / 200"          |
+| Open slot        | "1 slot open · 14 candidates", and the bar towards the next slot ("31 / 50 buildings") |
+| Offering         | The company, its symbol and price, days left, and Buy                                  |
+| Slots full       | "2 of 2 listed", and the bar towards the next slot                                     |
+| Paused by pacing | "Next listing possible from 01/2112 (2 a year)"                                        |
+
+A footer line gives the whole board: "Local listings 3 of 6 · 2 per map tile (3 owned) · at most 2
+IPOs a year". Listed local companies appear in the list like any stock.
+
+### What the game already keeps (checked in the code, 2026-11-17)
+
+| Needed                                 | Where                                                                                                                                                                                                                                                               | Status                                                                               |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Buildings and built area per kind      | City-wide `District` data: `m_commercialData`, `m_officeData`, `m_industrialData`, `m_leisureData`, `m_touristData`, `m_organicData`, `m_hightechData`, `m_farmingData`, `m_forestryData`, `m_oreData`, `m_oilData` (`m_finalBuildingCount`, `m_finalBuildingArea`) | Fields exist; the unit of the area (squares or m²) is **unverified**                 |
+| How many are at each level             | `m_finalLevel1` … `m_finalLevel5` on the commercial, office and industrial data                                                                                                                                                                                     | Fields exist; whether they count buildings or something else is **unverified**       |
+| Industry area by type                  | `District.GetOilIndustryArea()` and its siblings (what the game's own stocks use)                                                                                                                                                                                   | Confirmed in use by the game                                                         |
+| Map tiles owned                        | `GameAreaManager.m_areaCount`, `m_maxAreaCount`                                                                                                                                                                                                                     | Fields exist                                                                         |
+| A "N / target" bar for a locked stock  | `InvestmentMilestone` (`m_targetCount`, `GetProgress`, text "{0} / {1}")                                                                                                                                                                                            | Confirmed; how the locked card looks was not captured (none locked in the test city) |
+| Healthy days, jobs filled per business | Not kept by the game                                                                                                                                                                                                                                                | The mod counts them in its daily scan (`CandidateBook`)                              |
+
+If a tally turns out not to mean what its name suggests, the mod's own daily scan of businesses
+gives the same numbers at the cost of one pass over the buildings a day.
+
 ## The IPO
 
 1. **Announcement:** a chirp from City Brokerage, "{Company} is going public at ₡X a share. The city
