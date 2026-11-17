@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 using Xunit;
-using ModType = FinanceOverhaul.Mod;
+using ModType = FinanceOverhaul.ModBuildInfo;
 
 namespace FinanceOverhaul.Host.Tests
 {

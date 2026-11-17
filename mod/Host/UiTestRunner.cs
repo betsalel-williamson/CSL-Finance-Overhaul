@@ -1544,7 +1544,7 @@ namespace FinanceOverhaul
                     {
                         if (a == "all" || kind.ToString() == a)
                         {
-                            Mod.SetOrderKindEnabled(kind, on);
+                            ModOptions.OnOrderKindChanged(kind, on);
                             found = true;
                         }
                     }

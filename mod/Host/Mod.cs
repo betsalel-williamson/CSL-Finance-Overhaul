@@ -1,6 +1,3 @@
-using System;
-using System.Globalization;
-using System.IO;
 using FinanceOverhaul.Market;
 #if HAS_CITIES
 using CitiesHarmony.API;
@@ -9,186 +6,60 @@ using ICities;
 
 namespace FinanceOverhaul
 {
+    /// <summary>
+    /// The mod as Cities sees it: name, enable and disable, and the Options page. Settings live
+    /// here while the mod is enabled; the Options page is <see cref="ModOptions"/>, the file
+    /// they are saved to is <see cref="ModSettingsStore"/>, the version text is
+    /// <see cref="ModBuildInfo"/>.
+    /// </summary>
     public class Mod
 #if HAS_CITIES
         : IUserMod
 #endif
     {
-        public string Name => OptionsTitle;
+        public string Name => ModBuildInfo.OptionsTitle;
 
         public string Description =>
             "Stock Exchange overhaul for Financial Districts: limit, stop-loss, take-profit and trailing stop orders, a Stock Monitor, an Index stock, city bonds, a live LED ticker and Chirper notices.";
 
         public static ModSettings Settings { get; private set; }
 
-        public static string OptionsTitle
+        /// <summary>The settings, read from disk when the mod has not loaded them yet.</summary>
+        internal static ModSettings EnsureSettings()
         {
-            get
+            if (Settings == null)
             {
-                string version = BuildInfo.ShowDevBuildIdentity
-                    ? GetAssemblyIdentityDisplay()
-                    : GetProductVersionDisplay();
-                if (string.IsNullOrEmpty(version))
-                {
-                    return "Finance Overhaul";
-                }
-
-                return "Finance Overhaul " + version;
-            }
-        }
-
-        internal static string GetProductVersionDisplay()
-        {
-            try
-            {
-                return BuildInfo.ProductVersion;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        internal static string GetAssemblyIdentityDisplay()
-        {
-            try
-            {
-                Version v = typeof(Mod).Assembly.GetName().Version;
-                return v == null ? null : v.ToString();
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        internal static string GetAssemblyBuildTimestampUtcDisplay()
-        {
-            try
-            {
-                return BuildInfo.BuildTimestampUtc;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        internal static string GetBuildInfoFooterDisplay()
-        {
-            if (!BuildInfo.ShowDevBuildIdentity)
-            {
-                return null;
+                Settings = ModSettingsStore.Load();
             }
 
-            string built = GetAssemblyBuildTimestampUtcDisplay();
-            if (string.IsNullOrEmpty(built))
-            {
-                return null;
-            }
-
-            return "Built (UTC): " + built;
-        }
-
-        internal static string GetBuildInfoLocalDisplay()
-        {
-            if (!BuildInfo.ShowDevBuildIdentity)
-            {
-                return null;
-            }
-
-            string builtUtc = GetAssemblyBuildTimestampUtcDisplay();
-            if (string.IsNullOrEmpty(builtUtc))
-            {
-                return null;
-            }
-
-            if (
-                !DateTime.TryParse(
-                    builtUtc,
-                    CultureInfo.InvariantCulture,
-                    DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal,
-                    out DateTime utc
-                )
-            )
-            {
-                return "Built (local): " + builtUtc;
-            }
-
-            DateTime local = utc.ToLocalTime();
-            return "Built (local): "
-                + local.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-        }
-
-        /// <summary>
-        /// Options persist in a small key=value file so they survive hot reload
-        /// (every reload calls OnEnabled on a fresh assembly) and game restarts.
-        /// </summary>
-        internal static string SettingsPath
-        {
-            get
-            {
-#if HAS_CITIES
-                try
-                {
-                    return Path.Combine(
-                        ColossalFramework.IO.DataLocation.localApplicationData,
-                        SettingsFile.FileName
-                    );
-                }
-                catch
-                {
-                    // fall through to temp
-                }
-#endif
-                return Path.Combine(Path.GetTempPath(), SettingsFile.FileName);
-            }
-        }
-
-        internal static ModSettings LoadSettings()
-        {
-            try
-            {
-                string path = SettingsPath;
-                if (File.Exists(path))
-                {
-                    return ForBuild(SettingsFile.Parse(File.ReadAllText(path)));
-                }
-            }
-            catch (Exception ex)
-            {
-                ModLog.Warn("settings: read failed, using defaults: " + ex.Message);
-            }
-
-            return ForBuild(new ModSettings());
-        }
-
-        /// <summary>Release builds use the release value of every feature flag.</summary>
-        private static ModSettings ForBuild(ModSettings s)
-        {
-            if (!BuildInfo.ShowDevBuildIdentity)
-            {
-                s.PinReleaseFlags();
-            }
-
-            return s;
+            return Settings;
         }
 
         internal static void SaveSettings()
         {
-            try
+            ModSettingsStore.Save(Settings);
+        }
+
+        /// <summary>Whether an order type's flag is on (on when settings aren't loaded yet).</summary>
+        internal static bool OrderKindEnabled(OrderKind kind)
+        {
+            return Settings == null || Settings.IsEnabled(kind);
+        }
+
+        /// <summary>Lifetime for orders placed from now on (open orders keep theirs).</summary>
+        internal static int OrderLifetimeDays
+        {
+            get
             {
-                File.WriteAllText(SettingsPath, SettingsFile.Format(Settings));
-            }
-            catch (Exception ex)
-            {
-                ModLog.Warn("settings: write failed: " + ex.Message);
+                return Settings == null
+                    ? TradeOrder.DefaultLifetimeDays
+                    : Settings.OrderLifetimeDays;
             }
         }
 
         public void OnEnabled()
         {
-            Settings = LoadSettings();
+            Settings = ModSettingsStore.Load();
             ModLog.Info(
                 "settings: indexStock="
                     + Settings.IndexStockEnabled
@@ -196,7 +67,7 @@ namespace FinanceOverhaul
                     + Settings.LiveTickerEnabled
             );
 
-            ModLog.Info("mod enabled product=" + (GetProductVersionDisplay() ?? "?"));
+            ModLog.Info("mod enabled product=" + (ModBuildInfo.GetProductVersionDisplay() ?? "?"));
 
 #if HAS_CITIES
             try
@@ -236,373 +107,10 @@ namespace FinanceOverhaul
 #if HAS_CITIES
         public void OnSettingsUI(UIHelperBase helper)
         {
-            if (helper == null)
+            if (helper != null)
             {
-                return;
+                ModOptions.Build(helper);
             }
-
-            if (Settings == null)
-            {
-                Settings = LoadSettings();
-            }
-
-            // Preferences: how shipped features look and behave. Every build.
-            UIHelperBase group = helper.AddGroup(OptionsTitle);
-            group.AddCheckbox(
-                "Live Stock Exchange ticker (visual only)",
-                Settings.LiveTickerEnabled,
-                OnLiveTickerChanged
-            );
-            group.AddDropdown(
-                "Stock Exchange ticker shows",
-                new[] { "Change % (+3.22%)", "Price and ₡ change (₡951 +₡30)" },
-                Settings.TickerShows == TickerDisplay.PriceAndChange ? 1 : 0,
-                OnTickerShowsChanged
-            );
-            group.AddCheckbox(
-                "Show the LED ticker in info views (traffic, population…)",
-                Settings.TickerInInfoViews,
-                OnTickerInInfoViewsChanged
-            );
-            group.AddDropdown(
-                "LED ticker brightness",
-                new[] { "Classic", "Bright", "Brightest (daylight)" },
-                (int)Settings.TickerBrightness,
-                OnTickerBrightnessChanged
-            );
-
-            // How long new orders stay open (a game, so the player chooses; default 90 days).
-            int[] lifetimes = TradeOrder.LifetimeChoices;
-            var lifetimeLabels = new string[lifetimes.Length];
-            int selected = Array.IndexOf(lifetimes, TradeOrder.DefaultLifetimeDays);
-            for (int i = 0; i < lifetimes.Length; i++)
-            {
-                lifetimeLabels[i] = OrderText.LifetimeLabel(lifetimes[i]);
-                if (lifetimes[i] == Settings.OrderLifetimeDays)
-                {
-                    selected = i;
-                }
-            }
-
-            group.AddDropdown(
-                "Orders stay open for (new orders)",
-                lifetimeLabels,
-                selected,
-                OnOrderLifetimeChanged
-            );
-            group.AddCheckbox(
-                "Order and bond notices in Chirper",
-                Settings.NoticesEnabled,
-                v =>
-                {
-                    Settings.NoticesEnabled = v;
-                    SaveSettings();
-                    ModLog.Info("notices enabled=" + v);
-                }
-            );
-            if (BuildInfo.ShowDevBuildIdentity || Settings.CityBondsEnabled)
-            {
-                group.AddCheckbox(
-                    "Also chirp every bond coupon",
-                    Settings.NoticesBondCoupons,
-                    v =>
-                    {
-                        Settings.NoticesBondCoupons = v;
-                        SaveSettings();
-                    }
-                );
-            }
-
-            // Feature flags: whether a feature exists at all. Dev builds only; release builds
-            // use ModSettings.PinReleaseFlags.
-            if (BuildInfo.ShowDevBuildIdentity)
-            {
-                UIHelperBase flags = helper.AddGroup("Feature flags (dev builds only)");
-                foreach (OrderKind kind in ModSettings.OrderKinds)
-                {
-                    OrderKind k = kind;
-                    flags.AddCheckbox(
-                        OrderText.OptionLabel(k),
-                        Settings.IsEnabled(k),
-                        enabled => OnOrderKindChanged(k, enabled)
-                    );
-                }
-
-                flags.AddCheckbox(
-                    "Stock Monitor window",
-                    Settings.Monitor.Enabled,
-                    OnStockMonitorChanged
-                );
-                flags.AddCheckbox(
-                    "Share value charts in the Stock Monitor style",
-                    Settings.ShareChartsEnabled,
-                    OnShareChartsChanged
-                );
-                flags.AddCheckbox(
-                    "Index stock (adds an investment to saves)",
-                    Settings.IndexStockEnabled,
-                    OnIndexStockChanged
-                );
-                flags.AddCheckbox(
-                    "City bonds (sell bonds to raise money; adds mod save data)",
-                    Settings.CityBondsEnabled,
-                    OnCityBondsChanged
-                );
-                flags.AddCheckbox(
-                    "Dev: Test Stock (TST) for game UI tests (adds a listing; use a test save)",
-                    Settings.DevTestStockEnabled,
-                    OnDevTestStockChanged
-                );
-            }
-
-            // Build info goes on the Options page itself after the group, as plain labels (not
-            // nested groups, which each draw a rule): the group's own separator rule then sits
-            // between the toggles and the build info.
-            AddFooterLabel(helper, GetBuildInfoFooterDisplay());
-            AddFooterLabel(helper, GetBuildInfoLocalDisplay());
-
-            // Always available (dev and release): one click puts version, assembly identity
-            // and build time on the clipboard for bug reports.
-            copyBuildInfoButton =
-                helper.AddButton(CopyBuildInfoLabel, OnCopyBuildInfo)
-                as ColossalFramework.UI.UIButton;
-        }
-
-        private const string CopyBuildInfoLabel = "Copy build info";
-
-        private static ColossalFramework.UI.UIButton copyBuildInfoButton;
-
-        internal static string GetBuildInfoText()
-        {
-            return BuildInfoText.Format(
-                GetProductVersionDisplay(),
-                GetAssemblyIdentityDisplay(),
-                GetAssemblyBuildTimestampUtcDisplay(),
-                BuildInfo.ShowDevBuildIdentity
-            );
-        }
-
-        private static void OnCopyBuildInfo()
-        {
-            try
-            {
-                string text = GetBuildInfoText();
-                UnityEngine.GUIUtility.systemCopyBuffer = text;
-                ModLog.Info("build info copied: " + text.Replace("\n", " | "));
-                if (copyBuildInfoButton != null)
-                {
-                    copyBuildInfoButton.text = "Copied build info";
-                }
-            }
-            catch (Exception ex)
-            {
-                ModLog.Warn("build info copy failed: " + ex.Message);
-            }
-        }
-
-        private static void AddFooterLabel(UIHelperBase group, string text)
-        {
-            if (string.IsNullOrEmpty(text))
-            {
-                return;
-            }
-
-            var helper = group as UIHelper;
-            var panel = helper == null ? null : helper.self as ColossalFramework.UI.UIComponent;
-            if (panel == null)
-            {
-                group.AddGroup(text); // fallback: still visible, with an extra rule
-                return;
-            }
-
-            ColossalFramework.UI.UILabel label =
-                panel.AddUIComponent<ColossalFramework.UI.UILabel>();
-            label.text = text;
-            label.textScale = 0.875f;
-        }
-
-        private static void OnIndexStockChanged(bool enabled)
-        {
-            if (Settings == null)
-            {
-                Settings = new ModSettings();
-            }
-
-            Settings.IndexStockEnabled = enabled;
-            SaveSettings();
-            ModLog.Info("index stock enabled=" + enabled);
-            if (enabled)
-            {
-                // Mid-game: list Index now instead of waiting for the next city load.
-                IndexListing.EnsureInLoadedCity();
-            }
-            else
-            {
-                ModLog.Info("index: disabling keeps an existing listing until the next city load");
-            }
-        }
-
-        private static void OnDevTestStockChanged(bool enabled)
-        {
-            if (Settings == null)
-            {
-                Settings = new ModSettings();
-            }
-
-            Settings.DevTestStockEnabled = enabled;
-            SaveSettings();
-            ModLog.Info("dev test stock enabled=" + enabled);
-            if (enabled)
-            {
-                TestStockListing.EnsureInLoadedCity();
-            }
-        }
-
-        /// <summary>Whether an order type's flag is on (on when settings aren't loaded yet).</summary>
-        internal static bool OrderKindEnabled(OrderKind kind)
-        {
-            return Settings == null || Settings.IsEnabled(kind);
-        }
-
-        /// <summary>Same as ticking the Options checkbox (used by the game UI tests).</summary>
-        internal static void SetOrderKindEnabled(OrderKind kind, bool enabled)
-        {
-            OnOrderKindChanged(kind, enabled);
-        }
-
-        private static void OnOrderKindChanged(OrderKind kind, bool enabled)
-        {
-            if (Settings == null)
-            {
-                Settings = new ModSettings();
-            }
-
-            Settings.SetEnabled(kind, enabled);
-            SaveSettings();
-            ModLog.Info("orders: " + SettingsFile.OrderKey(kind) + "=" + enabled);
-            OrderTicket.OnFlagsChanged();
-        }
-
-        /// <summary>Lifetime for orders placed from now on (open orders keep theirs).</summary>
-        internal static int OrderLifetimeDays
-        {
-            get
-            {
-                return Settings == null
-                    ? TradeOrder.DefaultLifetimeDays
-                    : Settings.OrderLifetimeDays;
-            }
-        }
-
-        private static void OnTickerInInfoViewsChanged(bool shown)
-        {
-            if (Settings == null)
-            {
-                Settings = new ModSettings();
-            }
-
-            Settings.TickerInInfoViews = shown;
-            SaveSettings();
-            ModLog.Info("ticker: in info views=" + shown);
-        }
-
-        private static void OnTickerBrightnessChanged(int index)
-        {
-            if (Settings == null)
-            {
-                Settings = new ModSettings();
-            }
-
-            Settings.TickerBrightness = (LedBrightness)Math.Max(0, Math.Min(2, index));
-            SaveSettings();
-            ModLog.Info("ticker: brightness " + Settings.TickerBrightness);
-        }
-
-        private static void OnTickerShowsChanged(int index)
-        {
-            if (Settings == null)
-            {
-                Settings = new ModSettings();
-            }
-
-            Settings.TickerShows =
-                index == 1 ? TickerDisplay.PriceAndChange : TickerDisplay.ChangePercent;
-            SaveSettings();
-            ModLog.Info("ticker: shows " + Settings.TickerShows);
-        }
-
-        private static void OnOrderLifetimeChanged(int index)
-        {
-            if (Settings == null)
-            {
-                Settings = new ModSettings();
-            }
-
-            int[] lifetimes = TradeOrder.LifetimeChoices;
-            if (index < 0 || index >= lifetimes.Length)
-            {
-                return;
-            }
-
-            Settings.OrderLifetimeDays = lifetimes[index];
-            SaveSettings();
-            ModLog.Info("orders: new orders stay open " + Settings.OrderLifetimeDays + " days");
-        }
-
-        private static void OnShareChartsChanged(bool enabled)
-        {
-            if (Settings == null)
-            {
-                Settings = new ModSettings();
-            }
-
-            Settings.ShareChartsEnabled = enabled;
-            SaveSettings();
-            ModLog.Info("share charts enabled=" + enabled);
-            if (!enabled)
-            {
-                ShareChartOverlay.RemoveAll();
-            }
-        }
-
-        private static void OnCityBondsChanged(bool enabled)
-        {
-            if (Settings == null)
-            {
-                Settings = new ModSettings();
-            }
-
-            Settings.CityBondsEnabled = enabled;
-            SaveSettings();
-            ModLog.Info("city bonds enabled=" + enabled);
-        }
-
-        private static void OnStockMonitorChanged(bool enabled)
-        {
-            if (Settings == null)
-            {
-                Settings = new ModSettings();
-            }
-
-            Settings.Monitor.Enabled = enabled;
-            SaveSettings();
-            ModLog.Info("stock monitor enabled=" + enabled);
-            if (StockMonitorHost.Current != null)
-            {
-                StockMonitorHost.Current.ApplyFlag();
-            }
-        }
-
-        private static void OnLiveTickerChanged(bool enabled)
-        {
-            if (Settings == null)
-            {
-                Settings = new ModSettings();
-            }
-
-            Settings.LiveTickerEnabled = enabled;
-            SaveSettings();
-            ModLog.Info("live ticker enabled=" + enabled);
         }
 #endif
     }

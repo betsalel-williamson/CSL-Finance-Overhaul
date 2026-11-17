@@ -41,7 +41,7 @@ namespace FinanceOverhaul
 
         public static string Folder
         {
-            get { return Path.GetDirectoryName(Mod.SettingsPath); }
+            get { return Path.GetDirectoryName(ModSettingsStore.Path); }
         }
 
         private void Update()
