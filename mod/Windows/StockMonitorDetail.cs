@@ -451,7 +451,7 @@ namespace FinanceOverhaul
         {
             b.normalBgSprite = on ? "ButtonMenuPressed" : "ButtonMenu";
             b.focusedBgSprite = b.normalBgSprite;
-            b.textColor = on ? (Color32)Color.white : new Color32(190, 198, 206, 255);
+            b.textColor = on ? (Color32)Color.white : FoTheme.TextLabel;
         }
 
         private void DrawChart(float[] range, Color32 colour)

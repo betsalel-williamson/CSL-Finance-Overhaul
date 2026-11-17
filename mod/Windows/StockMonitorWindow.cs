@@ -43,15 +43,15 @@ namespace FinanceOverhaul
             SparkH = 28,
             SparkScale = 2;
 
-        private static readonly Color32 White = new Color32(245, 247, 250, 255);
-        private static readonly Color32 Muted = FoTheme.ChartLabel;
+        private static readonly Color32 White = FoTheme.TextPrimary;
+        private static readonly Color32 Muted = FoTheme.TextMuted;
         private static readonly Color32 Cyan = FoTheme.Accent;
         private static readonly Color32 Gold = FoTheme.TickerSymbol;
         private static readonly Color32 GoldBack = new Color32(70, 52, 24, 255);
         private static readonly Color32 PillText = FoTheme.Header; // black reads best on the light game colours
         private static readonly Color32 Gain = FoTheme.TickerGain;
         private static readonly Color32 Loss = FoTheme.Loss;
-        private static readonly Color32 Flat = new Color32(159, 176, 192, 255);
+        private static readonly Color32 Flat = FoTheme.TickerFlat;
         private static readonly Color32 Divider = new Color32(255, 255, 255, 26);
 
         public static StockMonitorHost Current { get; private set; }
@@ -584,7 +584,7 @@ namespace FinanceOverhaul
                 bool on = kv.Key == Settings.Filter;
                 kv.Value.normalBgSprite = on ? "ButtonMenuPressed" : "ButtonMenu";
                 kv.Value.focusedBgSprite = kv.Value.normalBgSprite;
-                kv.Value.textColor = on ? (Color32)Color.white : new Color32(190, 198, 206, 255);
+                kv.Value.textColor = on ? (Color32)Color.white : FoTheme.TextLabel;
             }
         }
 

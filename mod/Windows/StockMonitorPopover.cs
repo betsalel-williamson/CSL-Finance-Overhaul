@@ -106,7 +106,7 @@ namespace FinanceOverhaul
             popover.name = PopoverName;
             popover.width = PopW;
             popover.backgroundSprite = "GenericPanelWhite";
-            popover.color = new Color32(10, 13, 15, 235);
+            popover.color = new Color32(FoTheme.Window.r, FoTheme.Window.g, FoTheme.Window.b, 235);
 
             UILabel title = Label(
                 popover,

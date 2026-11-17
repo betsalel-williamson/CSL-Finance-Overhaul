@@ -30,8 +30,20 @@ namespace FinanceOverhaul
         /// <summary>Title bars and text on light pills. Figma: color/bg/header.</summary>
         public static readonly Color32 Header = new Color32(9, 14, 17, 255);
 
-        /// <summary>Background of the mod's own windows.</summary>
-        public static readonly Color32 Window = new Color32(10, 13, 15, 255);
+        /// <summary>Background of the mod's own windows. Figma: color/bg/header.</summary>
+        public static readonly Color32 Window = new Color32(9, 14, 17, 255);
+
+        /// <summary>Frame of a dialog. Figma: color/bg/dialog.</summary>
+        public static readonly Color32 Dialog = new Color32(50, 55, 58, 255);
+
+        /// <summary>A card inside a dialog. Figma: color/bg/panel-alt.</summary>
+        public static readonly Color32 PanelAlt = new Color32(24, 29, 35, 255);
+
+        /// <summary>Body text and unselected tabs. Figma: color/text/label.</summary>
+        public static readonly Color32 TextLabel = new Color32(210, 213, 218, 255);
+
+        /// <summary>A change of 0.00 and unknown values. Figma: color/ticker/flat.</summary>
+        public static readonly Color32 TickerFlat = new Color32(159, 176, 192, 255);
 
         /// <summary>Background of a typed field.</summary>
         public static readonly Color32 Field = new Color32(28, 28, 28, 255);
