@@ -159,6 +159,7 @@ namespace FinanceOverhaul
             }
 
             OrderDesk.UnfreezeAll();
+            BondDesk.ClearTestFinances();
             CityBondsSection.ForceShow = false;
             ChirpNotices.Muted = false;
             if (ctx.TickerBefore.HasValue && Mod.Settings != null)
@@ -1071,6 +1072,39 @@ namespace FinanceOverhaul
                 }
                 case "bond-finances":
                 {
+                    // bond-finances DEBT INCOME — fixes the city's debt and annual income (₡)
+                    // for bond pricing until the scenario ends; "real" goes back to the city's
+                    // own; no argument logs what pricing sees now.
+                    if (a == "real")
+                    {
+                        BondDesk.ClearTestFinances();
+                    }
+                    else if (!string.IsNullOrEmpty(a))
+                    {
+                        long setDebt,
+                            setIncome;
+                        if (
+                            !long.TryParse(
+                                a.Replace(",", string.Empty),
+                                NumberStyles.Integer,
+                                CultureInfo.InvariantCulture,
+                                out setDebt
+                            )
+                            || !long.TryParse(
+                                (b ?? string.Empty).Replace(",", string.Empty),
+                                NumberStyles.Integer,
+                                CultureInfo.InvariantCulture,
+                                out setIncome
+                            )
+                        )
+                        {
+                            r.Error = "bond-finances DEBT INCOME (whole ₡) or bond-finances real";
+                            break;
+                        }
+
+                        BondDesk.SetTestFinances(setDebt * 100, setIncome * 100);
+                    }
+
                     long debt,
                         income;
                     BondDesk.CityFinances(out debt, out income);

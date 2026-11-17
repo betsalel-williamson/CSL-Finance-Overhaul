@@ -46,8 +46,12 @@ owns Oil" fails elsewhere). For a controlled test use the dev **Test Stock (TST)
 Feature flags → Test Stock, in a test save only. `set-price TST 100` fixes its price from the next
 day, `run-days N` advances time, and buying or selling TST gives a known holding, cost basis and
 order triggers. Name such scenarios `NN-tst-*.uitest`; they are skipped unless `FO_TST=1` or passed
-by path. For manual control without a scenario, write `buy SHARES LIMIT NAME`, `cancel ID` or `list`
-to the `FinanceOverhaul.order` trigger file (`docs/developer/live-reload.md`).
+by path. Bonds have the same control: `bond-finances DEBT INCOME` fixes the debt and annual income
+that pricing sees until the scenario ends. A scenario never assumes what the loaded city holds or
+earns: it sets the state up itself (buy the share, fix the finances) or reads it from the game
+(`$owned:SYMBOL`), and undoes it in `cleanup:`. For manual control without a scenario, write
+`buy SHARES LIMIT NAME`, `cancel ID` or `list` to the `FinanceOverhaul.order` trigger file
+(`docs/developer/live-reload.md`).
 
 ## Git hooks
 

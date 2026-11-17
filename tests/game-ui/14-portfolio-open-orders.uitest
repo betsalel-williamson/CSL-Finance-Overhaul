@@ -1,4 +1,11 @@
 name an open order is an entry of Your Portfolio, under its holding, and can be cancelled there
+# The card goes under its holding, so hold one share whatever the city owned before.
+remember Oil
+show-buy Oil
+type FinanceOverhaulShareAmountField 1
+click Button
+wait 1
+expect-owned-delta Oil 1
 show-buy Oil
 click FinanceOverhaulOrderTab-Limit
 type FinanceOverhaulShareAmountField 3
@@ -23,5 +30,6 @@ expect-orders-delta 0
 expect-hidden FinanceOverhaulOpenOrderRow-$order
 cleanup:
 cancel-new-orders
+sell-back Oil 1
 close-dialog
 close-economy

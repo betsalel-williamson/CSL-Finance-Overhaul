@@ -4,6 +4,9 @@
 name City bonds section: sell from the Loans tab, see the owed row, refused over the cap, repay
 show-economy loans
 bonds-section show
+# Fixed finances (no debt, ₡1,000,000 a year), so the rate and the 3× cap (₡3,000,000) do not
+# depend on the loaded city.
+bond-finances 0 1,000,000
 expect-visible FinanceOverhaulBondsSection
 expect-hidden LoanDesc
 bonds-term 1
@@ -17,7 +20,7 @@ expect-text FinanceOverhaulBondsOwedTitle Bonds you owe (
 expect-visible FinanceOverhaulBondsRow-$bond
 expect-text FinanceOverhaulBondsRepay-$bond Repay ₡1,000
 capture bonds-sold
-bonds-amount 60,000,000
+bonds-amount 3,500,000
 expect-text FinanceOverhaulBondsHint Refused: the city would owe more than 3×
 capture bonds-refused
 bonds-amount 200,000,000

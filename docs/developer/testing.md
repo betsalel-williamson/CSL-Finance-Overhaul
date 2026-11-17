@@ -33,30 +33,31 @@ swap variant checks the boards inside the game's switch event), `live-ticker on|
 `ticker-brightness LEVEL|restore` (all put the player's choices back), `bonds-section show|auto`
 (shows the Loans tab's City bonds section and allows selling with the flag off), `bonds-term YEARS`
 / `bonds-amount TEXT` (fill the section), `$bond` (the newest bond the scenario sold),
-`bond-finances` (logs debt and annual income used for bond pricing), `issue-bond YEARS FACE` (sells
-a bond, simulation paused; cash must rise by exactly the face), `bond-backdate DAYS` and
-`expect-bond-coupons N` (the scenario's newest bond), `away DAYS` (pretends the mod was off: the
-scenario's bonds miss DAYS of payments and the bookmark goes back),
-`stress-stocks add N|fill TOTAL|slots|clear`, `stress-measure SECONDS`, `stress-panel`,
-`scroll-investments bottom` and `count-investment-rows` (dev many-stocks test, scenario 51: test
-save with the dev test stock option; never overwrites a held investment), `welcome-back pay|skip`
-and `expect-welcome-back shown|hidden` (scenarios 48–49), `redeem-new-bonds` (cleanup: repays the
-scenario's own bonds — scenario 37), `money-probe AMOUNT` (adds AMOUNT cents through the loan-taken
-budget line and fetches it back, simulation paused; fails unless cash ends where it began — scenario
-36), `hover CONTROL FX FY` / `hover off` (a simulated mouse at that fraction of a control, for the
-Stock Monitor hover), `log-basket` (every investment's daily history, for auditing the Index math
-offline), `inspect-parents CONTROL` (a control and every parent: absolute box, background, clipping
-— for measuring vanilla UI), `share-charts on|off` (the share chart flag, for before/after captures)
-— and checks `expect-visible`, `expect-text`, `expect-slider CONTROL [max]` (the slider's thumb is
-drawn where its value is; with `max`, the value is the maximum), `expect-no-overflow` (every visible
-part inside the dialog or the named control, and none of our fixed-width labels cutting its text
-off; inside a clipping, scrolling list only the width is checked, against the list),
-`expect-at-bottom LIST` (a scrolling list that is long enough to scroll sits at its end — scenario
-52), `expect-owned-delta`, `expect-orders-delta` (orders this scenario created) and `expect-log`.
-`$owned:SYMBOL` in any step becomes the shares owned now. Lines after `cleanup:` always run (cancel
-orders, sell back, close the dialog). Results: `uitest: PASS|FAIL` in the mod log, captures as
-`FinanceOverhaul-uitest-*.png`. Scenarios trade small amounts in the loaded city and undo them in
-cleanup; use a test save.
+`bond-finances` (logs debt and annual income used for bond pricing; `bond-finances DEBT INCOME`
+fixes them in whole ₡ until the scenario ends, the bond counterpart of the test stock;
+`bond-finances real` undoes it), `issue-bond YEARS FACE` (sells a bond, simulation paused; cash must
+rise by exactly the face), `bond-backdate DAYS` and `expect-bond-coupons N` (the scenario's newest
+bond), `away DAYS` (pretends the mod was off: the scenario's bonds miss DAYS of payments and the
+bookmark goes back), `stress-stocks add N|fill TOTAL|slots|clear`, `stress-measure SECONDS`,
+`stress-panel`, `scroll-investments bottom` and `count-investment-rows` (dev many-stocks test,
+scenario 51: test save with the dev test stock option; never overwrites a held investment),
+`welcome-back pay|skip` and `expect-welcome-back shown|hidden` (scenarios 48–49), `redeem-new-bonds`
+(cleanup: repays the scenario's own bonds — scenario 37), `money-probe AMOUNT` (adds AMOUNT cents
+through the loan-taken budget line and fetches it back, simulation paused; fails unless cash ends
+where it began — scenario 36), `hover CONTROL FX FY` / `hover off` (a simulated mouse at that
+fraction of a control, for the Stock Monitor hover), `log-basket` (every investment's daily history,
+for auditing the Index math offline), `inspect-parents CONTROL` (a control and every parent:
+absolute box, background, clipping — for measuring vanilla UI), `share-charts on|off` (the share
+chart flag, for before/after captures) — and checks `expect-visible`, `expect-text`,
+`expect-slider CONTROL [max]` (the slider's thumb is drawn where its value is; with `max`, the value
+is the maximum), `expect-no-overflow` (every visible part inside the dialog or the named control,
+and none of our fixed-width labels cutting its text off; inside a clipping, scrolling list only the
+width is checked, against the list), `expect-at-bottom LIST` (a scrolling list that is long enough
+to scroll sits at its end — scenario 52), `expect-owned-delta`, `expect-orders-delta` (orders this
+scenario created) and `expect-log`. `$owned:SYMBOL` in any step becomes the shares owned now. Lines
+after `cleanup:` always run (cancel orders, sell back, close the dialog). Results:
+`uitest: PASS|FAIL` in the mod log, captures as `FinanceOverhaul-uitest-*.png`. Scenarios trade
+small amounts in the loaded city and undo them in cleanup; use a test save.
 
 **Your orders are safe:** when a scenario starts, every order already open (the player's) is frozen
 — no fill, no expiry, no trailing peak — until the scenario ends, even when it runs days

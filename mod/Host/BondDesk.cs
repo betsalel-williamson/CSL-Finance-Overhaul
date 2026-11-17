@@ -43,12 +43,37 @@ namespace FinanceOverhaul
             return BondPricing.Offer(term, debt, faceCents, income);
         }
 
+        // Game UI tests (dev builds): fixed finances, so a scenario's rates and debt cap do not
+        // depend on the loaded city. The bond counterpart of the test stock.
+        private static bool testFinances;
+        private static long testDebtCents;
+        private static long testIncomeCents;
+
+        internal static void SetTestFinances(long debtCents, long annualIncomeCents)
+        {
+            testDebtCents = Math.Max(0, debtCents);
+            testIncomeCents = Math.Max(0, annualIncomeCents);
+            testFinances = BuildInfo.ShowDevBuildIdentity;
+        }
+
+        internal static void ClearTestFinances()
+        {
+            testFinances = false;
+        }
+
         /// <summary>
         /// Debt already owed (vanilla loans left + outstanding bond faces) and annual income, in
         /// cents.
         /// </summary>
         public static void CityFinances(out long debtCents, out long annualIncomeCents)
         {
+            if (testFinances)
+            {
+                debtCents = testDebtCents;
+                annualIncomeCents = testIncomeCents;
+                return;
+            }
+
             EconomyManager em = EconomyManager.instance;
             long loans = 0;
             for (int i = 0; i < EconomyManager.MAX_LOANS; i++)
