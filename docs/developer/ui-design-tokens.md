@@ -68,7 +68,7 @@ and Figma is updated to match; the mod's own windows follow Figma.
 | ---------------------- | --------------------- | --------------------------------------------------------------------------------------------- |
 | `FO/Game/Header`       | Open Sans SemiBold 18 | Modal title bar                                                                               |
 | `FO/Game/Title`        | Open Sans SemiBold 16 | Row name                                                                                      |
-| `FO/Game/Tab`          | Open Sans SemiBold 16 | Economy tabs                                                                                  |
+| `FO/Game/Tab`          | Open Sans SemiBold 13 | Economy tabs                                                                                  |
 | `FO/Game/Body`         | Open Sans SemiBold 13 | Label: value lines                                                                            |
 | `FO/Game/Section`      | Open Sans SemiBold 11 | Column headers                                                                                |
 | `FO/Game/Button`       | Open Sans SemiBold 13 | Buy / Sell                                                                                    |
@@ -76,13 +76,14 @@ and Figma is updated to match; the mod's own windows follow Figma.
 | `FO/Ticker/Board`      | Doto Bold 26          | Facade LED ticker (dot-matrix stand-in for the in-game `LedFont`, 5×7 with one descender row) |
 | `FO/Doc/*`, `FO/PinId` | Inter                 | UI Map annotation only                                                                        |
 
-The Foundations page also draws a strip of the board at each LED brightness level (Classic, Bright,
-Brightest). The board between dots is one colour at every level (`color/ticker/board` #1E303E,
-`LedPalette.Board`). What changes is the lit dot, its glow into the gap beside it, and the unlit
-dot. Each dot is a 4 × 4 texel cell (`TexelsPerDot`): a 3 × 3 block in the dot colour and a 1-texel
-gap on its right and bottom. Beside a lit dot the gap is the board blended toward the dot colour by
-0, 0.3 or 0.55 (`LedPalette.Gap`); beside an unlit dot it is always the board. Lit colours and glows
-above Classic are computed by `LedPalette`, so they are raw fills on the specimen, not variables.
+The UI Map (band 08) draws two real board rows at each LED brightness level (Classic, Bright,
+Brightest), in the mod's own LED font; Foundations keeps the base colours only. The board between
+dots is one colour at every level (`color/ticker/board` #1E303E, `LedPalette.Board`). What changes
+is the lit dot, its glow into the gap beside it, and the unlit dot. Each dot is a 4 × 4 texel cell
+(`TexelsPerDot`): a 3 × 3 block in the dot colour and a 1-texel gap on its right and bottom. Beside
+a lit dot the gap is the board blended toward the dot colour by 0, 0.3 or 0.55 (`LedPalette.Gap`);
+beside an unlit dot it is always the board. Lit colours and glows above Classic are computed by
+`LedPalette`, so they are raw fills on the specimen, not variables.
 
 ## Type scale in code
 
@@ -171,6 +172,16 @@ tint, sprites, text colour and scale). The mod's additions inside the game's pan
 | Invest dialog buttons | Sprite `ButtonMenu`; text #FEFEFE, hovered #0784FF, disabled #2E2E2E                                    | `FoTheme.GameText`                                           |
 | Loans tab, offers     | Panel `UnlockingPanel2` tinted #4FDB00; bank name #97EE00 at 1.375; row labels #97EE00; values #B9DDFE  | `FoTheme.GameHeading`: City bonds title and row labels       |
 | Loans tab, "Take"     | Sprite `ButtonMenu`; text #FEFEFE, disabled #5B616A                                                     | `FoTheme.GameText`, `GameDisabledText`: bond buttons         |
+
+The game's Economy tabs measure 16 px (scale 1); the Figma style `FO/Game/Tab` is still 13 and has
+not been changed, because the UI Map mockups that use it would need checking one by one.
+
+Figma variables follow these values: `color/bg/field` (primitive `csl/field/tint`),
+`color/bonds/text`, `button-text`, `term-off` and `color/order/tab-text`, `tab-text-off`
+(`csl/text/panel`), `color/bonds/button-text-disabled` (`csl/text/button-disabled`),
+`color/bonds/title` (`csl/loans/heading`). The Foundations page has a Stock Monitor section listing
+every colour that window draws with; the LED brightness examples are on the UI Map (band 08), drawn
+from the mod's own font and palette.
 
 Decided where the game has no equivalent:
 
