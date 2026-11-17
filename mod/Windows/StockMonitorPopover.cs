@@ -108,7 +108,7 @@ namespace FinanceOverhaul
             popover.backgroundSprite = "GenericPanelWhite";
             popover.color = new Color32(FoTheme.Window.r, FoTheme.Window.g, FoTheme.Window.b, 235);
 
-            UILabel title = Label(
+            UILabel title = FoText.Label(
                 popover,
                 Prefix + "SettingsTitle",
                 Strings.Get("monitor.settings.title"),
@@ -118,7 +118,7 @@ namespace FinanceOverhaul
             title.relativePosition = new Vector3(14f, 10f);
 
             // Opacity slider: our own track (no guessed game sprites), 5% steps.
-            UILabel opacityLabel = Label(
+            UILabel opacityLabel = FoText.Label(
                 popover,
                 null,
                 Strings.Get("monitor.settings.opacity"),
@@ -126,7 +126,7 @@ namespace FinanceOverhaul
                 White
             );
             opacityLabel.relativePosition = new Vector3(14f, 40f);
-            opacityValue = Label(popover, Prefix + "OpacityValue", "", 0.75f, Accent);
+            opacityValue = FoText.Label(popover, Prefix + "OpacityValue", "", 0.75f, Accent);
             opacityValue.autoSize = false;
             opacityValue.size = new Vector2(60f, 16f);
             opacityValue.textAlignment = UIHorizontalAlignment.Right;
@@ -159,7 +159,7 @@ namespace FinanceOverhaul
                 knob.relativePosition = new Vector3(Mathf.Clamp(x - 6f, 0f, TrackW - 12f), 4f);
             });
 
-            UILabel range = Label(
+            UILabel range = FoText.Label(
                 popover,
                 null,
                 Strings.Get("monitor.settings.opacity.note"),
@@ -198,7 +198,7 @@ namespace FinanceOverhaul
                 v => Settings.ChangeAsCurrency = v
             );
 
-            UILabel stocks = Label(
+            UILabel stocks = FoText.Label(
                 popover,
                 null,
                 Strings.Get("monitor.settings.stocks"),
@@ -275,7 +275,7 @@ namespace FinanceOverhaul
             UILabel note = stockGrid.parent.Find<UILabel>(Prefix + "SettingsNote");
             if (note == null)
             {
-                note = Label(
+                note = FoText.Label(
                     popover,
                     Prefix + "SettingsNote",
                     Strings.Get("monitor.settings.note"),
@@ -333,7 +333,7 @@ namespace FinanceOverhaul
             row.name = name;
             row.relativePosition = new Vector3(x, y);
             Action<bool> show = FoCheckbox.AddBox(row, 0f, 0f);
-            UILabel label = Label(row, null, text, scale, White);
+            UILabel label = FoText.Label(row, null, text, scale, White);
             label.relativePosition = new Vector3(FoCheckbox.Size + 5f, 1f);
             label.isInteractive = false;
             row.size = new Vector2(label.width + FoCheckbox.Size + 9f, 18f);
@@ -368,7 +368,7 @@ namespace FinanceOverhaul
 
         private void SetOpacityFromMouse(UIComponent track)
         {
-            Vector2 mouse = TestMouse ?? MouseInUi();
+            Vector2 mouse = FoPointer.Position;
             float f = (mouse.x - track.absolutePosition.x) / track.width;
             Settings.Opacity = StockMonitor.OpacityAt(f);
             Mod.SaveSettings();

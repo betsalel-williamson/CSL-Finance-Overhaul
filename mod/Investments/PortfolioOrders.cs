@@ -478,45 +478,17 @@ namespace FinanceOverhaul
             return -1;
         }
 
-        /// <summary>
-        /// One line in <paramref name="width"/>: scaled down when it nearly fits (like the
-        /// Stock Monitor's cells, never below <see cref="DetailMinScale"/>), otherwise wrapped
-        /// at its normal scale so the card grows instead of cutting text off.
-        /// </summary>
+        /// <summary>The detail line in its width, never cut off (see <see cref="FoText.Fit"/>).</summary>
         private static void FitDetail(UILabel label, string text, float width)
         {
-            float baseScale = label.textScale;
-            label.autoHeight = false;
-            label.wordWrap = false;
-            label.text = text;
-            LabelFit.Result fit = LabelFit.SingleLine(
-                baseScale,
+            label.height = FoText.Fit(
+                label,
+                text,
+                label.textScale,
                 DetailMinScale,
                 width,
-                scale =>
-                {
-                    label.autoSize = false;
-                    label.textScale = scale;
-                    label.autoSize = true;
-                    return label.width;
-                }
+                DetailHeight
             );
-            label.autoSize = false;
-            label.textScale = fit.Scale;
-            if (fit.Wrap)
-            {
-                label.wordWrap = true;
-                label.width = width;
-                label.autoHeight = true;
-                label.height = Mathf.Max(DetailHeight, label.height);
-            }
-            else
-            {
-                label.size = new Vector2(width, DetailHeight);
-                // A scaled-down line stays centred on the row's normal line.
-                label.verticalAlignment =
-                    fit.Scale < baseScale ? UIVerticalAlignment.Middle : UIVerticalAlignment.Top;
-            }
         }
 
         private static void Style(UILabel label, UILabel from, float scale)

@@ -75,7 +75,7 @@ namespace FinanceOverhaul
 
             for (int i = 0; i < AxisCount; i++)
             {
-                UILabel l = StockMonitorHost.Label(
+                UILabel l = FoText.Label(
                     v.Root,
                     name + "Axis-" + i,
                     "",
@@ -86,22 +86,10 @@ namespace FinanceOverhaul
                 v.axis.Add(l);
             }
 
-            v.from = StockMonitorHost.Label(
-                v.Root,
-                name + "From",
-                "",
-                labelScale,
-                FoTheme.ChartLabel
-            );
+            v.from = FoText.Label(v.Root, name + "From", "", labelScale, FoTheme.ChartLabel);
             v.from.relativePosition = new Vector3(8f, 6f + plot.y + 3f);
             v.from.isInteractive = false;
-            v.to = StockMonitorHost.Label(
-                v.Root,
-                name + "To",
-                "today",
-                labelScale,
-                FoTheme.ChartLabel
-            );
+            v.to = FoText.Label(v.Root, name + "To", "today", labelScale, FoTheme.ChartLabel);
             v.to.isInteractive = false;
             v.to.relativePosition = new Vector3(
                 8f + plot.x - 30f * labelScale / 0.7f,
@@ -220,13 +208,7 @@ namespace FinanceOverhaul
                 hoverLine = Box(FoTheme.HoverLine);
                 hoverDot = Box(Color.white);
                 hoverDot.size = new Vector2(6f, 6f);
-                hoverTip = StockMonitorHost.Label(
-                    Root,
-                    Root.name + "HoverTip",
-                    "",
-                    0.7f,
-                    Color.white
-                );
+                hoverTip = FoText.Label(Root, Root.name + "HoverTip", "", 0.7f, Color.white);
                 hoverTip.backgroundSprite = "GenericPanelWhite";
                 hoverTip.color = FoTheme.Tip;
                 hoverTip.padding = new RectOffset(6, 6, 3, 2);
@@ -408,7 +390,7 @@ namespace FinanceOverhaul
                 buffer[id].FillGraphValues(history);
                 float[] range = StockDetail.Range(history, StockDetail.LongRange);
                 // One rule everywhere: the game's change rate (list, pills, Economy panel, LED).
-                Color32 colour = StockMonitorHost.ColourOf(
+                Color32 colour = FoTheme.Change(
                     StockMonitor.ChangeColour(
                         buffer[id]
                             .Info.m_investmentAI.CalculateChangeRate(
@@ -447,7 +429,7 @@ namespace FinanceOverhaul
 
             try
             {
-                Vector2 mouse = StockMonitorHost.TestMouse ?? StockMonitorHost.MouseInUi();
+                Vector2 mouse = FoPointer.Position;
                 foreach (KeyValuePair<UIGraph, ShareChartView> kv in Views)
                 {
                     if (kv.Key == null || !kv.Key.isVisible)

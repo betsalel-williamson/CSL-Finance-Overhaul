@@ -94,14 +94,14 @@ namespace FinanceOverhaul
             detail.size = new Vector2(Width, DetailHeight);
             detail.relativePosition = new Vector3(0f, TitleHeight);
 
-            UILabel back = Label(detail, Prefix + "Back", "« All stocks", 0.75f, Accent);
+            UILabel back = FoText.Label(detail, Prefix + "Back", "« All stocks", 0.75f, Accent);
             back.relativePosition = new Vector3(12f, 2f);
             back.isInteractive = true;
             back.eventClick += (c, p) => ShowList();
 
-            dSymbol = Label(detail, Prefix + "DetailSymbol", "", 1.8f, White);
+            dSymbol = FoText.Label(detail, Prefix + "DetailSymbol", "", 1.8f, White);
             dSymbol.relativePosition = new Vector3(12f, 20f);
-            dName = Label(detail, Prefix + "DetailName", "", 0.8f, Muted);
+            dName = FoText.Label(detail, Prefix + "DetailName", "", 0.8f, Muted);
 
             dPrice = RightLabel(Prefix + "DetailPrice", 1.25f, White, 22f);
             dChange = RightLabel(Prefix + "DetailChange", 0.8f, Gain, 50f);
@@ -109,7 +109,7 @@ namespace FinanceOverhaul
 
             dRange7 = RangeButton(StockDetail.ShortRange, 12f);
             dRange30 = RangeButton(StockDetail.LongRange, 62f);
-            UILabel note = Label(
+            UILabel note = FoText.Label(
                 detail,
                 Prefix + "DetailNote",
                 Strings.Get("detail.history.limit"),
@@ -142,13 +142,13 @@ namespace FinanceOverhaul
 
             for (int i = 0; i < AxisCount; i++)
             {
-                UILabel axis = Label(detail, Prefix + "DetailAxis-" + i, "", 0.6f, Muted);
+                UILabel axis = FoText.Label(detail, Prefix + "DetailAxis-" + i, "", 0.6f, Muted);
                 dAxis.Add(axis);
             }
 
-            dFromLabel = Label(detail, Prefix + "DetailFrom", "", 0.6f, Muted);
+            dFromLabel = FoText.Label(detail, Prefix + "DetailFrom", "", 0.6f, Muted);
             dFromLabel.relativePosition = new Vector3(ChartX, ChartY + ChartH + 4f);
-            dToLabel = Label(detail, Prefix + "DetailTo", "today", 0.6f, Muted);
+            dToLabel = FoText.Label(detail, Prefix + "DetailTo", "today", 0.6f, Muted);
             dToLabel.relativePosition = new Vector3(ChartX + ChartW - 28f, ChartY + ChartH + 4f);
 
             // Four rows of two cells, then Open orders across the full width (an order summary
@@ -162,9 +162,9 @@ namespace FinanceOverhaul
                     float x = 12f + col * 172f;
                     float cellW = cols == 2 ? 162f : Width - 24f;
                     dCells.Add(new Vector2(x, cellW));
-                    UILabel k = Label(detail, null, "", 0.7f, Muted);
+                    UILabel k = FoText.Label(detail, null, "", 0.7f, Muted);
                     k.relativePosition = new Vector3(x, y);
-                    UILabel v = Label(
+                    UILabel v = FoText.Label(
                         detail,
                         Prefix + "DetailStat-" + row + "-" + col,
                         "",
@@ -201,7 +201,7 @@ namespace FinanceOverhaul
                 y + 12f,
                 BuySellInvestmentPanel.Mode.Sell
             );
-            UILabel hint = Label(
+            UILabel hint = FoText.Label(
                 detail,
                 Prefix + "DetailHint",
                 Strings.Get("detail.trade.tip"),
@@ -214,7 +214,7 @@ namespace FinanceOverhaul
 
         private UILabel RightLabel(string name, float scale, Color32 colour, float y)
         {
-            UILabel l = Label(detail, name, "", scale, colour);
+            UILabel l = FoText.Label(detail, name, "", scale, colour);
             l.autoSize = false;
             l.size = new Vector2(170f, 24f * scale);
             l.textAlignment = UIHorizontalAlignment.Right;
@@ -224,14 +224,13 @@ namespace FinanceOverhaul
 
         private UIButton RangeButton(int days, float x)
         {
-            UIButton b = detail.AddUIComponent<UIButton>();
-            b.name = Prefix + "Range-" + days;
-            b.text = StockDetail.RangeChip(days);
-            b.textScale = 0.75f;
-            b.size = new Vector2(44f, 22f);
-            b.normalBgSprite = "ButtonMenu";
-            b.hoveredBgSprite = "ButtonMenuHovered";
-            b.pressedBgSprite = "ButtonMenuPressed";
+            UIButton b = FoButton.Add(
+                detail,
+                Prefix + "Range-" + days,
+                StockDetail.RangeChip(days),
+                new Vector2(44f, 22f),
+                0.75f
+            );
             b.relativePosition = new Vector3(x, 88f);
             b.eventClick += (c, p) =>
             {
@@ -249,15 +248,7 @@ namespace FinanceOverhaul
             BuySellInvestmentPanel.Mode mode
         )
         {
-            UIButton b = detail.AddUIComponent<UIButton>();
-            b.name = name;
-            b.text = text;
-            b.textScale = 0.9f;
-            b.size = new Vector2(160f, 32f);
-            b.normalBgSprite = "ButtonMenu";
-            b.hoveredBgSprite = "ButtonMenuHovered";
-            b.pressedBgSprite = "ButtonMenuPressed";
-            b.disabledBgSprite = "ButtonMenuDisabled";
+            UIButton b = FoButton.Add(detail, name, text, new Vector2(160f, 32f), 0.9f);
             b.relativePosition = new Vector3(x, y);
             b.eventClick += (c, p) =>
             {
@@ -333,13 +324,13 @@ namespace FinanceOverhaul
                 ref buffer[detailId],
                 TickerFeed.PanelChangeRateWindow
             );
-            Color32 colour = ColourOf(StockMonitor.ChangeColour(rate));
+            Color32 colour = FoTheme.Change(StockMonitor.ChangeColour(rate));
             dChange.text = StockDetail.ChangeHeader(price, rate);
             dChange.textColor = colour;
             dYesterday.text = StockDetail.YesterdayLine(yesterday);
 
-            StyleRange(dRange7, detailDays == StockDetail.ShortRange);
-            StyleRange(dRange30, detailDays == StockDetail.LongRange);
+            FoButton.SetSelected(dRange7, detailDays == StockDetail.ShortRange);
+            FoButton.SetSelected(dRange30, detailDays == StockDetail.LongRange);
             dFromLabel.text = Strings.Plural("daysAgo", range.Length, range.Length.ToString());
             dRangeShown = range;
             dSymbolShown = symbol;
@@ -445,13 +436,6 @@ namespace FinanceOverhaul
             value.autoSize = false;
             value.size = new Vector2(Mathf.Max(0f, available), 16f);
             value.relativePosition = new Vector3(x + key.width + gap, value.relativePosition.y);
-        }
-
-        private static void StyleRange(UIButton b, bool on)
-        {
-            b.normalBgSprite = on ? "ButtonMenuPressed" : "ButtonMenu";
-            b.focusedBgSprite = b.normalBgSprite;
-            b.textColor = on ? (Color32)Color.white : FoTheme.TextLabel;
         }
 
         private void DrawChart(float[] range, Color32 colour)

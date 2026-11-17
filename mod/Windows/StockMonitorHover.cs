@@ -11,9 +11,6 @@ namespace FinanceOverhaul
     /// </summary>
     public sealed partial class StockMonitorHost
     {
-        /// <summary>Game UI tests only: a simulated mouse position in UI units (null = real mouse).</summary>
-        public static Vector2? TestMouse;
-
         private UILabel hoverTip;
         private UIPanel hoverLine;
         private UIPanel hoverDot;
@@ -23,14 +20,14 @@ namespace FinanceOverhaul
             if (
                 window == null
                 || !window.isVisible
-                || (!TestMouse.HasValue && !window.containsMouse)
+                || (!FoPointer.Test.HasValue && !window.containsMouse)
             )
             {
                 HideHover();
                 return;
             }
 
-            Vector2 mouse = TestMouse ?? MouseInUi();
+            Vector2 mouse = FoPointer.Position;
             if (detailId >= 0 && detail != null && detail.isVisible)
             {
                 if (!HoverOver(dChart, mouse, dRangeShown, dSymbolShown, 4, ChartScale))
@@ -113,14 +110,6 @@ namespace FinanceOverhaul
             return y >= top - 1f && y + spark.height <= top + list.height + 1f;
         }
 
-        internal static Vector2 MouseInUi()
-        {
-            // Screen pixels (y up) → UI units (y down), same scale as the button drag.
-            float scale = UIView.GetAView().GetScreenResolution().y / Mathf.Max(1f, Screen.height);
-            Vector3 m = Input.mousePosition;
-            return new Vector2(m.x * scale, (Screen.height - m.y) * scale);
-        }
-
         private void EnsureHover()
         {
             if (hoverTip != null)
@@ -141,7 +130,7 @@ namespace FinanceOverhaul
             hoverDot.size = new Vector2(6f, 6f);
             hoverDot.isInteractive = false;
 
-            hoverTip = Label(window, Prefix + "HoverTip", "", 0.7f, White);
+            hoverTip = FoText.Label(window, Prefix + "HoverTip", "", 0.7f, White);
             hoverTip.backgroundSprite = "GenericPanelWhite";
             hoverTip.color = FoTheme.Tip;
             hoverTip.padding = new RectOffset(6, 6, 3, 2);

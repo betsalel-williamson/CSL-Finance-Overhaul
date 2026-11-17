@@ -1,3 +1,4 @@
+using FinanceOverhaul.Core;
 using UnityEngine;
 
 namespace FinanceOverhaul
@@ -77,5 +78,16 @@ namespace FinanceOverhaul
 
         /// <summary>Fully transparent.</summary>
         public static readonly Color32 Clear = new Color32(0, 0, 0, 0);
+
+        /// <summary>
+        /// The colour of a price change in the Stock Monitor's style (pills, sparklines, share
+        /// charts), from the library's verdict on the rounded rate: gain, loss or flat.
+        /// </summary>
+        public static Color32 Change(byte rate)
+        {
+            return rate == LedText.Gain ? TickerGain
+                : rate == LedText.Loss ? Loss
+                : TickerFlat;
+        }
     }
 }

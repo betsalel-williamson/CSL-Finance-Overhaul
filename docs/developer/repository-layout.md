@@ -27,16 +27,16 @@ One flat namespace, `FinanceOverhaul.Core`; the folders only group files.
 
 ## Mod folders (`mod/`)
 
-| Folder         | Holds                                                                                                                                                                 |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| (root)         | What Cities calls: `Mod`, Options page, settings file, build info, loading extension                                                                                  |
-| `Harmony/`     | Every Harmony patch: `Patcher` applies and removes them, `Patcher.*` hold the hooks by feature; `GameInternals` holds every private game member reached by reflection |
-| `Kit/`         | Reusable UI components, one per component in the Figma library; knows no feature                                                                                      |
-| `Exchange/`    | The Stock Exchange building: LED boards and the ticker feed                                                                                                           |
-| `Windows/`     | The mod's own windows: Stock Monitor, Welcome back                                                                                                                    |
-| `Investments/` | Changes inside the game's Economy panel: order ticket, typed share amount, Your Portfolio cards, share charts, City bonds section                                     |
-| `Engines/`     | No UI, owns save data: order desk, bond desk, Index listing, symbols, Chirper notices                                                                                 |
-| `Dev/`         | Dev builds only: game UI test runner, captures, test stock, stress stocks                                                                                             |
+| Folder         | Holds                                                                                                                                                                                                                        |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| (root)         | What Cities calls: `Mod`, Options page, settings file, build info, loading extension                                                                                                                                         |
+| `Harmony/`     | Every Harmony patch: `Patcher` applies and removes them, `Patcher.*` hold the hooks by feature; `GameInternals` holds every private game member reached by reflection                                                        |
+| `Kit/`         | Reusable UI, one class per Figma component: `FoTheme` (colours), `FoWindow` (title bar, opacity), `FoButton`, `FoPill`, `FoCheckbox`, `FoText` (labels, fitting, heavy weight), `FoSparkline`, `FoPointer`; knows no feature |
+| `Exchange/`    | The Stock Exchange building: LED boards and the ticker feed                                                                                                                                                                  |
+| `Windows/`     | The mod's own windows: Stock Monitor, Welcome back                                                                                                                                                                           |
+| `Investments/` | Changes inside the game's Economy panel: order ticket, typed share amount, Your Portfolio cards, share charts, City bonds section                                                                                            |
+| `Engines/`     | No UI, owns save data: order desk, bond desk, Index listing, symbols, Chirper notices                                                                                                                                        |
+| `Dev/`         | Dev builds only: game UI test runner (`UiTestRunner.cs` runs a scenario; its commands are in `UiTestRunner.*.cs`, one file per group), captures, test stock, stress stocks                                                   |
 
 Surfaces and engines use the Kit and the library; the Kit uses only the library.
 
