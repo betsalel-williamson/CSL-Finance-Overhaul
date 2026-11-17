@@ -167,8 +167,8 @@ game's own stocks have no company value behind them and stay as they are.
 
 **First-day pop (built):** a log-normal jump with the two options as its average (+15%) and standard
 deviation (25%), cut off at −50% and +300%. In 400,000 simulated listings about 3 in 10 open below
-the offering price, more than half open between 0% and +50%, and a few percent open more than 50% up
-(`IpoPricing.FirstDayPop`, `IpoPricingTests`).
+the offering price, more than half open between 0% and +50%, and about 9 in 100 open more than 50%
+up (`IpoPricing.FirstDayPop`, `IpoPricingTests`).
 
 ### After the IPO
 
