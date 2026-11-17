@@ -34,8 +34,10 @@ The mod (`mod/`) always does: hooks, save data and drawing only, no `#if` guards
 build without the game. Harmony patches live only in `mod/Harmony/` (`Patcher` and its per-feature
 `Patcher.*` files); a patch method there only hands over to the feature's own class. Private game
 members are reached only through `GameInternals` in the same folder: no `AccessTools` or
-`BindingFlags` anywhere else. A mod class that needs a test has a calculation in it that belongs in
-the library: move it there and have the mod call it.
+`BindingFlags` anywhere else. A surface (`Windows/`, `Investments/`, `Exchange/`) never calls into
+another surface: what two of them share is a `Kit/` component, and the Kit knows no feature. A mod
+class that needs a test has a calculation in it that belongs in the library: move it there and have
+the mod call it.
 
 ## Wording
 
