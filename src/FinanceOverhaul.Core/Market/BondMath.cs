@@ -69,22 +69,34 @@ namespace FinanceOverhaul.Core
 
     /// <summary>
     /// Bond cash flows in integer cents, exact to the cent (see BondMathTests for the proved
-    /// properties): simple annual interest, 30/360 day count (a 30-day period = 1/12 year), rounded half up once for the whole
-    /// bond, then split over the coupons by largest remainder so they add up exactly and differ
+    /// properties): simple annual interest, rounded half up once for the whole bond. A year is
+    /// 52 weeks for a bond with weekly coupons (a 7-day period = 1/52 year, as the game's loans
+    /// count) and 360 days otherwise (30/360: a 30-day period = 1/12 year, the bonds sold before
+    /// coupons became weekly). The interest is then split over the coupons by largest remainder so they add up exactly and differ
     /// by at most one cent. Issuer and holder use the same schedule, so what one pays the other
     /// receives.
     /// </summary>
     public static class BondMath
     {
-        // 30/360 day count, a common bond convention: a 30-day period is exactly 1/12 of a year.
-        private const long YearDays = 360;
+        /// <summary>Days in a week: the period of a bond with weekly coupons.</summary>
+        public const int WeekDays = 7;
+
+        /// <summary>
+        /// Days in the bond's year: 364 (52 weeks) with weekly coupons, else 360 (30/360, a
+        /// common bond convention: a 30-day period is exactly 1/12 of a year).
+        /// </summary>
+        public static long YearDays(BondTerms t)
+        {
+            return t.PeriodDays == WeekDays ? 364 : 360;
+        }
+
         private const long BasisPoints = 10_000;
 
-        /// <summary>round(face × rate × termDays / 360), half up (30/360). Max product 1e10 × 2000 × 131,400 ≈ 2.6e18 &lt; 2^63.</summary>
+        /// <summary>round(face × rate × termDays / year days), half up. Max product 1e10 × 2000 × 131,400 ≈ 2.6e18 &lt; 2^63.</summary>
         public static long TotalInterest(BondTerms t)
         {
             long numerator = t.FaceCents * t.RateBasisPoints * t.TermDays; // ≤ 2.6e18
-            long denominator = BasisPoints * YearDays;
+            long denominator = BasisPoints * YearDays(t);
             return (numerator + denominator / 2) / denominator;
         }
 

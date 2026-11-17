@@ -77,15 +77,15 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
-        public void TermsAreMonthlyCouponsOverOneTwoOrFiveYears()
+        public void TermsAreWeeklyCouponsOverOneTwoOrFiveYears()
         {
             BondTerms t = BondPricing
                 .Offer(BondTerm.FiveYears, 0, Million, 100 * Million)
                 .Terms(Million);
-            Assert.Equal(60, t.Periods);
-            Assert.Equal(30, t.PeriodDays);
-            Assert.Equal(12, BondPricing.Periods(BondTerm.OneYear));
-            Assert.Equal(24, BondPricing.Periods(BondTerm.TwoYears));
+            Assert.Equal(260, t.Periods);
+            Assert.Equal(7, t.PeriodDays);
+            Assert.Equal(52, BondPricing.Periods(BondTerm.OneYear));
+            Assert.Equal(104, BondPricing.Periods(BondTerm.TwoYears));
         }
 
         [Fact]

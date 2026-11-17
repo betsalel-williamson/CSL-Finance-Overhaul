@@ -18,7 +18,7 @@ namespace FinanceOverhaul.Core
         public BondTerm Term;
         public string Reason;
 
-        /// <summary>The bond's terms for this face value (monthly coupons, 30/360).</summary>
+        /// <summary>The bond's terms for this face value (weekly coupons, 52 weeks to the year).</summary>
         public BondTerms Terms(long faceCents)
         {
             return new BondTerms(
@@ -38,7 +38,10 @@ namespace FinanceOverhaul.Core
     /// </summary>
     public static class BondPricing
     {
-        public const int PeriodDays = 30;
+        /// <summary>A coupon every week, as the game's loans are paid.</summary>
+        public const int PeriodDays = BondMath.WeekDays;
+
+        public const int WeeksPerYear = 52;
         public const int PremiumBasisPointsPerLeverage = 150;
         public const int MaxPremiumBasisPoints = 600;
 
@@ -75,7 +78,7 @@ namespace FinanceOverhaul.Core
 
         public static int Periods(BondTerm term)
         {
-            return (int)term * 12;
+            return (int)term * WeeksPerYear;
         }
 
         /// <param name="existingDebtCents">Owed already: vanilla loans left + outstanding bond faces.</param>

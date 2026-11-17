@@ -1,15 +1,15 @@
 # Save compatibility: Welcome back. Sells a ₡1,000 1-year bond, then pretends the mod was off for
-# 60 days (two monthly coupons missed). The dialog asks; "Start fresh from today" skips both
+# 14 days (two weekly coupons missed). The dialog asks; "Start fresh from today" skips both
 # coupons without paying them, and payments carry on from today.
 name welcome back: start fresh skips the missed coupons
 issue-bond 1 1000
-away 60
+away 14
 expect-welcome-back shown
-expect-log bonds: mod was off for 60 day(s); 2 payment(s) missed
+expect-log bonds: mod was off for 14 day(s); 2 payment(s) missed
 capture welcome-back
 welcome-back skip
 expect-welcome-back hidden
 expect-bond-coupons 2
-expect-log bonds: welcome back after 60 day(s) away: started fresh (0 payment(s) moved)
+expect-log bonds: welcome back after 14 day(s) away: started fresh (0 payment(s) moved)
 cleanup:
 redeem-new-bonds

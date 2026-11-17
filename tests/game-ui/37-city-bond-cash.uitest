@@ -1,12 +1,12 @@
 # City bonds engine (Options flag not needed: tests sell through the desk). Sells a small
 # ₡1,000 1-year bond, makes its first coupon due, lets a day pass, and redeems it in cleanup.
-# Costs the city about ₡3 in interest.
+# Costs the city under ₡1 in interest.
 name city bond: selling adds the face to cash; the first coupon is paid when due; redeeming removes it
 bond-finances
 issue-bond 1 1000
 expect-log bonds: sold #
 expect-bond-coupons 0
-bond-backdate 30
+bond-backdate 7
 run-days 1
 expect-log coupon ₡
 expect-bond-coupons 1

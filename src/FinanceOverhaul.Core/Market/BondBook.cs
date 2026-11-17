@@ -247,6 +247,46 @@ namespace FinanceOverhaul.Core
     }
 
     /// <summary>
+    /// Bonds sold before coupons became weekly paid every 30 days. They are converted once, when
+    /// the city loads: the same bond (number, name, face, rate) with what is left of its term
+    /// in weekly coupons, counted from its last paid coupon so no interest is skipped or paid
+    /// twice. The repayment day moves by at most three days (the remaining days rounded to whole
+    /// weeks), and the interest still to pay is never more than before (a year of 52 weeks is
+    /// 364 days, against 360 for the old count).
+    /// </summary>
+    public static class BondMigration
+    {
+        /// <summary>Converts every bond that is not weekly; returns how many were converted.</summary>
+        public static int ToWeekly(BondBook book)
+        {
+            int converted = 0;
+            foreach (IssuedBond b in book.Bonds)
+            {
+                if (b.Terms.PeriodDays == BondMath.WeekDays)
+                {
+                    continue;
+                }
+
+                int last = b.LastCouponDay;
+                int daysLeft = b.DueDay(b.Terms.Periods) - last;
+                int weeks = (daysLeft + BondMath.WeekDays / 2) / BondMath.WeekDays;
+                weeks = Math.Max(1, Math.Min(BondTerms.MaxPeriods, weeks));
+                b.Terms = new BondTerms(
+                    b.Terms.FaceCents,
+                    b.Terms.RateBasisPoints,
+                    weeks,
+                    BondMath.WeekDays
+                );
+                b.IssueDay = last;
+                b.CouponsPaid = 0;
+                converted++;
+            }
+
+            return converted;
+        }
+    }
+
+    /// <summary>
     /// Versioned text format for the bond book in the save (mod data id <see cref="DataId"/>).
     /// Unknown versions and malformed or out-of-range lines are skipped, so a newer or damaged
     /// blob never breaks loading; vanilla ignores mod data entirely.

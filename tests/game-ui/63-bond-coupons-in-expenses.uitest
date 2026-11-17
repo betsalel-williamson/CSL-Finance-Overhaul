@@ -1,0 +1,13 @@
+# Bond coupons are paid weekly and show in Economy as loan expenses, like a loan's weekly cost.
+# Sells a ₡10,000,000 1-year bond against fixed finances (3.15%: ₡6,057.69 a week), makes its
+# first coupon due, lets eight days pass so a full week is on the books, and repays it in
+# cleanup. Costs the city about ₡12,000 of interest.
+name city bond: weekly coupons show in the Economy loan expenses
+bond-finances 0 100,000,000
+issue-bond 1 10000000
+bond-backdate 7
+run-days 8
+expect-log coupon ₡6,057.
+expect-loan-expenses 6,000
+cleanup:
+redeem-new-bonds

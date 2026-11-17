@@ -201,7 +201,7 @@ namespace FinanceOverhaul.Core
             { "bond.title", "City bonds" },
             {
                 "bond.about",
-                "You can only have three loans at once. Bonds don't use a loan slot: the city pays a coupon every 30 days and repays the face at maturity."
+                "You can only have three loans at once. Bonds don't use a loan slot: the city pays a coupon every week and repays the face at maturity."
             },
             { "bond.sellTitle", "Sell a bond" },
             { "bond.term", "Term" },
@@ -209,7 +209,7 @@ namespace FinanceOverhaul.Core
             { "bond.weeks.other", "{0} Weeks" },
             { "bond.amount", "Amount (₡)" },
             { "bond.rate", "Rate" },
-            { "bond.coupon", "Coupon every 30 days" },
+            { "bond.coupon", "Weekly Cost" },
             { "bond.interest", "Total interest" },
             { "bond.total", "Total" },
             { "bond.repaidOn", "Repaid on" },
@@ -241,11 +241,9 @@ namespace FinanceOverhaul.Core
             { "bond.card.term", "Term" },
             { "bond.card.interest", "Interest" },
             { "bond.card.total", "Total" },
-            { "bond.card.nextCoupon", "Next Coupon" },
-            { "bond.card.nextCoupon.value", "{0} on {1}" },
+            { "bond.card.weeklyCost", "Weekly Cost" },
+            { "bond.card.timeLeft", "Time Left" },
             { "bond.card.repaidOn", "Repaid On" },
-            { "bond.card.couponsLeft", "Coupons Left" },
-            { "bond.card.couponsLeft.value", "{0} of {1}" },
             { "bond.owed", "Owed: loans {0} + bonds {1} = {2} · {3} annual income (cap {4}×)" },
             // Chirper notices
             { "notice.sender.brokerage", "City Brokerage" },

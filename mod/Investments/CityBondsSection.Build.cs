@@ -302,17 +302,17 @@ namespace FinanceOverhaul
                 next + 20f,
                 new[]
                 {
-                    Strings.Get("bond.card.nextCoupon"),
+                    Strings.Get("bond.card.weeklyCost"),
+                    Strings.Get("bond.card.timeLeft"),
                     Strings.Get("bond.card.repaidOn"),
-                    Strings.Get("bond.card.couponsLeft"),
                 },
                 new[]
                 {
-                    BondText.CardNextCoupon(b, DateIn(BondText.NextCouponInDays(b, today))),
+                    BondText.CardWeeklyCost(b),
+                    BondText.CardTimeLeft(b),
                     DateIn(b.DueDay(b.Terms.Periods) - today),
-                    BondText.CardCouponsLeft(b),
                 },
-                new[] { "NextCoupon", "RepaidOn", "CouponsLeft" } // not shown: control names for tests
+                new[] { "WeeklyCost", "TimeLeft", "RepaidOn" } // not shown: control names for tests
             );
 
             UIButton repay = Button(card, RepayPrefix + id, Strings.Get("bond.repay"), RepayWidth);

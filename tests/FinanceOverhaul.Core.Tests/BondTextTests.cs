@@ -72,8 +72,10 @@ namespace FinanceOverhaul.Core.Tests
             Assert.Equal(458, offer.RateBasisPoints);
             Assert.Equal("4.58% a year (4.50% + 0.08%)", BondText.RateLine(offer));
             BondTerms t = offer.Terms(50_000_000);
-            Assert.Equal(190_834, BondText.CouponCents(t)); // ₡114,500 over 60: 20 coupons a cent more
-            Assert.Equal("₡1,908.34", BondText.Money(BondText.CouponCents(t)));
+            Assert.Equal(260, t.Periods); // a coupon a week for five years of 52 weeks
+            Assert.Equal(7, t.PeriodDays);
+            Assert.Equal(44_039, BondText.CouponCents(t)); // ₡114,500 over 260: 120 coupons a cent more
+            Assert.Equal("₡440.39", BondText.Money(BondText.CouponCents(t)));
             Assert.Equal(50_000_000 + 11_450_000, BondText.TotalCents(t)); // face + ₡114,500 interest
 
             var book = new BondBook();
@@ -83,14 +85,12 @@ namespace FinanceOverhaul.Core.Tests
             Assert.Equal("₡500,000", BondText.CardAmount(b));
             Assert.Equal("260 Weeks", BondText.CardTerm(b));
             Assert.Equal("4.58%", BondText.CardInterest(b));
-            Assert.Equal(30, BondText.NextCouponInDays(b, 1000));
-            Assert.Equal("₡1,908.34 on 01/02/2026", BondText.CardNextCoupon(b, "01/02/2026"));
-            Assert.Equal("60 of 60", BondText.CardCouponsLeft(b));
-            book.Due(1030 + 18); // one coupon paid, 18 days into the next period
-            Assert.Equal(12, BondText.NextCouponInDays(b, 1048));
-            Assert.Equal("59 of 60", BondText.CardCouponsLeft(b));
-            Assert.Equal(BondMath.RedemptionAmount(t, 1, 18), BondText.RepayCents(b, 1048));
-            Assert.Equal(50_000_000 + 190_834 * 18 / 30, BondText.RepayCents(b, 1048));
+            Assert.Equal("₡440.39", BondText.CardWeeklyCost(b));
+            Assert.Equal("260 Weeks", BondText.CardTimeLeft(b));
+            book.Due(1007 + 3); // one coupon paid, 3 days into the next week
+            Assert.Equal("259 Weeks", BondText.CardTimeLeft(b));
+            Assert.Equal(BondMath.RedemptionAmount(t, 1, 3), BondText.RepayCents(b, 1010));
+            Assert.Equal(50_000_000 + 44_039 * 3 / 7, BondText.RepayCents(b, 1010));
         }
 
         [Fact]
@@ -98,7 +98,7 @@ namespace FinanceOverhaul.Core.Tests
         {
             var book = new BondBook();
             IssuedBond b;
-            book.Issue(new BondTerms(10_000, 300, 12, 30), 0, out b);
+            book.Issue(new BondTerms(10_000, 300, 52, 7), 0, out b);
             Assert.True(book.Rename(b.Id, "New hospital"));
             Assert.False(book.Rename(b.Id, "New hospital")); // unchanged
             Assert.False(book.Rename(99, "x")); // unknown

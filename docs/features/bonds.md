@@ -8,8 +8,8 @@ Figma → docs), each behind its own Options flag, each stored in the mod's own 
 ## Pieces, in order
 
 1. **Issue city bonds (raise money)** — the city sells a bond, receives the face value now, pays a
-   coupon every 30 game days, and repays the face at maturity; it can also redeem early. Cash moves
-   through the game's own budget lines (`EconomyManager.AddResource(LoanAmount, …)` in,
+   coupon every week, and repays the face at maturity; it can also redeem early. Cash moves through
+   the game's own budget lines (`EconomyManager.AddResource(LoanAmount, …)` in,
    `FetchResource(LoanPayment, …)` out), so debt service shows up beside vanilla loans without using
    the three vanilla loan slots. _Status: shipped behind the Options flag — math, pricing, book,
    daily engine and the Economy → Loans section (below)._
@@ -28,13 +28,38 @@ Measured in a live city by game UI scenario 36 (`money-probe 100`, simulation pa
 exactly to its start. `playerMoney` is whole ₡ (what the order desk compares prices against), so a
 bond of `F` cents moves it by about `F / 100`.
 
+## Weekly coupons and the conversion of older bonds (2026-11-17)
+
+Coupons were paid every 30 days until 0.2.0. They are now weekly, for two reasons: the game's loans
+are paid weekly, and Economy shows loan expenses for the last week, so a monthly coupon made that
+line read ₡0 most of the time. A coupon goes out through the game's loan-payment line
+(`FetchResource(LoanPayment)`), which `EconomyManager.GetLoanExpenses` (the Economy panel's loans
+figure) includes: game UI scenario 63 sells a ₡10,000,000 bond and sees its ₡6,057.69 weekly coupon
+there.
+
+A bond sold with 30-day coupons is converted when the city loads (`BondMigration.ToWeekly`, called
+by `BondDesk` before anything else reads the book):
+
+- Same number, name, face and rate.
+- The rest of its term in weekly coupons, counted from its last paid coupon, so no interest is
+  skipped or paid twice. If a week or more has passed since that coupon, the weekly coupons already
+  due are paid on the first day (at most four).
+- The remaining days are rounded to whole weeks, so the repayment day moves by at most three days.
+- The interest left to pay is never more than before and within 2% of it (52 weeks are 364 days, the
+  old count used 360).
+- The save keeps each bond's period, so a build from before the change still reads converted bonds.
+
+Unit tests: `BondWeeklyTests`. Checked in game on a city owing a 5-year bond with 30-day coupons.
+
 ## Cash-flow math (shipped: `BondMath`)
 
 A fixed-rate **bullet** bond in integer **cents**: face `F`, annual rate `r` in basis points, `n`
 periods of `d` days.
 
-- **Day count 30/360:** a 30-day period is exactly 1/12 of a year (a common bond convention; the
-  game calendar's uneven months would otherwise make "monthly" coupons unequal).
+- **Day count:** a bond with weekly coupons counts 52 weeks to the year (a 7-day period is exactly
+  1/52 of a year, as the game's loans count their weekly cost), so a 52-week bond pays exactly its
+  yearly rate. Bonds sold before coupons became weekly used 30/360 (a 30-day period = 1/12 of a
+  year); the maths still handles them, and they are converted on load (below).
 - **Total interest** `I = round(F × r × n × d / 360)`, half up, computed once for the whole bond.
 - **Coupons:** `I` split over the `n` periods by largest remainder — each coupon is `⌊I/n⌋` or
   `⌈I/n⌉`, the first `I mod n` carry the extra cent — and the face is repaid with the last coupon.
@@ -48,11 +73,11 @@ each coupon is the floor or ceiling of the ideal; bullet shape (no negative paym
 at maturity); more rate or more periods never means less interest; zero rate pays nothing; early
 redemption lies between the face and face + next coupon, never falls within a period and equals
 those at the period's ends; no overflow at the bounds; invalid terms are rejected. Example:
-₡1,000,000 at 4.5% for 24 monthly periods → ₡90,000 interest, ₡3,750 a month.
+₡1,000,000 at 4.5% for 104 weekly periods → ₡90,000 interest, ₡865.38 a week.
 
 ## City bond pricing — rate by debt (shipped: `BondPricing`)
 
-- **Terms:** 1, 2 or 5 game years, monthly coupons (12, 24 or 60 periods of 30 days).
+- **Terms:** 52, 104 or 260 weeks (1, 2 or 5 years of 52 weeks), a coupon every 7 days.
 - **Base rate:** 3.00% (1 year), 3.50% (2 years), 4.50% (5 years).
 - **Debt premium:** +1.50% per 1× of leverage, where leverage = (debt already owed — vanilla loans
   left + outstanding bond faces — plus this bond) ÷ the city's annual income; capped at +6.00%.
@@ -103,16 +128,16 @@ A **City bonds** section on Economy → Loans, in the help strip plus the gap ab
 loan cards (about 1230 × 312 UI units); the strip's "three loans" sentence becomes its header line.
 Left, **sell a bond**: term tabs (52 / 104 / 260 Weeks: 1, 2 or 5 years in the unit the game's loan
 cards use), amount field whose hint shows the most the city can raise before 3× income, a live quote
-(rate as base + premium, coupon every 30 days, total interest, Total = amount + interest as on a
-loan card, repay date) and **Sell bond · receive ₡…**; over the cap the hint turns red with the
-reason and the button is disabled. Right, **bonds you owe** (`FO/BondRow`): each bond is a card in
-the look of the game's loan cards, with a name box on top ("Bond #63" until the player types a name
-such as the project it pays for; saved with the city as its own line, so a build from before names
-still reads the bonds), then Amount, Term, Interest, Next Coupon (amount and date), Repaid On,
-Coupons Left and Total; **Pay Now** pays the Total = face + interest accrued this period; footer
-with total owed and leverage vs the 3× cap; more rows scroll with a vertical scrollbar and edge
-fades (shown only on overflow; scenario 44). Shown when the Options flag is on or while the city
-still owes a bond. Pins and catalog ids: [UI Figma map](../developer/ui-figma-map.md).
+(rate as base + premium, weekly cost, total interest, Total = amount + interest as on a loan card,
+repay date) and **Sell bond · receive ₡…**; over the cap the hint turns red with the reason and the
+button is disabled. Right, **bonds you owe** (`FO/BondRow`): each bond is a card in the look of the
+game's loan cards, with a name box on top ("Bond #63" until the player types a name such as the
+project it pays for; saved with the city as its own line, so a build from before names still reads
+the bonds), then Amount, Term, Interest, Total, Weekly Cost, Time Left (weeks) and Repaid On, as a
+loan card lists them; **Pay Now** pays the Total = face + interest accrued this period; footer with
+total owed and leverage vs the 3× cap; more rows scroll with a vertical scrollbar and edge fades
+(shown only on overflow; scenario 44). Shown when the Options flag is on or while the city still
+owes a bond. Pins and catalog ids: [UI Figma map](../developer/ui-figma-map.md).
 
 In game it replaces the vanilla help strip (`LoanDesc`, hidden while the section shows and restored
 when it hides or the mod reloads) at 1108 × 271 UI units. The amount accepts whole ₡ with commas or

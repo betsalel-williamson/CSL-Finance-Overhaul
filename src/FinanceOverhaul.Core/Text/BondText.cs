@@ -138,7 +138,11 @@ namespace FinanceOverhaul.Core
 
         private static string Weeks(int years)
         {
-            int weeks = years * 52;
+            return WeekCount(years * BondPricing.WeeksPerYear);
+        }
+
+        private static string WeekCount(int weeks)
+        {
             return Strings.Plural("bond.weeks", weeks, Number(weeks));
         }
 
@@ -186,10 +190,10 @@ namespace FinanceOverhaul.Core
             return WholeMoney(b.Terms.FaceCents);
         }
 
-        /// <summary>"260 Weeks"</summary>
+        /// <summary>"260 Weeks": the bond's whole term.</summary>
         public static string CardTerm(IssuedBond b)
         {
-            return Weeks(b.Terms.Periods / 12);
+            return WeekCount(b.Terms.TermDays / BondMath.WeekDays);
         }
 
         /// <summary>"4.58%"</summary>
@@ -198,37 +202,18 @@ namespace FinanceOverhaul.Core
             return BondPricing.RateText(b.Terms.RateBasisPoints);
         }
 
-        /// <summary>Days until the next coupon is paid (0 when it is due or none is left).</summary>
-        public static int NextCouponInDays(IssuedBond b, int today)
+        /// <summary>"₡440.39": the coupon due next, as a loan card gives its weekly cost; "—" when none is left.</summary>
+        public static string CardWeeklyCost(IssuedBond b)
         {
             return b.CouponsPaid >= b.Terms.Periods
-                ? 0
-                : Math.Max(0, b.DueDay(b.CouponsPaid + 1) - today);
+                ? "—"
+                : Money(BondMath.Schedule(b.Terms)[b.CouponsPaid].Interest);
         }
 
-        /// <summary>"₡1,908.34 on 01/03/2026" (the host formats the date); "—" when none is left.</summary>
-        public static string CardNextCoupon(IssuedBond b, string date)
+        /// <summary>"258 Weeks": the coupons still to pay, one a week.</summary>
+        public static string CardTimeLeft(IssuedBond b)
         {
-            if (b.CouponsPaid >= b.Terms.Periods)
-            {
-                return "—";
-            }
-
-            return Strings.Format(
-                "bond.card.nextCoupon.value",
-                Money(BondMath.Schedule(b.Terms)[b.CouponsPaid].Interest),
-                date
-            );
-        }
-
-        /// <summary>"58 of 60"</summary>
-        public static string CardCouponsLeft(IssuedBond b)
-        {
-            return Strings.Format(
-                "bond.card.couponsLeft.value",
-                Number(Math.Max(0, b.Terms.Periods - b.CouponsPaid)),
-                Number(b.Terms.Periods)
-            );
+            return WeekCount(Math.Max(0, b.Terms.Periods - b.CouponsPaid));
         }
 
         /// <summary>What Pay Now costs today (the card's Total): the face plus interest accrued this period.</summary>

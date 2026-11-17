@@ -1,22 +1,22 @@
 # A bond payment the city cannot cover is still paid in full and takes the cash below zero, as a
 # loan payment does: first a coupon, then an early repayment. With the simulation paused the
-# city's cash is set to ₡1 and put back afterwards, less the ₡2.50 of interest the bond cost.
+# city's cash is set to ₡0.10 and put back afterwards, less the ₡0.58 of interest the bond cost.
 name city bond: a coupon and a repayment are paid in full when they take cash below zero
 bond-finances 0 1,000,000
 issue-bond 1 1000
 expect-bond-coupons 0
 # paused first: with the simulation running, the coupon would be paid the moment it falls due
 pause on
-bond-backdate 30
-cash-set 1
-# the ₡2.50 coupon against ₡1 of cash
+bond-backdate 7
+cash-set 0.10
+# the ₡0.58 weekly coupon against ₡0.10 of cash
 bond-pay-due
 expect-bond-coupons 1
-expect-cash -1.50
+expect-cash -0.48
 # repaying the ₡1,000 face with the cash already below zero
 redeem-new-bonds
 expect-log redemption ₡1,000.00
-expect-cash -1,001.50
+expect-cash -1,000.48
 cleanup:
 redeem-new-bonds
 cash-restore

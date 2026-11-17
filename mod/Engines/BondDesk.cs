@@ -370,6 +370,13 @@ namespace FinanceOverhaul
                 {
                     book = BondBookCodec.Parse(Encoding.UTF8.GetString(data));
                     ModLog.Info("bonds: loaded " + book.Bonds.Count + " outstanding bond(s)");
+                    int weekly = BondMigration.ToWeekly(book);
+                    if (weekly > 0)
+                    {
+                        // Sold when coupons were paid every 30 days: now weekly, like new ones.
+                        ModLog.Info("bonds: converted " + weekly + " bond(s) to weekly coupons");
+                        Save(book);
+                    }
                 }
             }
             catch (Exception ex)

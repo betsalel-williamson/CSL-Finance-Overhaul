@@ -269,6 +269,28 @@ namespace FinanceOverhaul
                     ctx.CashTaken += now - cents;
                     break;
                 }
+                case "log-loan-expenses":
+                case "expect-loan-expenses":
+                {
+                    // log-loan-expenses — logs what Economy shows as the loans expense (weekly).
+                    // expect-loan-expenses ₡MIN — it must be at least this much.
+                    long shown = EconomyManager.instance.GetLoanExpenses();
+                    ModLog.Info("uitest: loan expenses shown=" + shown + " cents");
+                    long least;
+                    if (cmd == "expect-loan-expenses")
+                    {
+                        if (!TryCents(a, out least))
+                        {
+                            r.Error = "expect-loan-expenses needs an amount in ₡";
+                        }
+                        else if (shown < least)
+                        {
+                            r.Error = "loan expenses show " + shown + " cents, expected " + least;
+                        }
+                    }
+
+                    break;
+                }
                 case "bond-pay-due":
                     // Runs the daily bond step now (with the simulation paused), paying what is
                     // due today: after bond-backdate, this scenario's coupon.

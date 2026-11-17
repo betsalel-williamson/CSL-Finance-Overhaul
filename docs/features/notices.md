@@ -32,7 +32,7 @@ announcement.
 - **Threads:** notices are collected during the daily order and bond steps (simulation thread) and
   posted on the main thread (`ChirpNoticePoster`).
 - **Options:** "Order and bond notices in Chirper" (on by default; UI only) and "Also chirp every
-  bond coupon" (off: monthly per bond is chatty).
+  bond coupon" (off: weekly per bond is chatty).
 - **Tests:** notices are muted while a game UI test runs, so tests never chirp in the player's city;
   a scenario opts in with the `notices on` step.
 

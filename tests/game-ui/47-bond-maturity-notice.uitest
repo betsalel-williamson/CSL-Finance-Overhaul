@@ -3,7 +3,7 @@
 name notices: a city bond repaid at maturity is chirped by City Treasury
 issue-bond 1 1000
 notices on
-bond-backdate 360
+bond-backdate 364
 run-days 1
 wait 1
 expect-log notices: chirped [City Treasury] Bond #
