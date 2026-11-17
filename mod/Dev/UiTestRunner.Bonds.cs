@@ -222,6 +222,58 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "cash-set":
+                case "cash-restore":
+                case "expect-cash":
+                {
+                    // cash-set ₡ — sets the city's cash outright (the simulation must be paused:
+                    // `pause on`); what it took is put back by cash-restore or when the scenario
+                    // ends, so payments made meanwhile stay paid. expect-cash ₡ — the cash now,
+                    // to the cent.
+                    if (!SimulationManager.instance.SimulationPaused)
+                    {
+                        r.Error = cmd + " needs the simulation paused (pause on)";
+                        break;
+                    }
+
+                    if (cmd == "cash-restore")
+                    {
+                        RestoreCash(ctx);
+                        break;
+                    }
+
+                    long cents;
+                    if (!TryCents(a, out cents))
+                    {
+                        r.Error = cmd + " needs an amount in ₡";
+                        break;
+                    }
+
+                    long now = RawCash(EconomyManager.instance);
+                    if (cmd == "expect-cash")
+                    {
+                        if (now != cents)
+                        {
+                            r.Error = "cash is " + now + " cents, expected " + cents;
+                        }
+
+                        break;
+                    }
+
+                    if (!SetRawCash(cents))
+                    {
+                        r.Error = "the game's cash field is not available";
+                        break;
+                    }
+
+                    ctx.CashTaken += now - cents;
+                    break;
+                }
+                case "bond-pay-due":
+                    // Runs the daily bond step now (with the simulation paused), paying what is
+                    // due today: after bond-backdate, this scenario's coupon.
+                    BondDesk.OnInvestmentsStepped();
+                    break;
                 case "redeem-new-bonds":
                     // Repays every bond this scenario sold (by the desk or the UI), never the
                     // player's.

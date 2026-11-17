@@ -88,6 +88,9 @@ namespace FinanceOverhaul
             public Vector3 ExchangePositionBefore;
             public float ExchangeAngleBefore;
 
+            /// <summary>Cents a scenario took out of the city's cash with cash-set, to put back.</summary>
+            public long CashTaken;
+
             /// <summary>Bonds the city owed when the scenario started (the player's).</summary>
             public readonly HashSet<int> BondsBefore = new HashSet<int>();
             public readonly Dictionary<string, uint> Owned = new Dictionary<string, uint>();
@@ -187,6 +190,7 @@ namespace FinanceOverhaul
             }
 
             RestoreExchange(ctx);
+            RestoreCash(ctx);
             if (ctx.BrightnessBefore.HasValue && Mod.Settings != null)
             {
                 Mod.Settings.TickerBrightness = ctx.BrightnessBefore.Value;
@@ -538,6 +542,50 @@ namespace FinanceOverhaul
         }
 
         /// <summary>The city's cash field itself (LastCashAmount only updates on a sim step).</summary>
+        /// <summary>Puts back what cash-set took (the scenario's own payments stay paid).</summary>
+        private static void RestoreCash(Context ctx)
+        {
+            if (ctx.CashTaken == 0)
+            {
+                return;
+            }
+
+            SetRawCash(RawCash(EconomyManager.instance) + ctx.CashTaken);
+            ctx.CashTaken = 0;
+        }
+
+        private static bool SetRawCash(long cents)
+        {
+            FieldInfo f = GameInternals.Manager.CashAmount;
+            if (f == null)
+            {
+                return false;
+            }
+
+            f.SetValue(EconomyManager.instance, Convert.ChangeType(cents, f.FieldType));
+            return true;
+        }
+
+        private static bool TryCents(string text, out long cents)
+        {
+            decimal whole;
+            cents = 0;
+            if (
+                !decimal.TryParse(
+                    (text ?? string.Empty).Replace(",", string.Empty),
+                    NumberStyles.Number,
+                    CultureInfo.InvariantCulture,
+                    out whole
+                )
+            )
+            {
+                return false;
+            }
+
+            cents = (long)Math.Round(whole * 100m);
+            return true;
+        }
+
         private static long RawCash(EconomyManager em)
         {
             FieldInfo f = GameInternals.Manager.CashAmount;

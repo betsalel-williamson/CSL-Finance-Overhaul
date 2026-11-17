@@ -76,8 +76,9 @@ debt, a bigger bond, less income or a longer term never gives a cheaper rate; th
   already received stays). Reloaded from mod data after a hot reload or level load.
 - **Cash:** once per game day, after the vanilla investment update, each due payment goes out
   through `FetchResource(LoanPayment, …)` and a sale comes in through `AddResource(LoanAmount, …)`,
-  in cents, split into `int`-sized pieces. Payments are made even if cash goes below zero; a
-  short-paid amount is logged as a warning.
+  in cents, split into `int`-sized pieces. Payments are made even if cash goes below zero (game UI
+  scenario 61: a ₡2.50 coupon against ₡1 of cash leaves −₡1.50, and repaying the ₡1,000 face then
+  leaves −₡1,001.50); a short-paid amount is logged as a warning.
 - **City finances for pricing:** debt = vanilla loans' `m_amountLeft` + outstanding bond faces;
   annual income = the game's weekly income total (`GetIncomeAndExpenses`, all services) × 52.
   Checked in game: the weekly figure matched the Economy panel's total (residential ₡104,668 =

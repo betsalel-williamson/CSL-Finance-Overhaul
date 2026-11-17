@@ -45,9 +45,10 @@ player's own orders.
 ## Open loose ends
 
 - Save compatibility matrix: Index cases 1, 3, 4, 5 and city bonds not yet run in game.
-- Bonds: a payment that takes cash below zero is not yet tested in game.
-- Game UI scenario 14 assumes the city holds Oil Industry.
-- Esc to close the Stock Monitor; exact alignment of our chart grid with the vanilla grid.
+- Exact alignment of our chart grid with the vanilla grid.
+- Closed 2026-11-17: a bond coupon and an early repayment that take cash below zero are paid in full
+  (game UI scenario 61); Esc closes the Stock Monitor (scenario 60); scenario 14 buys the share it
+  needs and sells it back, so it no longer assumes the city holds Oil Industry.
 - Parked by choice: price history longer than 30 days (6M–10Y).
 
 ## Priorities (set 2026-11-15)
