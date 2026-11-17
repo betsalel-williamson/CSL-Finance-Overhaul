@@ -55,6 +55,21 @@ namespace FinanceOverhaul
         private UIPanel section;
         private UIScrollablePanel owedList;
         private UITextField amount;
+
+        // One more digit than the largest bond, so an amount that is too large can still be
+        // typed and refused in words.
+        private const int AmountMaxDigits = 10;
+        private static readonly System.Reflection.FieldInfo CursorIndex = GameInternals
+            .Ui
+            .TextCursorIndex;
+        private static readonly System.Reflection.FieldInfo SelectionStart = GameInternals
+            .Ui
+            .TextSelectionStart;
+        private static readonly System.Reflection.FieldInfo SelectionEnd = GameInternals
+            .Ui
+            .TextSelectionEnd;
+        private string seenAmount;
+        private int seenCaret;
         private UIButton sell;
         private UILabel hint,
             rate,
@@ -157,6 +172,7 @@ namespace FinanceOverhaul
 
                 if (economy.isLoansOpen)
                 {
+                    GroupAmount();
                     ShowSection();
                 }
             }
@@ -190,12 +206,62 @@ namespace FinanceOverhaul
             }
         }
 
+        /// <summary>
+        /// Keeps the typed amount grouped in thousands ("1,500,000") with the caret beside
+        /// the digit it was beside. Checked once a frame, after the field has finished its
+        /// own handling of the key, so the text and caret read here are settled.
+        /// </summary>
+        private void GroupAmount()
+        {
+            if (amount == null || CursorIndex == null)
+            {
+                return;
+            }
+
+            string text = amount.text ?? string.Empty;
+            int caret = (int)CursorIndex.GetValue(amount);
+            if (text != seenAmount)
+            {
+                GroupedEdit edit = GroupedNumberInput.Apply(
+                    seenAmount,
+                    seenCaret,
+                    text,
+                    caret,
+                    Strings.Get("number.group"),
+                    AmountMaxDigits
+                );
+                if (edit.Text != text)
+                {
+                    amount.text = edit.Text; // raises the field's change event: Refresh(true)
+                }
+
+                if (amount.hasFocus)
+                {
+                    CursorIndex.SetValue(amount, edit.Caret);
+                    if (SelectionStart != null && SelectionEnd != null)
+                    {
+                        SelectionStart.SetValue(amount, edit.Caret);
+                        SelectionEnd.SetValue(amount, edit.Caret);
+                    }
+
+                    amount.Invalidate();
+                }
+
+                text = edit.Text;
+                caret = edit.Caret;
+            }
+
+            seenAmount = text;
+            seenCaret = caret;
+        }
+
         /// <summary>Fills the amount field (game UI tests and the player alike).</summary>
         public void SetAmount(string text)
         {
             if (amount != null)
             {
                 amount.text = text;
+                GroupAmount();
                 Refresh(true);
             }
         }

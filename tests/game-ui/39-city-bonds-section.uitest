@@ -20,7 +20,9 @@ expect-text FinanceOverhaulBondsOwedTitle Bonds you owe (
 expect-visible FinanceOverhaulBondsRow-$bond
 expect-text FinanceOverhaulBondsRepay-$bond Repay ₡1,000
 capture bonds-sold
-bonds-amount 3,500,000
+# an amount typed without separators is grouped as it is typed
+bonds-amount 3500000
+expect-text-is FinanceOverhaulBondsAmount 3,500,000
 expect-text FinanceOverhaulBondsHint Refused: the city would owe more than 3×
 capture bonds-refused
 bonds-amount 200,000,000

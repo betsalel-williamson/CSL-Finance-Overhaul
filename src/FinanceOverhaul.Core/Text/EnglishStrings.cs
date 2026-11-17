@@ -25,6 +25,8 @@ namespace FinanceOverhaul.Core
             // Joining: two whole sentences, and items in a list.
             { "join.sentences", "{0} {1}" },
             { "join.list", "{0}, {1}" },
+            // The thousands separator put into a number while the player types it.
+            { "number.group", "," },
             // Price charts (Stock Monitor detail, the Invest dialog, the portfolio tooltip): the
             // right-hand end of the time axis. The left-hand end is "daysAgo".
             { "chart.today", "today" },
