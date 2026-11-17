@@ -246,6 +246,80 @@ dialog can be waiting when another is due.
 The combine rule and the wording are unit tested in the library without the game; the dialog, the
 checkbox and the bell call are checked by a game UI scenario.
 
+## Evidence for the sizes (2026-11-17)
+
+Two sources for how often companies list and leave, and how their prices move: the game's own
+stocks, measured, and US market history. Proposed sizes follow; they are **not decided**.
+
+### The game's own stocks (measured)
+
+One 30-day window in one city, 14 listed stocks, read with the dev command `log-prices`
+([Testing](../developer/testing.md)).
+
+| Stock                                              | Typical daily move | Largest | 30-day low to high |
+| -------------------------------------------------- | ------------------ | ------- | ------------------ |
+| Index (the mod's)                                  | 1.2%               | 6%      | 6%                 |
+| ChirperCrypto                                      | 2.2%               | 5%      | 6%                 |
+| Deathcare and Healthcare funds                     | 2.2–2.3%           | 5–7%    | 10%                |
+| Greasy Gasoline, Very Legit Company, Traffic Jelly | 2.5–2.8%           | 7%      | 10–17%             |
+| Chirpy Cruises                                     | 2.6%               | 14%     | 51%                |
+| Generic and Oil Industry                           | 4.9%               | 12–14%  | 16–17%             |
+| Farming Industry                                   | 7.1%               | 15%     | 18%                |
+| Ore, Forestry, ChirpAir                            | random             | 2,000%+ | 11 to 2,187        |
+
+- The eleven calm stocks move about 3% a day (standard deviation about 4%) and stay inside a 10–18%
+  band over a month: they wobble around a level the city sets and do not trend.
+- Ore, Forestry and ChirpAir jump at random between 10 and 2,200 every day: the game's rule for a
+  computed value under 10 ([Game code notes](../developer/game-code-notes.md), section 4). The city
+  has almost none of what drives them.
+
+### US market history
+
+Sources: Jay Ritter, "IPO Statistics for 2025 and Earlier Years" (operating-company IPOs,
+1980–2025); Doidge, Karolyi and Stulz, "The U.S. Listing Gap" (1975–2012); Lowry, Officer and
+Schwert on the spread of initial returns; Damodaran's sector data (January 2026). Read in the source
+documents unless marked.
+
+| Question                     | Figure                                                                                                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| New listings a year          | 9.2% of listed companies (1975–96), 5.1% (1997–2012); IPOs alone: 21 to 677 a year, about 203                                                          |
+| IPOs by sector               | Technology 36%, life science 11%, everything else 53% (no finer split published)                                                                       |
+| First-day return             | Average 19%; median about 7% (table header unclear); 16.5% open down, 13% flat, about 3.5% double                                                      |
+| Its spread                   | Standard deviation about 30% outside the 1998–2000 bubble (126% inside it)                                                                             |
+| First day by sector          | Technology 31%, life science 16%, other 12%                                                                                                            |
+| Three years on               | Average +21%, median −26%; 38.5% lose over half; about 5.5% a year behind the market                                                                   |
+| Larger, profitable companies | Close to the market (−3%); 26% lose over half in three years                                                                                           |
+| Leaving the exchange, a year | 7.3% of listed companies (1975–96), 9.5% (1997–2012)                                                                                                   |
+| …by reason                   | Merger 3.9–5.6%; for cause (failure, falling below the rules) 3.3–3.5%; voluntary 0.1–0.4%                                                             |
+| Still listed after 5 years   | 60–65% of new listings                                                                                                                                 |
+| Still listed after 10 years  | 37–61% (search snippet only: Fama and French 2004)                                                                                                     |
+| Paid to holders when leaving | Merger: 36–48% above the price (snippet); for cause: about −30% NYSE (from memory), −55% Nasdaq (snippet)                                              |
+| A stock's swing in a year    | Market average 48%; utilities 15%, banks 23%, retail 43%, machinery 45%, oil and gas 42%, software 57%, mining 78% (tool summary of Damodaran's table) |
+
+Not found: how much more a new listing swings than a seasoned one and how fast that settles;
+survival after 1 and 3 years; delisting by industry.
+
+### Proposed sizes (not decided)
+
+- **Price path:** a random walk with drift, unlike the game's stocks, which wobble around a level. A
+  3% daily move over 365 game days is a 57% yearly swing, the size of a real single stock (48%), so
+  one game day stands for one trading day and the game's own daily move (about 3%) is the yardstick.
+- **Daily swing by kind:** commercial 2.3% (retail 43% a year), industry 2.4% (machinery 45%),
+  office and IT cluster 3.0% (software 57%), oil and ore 3.5% (mining and energy). The first-year
+  extra swing stays at the design's 2× as a guess: no figure was found.
+- **Drift:** healthy and earning, about +8% a year (profitable, established listings track the
+  market). With problems, down. Without a home, falling 30–55% over the grace period, then delisted
+  and paid out at the last price (the for-cause figures).
+- **First-day pop:** average 19% and spread 30% (now 15% and 25%); in the model that gives about 28%
+  opening down and 1% doubling. IT cluster listings 31% on average, as technology does.
+- **How often:** history is one new listing a year for every 11 to 20 listed companies. With the cap
+  of 12 that is one IPO every one to two game years, not the design's ten.
+- **Leaving:** for cause is already the building's fate (abandoned, demolished, no new home).
+  Mergers are the larger real cause: a listed company is bought out with a chance of about 4–5% a
+  year, the city paid about 40% above the price, which also frees a slot (the design's "acquisition"
+  made a regular event rather than only at the cap). Together about 60% of listings would still be
+  there after five years, as in history.
+
 ## Limits and room for later
 
 - The game holds **254 investments** (measured, scenario 51). Local IPOs get a **cap** (default 12)
