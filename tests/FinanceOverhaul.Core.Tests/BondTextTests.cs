@@ -80,7 +80,7 @@ namespace FinanceOverhaul.Core.Tests
             book.Issue(t, 1000, out b);
             Assert.Equal("Bond #1", BondText.CardTitle(b));
             Assert.Equal("₡500,000", BondText.CardAmount(b));
-            Assert.Equal("5 years", BondText.CardTerm(b));
+            Assert.Equal("260 Weeks", BondText.CardTerm(b));
             Assert.Equal("4.58%", BondText.CardInterest(b));
             Assert.Equal(30, BondText.NextCouponInDays(b, 1000));
             Assert.Equal("₡1,908.34 on 01/02/2026", BondText.CardNextCoupon(b, "01/02/2026"));
@@ -102,7 +102,7 @@ namespace FinanceOverhaul.Core.Tests
             Assert.False(book.Rename(b.Id, "New hospital")); // unchanged
             Assert.False(book.Rename(99, "x")); // unknown
             Assert.Equal("New hospital", BondText.CardTitle(b));
-            Assert.Equal("1 year", BondText.CardTerm(b));
+            Assert.Equal("52 Weeks", BondText.CardTerm(b));
             Assert.True(book.Rename(b.Id, ""));
             Assert.Equal("Bond #1", BondText.CardTitle(b));
         }

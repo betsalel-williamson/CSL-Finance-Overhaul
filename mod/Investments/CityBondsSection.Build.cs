@@ -141,7 +141,7 @@ namespace FinanceOverhaul
             )
             {
                 BondTerm captured = t;
-                UIButton b = Button(section, TermPrefix + (int)t, BondText.YearsText(t), 84f);
+                UIButton b = Button(section, TermPrefix + (int)t, BondText.WeeksText(t), 84f);
                 b.relativePosition = new Vector3(x, y);
                 b.eventClick += (c, p) => SetTerm(captured);
                 termButtons[t] = b;

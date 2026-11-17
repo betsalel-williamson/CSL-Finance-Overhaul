@@ -118,15 +118,19 @@ namespace FinanceOverhaul.Core
             return BondMath.Schedule(terms)[0].Interest;
         }
 
-        public static string TermText(BondTerm term)
+        /// <summary>
+        /// A term the way the game's loan cards give a payment plan: in weeks, 52 to a year
+        /// ("52 Weeks", "260 Weeks").
+        /// </summary>
+        public static string WeeksText(BondTerm term)
         {
-            return Strings.Format("bond.termName", Number((int)term));
+            return Weeks((int)term);
         }
 
-        /// <summary>A term button: "1 year", "5 years".</summary>
-        public static string YearsText(BondTerm term)
+        private static string Weeks(int years)
         {
-            return Strings.Plural("bond.years", (int)term, Number((int)term));
+            int weeks = years * 52;
+            return Strings.Plural("bond.weeks", weeks, Number(weeks));
         }
 
         /// <summary>Longest name a bond can be given.</summary>
@@ -173,11 +177,10 @@ namespace FinanceOverhaul.Core
             return WholeMoney(b.Terms.FaceCents);
         }
 
-        /// <summary>"5 years"</summary>
+        /// <summary>"260 Weeks"</summary>
         public static string CardTerm(IssuedBond b)
         {
-            int years = b.Terms.Periods / 12;
-            return Strings.Plural("bond.years", years, Number(years));
+            return Weeks(b.Terms.Periods / 12);
         }
 
         /// <summary>"4.58%"</summary>

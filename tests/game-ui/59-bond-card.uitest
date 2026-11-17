@@ -13,7 +13,7 @@ expect-log bonds: sold #
 wait 0.8
 expect-visible FinanceOverhaulBondsRow-$bond
 expect-text-is FinanceOverhaulBondsValue-Amount-$bond ₡1,500,000
-expect-text-is FinanceOverhaulBondsValue-Term-$bond 5 years
+expect-text-is FinanceOverhaulBondsValue-Term-$bond 260 Weeks
 expect-text-is FinanceOverhaulBondsValue-CouponsLeft-$bond 60 of 60
 expect-text FinanceOverhaulBondsValue-NextCoupon-$bond on
 expect-text-is FinanceOverhaulBondsRepay-$bond Pay Now
