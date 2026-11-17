@@ -1,0 +1,37 @@
+name Your Portfolio stays at the end of its list when the day changes and the order cards are redrawn
+show-buy Oil
+click FinanceOverhaulOrderTab-Limit
+type FinanceOverhaulShareAmountField 1
+type FinanceOverhaulLimitPriceField 1
+click Button
+show-buy Oil
+click FinanceOverhaulOrderTab-Limit
+type FinanceOverhaulShareAmountField 1
+type FinanceOverhaulLimitPriceField 1
+click Button
+show-buy Oil
+click FinanceOverhaulOrderTab-Limit
+type FinanceOverhaulShareAmountField 1
+type FinanceOverhaulLimitPriceField 1
+click Button
+show-buy Oil
+click FinanceOverhaulOrderTab-Limit
+type FinanceOverhaulShareAmountField 1
+type FinanceOverhaulLimitPriceField 1
+click Button
+expect-orders-delta 4
+show-economy
+wait 1
+scroll-bottom OwnedInvestmentsScrollablePanel
+expect-at-bottom OwnedInvestmentsScrollablePanel
+# Days left changes each game day, which rewrites every order card.
+run-days 1
+expect-at-bottom OwnedInvestmentsScrollablePanel
+# A cancelled order really shortens the list; the rest of it stays in view at the new end.
+click FinanceOverhaulOpenOrderCancel-$order
+wait 1
+expect-at-bottom OwnedInvestmentsScrollablePanel
+cleanup:
+cancel-new-orders
+close-dialog
+close-economy

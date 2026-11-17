@@ -51,7 +51,8 @@ offline), `inspect-parents CONTROL` (a control and every parent: absolute box, b
 drawn where its value is; with `max`, the value is the maximum), `expect-no-overflow` (every visible
 part inside the dialog or the named control, and none of our fixed-width labels cutting its text
 off; inside a clipping, scrolling list only the width is checked, against the list),
-`expect-owned-delta`, `expect-orders-delta` (orders this scenario created) and `expect-log`.
+`expect-at-bottom LIST` (a scrolling list that is long enough to scroll sits at its end — scenario
+52), `expect-owned-delta`, `expect-orders-delta` (orders this scenario created) and `expect-log`.
 `$owned:SYMBOL` in any step becomes the shares owned now. Lines after `cleanup:` always run (cancel
 orders, sell back, close the dialog). Results: `uitest: PASS|FAIL` in the mod log, captures as
 `FinanceOverhaul-uitest-*.png`. Scenarios trade small amounts in the loaded city and undo them in

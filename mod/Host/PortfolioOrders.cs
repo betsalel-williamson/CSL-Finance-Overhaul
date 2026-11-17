@@ -41,6 +41,7 @@ namespace FinanceOverhaul
 
         private EconomyPanel economy;
         private string shownSignature;
+        private string shownIds;
         private float nextCheck;
 
         private void Update()
@@ -76,8 +77,21 @@ namespace FinanceOverhaul
                     return;
                 }
 
-                Rebuild(list, orders, OrderDesk.Today);
+                // Same orders, new text (days left, a trailing stop's trigger): rewrite the
+                // cards where they are. Removing and re-adding them would shorten the list for
+                // a moment and move a list that is scrolled to its end.
+                string ids = Ids(orders);
+                if (
+                    ids != shownIds
+                    || CountCards(list) != orders.Length
+                    || !Refresh(list, orders, OrderDesk.Today)
+                )
+                {
+                    Rebuild(list, orders, OrderDesk.Today);
+                }
+
                 shownSignature = signature;
+                shownIds = ids;
             }
             catch (Exception ex)
             {
@@ -174,7 +188,30 @@ namespace FinanceOverhaul
             }
         }
 
+        /// <summary>
+        /// Orders were placed, filled or cancelled: build the cards again. Removing them
+        /// shortens the list, and the scrolling panel then clamps a position near the end;
+        /// the cards come back in the same pass, so the position from before is put back
+        /// (clamped to the new length when orders really went away).
+        /// </summary>
         private void Rebuild(UIComponent list, TradeOrder[] orders, int today)
+        {
+            var scroller = list as UIScrollablePanel;
+            Vector2 scrollBefore = scroller != null ? scroller.scrollPosition : Vector2.zero;
+            try
+            {
+                RebuildCards(list, orders, today);
+            }
+            finally
+            {
+                if (scroller != null && scroller.scrollPosition != scrollBefore)
+                {
+                    scroller.scrollPosition = scrollBefore;
+                }
+            }
+        }
+
+        private void RebuildCards(UIComponent list, TradeOrder[] orders, int today)
         {
             UiCleanup.RemoveChildrenWhere(list, IsCard);
             RestoreLegacyLayout(list);
@@ -244,40 +281,21 @@ namespace FinanceOverhaul
             UILabel side = card.AddUIComponent<UILabel>();
             Style(side, bodyStyle, 1f);
             side.name = SidePrefix + order.Id;
-            bool paused = !Mod.OrderKindEnabled(order.Kind);
-            side.textColor =
-                paused ? MutedColor
-                : order.IsSell ? SellColor
-                : BuyColor;
-            side.text = OrderText.CardSide(order.Kind, paused);
             side.relativePosition = new Vector3(24f, 38f);
-
-            Vector2 cancelSize =
-                sellStyle != null
-                    ? new Vector2(Mathf.Max(70f, sellStyle.width + 16f), sellStyle.height)
-                    : new Vector2(76f, 28f);
 
             UILabel detail = card.AddUIComponent<UILabel>();
             detail.name = DetailPrefix + order.Id;
-            Style(detail, bodyStyle, 0.9f);
             detail.textColor = MutedColor;
             detail.relativePosition = new Vector3(DetailLeft, 60f);
-            // Up to the Cancel button: the whole line, scaled down or wrapped, never cut off.
-            FitDetail(
-                detail,
-                OrderText.CardDetail(order, today),
-                card.width - cancelSize.x - CancelRight - DetailGap - DetailLeft
-            );
-            card.height = CardHeight + Mathf.Max(0f, detail.height - DetailHeight);
 
             UIButton cancel = card.AddUIComponent<UIButton>();
             cancel.name = CancelPrefix + order.Id;
             cancel.text = "Cancel";
-            cancel.size = cancelSize;
-            cancel.relativePosition = new Vector3(
-                card.width - cancel.width - CancelRight,
-                card.height - cancel.height - 10f
-            );
+            cancel.size =
+                sellStyle != null
+                    ? new Vector2(Mathf.Max(70f, sellStyle.width + 16f), sellStyle.height)
+                    : new Vector2(76f, 28f);
+            Fill(card, side, detail, cancel, order, today, bodyStyle);
             if (sellStyle != null)
             {
                 cancel.normalBgSprite = sellStyle.normalBgSprite;
@@ -296,6 +314,102 @@ namespace FinanceOverhaul
 
             int orderId = order.Id;
             cancel.eventClick += (c, p) => OrderDesk.Cancel(orderId);
+        }
+
+        /// <summary>Everything on a card that changes while its order stays open.</summary>
+        private static void Fill(
+            UIPanel card,
+            UILabel side,
+            UILabel detail,
+            UIButton cancel,
+            TradeOrder order,
+            int today,
+            UILabel bodyStyle
+        )
+        {
+            bool paused = !Mod.OrderKindEnabled(order.Kind);
+            side.textColor =
+                paused ? MutedColor
+                : order.IsSell ? SellColor
+                : BuyColor;
+            side.text = OrderText.CardSide(order.Kind, paused);
+
+            // Up to the Cancel button: the whole line, scaled down or wrapped, never cut off.
+            // The fit starts from the normal scale every time, not from the last fit.
+            Style(detail, bodyStyle, 0.9f);
+            FitDetail(
+                detail,
+                OrderText.CardDetail(order, today),
+                card.width - cancel.width - CancelRight - DetailGap - DetailLeft
+            );
+            float height = CardHeight + Mathf.Max(0f, detail.height - DetailHeight);
+            if (card.height != height)
+            {
+                card.height = height;
+            }
+
+            var at = new Vector3(
+                card.width - cancel.width - CancelRight,
+                card.height - cancel.height - 10f
+            );
+            if (cancel.relativePosition != at)
+            {
+                cancel.relativePosition = at;
+            }
+        }
+
+        /// <summary>
+        /// Rewrites every card in place. False when a card or one of its parts is missing
+        /// (the caller then rebuilds).
+        /// </summary>
+        private static bool Refresh(UIComponent list, TradeOrder[] orders, int today)
+        {
+            UILabel bodyStyle = list.Find<UILabel>("YouInvestedLabel");
+            foreach (TradeOrder order in orders)
+            {
+                var card = Named(list, RowPrefix + order.Id) as UIPanel;
+                if (card == null)
+                {
+                    return false;
+                }
+
+                var side = Named(card, SidePrefix + order.Id) as UILabel;
+                var detail = Named(card, DetailPrefix + order.Id) as UILabel;
+                var cancel = Named(card, CancelPrefix + order.Id) as UIButton;
+                if (side == null || detail == null || cancel == null)
+                {
+                    return false;
+                }
+
+                Fill(card, side, detail, cancel, order, today, bodyStyle);
+            }
+
+            return true;
+        }
+
+        /// <summary>A direct child by its current name (Find matches the name at creation).</summary>
+        private static UIComponent Named(UIComponent parent, string name)
+        {
+            foreach (UIComponent c in parent.components)
+            {
+                if (c != null && c.name == name)
+                {
+                    return c;
+                }
+            }
+
+            return null;
+        }
+
+        private static string Ids(TradeOrder[] orders)
+        {
+            var sb = new StringBuilder();
+            foreach (TradeOrder o in orders)
+            {
+                sb.Append(o.Id).Append(';');
+            }
+
+            return sb.ToString();
         }
 
         private static bool IsCard(UIComponent c)
@@ -373,6 +487,7 @@ namespace FinanceOverhaul
         private static void FitDetail(UILabel label, string text, float width)
         {
             float baseScale = label.textScale;
+            label.autoHeight = false;
             label.wordWrap = false;
             label.text = text;
             LabelFit.Result fit = LabelFit.SingleLine(

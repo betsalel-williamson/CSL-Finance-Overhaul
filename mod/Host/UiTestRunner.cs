@@ -1657,6 +1657,30 @@ namespace FinanceOverhaul
                     );
                     break;
                 }
+                case "expect-at-bottom":
+                {
+                    // CONTROL (a scrolling list) is long enough to scroll and sits at its end.
+                    UIScrollablePanel scroll = FindControl(a) as UIScrollablePanel;
+                    if (scroll == null)
+                    {
+                        r.Error = "no scrolling list " + a;
+                        break;
+                    }
+
+                    float max =
+                        scroll.CalculateViewSize().y
+                        - (scroll.height - scroll.scrollPadding.vertical);
+                    if (max <= 0f)
+                    {
+                        r.Error = a + " does not scroll (content fits)";
+                    }
+                    else if (scroll.scrollPosition.y < max - 1f)
+                    {
+                        r.Error = a + " is at " + scroll.scrollPosition.y + ", its end is " + max;
+                    }
+
+                    break;
+                }
                 case "scroll-into-view":
                 {
                     // Like a player scrolling until CONTROL shows (CONTROL may sit inside a
