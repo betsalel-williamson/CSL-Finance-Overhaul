@@ -80,6 +80,7 @@ namespace FinanceOverhaul
             list.isVisible = on;
             footer.isVisible = on;
             sortLabel.isVisible = on;
+            sortDirection.isVisible = on; // the ▲/▼ sorts the list: not part of a stock's detail
             empty.isVisible = on && !string.IsNullOrEmpty(empty.text);
             foreach (UIButton tab in filterTabs.Values)
             {
