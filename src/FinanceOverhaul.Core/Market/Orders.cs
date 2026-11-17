@@ -479,6 +479,33 @@ namespace FinanceOverhaul.Core
             return order;
         }
 
+        /// <summary>
+        /// Places an order of any kind; null when it would be meaningless.
+        /// </summary>
+        /// <param name="trigger">Whole ₡ per share, or the trail percent for a trailing stop.</param>
+        /// <param name="mark">Today's price (a trailing stop starts its peak there).</param>
+        public TradeOrder Place(
+            OrderKind kind,
+            string investmentKey,
+            uint shares,
+            int trigger,
+            float mark,
+            int today
+        )
+        {
+            switch (kind)
+            {
+                case OrderKind.LimitBuy:
+                    return AddLimitBuy(investmentKey, shares, trigger, today);
+                case OrderKind.TakeProfitSell:
+                    return AddTakeProfit(investmentKey, shares, trigger, today);
+                case OrderKind.TrailingStopSell:
+                    return AddTrailingStop(investmentKey, shares, trigger, mark, today);
+                default:
+                    return AddStopLoss(investmentKey, shares, trigger, today);
+            }
+        }
+
         /// <summary>Stop-loss sell; null when it would be meaningless.</summary>
         public TradeOrder AddStopLoss(string investmentKey, uint shares, int stopPrice, int today)
         {

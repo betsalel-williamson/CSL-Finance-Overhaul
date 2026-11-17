@@ -23,9 +23,6 @@ namespace FinanceOverhaul
         // pays nothing and leaves the "last seen" bookmark alone until the player chooses.
         private static MissedPayments pending;
 
-        /// <summary>Annual income is the game's weekly income figure × 52.</summary>
-        public const int WeeksPerYear = 52;
-
         public static BondBook Snapshot()
         {
             lock (Sync)
@@ -75,13 +72,13 @@ namespace FinanceOverhaul
             }
 
             EconomyManager em = EconomyManager.instance;
-            long loans = 0;
+            var loans = new List<long>();
             for (int i = 0; i < EconomyManager.MAX_LOANS; i++)
             {
                 EconomyManager.Loan loan;
-                if (em.GetLoan(i, out loan) && loan.m_amountLeft > 0)
+                if (em.GetLoan(i, out loan))
                 {
-                    loans += loan.m_amountLeft;
+                    loans.Add(loan.m_amountLeft);
                 }
             }
 
@@ -100,8 +97,7 @@ namespace FinanceOverhaul
                 out weeklyIncome,
                 out weeklyExpenses
             );
-            debtCents = loans + bonds;
-            annualIncomeCents = Math.Max(0, weeklyIncome) * WeeksPerYear;
+            BondDay.Finances(loans, bonds, weeklyIncome, out debtCents, out annualIncomeCents);
         }
 
         /// <summary>Sells a bond at the offered rate; null (with the reason logged) if refused.</summary>
@@ -123,16 +119,7 @@ namespace FinanceOverhaul
                 Save(b);
             }
 
-            ModLog.Info(
-                "bonds: sold #"
-                    + bond.Id
-                    + " "
-                    + Money(faceCents)
-                    + " for "
-                    + (int)term
-                    + "y at "
-                    + BondPricing.RateText(offer.RateBasisPoints)
-            );
+            ModLog.Info(BondLog.Sold(bond, term, offer.RateBasisPoints));
             return bond;
         }
 
@@ -191,7 +178,13 @@ namespace FinanceOverhaul
                     }
 
                     Save(b);
-                    ChirpNotices.PostDay(DayNotices(b, due));
+                    ChirpNotices.PostDay(
+                        BondDay.Notices(
+                            b,
+                            due,
+                            Mod.Settings != null && Mod.Settings.NoticesBondCoupons
+                        )
+                    );
                 }
 
                 WriteSeen(today);
@@ -232,15 +225,7 @@ namespace FinanceOverhaul
                     Move(c);
                 }
 
-                ModLog.Info(
-                    "bonds: welcome back after "
-                        + pending.DaysAway
-                        + " day(s) away: "
-                        + (pay ? "paid what was missed" : "started fresh")
-                        + " ("
-                        + cash.Count
-                        + " payment(s) moved)"
-                );
+                ModLog.Info(BondLog.Settled(pending, pay, cash.Count));
                 pending = null;
                 Save(b);
                 WriteSeen(today);
@@ -261,11 +246,7 @@ namespace FinanceOverhaul
                 BondBook b = Book();
                 foreach (int id in bondIds)
                 {
-                    IssuedBond bond = b.Find(id);
-                    if (bond != null)
-                    {
-                        bond.IssueDay -= days;
-                    }
+                    b.Backdate(id, days);
                 }
 
                 Save(b);
@@ -291,62 +272,17 @@ namespace FinanceOverhaul
             }
         }
 
-        /// <summary>
-        /// Notices for today's payments: a bond repaid at maturity (face plus its last coupon),
-        /// and each coupon only when Options → "Also chirp every bond coupon" is on.
-        /// </summary>
-        private static List<Notice> DayNotices(BondBook book, List<BondCash> due)
-        {
-            var notices = new List<Notice>();
-            bool coupons = Mod.Settings != null && Mod.Settings.NoticesBondCoupons;
-            foreach (BondCash c in due)
-            {
-                if (c.Kind == BondCashKind.Principal)
-                {
-                    long last = 0;
-                    foreach (BondCash x in due)
-                    {
-                        if (x.BondId == c.BondId && x.Day == c.Day && x.Kind == BondCashKind.Coupon)
-                        {
-                            last = x.Cents;
-                        }
-                    }
-
-                    notices.Add(NoticeText.BondMatured(c.BondId, c.Cents, last));
-                }
-                else if (c.Kind == BondCashKind.Coupon && coupons)
-                {
-                    IssuedBond bond = book.Find(c.BondId);
-                    if (bond != null) // matured bonds get the maturity notice instead
-                    {
-                        notices.Add(
-                            NoticeText.BondCoupon(
-                                c.BondId,
-                                c.Cents,
-                                bond.Terms.Periods - bond.CouponsPaid,
-                                bond.Terms.Periods
-                            )
-                        );
-                    }
-                }
-            }
-
-            return notices;
-        }
-
         /// <summary>Game UI tests: moves a bond's schedule this many days earlier.</summary>
         public static bool Backdate(int id, int days)
         {
             lock (Sync)
             {
                 BondBook b = Book();
-                IssuedBond bond = b.Find(id);
-                if (bond == null)
+                if (!b.Backdate(id, days))
                 {
                     return false;
                 }
 
-                bond.IssueDay -= days;
                 Save(b);
                 lastPaidDay = -1;
                 return true;
@@ -368,12 +304,10 @@ namespace FinanceOverhaul
         private static void Move(BondCash c)
         {
             EconomyManager em = EconomyManager.instance;
-            bool cashIn = c.Kind == BondCashKind.Proceeds;
-            long left = c.Cents;
+            bool cashIn = BondDay.IsCashIn(c);
             long moved = 0;
-            while (left > 0)
+            foreach (int piece in BondDay.Pieces(c.Cents))
             {
-                int piece = (int)Math.Min(left, int.MaxValue);
                 moved += cashIn
                     ? em.AddResource(
                         EconomyManager.Resource.LoanAmount,
@@ -389,38 +323,18 @@ namespace FinanceOverhaul
                         ItemClass.SubService.None,
                         ItemClass.Level.None
                     );
-                left -= piece;
             }
 
-            string line =
-                "bonds: #"
-                + c.BondId
-                + " "
-                + c.Kind.ToString().ToLowerInvariant()
-                + " "
-                + Money(c.Cents)
-                + " ("
-                + c.Cents
-                + " cents, due day " // not shown: a log line
-                + c.Day
-                + ")";
-            if (moved != c.Cents)
+            bool shortfall;
+            string line = BondLog.Moved(c, moved, out shortfall);
+            if (shortfall)
             {
-                ModLog.Warn(line + " — the game moved only " + moved + " cents");
+                ModLog.Warn(line);
             }
             else
             {
                 ModLog.Info(line);
             }
-        }
-
-        private static string Money(long cents)
-        {
-            return "₡"
-                + (cents / 100m).ToString(
-                    "#,0.00",
-                    System.Globalization.CultureInfo.InvariantCulture
-                );
         }
 
         private static BondBook Book()
@@ -459,15 +373,7 @@ namespace FinanceOverhaul
                 if (m.Any)
                 {
                     pending = m;
-                    ModLog.Info(
-                        "bonds: mod was off for "
-                            + m.DaysAway
-                            + " day(s); "
-                            + m.Payments.Count
-                            + " payment(s) missed ("
-                            + Money(m.TotalCents)
-                            + "), waiting for the player"
-                    );
+                    ModLog.Info(BondLog.Missed(m));
                 }
             }
             catch (Exception ex)

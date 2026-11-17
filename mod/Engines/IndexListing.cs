@@ -278,8 +278,7 @@ namespace FinanceOverhaul
         {
             return info.m_investmentAI != null
                 && info.m_investmentAI.m_unit == InvestmentAI.Unit.Share
-                && !TestStock.IsTestName(info.m_name) // the dev test listing never counts
-                && !StressStock.IsStressName(info.m_name);
+                && IndexDay.IsMemberName(info.m_name);
         }
 
         /// <summary>A share-priced prefab to clone (also used by the dev test listing).</summary>
@@ -299,52 +298,40 @@ namespace FinanceOverhaul
         /// </summary>
         private static InvestmentInfo FindSectorSource(InvestmentInfo[] prefabs)
         {
-            InvestmentInfo fallback = null;
+            var candidates = new List<IndexSource>(prefabs.Length);
             for (int i = 0; i < prefabs.Length; i++)
             {
                 InvestmentInfo p = prefabs[i];
-                if (p == null)
-                {
-                    continue;
-                }
-
-                InvestmentAI ai = p.GetComponent<InvestmentAI>();
-                ModLog.Info(
-                    "index: candidate '"
-                        + p.name
-                        + "' ai="
-                        + (ai == null ? "null" : ai.GetType().Name)
-                        + " unit="
-                        + (ai == null ? "?" : ai.m_unit.ToString())
-                        + " milestone="
-                        + (p.m_unlockingMilestone == null ? "none" : p.m_unlockingMilestone.name)
+                InvestmentAI ai = p == null ? null : p.GetComponent<InvestmentAI>();
+                candidates.Add(
+                    new IndexSource
+                    {
+                        Name = p == null ? null : p.name,
+                        SharePriced = ai != null && ai.m_unit == InvestmentAI.Unit.Share,
+                        HasMilestone = p != null && p.m_unlockingMilestone != null,
+                    }
                 );
-                if (
-                    CityIndexBasket.IsIndexName(p.name)
-                    || TestStock.IsTestName(p.name)
-                    || StressStock.IsStressName(p.name)
-                )
+                if (p != null)
                 {
-                    continue;
-                }
-
-                if (ai == null || ai.m_unit != InvestmentAI.Unit.Share)
-                {
-                    continue;
-                }
-
-                if (p.m_unlockingMilestone == null)
-                {
-                    return p;
-                }
-
-                if (fallback == null)
-                {
-                    fallback = p;
+                    ModLog.Info(
+                        "index: candidate '"
+                            + p.name
+                            + "' ai="
+                            + (ai == null ? "null" : ai.GetType().Name)
+                            + " unit="
+                            + (ai == null ? "?" : ai.m_unit.ToString())
+                            + " milestone="
+                            + (
+                                p.m_unlockingMilestone == null
+                                    ? "none"
+                                    : p.m_unlockingMilestone.name
+                            )
+                    );
                 }
             }
 
-            return fallback;
+            int pick = IndexDay.PickSource(candidates);
+            return pick < 0 ? null : prefabs[pick];
         }
 
         private static void DestroyHolder()

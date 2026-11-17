@@ -175,6 +175,22 @@ namespace FinanceOverhaul.Core
             return true;
         }
 
+        /// <summary>
+        /// Moves a bond's whole schedule this many days earlier, as if it had been sold sooner
+        /// (game UI tests: makes payments fall due without waiting). False if unknown.
+        /// </summary>
+        public bool Backdate(int id, int days)
+        {
+            IssuedBond bond = Find(id);
+            if (bond == null)
+            {
+                return false;
+            }
+
+            bond.IssueDay -= days;
+            return true;
+        }
+
         public IssuedBond Find(int id)
         {
             foreach (IssuedBond b in Bonds)

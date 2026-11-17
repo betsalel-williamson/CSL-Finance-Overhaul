@@ -193,16 +193,11 @@ namespace FinanceOverhaul
                     ownNewestFirst[j] = own.GetFromTop(j);
                 }
 
-                // Queue.Add appends newest, so add oldest first.
+                // Queue.Add appends newest, so the history goes back in oldest first.
                 data.ClearValues();
-                for (int j = older.Length - 1; j >= 0; j--)
+                foreach (float v in IndexDay.WithOlderDays(ownNewestFirst, older))
                 {
-                    data.AddValue(older[j]);
-                }
-
-                for (int j = ownCount - 1; j >= 0; j--)
-                {
-                    data.AddValue(ownNewestFirst[j]);
+                    data.AddValue(v);
                 }
 
                 ModLog.Info(

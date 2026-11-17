@@ -27,34 +27,8 @@ namespace FinanceOverhaul
                 RebaseOnce(ai, ref data);
                 float previous =
                     data.allValues != null && data.allValues.Count > 0 ? data.value : 0f;
-                float mark;
-                string mode;
-                if (
-                    CityIndexBasket.TryComputeChainedMark(
-                        previous,
-                        Names,
-                        Last,
-                        Prev,
-                        Eligible,
-                        out mark
-                    )
-                )
-                {
-                    mode = "chain";
-                }
-                else if (
-                    !(previous > 0f)
-                    && CityIndexBasket.TryComputeMark(Names, Last, Eligible, out mark)
-                )
-                {
-                    mode = "seed";
-                }
-                else if (previous > 0f)
-                {
-                    mark = previous;
-                    mode = "hold";
-                }
-                else
+                IndexMark m = IndexDay.Mark(previous, Names, Last, Prev, Eligible);
+                if (m.Mode == IndexMarkMode.None)
                 {
                     if (!markFailureLogged)
                     {
@@ -67,8 +41,9 @@ namespace FinanceOverhaul
                     return;
                 }
 
+                float mark = m.Value;
                 value = mark;
-                LogUpdate(mode, previous, mark);
+                LogUpdate(m.Mode, previous, mark);
             }
             catch (Exception ex)
             {
@@ -116,14 +91,7 @@ namespace FinanceOverhaul
                     return; // no members readable yet; try again tomorrow
                 }
 
-                int openOrders = 0;
-                foreach (TradeOrder o in OrderDesk.Snapshot())
-                {
-                    if (CityIndexBasket.IsIndexName(o.InvestmentKey))
-                    {
-                        openOrders++;
-                    }
-                }
+                int openOrders = OrderDay.CountForIndex(OrderDesk.Snapshot());
 
                 IndexRebase.Plan plan = IndexRebase.Decide(
                     data.value,
@@ -187,29 +155,15 @@ namespace FinanceOverhaul
         }
 
         /// <summary>First 20 updates after (re)load, then every 30th, to keep the log small.</summary>
-        private static void LogUpdate(string mode, float previous, float mark)
+        private static void LogUpdate(IndexMarkMode mode, float previous, float mark)
         {
             updateCount++;
-            if (updateCount > 20 && updateCount % 30 != 0)
+            if (IndexDay.LogsUpdate(updateCount))
             {
-                return;
+                ModLog.Info(
+                    IndexDay.UpdateLine(updateCount, mode, previous, mark, CountEligible())
+                );
             }
-
-            float change = previous > 0f ? (mark / previous - 1f) * 100f : 0f;
-            ModLog.Info(
-                "index: update #"
-                    + updateCount
-                    + " mode="
-                    + mode
-                    + " "
-                    + previous.ToString("0.##")
-                    + " -> "
-                    + mark.ToString("0.##")
-                    + " ("
-                    + change.ToString("+0.00;-0.00")
-                    + "%) members="
-                    + CountEligible()
-            );
         }
 
         /// <summary>One-line readout for the log after a level loads.</summary>
@@ -301,16 +255,7 @@ namespace FinanceOverhaul
 
         private static int CountEligible()
         {
-            int n = 0;
-            for (int i = 0; i < Eligible.Count; i++)
-            {
-                if (Eligible[i] && !CityIndexBasket.IsIndexName(Names[i]))
-                {
-                    n++;
-                }
-            }
-
-            return n;
+            return IndexDay.CountMembers(Names, Eligible);
         }
     }
 }

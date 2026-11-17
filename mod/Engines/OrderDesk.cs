@@ -22,57 +22,13 @@ namespace FinanceOverhaul
 
         public static int Today
         {
-            get
-            {
-                return (int)(
-                    SimulationManager.instance.m_currentGameTime.Ticks / TimeSpan.TicksPerDay
-                );
-            }
+            get { return OrderDay.DayOf(SimulationManager.instance.m_currentGameTime.Ticks); }
         }
 
         /// <summary>Places a limit buy for the investment with this id. Returns the order or null.</summary>
         public static TradeOrder PlaceLimitBuy(byte investmentId, uint shares, int limitPrice)
         {
-            try
-            {
-                Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
-                InvestmentInfo info = buffer[investmentId].Info;
-                if (info == null)
-                {
-                    return null;
-                }
-
-                lock (Sync)
-                {
-                    OrderBook b = Book();
-                    b.LifetimeDays = Mod.OrderLifetimeDays; // Options; open orders keep theirs
-                    TradeOrder order = b.AddLimitBuy(info.name, shares, limitPrice, Today);
-                    if (order != null)
-                    {
-                        Save(b);
-                        ModLog.Info(
-                            "orders: placed #"
-                                + order.Id
-                                + " limit buy "
-                                + shares
-                                + " "
-                                + info.name
-                                + " at or below "
-                                + limitPrice
-                                + " (expires day "
-                                + order.ExpiresDay
-                                + ")"
-                        );
-                    }
-
-                    return order;
-                }
-            }
-            catch (Exception ex)
-            {
-                ModLog.Warn("orders: place failed: " + ex.Message);
-                return null;
-            }
+            return Place(OrderKind.LimitBuy, investmentId, shares, limitPrice);
         }
 
         /// <summary>
@@ -88,13 +44,15 @@ namespace FinanceOverhaul
             int triggerPrice
         )
         {
+            return Place(kind, investmentId, shares, triggerPrice);
+        }
+
+        private static TradeOrder Place(OrderKind kind, byte investmentId, uint shares, int trigger)
+        {
             try
             {
-                InvestmentInfo info = EconomyManager
-                    .instance
-                    .m_investments
-                    .m_buffer[investmentId]
-                    .Info;
+                Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
+                InvestmentInfo info = buffer[investmentId].Info;
                 if (info == null)
                 {
                     return null;
@@ -104,50 +62,12 @@ namespace FinanceOverhaul
                 {
                     OrderBook b = Book();
                     b.LifetimeDays = Mod.OrderLifetimeDays; // Options; open orders keep theirs
-                    float mark = EconomyManager.instance.m_investments.m_buffer[investmentId].value;
-                    TradeOrder order;
-                    switch (kind)
-                    {
-                        case OrderKind.TakeProfitSell:
-                            order = b.AddTakeProfit(info.name, shares, triggerPrice, Today);
-                            break;
-                        case OrderKind.TrailingStopSell:
-                            order = b.AddTrailingStop(info.name, shares, triggerPrice, mark, Today);
-                            break;
-                        default:
-                            order = b.AddStopLoss(info.name, shares, triggerPrice, Today);
-                            break;
-                    }
-
+                    float mark = buffer[investmentId].value;
+                    TradeOrder order = b.Place(kind, info.name, shares, trigger, mark, Today);
                     if (order != null)
                     {
                         Save(b);
-                        ModLog.Info(
-                            "orders: placed #"
-                                + order.Id
-                                + " "
-                                + OrderLog.Name(kind)
-                                + " "
-                                + shares
-                                + " "
-                                + info.name
-                                + (
-                                    kind == OrderKind.TrailingStopSell
-                                        ? " trailing "
-                                            + triggerPrice
-                                            + "% from "
-                                            + mark.ToString("0.##")
-                                            + " (stop "
-                                            + order.TriggerPrice
-                                            + ")"
-                                    : kind == OrderKind.TakeProfitSell
-                                        ? " at or above " + triggerPrice
-                                    : " at or below " + triggerPrice
-                                )
-                                + " (expires day "
-                                + order.ExpiresDay
-                                + ")"
-                        );
+                        ModLog.Info(OrderLog.Placed(order, mark));
                     }
 
                     return order;
@@ -240,11 +160,6 @@ namespace FinanceOverhaul
         // Today's order notices (fills, expiries, cancellations), posted together at the end.
         private static readonly List<Notice> DayNotices = new List<Notice>();
 
-        private static string SymbolOf(Investment[] buffer, int id, string key)
-        {
-            return id >= 0 && buffer[id].Info != null ? StockSymbols.For(buffer[id].Info) : key;
-        }
-
         /// <summary>Freezes these order ids until <see cref="UnfreezeAll"/> (game UI tests only).</summary>
         public static void Freeze(IEnumerable<int> ids)
         {
@@ -274,163 +189,73 @@ namespace FinanceOverhaul
             }
         }
 
+        /// <summary>
+        /// One order's day: reads its stock from the game, lets <see cref="OrderDay"/> decide,
+        /// and carries the decision out. True when the book changed.
+        /// </summary>
         private static bool Evaluate(OrderBook b, TradeOrder order, int today)
         {
-            if (Frozen.Contains(order.Id))
-            {
-                return false;
-            }
-
-            // Switched off in Options: kept as is (no fill, no expiry, no peak) until back on.
-            if (!Mod.OrderKindEnabled(order.Kind))
-            {
-                return false;
-            }
-
             EconomyManager economy = EconomyManager.instance;
             Investment[] buffer = economy.m_investments.m_buffer;
             int id = Find(buffer, order.InvestmentKey);
-            float mark = 0f;
-            uint available = 0;
-            uint owned = 0;
-            InvestmentAI ai = null;
-            if (id >= 0)
+            InvestmentAI ai = id < 0 ? null : buffer[id].Info.m_investmentAI;
+            var listing = new ListingState { Listed = id >= 0, Symbol = order.InvestmentKey };
+            if (ai != null)
             {
-                ai = buffer[id].Info.m_investmentAI;
-                mark = buffer[id].value;
-                available = ai.AvailableForBuyingCount(ref buffer[id]);
-                owned = ai.OwnedCount(ref buffer[id]);
-            }
-
-            // A locked or missing listing just waits (until it expires).
-            if (id < 0 && today <= order.ExpiresDay)
-            {
-                return false;
+                listing.Mark = buffer[id].value;
+                listing.Available = ai.AvailableForBuyingCount(ref buffer[id]);
+                listing.Owned = ai.OwnedCount(ref buffer[id]);
+                listing.Symbol = StockSymbols.For(buffer[id].Info);
             }
 
             // Whole ₡, the same unit as CalculatePrice (the vanilla dialog compares them directly).
-            long cash = EconomyManager.playerMoney;
-            OrderDecision d = OrderRules.Evaluate(order, today, mark, available, cash, owned);
-            switch (d.Action)
+            OrderStep step = OrderDay.Step(
+                order,
+                today,
+                listing,
+                EconomyManager.playerMoney,
+                Mod.OrderKindEnabled(order.Kind),
+                Frozen.Contains(order.Id)
+            );
+            switch (step.Kind)
             {
-                case OrderAction.Fill when order.IsSell:
-                    int stop = order.TriggerPrice;
-                    int proceeds = ai.SellShares((byte)id, ref buffer[id], d.Shares);
-                    DayNotices.Add(
-                        NoticeText.Filled(
-                            order.Kind,
-                            d.Shares,
-                            SymbolOf(buffer, id, order.InvestmentKey),
-                            mark,
-                            stop,
-                            proceeds
-                        )
-                    );
+                case OrderStepKind.Sell:
+                    int proceeds = ai.SellShares((byte)id, ref buffer[id], step.Shares);
                     // Same bookkeeping as the vanilla Sell button.
                     economy.m_lastInvestmentSell = SimulationManager.instance.m_currentGameTime;
+                    step = OrderDay.Filled(order, step.Shares, listing, proceeds);
                     b.Cancel(order.Id);
-                    ModLog.Info(
-                        "orders: filled #"
-                            + order.Id
-                            + " sold "
-                            + d.Shares
-                            + " "
-                            + order.InvestmentKey
-                            + " at "
-                            + mark.ToString("0.##")
-                            + " ("
-                            + OrderLog.TriggerWord(order.Kind)
-                            + " "
-                            + order.TriggerPrice
-                            + ") for "
-                            + proceeds
-                    );
                     if (ai.OwnedCount(ref buffer[id]) == 0)
                     {
                         RemovePortfolioRowOnMainThread((byte)id);
                     }
 
-                    return true;
-                case OrderAction.Fill:
-                    int cost = ai.BuyShares((byte)id, ref buffer[id], d.Shares);
-                    DayNotices.Add(
-                        NoticeText.Filled(
-                            order.Kind,
-                            d.Shares,
-                            SymbolOf(buffer, id, order.InvestmentKey),
-                            mark,
-                            order.TriggerPrice,
-                            cost
-                        )
-                    );
+                    break;
+                case OrderStepKind.Buy:
+                    int cost = ai.BuyShares((byte)id, ref buffer[id], step.Shares);
                     // Same bookkeeping as the vanilla Buy button.
                     economy.m_lastInvestmentBuy = SimulationManager.instance.m_currentGameTime;
                     economy.m_tempSpendOnInvestment += cost;
+                    step = OrderDay.Filled(order, step.Shares, listing, cost);
                     b.Cancel(order.Id);
-                    ModLog.Info(
-                        "orders: filled #"
-                            + order.Id
-                            + " bought "
-                            + d.Shares
-                            + " "
-                            + order.InvestmentKey
-                            + " at "
-                            + mark.ToString("0.##")
-                            + " (limit "
-                            + order.TriggerPrice
-                            + ") for "
-                            + cost
-                    );
                     AddPortfolioRowOnMainThread((byte)id);
-                    return true;
-                case OrderAction.Cancel:
+                    break;
+                case OrderStepKind.Remove:
                     b.Cancel(order.Id);
-                    string symbol = SymbolOf(buffer, id, order.InvestmentKey);
-                    DayNotices.Add(
-                        d.Reason == OrderRules.ReasonExpired
-                            ? NoticeText.Expired(
-                                order.Kind,
-                                order.Shares,
-                                symbol,
-                                order.ExpiresDay - order.PlacedDay
-                            )
-                            : NoticeText.Cancelled(
-                                order.Kind,
-                                order.Shares,
-                                symbol,
-                                d.Reason,
-                                (long)Math.Round((double)mark * order.Shares)
-                            )
-                    );
-                    ModLog.Info(
-                        "orders: cancelled #"
-                            + order.Id
-                            + " "
-                            + OrderLog.Name(order.Kind)
-                            + " "
-                            + order.Shares
-                            + " "
-                            + order.InvestmentKey
-                            + ": "
-                            + d.Reason
-                    );
-                    return true;
-                default:
-                    if (d.PeakRaised)
-                    {
-                        ModLog.Info(
-                            "orders: #"
-                                + order.Id
-                                + " trailing stop follows a new high "
-                                + mark.ToString("0.##")
-                                + " (stop "
-                                + order.TriggerPrice
-                                + ")"
-                        );
-                    }
-
-                    return d.PeakRaised;
+                    break;
             }
+
+            if (step.Notice != null)
+            {
+                DayNotices.Add(step.Notice);
+            }
+
+            if (step.LogLine != null)
+            {
+                ModLog.Info(step.LogLine);
+            }
+
+            return step.BookChanged;
         }
 
         private static int Find(Investment[] buffer, string key)
