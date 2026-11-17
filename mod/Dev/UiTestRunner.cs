@@ -809,6 +809,13 @@ namespace FinanceOverhaul
                     yield return new WaitForSeconds(1.2f);
                     break;
                 }
+                case "monitor-compact":
+                {
+                    // monitor-compact on|off — the Compact rows setting (monitor restore).
+                    Mod.Settings.Monitor.CompactRows = a == "on";
+                    yield return new WaitForSeconds(1.2f);
+                    break;
+                }
                 case "expect-monitor-pills-desc":
                 {
                     // The visible ₡ pills, top to bottom, never increase (Sort: Change ₡).

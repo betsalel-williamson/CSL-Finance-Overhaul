@@ -152,11 +152,11 @@ Your Portfolio with an open order card right under its holding
 
 Band 10: the floating Stock Monitor — in place over a real screenshot (50%) and at 1:1: list window,
 detail view, settings popover, Options flag ([Stock Monitor](../features/stock-monitor.md)). Below
-the 1:1 row, all `planned`: one frame per filter tab (All, Portfolio, Orders and the two empty
-states); a sorting table (which sort each tab offers) with the Orders tab's three sort states; and
-the Orders tab with compact rows. Orders are grouped by stock with a line per order (the chosen
-layout); the two layouts not chosen are kept dimmed. Title bars use the in-game geometry (40 px bar,
-24 px gear beside a 32 px close button flush right).
+the 1:1 row, drawn before the build and now shipped: one frame per filter tab (All, Portfolio,
+Orders and the two empty states); a sorting table (which sort each tab offers) with the Orders tab's
+three sort states; and the Orders tab with compact rows. Orders are grouped by stock with a line per
+order (the chosen layout); the two layouts not chosen are kept dimmed. Title bars use the in-game
+geometry (40 px bar, 24 px gear beside a 32 px close button flush right).
 
 | #   | Catalog id               | Title                  | Code evidence / status                                                           |
 | --- | ------------------------ | ---------------------- | -------------------------------------------------------------------------------- |
@@ -172,14 +172,14 @@ layout); the two layouts not chosen are kept dimmed. Title bars use the in-game 
 | 10  | `monitor.trade`          | Buy / Sell             | Shipped: game's Invest dialog                                                    |
 | 11  | `monitor.open`           | Toolbar button         | Shipped (top-left mod row, right-drag to move)                                   |
 | 12  | `monitor.flag`           | Options flag           | Shipped: Stock Monitor window (testing)                                          |
-| 13  | `monitor.tabs`           | Tabs + order count     | Planned: "Orders (6)" on the tab; filter shipped (`MonitorFilter`)               |
+| 13  | `monitor.tabs`           | Tabs + order count     | Shipped (`MonitorOrders.TabLabel`)                                               |
 | 14  | `monitor.orders-badge`   | Orders badge           | Shipped (`StockMonitor.OrdersBadge`); All and Portfolio rows                     |
-| 15  | `monitor.order-line`     | Order line             | Planned (`FO/MonitorOrderLine`); wording shipped (`OrderText.CardDetail`)        |
-| 16  | `monitor.order-distance` | Distance to trigger    | Planned: "₡6 away · 9.1%" (today's price − `TriggerPrice`)                       |
-| 17  | `monitor.order-paused`   | Paused order           | Planned: muted, "· paused in Options" (`OrderText.CardSide`), no distance        |
+| 15  | `monitor.order-line`     | Order line             | Shipped (`MonitorOrders.Line`, `FO/MonitorOrderLine`)                            |
+| 16  | `monitor.order-distance` | Distance to trigger    | Shipped: "₡6 away · 9.1%" (`MonitorOrders.DistanceText`)                         |
+| 17  | `monitor.order-paused`   | Paused order           | Shipped: muted, "· paused in Options", no distance                               |
 | 18  | `monitor.empty`          | Empty state            | Shipped (`StockMonitor.EmptyText`)                                               |
-| 19  | `monitor.order-compact`  | Compact rows           | Planned: one line per order, short form (`StockDetail.OrdersSummary`)            |
-| 20  | `monitor.orders-sort`    | Sort on the Orders tab | Planned: Nearest (default) → Expires → Symbol; own memory (`monitor.ordersSort`) |
+| 19  | `monitor.order-compact`  | Compact rows           | Shipped: one line per order (`MonitorOrders.CompactText`)                        |
+| 20  | `monitor.orders-sort`    | Sort on the Orders tab | Shipped: Nearest (default) → Expires → Symbol; own memory (`monitor.ordersSort`) |
 
 ### City bonds frame (`shipped`, behind the Options flag)
 

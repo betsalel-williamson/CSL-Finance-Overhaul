@@ -29,6 +29,33 @@ a phone stocks app, styled like the City Vitals window players already know.
   grey for 0.00, black text.
 - Up to 10 rows show at once; the list scrolls with the mouse wheel. Footer: "Daily close · date".
 
+## Orders tab (shipped)
+
+The Orders tab lists the orders themselves, grouped by stock (Figma band 10, pins 13 to 20). The tab
+shows how many are open on the stocks listed, "Orders (6)", on every tab.
+
+- **A line per order** under its stock's row: a bar and the side and type in the side's colour ("BUY
+  · Limit", "SELL · Take-profit"), how far today's price is from the trigger at the right ("₡42 away
+  · 4.5%": whole ₡, cents under ₡1, and % of today's price), then the Your Portfolio card's wording
+  ("50 shares at or below ₡900 · 89 days left"). Buys use the game's gain colour, sells its loss
+  colour. The gold count badge is not shown here.
+- **Paused:** an order whose type is switched off in Options is muted, reads "· paused in Options"
+  and shows no distance, because it cannot trigger (it also does not expire while paused).
+- **Compact rows:** one line per order in the short form, "BUY ≤ ₡900 · 50 shares · 89 days left",
+  with the ₡ distance at the right.
+- **Nothing is cut off:** a line that is too wide is scaled down, then wrapped, and the row grows.
+  The window is as tall as its rows, up to the height of ten plain rows, then scrolls.
+- **Its own sort:** rows are grouped by stock, so Change, Price and Value held are not offered (they
+  are stock numbers that say nothing about an order). The tab cycles Nearest (closest active order
+  to its trigger; default) → Expires (fewest days left) → Symbol. The key orders the groups, each
+  ranked by its best active order, and the lines inside them; with Symbol the lines stay nearest
+  first. Paused orders go last, and a group with only paused orders goes to the end. The direction
+  button flips groups and lines together. Ties: symbol, then the order placed first.
+- **Remembered apart:** the Orders sort is kept per player in `monitor.ordersSort` and
+  `monitor.ordersSortReversed`; All and Portfolio keep sharing `monitor.sort`. Switching tabs never
+  changes either.
+- Rules and wording: `MonitorOrders` (`MonitorOrdersTests`); game UI scenario 54.
+
 ## Detail view (shipped)
 
 Click a row: the window shows that stock in place of the list (**« All stocks** goes back; the
@@ -128,19 +155,6 @@ is removed by name. Prices move once per game day, so rows are rebuilt only when
 **Stock Monitor window** — on by default. Off removes the button and the window at once.
 
 ## Later steps
-
-- **Orders tab, a line per order (designed, not built):** each stock row is followed by one line per
-  open order: side and type, the Your Portfolio wording, and how far today's price is from the
-  trigger ("₡6 away · 9.1%"). A paused order type is muted and shows no distance. The tab shows the
-  number of open orders, "Orders (6)". Figma band 10, pins 13 to 19.
-- **Sort on the Orders tab (designed, not built):** rows are grouped by stock, so the tab has its
-  own cycle: Nearest (closest active order to its trigger, as % of today's price; default) → Expires
-  (fewest days left) → Symbol. The key orders the groups and the lines inside them (Symbol: lines
-  stay nearest first; paused orders last). Change, Price and Value held are not offered there. Kept
-  separately per player (`monitor.ordersSort`, `monitor.ordersSortReversed`); All and Portfolio keep
-  sharing `monitor.sort`.
-
-Esc to close.
 
 ## Code
 

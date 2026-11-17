@@ -49,6 +49,16 @@ namespace FinanceOverhaul.Core
         public MonitorFilter Filter = MonitorFilter.All;
         public MonitorSort Sort = MonitorSort.Change;
 
+        /// <summary>
+        /// The Orders tab keeps its own sort (its rows are grouped by stock, so it offers
+        /// different keys); All and Portfolio share <see cref="Sort"/>. Switching tabs never
+        /// changes either choice.
+        /// </summary>
+        public OrdersSort OrdersSort = OrdersSort.Nearest;
+
+        /// <summary>The Orders tab's sort runs farthest, latest or Z first.</summary>
+        public bool OrdersSortReversed;
+
         /// <summary>The sort runs opposite to its natural direction (▲/▼ button).</summary>
         public bool SortReversed;
         private float opacity = DefaultOpacity;
@@ -159,6 +169,12 @@ namespace FinanceOverhaul.Core
                 case "sortreversed":
                     ReadBool(value, ref SortReversed);
                     break;
+                case "orderssort":
+                    ReadEnum(value, ref OrdersSort);
+                    break;
+                case "orderssortreversed":
+                    ReadBool(value, ref OrdersSortReversed);
+                    break;
             }
 
             return true; // a monitor key, even if its value was unusable
@@ -189,6 +205,8 @@ namespace FinanceOverhaul.Core
             Line(sb, "filter", Filter.ToString());
             Line(sb, "sort", Sort.ToString());
             Line(sb, "sortReversed", SortReversed ? "true" : "false");
+            Line(sb, "ordersSort", OrdersSort.ToString());
+            Line(sb, "ordersSortReversed", OrdersSortReversed ? "true" : "false");
         }
 
         private static string Escape(string s)

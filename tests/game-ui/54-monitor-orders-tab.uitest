@@ -1,0 +1,53 @@
+# Stock Monitor → Orders tab: orders are grouped by stock with a line per order, and the tab has
+# its own sort (Nearest → Expires → Symbol), remembered apart from the list sort. Places two limit
+# buys far below the price (they never fill) and cancels them; the player's monitor settings are
+# remembered and put back.
+name Stock Monitor Orders tab: a line per order under its stock, and its own sort
+monitor remember
+show-buy Oil
+click FinanceOverhaulOrderTab-Limit
+type FinanceOverhaulShareAmountField 3
+type FinanceOverhaulLimitPriceField 1
+click Button
+expect-orders-delta 1
+close-dialog
+monitor open
+click FinanceOverhaulStockMonitorFilter-All
+monitor-sort Price
+click FinanceOverhaulStockMonitorFilter-Orders
+wait 1.2
+# the tab counts the open orders; the row lists them
+expect-text FinanceOverhaulStockMonitorFilter-Orders Orders (
+expect-visible FinanceOverhaulStockMonitorRow-Oil
+expect-hidden FinanceOverhaulStockMonitorOrders-Oil
+expect-text-is FinanceOverhaulStockMonitorOrderType-$order BUY · Limit
+expect-text FinanceOverhaulStockMonitorOrderDetail-$order 3 shares at or below ₡1 ·
+expect-text FinanceOverhaulStockMonitorOrderDetail-$order days left
+expect-text FinanceOverhaulStockMonitorOrderDistance-$order away ·
+expect-no-overflow FinanceOverhaulStockMonitorRow-Oil
+capture monitor-orders-tab
+# its own sort cycle
+expect-text-is FinanceOverhaulStockMonitorSort Sort: Nearest
+click FinanceOverhaulStockMonitorSort
+wait 1.2
+expect-text-is FinanceOverhaulStockMonitorSort Sort: Expires
+click FinanceOverhaulStockMonitorSort
+wait 1.2
+expect-text-is FinanceOverhaulStockMonitorSort Sort: Symbol
+# the list tabs keep their sort, and coming back finds this one as it was left
+click FinanceOverhaulStockMonitorFilter-All
+wait 1.2
+expect-text-is FinanceOverhaulStockMonitorSort Sort: Price
+expect-visible FinanceOverhaulStockMonitorOrders-Oil
+click FinanceOverhaulStockMonitorFilter-Orders
+wait 1.2
+expect-text-is FinanceOverhaulStockMonitorSort Sort: Symbol
+# compact rows: one line per order, nothing cut off
+monitor-compact on
+expect-text FinanceOverhaulStockMonitorOrderDetail-$order BUY ≤ ₡1 · 3 shares ·
+expect-no-overflow FinanceOverhaulStockMonitorRow-Oil
+capture monitor-orders-tab-compact
+cleanup:
+cancel-new-orders
+close-dialog
+monitor restore

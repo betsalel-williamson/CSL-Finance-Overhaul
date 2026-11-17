@@ -32,6 +32,12 @@ namespace FinanceOverhaul
             get { return Settings.CompactRows ? CompactRowHeight : RowHeight; }
         }
         private const float FooterHeight = 28f;
+
+        // An order line: side and type over the order's wording (regular), or one line (compact).
+        private const float OrderLineHeight = 34f;
+        private const float OrderLineCompactHeight = 18f;
+        private const float OrderLineLeft = 20f;
+        private const float OrderTextMinScale = 0.55f;
         private const int VisibleRows = 10;
         private const int SparkW = 72,
             SparkH = 28,
@@ -84,6 +90,19 @@ namespace FinanceOverhaul
             public int Id = -1;
             public string Sym;
             public float[] History;
+
+            /// <summary>Orders tab: one per open order of this stock, reused between refreshes.</summary>
+            public readonly List<OrderLineUi> Lines = new List<OrderLineUi>();
+        }
+
+        /// <summary>One order under its stock row on the Orders tab (Figma band 10, pin 15).</summary>
+        private sealed class OrderLineUi
+        {
+            public UIPanel Panel;
+            public UIPanel Bar;
+            public UILabel Type;
+            public UILabel Distance;
+            public UILabel Detail;
         }
 
         private static StockMonitorSettings Settings
@@ -378,14 +397,20 @@ namespace FinanceOverhaul
                 tab.name = Prefix + "Filter-" + f;
                 tab.text = StockMonitor.FilterLabel(f);
                 tab.textScale = 0.75f;
-                tab.size = new Vector2(f == MonitorFilter.Portfolio ? 74f : 52f, 22f);
+                // Orders is wide enough for its count, "Orders (12)".
+                tab.size = new Vector2(
+                    f == MonitorFilter.All ? 44f
+                        : f == MonitorFilter.Portfolio ? 70f
+                        : 78f,
+                    22f
+                );
                 tab.normalBgSprite = "ButtonMenu";
                 tab.hoveredBgSprite = "ButtonMenuHovered";
                 tab.pressedBgSprite = "ButtonMenuPressed";
                 tab.relativePosition = new Vector3(x, TitleHeight + 6f);
                 tab.eventClick += (c, p) => SetFilter(filter);
                 filterTabs[f] = tab;
-                x += tab.width + 6f;
+                x += tab.width + 4f;
             }
 
             sortLabel = Label(window, Prefix + "Sort", "", 0.75f, Muted);
@@ -461,7 +486,15 @@ namespace FinanceOverhaul
 
         private void FlipSort()
         {
-            Settings.SortReversed = !Settings.SortReversed;
+            if (Settings.Filter == MonitorFilter.Orders)
+            {
+                Settings.OrdersSortReversed = !Settings.OrdersSortReversed;
+            }
+            else
+            {
+                Settings.SortReversed = !Settings.SortReversed;
+            }
+
             Mod.SaveSettings();
             Refresh(true);
         }
@@ -490,10 +523,23 @@ namespace FinanceOverhaul
             return t;
         }
 
+        /// <summary>
+        /// The Orders tab is grouped by stock and cycles its own sorts (nearest, expires,
+        /// symbol); All and Portfolio share the list sort. Each keeps its own choice.
+        /// </summary>
         private void CycleSort()
         {
-            Settings.SortReversed = false; // a new sort starts in its natural direction
-            Settings.Sort = StockMonitor.NextSort(Settings.Sort);
+            if (Settings.Filter == MonitorFilter.Orders)
+            {
+                Settings.OrdersSortReversed = false; // a new sort starts in its natural direction
+                Settings.OrdersSort = MonitorOrders.NextSort(Settings.OrdersSort);
+            }
+            else
+            {
+                Settings.SortReversed = false;
+                Settings.Sort = StockMonitor.NextSort(Settings.Sort);
+            }
+
             Mod.SaveSettings();
             Refresh(true);
         }
@@ -558,47 +604,89 @@ namespace FinanceOverhaul
             }
 
             List<MonitorQuote> quotes = Quotes();
+            TradeOrder[] orders = OrderDesk.Snapshot();
             int today = OrderDesk.Today;
-            string signature = Signature(quotes, today);
+            string signature = Signature(quotes, orders, today);
             if (!force && signature == shownSignature)
             {
                 return;
             }
 
             shownSignature = signature;
-            List<MonitorQuote> shown = StockMonitor.Rows(
+            bool ordersTab = Settings.Filter == MonitorFilter.Orders;
+            // Every tab shows how many orders are open on the stocks listed.
+            List<MonitorOrderGroup> groups = MonitorOrders.Groups(
                 quotes,
-                Settings.Filter,
-                Settings.Sort,
+                orders,
+                today,
+                Mod.OrderKindEnabled,
                 Settings.Hidden,
-                Settings.SortReversed,
-                Settings.ChangeAsCurrency
+                Settings.OrdersSort,
+                Settings.OrdersSortReversed
             );
+            UIButton ordersTabButton;
+            if (filterTabs.TryGetValue(MonitorFilter.Orders, out ordersTabButton))
+            {
+                ordersTabButton.text = MonitorOrders.TabLabel(MonitorOrders.Count(groups));
+            }
+
+            List<MonitorQuote> shown;
+            if (ordersTab)
+            {
+                // Grouped by stock: the groups come already in the tab's own order.
+                shown = new List<MonitorQuote>(groups.Count);
+                foreach (MonitorOrderGroup g in groups)
+                {
+                    shown.Add(g.Quote);
+                }
+            }
+            else
+            {
+                shown = StockMonitor.Rows(
+                    quotes,
+                    Settings.Filter,
+                    Settings.Sort,
+                    Settings.Hidden,
+                    Settings.SortReversed,
+                    Settings.ChangeAsCurrency
+                );
+            }
+
             while (rows.Count < shown.Count)
             {
                 rows.Add(BuildRow());
             }
 
+            float content = 0f;
             for (int i = 0; i < rows.Count; i++)
             {
                 bool used = i < shown.Count;
                 rows[i].Panel.isVisible = used;
                 if (used)
                 {
-                    Fill(rows[i], shown[i]);
+                    Fill(rows[i], shown[i], ordersTab ? groups[i].Lines : null);
+                    content += rows[i].Panel.height;
+                }
+                else
+                {
+                    Unname(rows[i]);
                 }
             }
 
-            int visible = Mathf.Clamp(shown.Count, 1, VisibleRows);
-            list.height = RowH * visible;
-            window.height = Height(visible);
+            // As tall as its rows, up to ten plain rows; more than that scrolls.
+            list.height = Mathf.Clamp(content, RowH, RowH * VisibleRows);
+            window.height = TitleHeight + BarHeight + list.height + FooterHeight;
             background.size = window.size;
             footer.relativePosition = new Vector3(12f, TitleHeight + BarHeight + list.height + 7f);
             footer.text = StockMonitor.Footer(SimulationManager.instance.m_currentGameTime);
             empty.text = shown.Count == 0 ? StockMonitor.EmptyText(Settings.Filter) : "";
             empty.isVisible = shown.Count == 0;
-            sortLabel.text = StockMonitor.SortLabel(Settings.Sort, Settings.ChangeAsCurrency);
-            bool down = StockMonitor.IsDescending(Settings.Sort, Settings.SortReversed);
+            sortLabel.text = ordersTab
+                ? MonitorOrders.SortLabel(Settings.OrdersSort)
+                : StockMonitor.SortLabel(Settings.Sort, Settings.ChangeAsCurrency);
+            bool down = ordersTab
+                ? MonitorOrders.IsDescending(Settings.OrdersSortReversed)
+                : StockMonitor.IsDescending(Settings.Sort, Settings.SortReversed);
             if (sortArrowDown != down || sortArrow.texture == null)
             {
                 if (sortArrow.texture != null)
@@ -610,13 +698,12 @@ namespace FinanceOverhaul
                 sortArrowDown = down;
             }
 
-            sortDirection.tooltip = StockMonitor.DirectionText(
-                Settings.Sort,
-                Settings.SortReversed
-            );
+            sortDirection.tooltip = ordersTab
+                ? MonitorOrders.DirectionText(Settings.OrdersSort, Settings.OrdersSortReversed)
+                : StockMonitor.DirectionText(Settings.Sort, Settings.SortReversed);
         }
 
-        private static string Signature(List<MonitorQuote> quotes, int today)
+        private static string Signature(List<MonitorQuote> quotes, TradeOrder[] orders, int today)
         {
             var sb = new System.Text.StringBuilder();
             sb.Append(today)
@@ -624,7 +711,19 @@ namespace FinanceOverhaul
                 .Append(Settings.Filter)
                 .Append('|')
                 .Append(Settings.Sort)
-                .Append(Settings.SortReversed);
+                .Append(Settings.SortReversed)
+                .Append(Settings.OrdersSort)
+                .Append(Settings.OrdersSortReversed);
+            // What an order line shows: its trigger (a trailing stop rises) and paused state.
+            foreach (TradeOrder o in orders)
+            {
+                sb.Append('#')
+                    .Append(o.Id)
+                    .Append(':')
+                    .Append(o.TriggerPrice)
+                    .Append(Mod.OrderKindEnabled(o.Kind) ? 'a' : 'p');
+            }
+
             sb.Append('|')
                 .Append(Settings.CompactRows)
                 .Append(Settings.ShowSparklines)
@@ -786,7 +885,31 @@ namespace FinanceOverhaul
             return r;
         }
 
-        private static void Fill(Row r, MonitorQuote q)
+        /// <summary>
+        /// A spare row keeps no stock's name: two controls called "Row-Oil" (one hidden) would
+        /// make lookups by name, such as the game UI tests', find the wrong one.
+        /// </summary>
+        private static void Unname(Row r)
+        {
+            if (r.Id < 0)
+            {
+                return;
+            }
+
+            r.Id = -1;
+            r.Sym = null;
+            r.Panel.name = Prefix + "SpareRow";
+            foreach (UIComponent c in r.Panel.GetComponentsInChildren<UIComponent>(true))
+            {
+                if (c != r.Panel)
+                {
+                    c.name = Prefix + "Spare";
+                }
+            }
+        }
+
+        /// <param name="lines">Orders tab: this stock's orders, drawn under its row; else null.</param>
+        private static void Fill(Row r, MonitorQuote q, List<MonitorOrderLine> lines)
         {
             r.Id = q.Id;
             r.Sym = q.Symbol;
@@ -834,7 +957,8 @@ namespace FinanceOverhaul
                 x += 13f;
             }
 
-            string badge = StockMonitor.OrdersBadge(q.OpenOrders);
+            // The Orders tab lists the orders themselves, so the count badge is not needed there.
+            string badge = lines != null ? null : StockMonitor.OrdersBadge(q.OpenOrders);
             r.Orders.isVisible = badge != null;
             r.Orders.name = Prefix + "Orders-" + q.Symbol;
             if (badge != null)
@@ -844,6 +968,177 @@ namespace FinanceOverhaul
             }
 
             DrawSpark(r.Texture, q.History, colour);
+            FillOrderLines(r, lines, h, compact);
+        }
+
+        /// <summary>
+        /// One line per open order under the stock's row; the row grows to hold them and the
+        /// divider moves to its new bottom edge.
+        /// </summary>
+        private static void FillOrderLines(
+            Row r,
+            List<MonitorOrderLine> lines,
+            float rowHeight,
+            bool compact
+        )
+        {
+            int count = lines == null ? 0 : lines.Count;
+            while (r.Lines.Count < count)
+            {
+                r.Lines.Add(BuildOrderLine(r.Panel));
+            }
+
+            float y = rowHeight - 3f; // tuck the first line up under the row's own content
+            for (int i = 0; i < r.Lines.Count; i++)
+            {
+                OrderLineUi ui = r.Lines[i];
+                ui.Panel.isVisible = i < count;
+                if (i >= count)
+                {
+                    continue;
+                }
+
+                ui.Panel.relativePosition = new Vector3(0f, y);
+                y += FillOrderLine(ui, lines[i], compact);
+            }
+
+            if (count > 0)
+            {
+                y += 5f;
+                r.Panel.height = y;
+                r.Line.relativePosition = new Vector3(12f, y - 1f);
+            }
+        }
+
+        private static OrderLineUi BuildOrderLine(UIPanel row)
+        {
+            var ui = new OrderLineUi();
+            ui.Panel = row.AddUIComponent<UIPanel>();
+            ui.Panel.size = new Vector2(Width, OrderLineHeight);
+            ui.Panel.isInteractive = false; // the whole row is one click target
+
+            ui.Bar = ui.Panel.AddUIComponent<UIPanel>();
+            ui.Bar.backgroundSprite = "EmptySprite";
+            ui.Bar.relativePosition = new Vector3(12f, 3f);
+
+            ui.Type = Label(ui.Panel, null, "", 0.6f, White);
+            ui.Distance = Label(ui.Panel, null, "", 0.6f, Muted);
+            ui.Distance.autoSize = true;
+            ui.Detail = Label(ui.Panel, null, "", 0.7f, White);
+            foreach (UIComponent c in ui.Panel.components)
+            {
+                c.isInteractive = false;
+            }
+
+            return ui;
+        }
+
+        /// <summary>Draws one order line and returns the height it took.</summary>
+        private static float FillOrderLine(OrderLineUi ui, MonitorOrderLine line, bool compact)
+        {
+            // Side colour as on the Your Portfolio cards: the game's gain for a buy, its loss
+            // colour for a sell, muted when the order's type is switched off in Options.
+            Color32 side =
+                line.Paused ? Muted
+                : line.IsSell ? FoTheme.GameNegative
+                : FoTheme.GamePositive;
+            string id = line.OrderId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            ui.Panel.name = Prefix + "OrderLine-" + id;
+            ui.Type.name = Prefix + "OrderType-" + id;
+            ui.Detail.name = Prefix + "OrderDetail-" + id;
+            ui.Distance.name = Prefix + "OrderDistance-" + id;
+            ui.Bar.color = side;
+
+            string distance = compact ? line.CompactDistance : line.Distance;
+            ui.Distance.isVisible = distance != null;
+            float right = Width - 12f;
+            float distanceWidth = 0f;
+            if (distance != null)
+            {
+                ui.Distance.text = distance;
+                distanceWidth = ui.Distance.width + 8f;
+                ui.Distance.relativePosition = new Vector3(right - ui.Distance.width, 3f);
+            }
+
+            float height;
+            if (compact)
+            {
+                // One line: the whole order in its short form, in the side colour.
+                ui.Type.isVisible = false;
+                ui.Detail.textColor = line.Paused ? Muted : White;
+                float textHeight = FitOrderText(
+                    ui.Detail,
+                    line.Compact,
+                    0.65f,
+                    right - OrderLineLeft - distanceWidth,
+                    13f
+                );
+                ui.Detail.relativePosition = new Vector3(OrderLineLeft, 2f);
+                height = Mathf.Max(OrderLineCompactHeight, textHeight + 5f);
+            }
+            else
+            {
+                // Two tiers: side and type (with the distance at the right), then the wording.
+                ui.Type.isVisible = true;
+                ui.Type.text = line.Type;
+                ui.Type.textColor = side;
+                ui.Type.relativePosition = new Vector3(OrderLineLeft, 3f);
+                ui.Detail.textColor = line.Paused ? Muted : White;
+                float textHeight = FitOrderText(
+                    ui.Detail,
+                    line.Detail,
+                    0.7f,
+                    right - OrderLineLeft,
+                    15f
+                );
+                ui.Detail.relativePosition = new Vector3(OrderLineLeft, 16f);
+                height = Mathf.Max(OrderLineHeight, 16f + textHeight + 3f);
+            }
+
+            ui.Panel.height = height;
+            ui.Bar.size = new Vector2(2f, height - 6f);
+            return height;
+        }
+
+        /// <summary>
+        /// The text on one line at its normal scale, scaled down when it nearly fits, wrapped
+        /// when it does not: never cut off. Returns the label's height.
+        /// </summary>
+        private static float FitOrderText(
+            UILabel label,
+            string text,
+            float baseScale,
+            float width,
+            float lineHeight
+        )
+        {
+            label.autoHeight = false;
+            label.wordWrap = false;
+            label.text = text;
+            LabelFit.Result fit = LabelFit.SingleLine(
+                baseScale,
+                OrderTextMinScale,
+                width,
+                scale =>
+                {
+                    label.autoSize = false;
+                    label.textScale = scale;
+                    label.autoSize = true;
+                    return label.width;
+                }
+            );
+            label.autoSize = false;
+            label.textScale = fit.Scale;
+            if (fit.Wrap)
+            {
+                label.wordWrap = true;
+                label.width = width;
+                label.autoHeight = true;
+                return Mathf.Max(lineHeight, label.height);
+            }
+
+            label.size = new Vector2(width, lineHeight);
+            return lineHeight;
         }
 
         private static void DrawSpark(Texture2D tex, float[] history, Color32 colour)
