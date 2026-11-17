@@ -321,6 +321,50 @@ namespace FinanceOverhaul
                     );
                     break;
                 }
+                case "log-prices":
+                {
+                    // log-prices — every listed stock's daily prices as the game keeps them
+                    // (up to 30, newest first) with its price rule, to measure how the game's
+                    // stocks move.
+                    Investment[] all = EconomyManager.instance.m_investments.m_buffer;
+                    for (int i = 0; i < all.Length; i++)
+                    {
+                        Investment inv = all[i];
+                        if (
+                            (inv.m_flags & Investment.Flags.Created) == 0
+                            || inv.Info == null
+                            || inv.allValues == null
+                        )
+                        {
+                            continue;
+                        }
+
+                        var kept = new System.Text.StringBuilder();
+                        for (int k = 0; k < inv.allValues.Count; k++)
+                        {
+                            kept.Append(
+                                    inv.allValues.GetFromTop(k)
+                                        .ToString("0.##", CultureInfo.InvariantCulture)
+                                )
+                                .Append(' ');
+                        }
+
+                        ModLog.Info(
+                            "uitest: prices|"
+                                + inv.Info.name
+                                + "|"
+                                + (
+                                    inv.Info.m_investmentAI == null
+                                        ? "?"
+                                        : inv.Info.m_investmentAI.GetType().Name
+                                )
+                                + "|"
+                                + kept
+                        );
+                    }
+
+                    break;
+                }
                 case "log-basket":
                 {
                     // Dev audit: every created investment's daily history (oldest first),
