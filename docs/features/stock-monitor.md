@@ -129,6 +129,17 @@ is removed by name. Prices move once per game day, so rows are rebuilt only when
 
 ## Later steps
 
+- **Orders tab, a line per order (designed, not built):** each stock row is followed by one line per
+  open order: side and type, the Your Portfolio wording, and how far today's price is from the
+  trigger ("₡6 away · 9.1%"). A paused order type is muted and shows no distance. The tab shows the
+  number of open orders, "Orders (6)". Figma band 10, pins 13 to 19.
+- **Sort on the Orders tab (designed, not built):** rows are grouped by stock, so the tab has its
+  own cycle: Nearest (closest active order to its trigger, as % of today's price; default) → Expires
+  (fewest days left) → Symbol. The key orders the groups and the lines inside them (Symbol: lines
+  stay nearest first; paused orders last). Change, Price and Value held are not offered there. Kept
+  separately per player (`monitor.ordersSort`, `monitor.ordersSortReversed`); All and Portfolio keep
+  sharing `monitor.sort`.
+
 Esc to close.
 
 ## Code

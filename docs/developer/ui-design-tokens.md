@@ -31,6 +31,13 @@ Colors were **sampled from vanilla Financial Districts captures** (Economy → I
 dialog, hover tooltip, Options) — not invented. Game chrome uses **Open Sans** (Colossal's UI face);
 annotation copy on the UI Map uses Inter so it never reads as game UI.
 
+The three colours the Economy panel uses for money are not samples: they are the values **read from
+the running game** (`EconomyPanel.m_positiveNumberColor` and its neighbours) and held in
+`csl/green/400` (151, 238, 0, gain), `csl/orange/500` (254, 150, 89, loss) and `csl/blue/300` (185,
+221, 254, money values). The code's copies are in `mod/Kit/FoTheme.cs`, and game UI scenario 53
+fails if the game's values differ. Rule: anything the mod adds inside a game panel follows the game,
+and Figma is updated to match; the mod's own windows follow Figma.
+
 ## Collections
 
 - **FO/Primitives** (hidden): `csl/*` sampled game colors, `annotation/*` Figma-only colors,
@@ -68,33 +75,34 @@ annotation copy on the UI Map uses Inter so it never reads as game UI.
 
 ## Components (Components page)
 
-| Tier       | Component                                     | Variants / properties                                                                |
-| ---------- | --------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Annotation | `FO/AnnotationPin`                            | Number=1…12                                                                          |
-| Atom       | `FO/EconomyTab`                               | State=Default/Active · Label                                                         |
-| Atom       | `FO/Button`                                   | Kind=Row/Primary × State=Default/Disabled · Label                                    |
-| Atom       | `FO/KeyValue`                                 | Tone=Default/Value/Gain/Loss/Price · Label, Value                                    |
-| Atom       | `FO/SectionLabel`                             | Label                                                                                |
-| Atom       | `FO/SectorIcon`                               | Glyph                                                                                |
-| Atom       | `FO/ModalHeader`                              | Title                                                                                |
-| Molecule   | `FO/InvestmentRow`                            | Kind=Purchasable/Portfolio × Trend=Gain/Loss · Name; Portfolio adds Avg cost / share |
-| Molecule   | `FO/TotalBar`                                 | Amount                                                                               |
-| Molecule   | `FO/ShareChart`                               | —                                                                                    |
-| Molecule   | `FO/ShareAmount`                              | State=Default/Editing · Shares                                                       |
-| Molecule   | `FO/OrderTab`                                 | State=Default/Active · Label                                                         |
-| Molecule   | `FO/OrderPriceField`                          | Label, Value, Hint                                                                   |
-| Molecule   | `FO/OpenOrderRow`                             | Portfolio order card: Name, Side, Order, Expiry, Cancel                              |
-| Molecule   | `FO/OptionsCheckbox`, `FO/OptionsBuiltFooter` | Label                                                                                |
-| Atom       | `FO/SortDirection`                            | Direction=Down/Up · Stock Monitor sort direction button                              |
-| Molecule   | `FO/ScrollHint`                               | Kind=EdgeFade (the rule)/ShadowLip/FadeChevron/MorePill · list mid-scroll            |
-| Atom       | `FO/Scrollbar`                                | State=Overflow/Fits (Fits is invisible); see the scrolling rule below                |
-| Molecule   | `FO/BondRow`                                  | Title, Next · Repay button (City bonds, Economy → Loans)                             |
-| Organism   | `FO/OptionsPanel`                             | Title                                                                                |
-| Organism   | `FO/EconomyInvestmentsPanel`                  | Composed from the above                                                              |
-| Organism   | `FO/InvestDialog`                             | Composed from the above                                                              |
-| Organism   | `FO/InvestmentTooltip`                        | Description                                                                          |
-| Facade     | `FO/TickerEntry`                              | Tone=Gain/Loss/Flat/Unknown · Symbol, Change                                         |
-| Facade     | `FO/TickerBoard`                              | LED screen: three rows sorted by symbol, clipped                                     |
+| Tier       | Component                                     | Variants / properties                                                                                         |
+| ---------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Annotation | `FO/AnnotationPin`                            | Number=1…20                                                                                                   |
+| Atom       | `FO/EconomyTab`                               | State=Default/Active · Label                                                                                  |
+| Atom       | `FO/Button`                                   | Kind=Row/Primary × State=Default/Disabled · Label                                                             |
+| Atom       | `FO/KeyValue`                                 | Tone=Default/Value/Gain/Loss/Price · Label, Value                                                             |
+| Atom       | `FO/SectionLabel`                             | Label                                                                                                         |
+| Atom       | `FO/SectorIcon`                               | Glyph                                                                                                         |
+| Atom       | `FO/ModalHeader`                              | Title                                                                                                         |
+| Molecule   | `FO/InvestmentRow`                            | Kind=Purchasable/Portfolio × Trend=Gain/Loss · Name; Portfolio adds Avg cost / share                          |
+| Molecule   | `FO/TotalBar`                                 | Amount                                                                                                        |
+| Molecule   | `FO/ShareChart`                               | —                                                                                                             |
+| Molecule   | `FO/ShareAmount`                              | State=Default/Editing · Shares                                                                                |
+| Molecule   | `FO/OrderTab`                                 | State=Default/Active · Label                                                                                  |
+| Molecule   | `FO/OrderPriceField`                          | Label, Value, Hint                                                                                            |
+| Molecule   | `FO/OpenOrderRow`                             | Portfolio order card: Name, Side, Order, Expiry, Cancel                                                       |
+| Molecule   | `FO/OptionsCheckbox`, `FO/OptionsBuiltFooter` | Label                                                                                                         |
+| Atom       | `FO/SortDirection`                            | Direction=Down/Up · Stock Monitor sort direction button                                                       |
+| Molecule   | `FO/ScrollHint`                               | Kind=EdgeFade (the rule)/ShadowLip/FadeChevron/MorePill · list mid-scroll                                     |
+| Molecule   | `FO/MonitorOrderLine`                         | Side=Buy/Sell/Paused × Density=Regular/Compact · Type, Detail, Distance (Stock Monitor → Orders tab, planned) |
+| Atom       | `FO/Scrollbar`                                | State=Overflow/Fits (Fits is invisible); see the scrolling rule below                                         |
+| Molecule   | `FO/BondRow`                                  | Title, Next · Repay button (City bonds, Economy → Loans)                                                      |
+| Organism   | `FO/OptionsPanel`                             | Title                                                                                                         |
+| Organism   | `FO/EconomyInvestmentsPanel`                  | Composed from the above                                                                                       |
+| Organism   | `FO/InvestDialog`                             | Composed from the above                                                                                       |
+| Organism   | `FO/InvestmentTooltip`                        | Description                                                                                                   |
+| Facade     | `FO/TickerEntry`                              | Tone=Gain/Loss/Flat/Unknown · Symbol, Change                                                                  |
+| Facade     | `FO/TickerBoard`                              | LED screen: three rows sorted by symbol, clipped                                                              |
 
 ## Rule: scrolling lists
 

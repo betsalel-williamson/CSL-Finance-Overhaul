@@ -151,22 +151,35 @@ Your Portfolio with an open order card right under its holding
 ### Stock Monitor frame (`shipped`; Esc to close planned)
 
 Band 10: the floating Stock Monitor — in place over a real screenshot (50%) and at 1:1: list window,
-detail view, settings popover, Options flag ([Stock Monitor](../features/stock-monitor.md)).
+detail view, settings popover, Options flag ([Stock Monitor](../features/stock-monitor.md)). Below
+the 1:1 row, all `planned`: one frame per filter tab (All, Portfolio, Orders and the two empty
+states); a sorting table (which sort each tab offers) with the Orders tab's three sort states; and
+the Orders tab with compact rows. Orders are grouped by stock with a line per order (the chosen
+layout); the two layouts not chosen are kept dimmed. Title bars use the in-game geometry (40 px bar,
+24 px gear beside a 32 px close button flush right).
 
-| #   | Catalog id          | Title          | Code evidence / status                             |
-| --- | ------------------- | -------------- | -------------------------------------------------- |
-| 1   | `monitor.window`    | Window         | Shipped; solid on hover (City Vitals); Esc planned |
-| 2   | `monitor.settings`  | Settings (⚙)   | Shipped: popover (`StockMonitorPopover`)           |
-| 3   | `monitor.filter`    | Filter + sort  | Shipped                                            |
-| 4   | `monitor.row`       | Row            | Shipped; click → detail                            |
-| 5   | `monitor.sparkline` | Sparkline      | Shipped (`Sparkline`, 30 game days)                |
-| 6   | `monitor.change`    | Change pill    | Shipped (black text; click flips ₡ / %)            |
-| 7   | `monitor.hover`     | Hover          | Shipped (`StockMonitorHover`)                      |
-| 8   | `monitor.detail`    | Detail         | Shipped (7D / 30D, `StockMonitorDetail`)           |
-| 9   | `monitor.stats`     | Stats          | Shipped (`StockDetail`)                            |
-| 10  | `monitor.trade`     | Buy / Sell     | Shipped: game's Invest dialog                      |
-| 11  | `monitor.open`      | Toolbar button | Shipped (top-left mod row, right-drag to move)     |
-| 12  | `monitor.flag`      | Options flag   | Shipped: Stock Monitor window (testing)            |
+| #   | Catalog id               | Title                  | Code evidence / status                                                           |
+| --- | ------------------------ | ---------------------- | -------------------------------------------------------------------------------- |
+| 1   | `monitor.window`         | Window                 | Shipped; solid on hover (City Vitals); Esc planned                               |
+| 2   | `monitor.settings`       | Settings (⚙)           | Shipped: popover (`StockMonitorPopover`)                                         |
+| 3   | `monitor.filter`         | Filter + sort          | Shipped                                                                          |
+| 4   | `monitor.row`            | Row                    | Shipped; click → detail                                                          |
+| 5   | `monitor.sparkline`      | Sparkline              | Shipped (`Sparkline`, 30 game days)                                              |
+| 6   | `monitor.change`         | Change pill            | Shipped (black text; click flips ₡ / %)                                          |
+| 7   | `monitor.hover`          | Hover                  | Shipped (`StockMonitorHover`)                                                    |
+| 8   | `monitor.detail`         | Detail                 | Shipped (7D / 30D, `StockMonitorDetail`)                                         |
+| 9   | `monitor.stats`          | Stats                  | Shipped (`StockDetail`)                                                          |
+| 10  | `monitor.trade`          | Buy / Sell             | Shipped: game's Invest dialog                                                    |
+| 11  | `monitor.open`           | Toolbar button         | Shipped (top-left mod row, right-drag to move)                                   |
+| 12  | `monitor.flag`           | Options flag           | Shipped: Stock Monitor window (testing)                                          |
+| 13  | `monitor.tabs`           | Tabs + order count     | Planned: "Orders (6)" on the tab; filter shipped (`MonitorFilter`)               |
+| 14  | `monitor.orders-badge`   | Orders badge           | Shipped (`StockMonitor.OrdersBadge`); All and Portfolio rows                     |
+| 15  | `monitor.order-line`     | Order line             | Planned (`FO/MonitorOrderLine`); wording shipped (`OrderText.CardDetail`)        |
+| 16  | `monitor.order-distance` | Distance to trigger    | Planned: "₡6 away · 9.1%" (today's price − `TriggerPrice`)                       |
+| 17  | `monitor.order-paused`   | Paused order           | Planned: muted, "· paused in Options" (`OrderText.CardSide`), no distance        |
+| 18  | `monitor.empty`          | Empty state            | Shipped (`StockMonitor.EmptyText`)                                               |
+| 19  | `monitor.order-compact`  | Compact rows           | Planned: one line per order, short form (`StockDetail.OrdersSummary`)            |
+| 20  | `monitor.orders-sort`    | Sort on the Orders tab | Planned: Nearest (default) → Expires → Symbol; own memory (`monitor.ordersSort`) |
 
 ### City bonds frame (`shipped`, behind the Options flag)
 
