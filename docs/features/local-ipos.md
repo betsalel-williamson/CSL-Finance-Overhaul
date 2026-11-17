@@ -318,6 +318,84 @@ dialog can be waiting when another is due.
 The combine rule and the wording are unit tested in the library without the game; the dialog, the
 checkbox and the bell call are checked by a game UI scenario.
 
+## Formulas (as built in the library)
+
+Every formula the built slices use, in one place. Code: `src/FinanceOverhaul.Core/Market/`
+(`IpoCalendar.cs`, `IpoPricing.cs`, `IpoBuyout.cs`); each has unit tests of the same name in
+`tests/FinanceOverhaul.Core.Tests/`. The defaults are options. Not yet built, so not here: drift and
+daily swing after listing, the gates, slots and pacing, and the building-loss delisting.
+
+### The dice
+
+One repeatable random source per city (`IpoDice`, SplitMix64), its state saved with the city, so the
+same save played forward rolls the same numbers. `Next()` is uniform in [0, 1).
+`LogNormal(mean, sd)` takes two numbers `u1`, `u2` and returns
+
+```text
+σ² = ln(1 + sd² ÷ mean²)        μ = ln(mean) − σ² ÷ 2
+z  = √(−2 · ln(1 − u1)) · cos(2π · u2)          (a standard normal number)
+result = e^(μ + σ · z)
+```
+
+Most results fall near the mean, a few far above it, none below zero.
+
+### Becoming a candidate
+
+```text
+healthy today = top level AND no problem icons AND fully staffed
+                AND jobs ≥ 20 AND land value ≥ 50
+healthy days  = previous + 1 if healthy today, else 0 (also 0 if the building is gone or replaced)
+candidate     = healthy days ≥ 365
+```
+
+### When a candidate goes public (one roll a day)
+
+```text
+p (one candidate, one day) = 1 − (1 − 1 ÷ (target years × 365))^(1 ÷ reference pool)
+chance today (n candidates) = 1 − (1 − p)^n
+roll = Next();  IPO today if roll < chance today
+which candidate = floor(roll ÷ chance today × n)          (each equally likely)
+```
+
+Defaults: target 10 years, reference pool 20, so 20 candidates list once in 3,650 days on average.
+No roll while an IPO is in progress, at the listing cap (12), or with no candidates.
+
+### Offering price
+
+```text
+company value  = annual earnings × 20
+city's stake   = company value × 10%
+offering price = floor(city's stake ÷ 1,000 shares) in whole ₡, kept between ₡1 and ₡100,000
+```
+
+₡26,000 a year → ₡520,000 → ₡52,000 stake → ₡52 a share.
+
+### First-day pop (the roll for opening up or down)
+
+```text
+jump = LogNormal(mean = 1 + 15%, sd = 25%)
+pop  = jump − 1, kept between −50% and +300%
+first-day price = offering price × (1 + pop), rounded to a whole ₡, between ₡1 and ₡100,000
+```
+
+With the defaults: the average pop is +15%, the middle one about +12%, about 29 in 100 listings open
+**below** the offering price, more than half open between 0% and +50%, and about 5 in 100 open more
+than 50% up (400,000 simulated listings).
+
+### Buy-outs (one roll a day)
+
+```text
+p (one company, one day) = 1 − (1 − 4%)^(1 ÷ 365)
+eligible = listed for at least 365 days
+chance today (n eligible) = 1 − (1 − p)^n
+roll = Next();  buy-out today if roll < chance today;  which = floor(roll ÷ chance today × n)
+premium = LogNormal(mean = 1 + 40%, sd = 15%) − 1, kept between +10% and +150%
+buyer's price a share = price × (1 + premium), rounded to a whole ₡
+the city receives = shares held × buyer's price a share
+```
+
+One listed company is bought about once in 25 game years; twelve see one about every two.
+
 ## Evidence for the sizes (2026-11-17)
 
 Two sources for how often companies list and leave, and how their prices move: the game's own
