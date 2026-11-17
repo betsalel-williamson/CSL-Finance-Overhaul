@@ -217,13 +217,13 @@ namespace FinanceOverhaul
                 );
                 if ((at - buffer[kv.Key].m_position).sqrMagnitude > 0.0001f || facing > 0.1f)
                 {
-                    return "boards of building "
+                    return "boards of building " // not shown: read by game UI tests
                         + kv.Key
                         + " are "
                         + (at - buffer[kv.Key].m_position).magnitude.ToString("0.##")
                         + " m and "
                         + facing.ToString("0.#")
-                        + "° from it";
+                        + "° from it"; // not shown: read by game UI tests
                 }
             }
 
