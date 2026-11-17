@@ -24,6 +24,7 @@ namespace FinanceOverhaul
         public const string SellName = Prefix + "Sell";
         public const string HintName = Prefix + "Hint";
         public const string RateName = Prefix + "Rate";
+        public const string TotalName = Prefix + "Total";
         public const string OwedTitleName = Prefix + "OwedTitle";
         public const string FooterName = Prefix + "Footer";
         public const string RowPrefix = Prefix + "Row-";
@@ -67,6 +68,7 @@ namespace FinanceOverhaul
             rate,
             coupon,
             interest,
+            total,
             repaid,
             owedTitle,
             footer;
@@ -338,6 +340,7 @@ namespace FinanceOverhaul
                 rate.textColor = Price;
                 coupon.text = BondText.Money(BondText.CouponCents(t));
                 interest.text = BondText.Money(BondMath.TotalInterest(t));
+                total.text = BondText.Money(BondText.TotalCents(t));
                 repaid.text = Strings.Format(
                     "bond.repaidOn.value",
                     DateIn(t.TermDays),
@@ -347,7 +350,7 @@ namespace FinanceOverhaul
             }
             else
             {
-                rate.text = coupon.text = interest.text = repaid.text = "—";
+                rate.text = coupon.text = interest.text = total.text = repaid.text = "—";
                 rate.textColor = Muted;
                 sell.text = Strings.Get("bond.sell");
             }

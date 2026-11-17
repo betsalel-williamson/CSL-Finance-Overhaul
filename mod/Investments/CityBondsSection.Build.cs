@@ -148,7 +148,7 @@ namespace FinanceOverhaul
                 x += 90f;
             }
 
-            y += 32f;
+            y += 30f;
             Label(section, null, Strings.Get("bond.amount"), 0.75f, Muted).relativePosition =
                 new Vector3(left, y + 6f);
             amount = section.AddUIComponent<UITextField>();
@@ -177,15 +177,15 @@ namespace FinanceOverhaul
             amount.text = "500,000";
             amountGrouping = new FoGroupedField(amount, AmountMaxDigits);
             amount.eventTextChanged += (c, t) => Refresh(true);
-            y += 30f;
+            y += 28f;
             hint = Wrapped(section, HintName, colW, 0.7f, Muted);
             hint.relativePosition = new Vector3(left, y);
             y += 34f; // two lines of hint
             rate = Row(left, ref y, Strings.Get("bond.rate"), RateName);
             coupon = Row(left, ref y, Strings.Get("bond.coupon"), Prefix + "Coupon");
             interest = Row(left, ref y, Strings.Get("bond.interest"), Prefix + "Interest");
+            total = Row(left, ref y, Strings.Get("bond.total"), TotalName);
             repaid = Row(left, ref y, Strings.Get("bond.repaidOn"), Prefix + "Repaid");
-            y += 4f;
             sell = Button(section, SellName, Strings.Get("bond.sell"), 260f);
             sell.relativePosition = new Vector3(left, y);
             sell.eventClick += (c, p) => OnSell();
@@ -459,7 +459,7 @@ namespace FinanceOverhaul
             );
             UILabel v = Label(section, name, "", 0.75f, Muted);
             v.relativePosition = new Vector3(left + 160f, y);
-            y += 18f;
+            y += 16f; // five quote rows fit above Sell
             return v;
         }
 

@@ -74,6 +74,7 @@ namespace FinanceOverhaul.Core.Tests
             BondTerms t = offer.Terms(50_000_000);
             Assert.Equal(190_834, BondText.CouponCents(t)); // ₡114,500 over 60: 20 coupons a cent more
             Assert.Equal("₡1,908.34", BondText.Money(BondText.CouponCents(t)));
+            Assert.Equal(50_000_000 + 11_450_000, BondText.TotalCents(t)); // face + ₡114,500 interest
 
             var book = new BondBook();
             IssuedBond b;

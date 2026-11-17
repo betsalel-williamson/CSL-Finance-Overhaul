@@ -119,6 +119,15 @@ namespace FinanceOverhaul.Core
         }
 
         /// <summary>
+        /// Everything the bond costs over its life: the face plus every coupon (the loan cards'
+        /// Total).
+        /// </summary>
+        public static long TotalCents(BondTerms terms)
+        {
+            return terms.FaceCents + BondMath.TotalInterest(terms);
+        }
+
+        /// <summary>
         /// A term the way the game's loan cards give a payment plan: in weeks, 52 to a year
         /// ("52 Weeks", "260 Weeks").
         /// </summary>

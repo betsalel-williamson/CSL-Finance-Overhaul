@@ -211,6 +211,7 @@ namespace FinanceOverhaul.Core
             { "bond.rate", "Rate" },
             { "bond.coupon", "Coupon every 30 days" },
             { "bond.interest", "Total interest" },
+            { "bond.total", "Total" },
             { "bond.repaidOn", "Repaid on" },
             { "bond.repaidOn.value", "{0} · {1}" },
             { "bond.sell", "Sell bond" },

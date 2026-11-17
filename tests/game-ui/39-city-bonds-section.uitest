@@ -12,7 +12,10 @@ expect-hidden LoanDesc
 bonds-term 1
 bonds-amount 1,000
 expect-text FinanceOverhaulBondsRate a year (3.00% +
+# the Total is the amount plus all the interest, as on a loan card
+expect-text-is FinanceOverhaulBondsTotal ₡1,030.00
 expect-text FinanceOverhaulBondsSell Sell bond · receive ₡1,000
+expect-no-overlap FinanceOverhaulBondsSell LoanOffer0
 click FinanceOverhaulBondsSell
 expect-log bonds: sold #
 wait 0.6
