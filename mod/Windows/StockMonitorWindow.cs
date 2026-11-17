@@ -134,7 +134,7 @@ namespace FinanceOverhaul
             }
 
             DragButton();
-            FadeBackground();
+            FadeWindow();
             FollowWindow();
             UpdateHover();
             if (window == null || !window.isVisible || Time.unscaledTime < nextCheck)
@@ -502,25 +502,32 @@ namespace FinanceOverhaul
         {
             if (background != null)
             {
-                background.opacity = Settings.BackgroundOpacity(
-                    window != null && window.containsMouse
-                );
+                background.opacity = StockMonitorSettings.HoverOpacity;
+            }
+
+            if (window != null)
+            {
+                FoWindow.SetOpacity(window, Settings.WindowOpacity(window.containsMouse));
             }
         }
 
         /// <summary>City Vitals style: solid while the mouse is over the window, see-through otherwise (~0.15 s fade).</summary>
-        private void FadeBackground()
+        private void FadeWindow()
         {
             if (background == null || window == null || !window.isVisible)
             {
                 return;
             }
 
-            float target = Settings.BackgroundOpacity(window.containsMouse);
-            float now = background.opacity;
+            // The whole window fades: text, pills and charts with the background.
+            float target = Settings.WindowOpacity(window.containsMouse);
+            float now = window.opacity;
             if (Mathf.Abs(now - target) > 0.005f)
             {
-                background.opacity = Mathf.MoveTowards(now, target, Time.unscaledDeltaTime * 6f);
+                FoWindow.SetOpacity(
+                    window,
+                    Mathf.MoveTowards(now, target, Time.unscaledDeltaTime * 6f)
+                );
             }
         }
 
@@ -753,7 +760,7 @@ namespace FinanceOverhaul
 
             r.Change = Label(r.Panel, null, "", 0.8f, PillText);
             r.Change.autoSize = false;
-            r.Change.useDropShadow = false;
+            FoText.Heavy(r.Change); // dark text on the loss red needs the extra weight
             r.Change.size = new Vector2(70f, 20f);
             r.Change.textAlignment = UIHorizontalAlignment.Right;
             r.Change.verticalAlignment = UIVerticalAlignment.Middle;
