@@ -520,3 +520,56 @@ listened to.
   (`UIView.library.ShowModal("PauseMenu")`).
 - A mod window is not on that list, so Esc skips it and opens the pause menu. The mod's prefix on
   `Escape` and `SteamEscape` gives the Stock Monitor its turn first.
+
+## 13. How a vanilla stock goes away, and what else Financial Districts keeps
+
+Read from IL call lists (calls and field accesses, not the arithmetic), 2026-11-17. Community
+sources for the player-facing side: the wiki's Stock Exchange page and Colossal Order's dev diary 1.
+
+### No share count, no volume
+
+`Investment` holds `m_values` (30 daily prices), `m_playerOwnedShareCount`, `m_playerSpentMoney`,
+`m_baseValue`, `m_randomInfluence`, `m_currentState`, `m_flags`, `m_infoIndex` and
+`m_requirementMissingDate`. `InvestmentAI` adds `m_maximumShareCount` (1,000),
+`m_availableDaysBeforeBankrupt` (7) and `m_notifyOnPriceChange`. There is no field for shares
+outstanding, shares traded, other holders, or a bid and ask: the city is the only trader, and
+`BuyShares` and `SellShares` change only the city's count, its spent money and its cash.
+
+### Two ways a stock goes away
+
+1. **Its requirement is lost.** Each stock has an unlocking milestone
+   (`InvestmentInfo.m_unlockingMilestone`; the wiki lists them: ChirpAir 30+ weekly plane
+   passengers, Chirpy Cruises 50+ weekly cruise passengers, Deathcare 3 deathcare buildings,
+   Forestry, Oil and Ore 200+ squares of that industry, ChirperCrypto Stock Exchange level 3).
+   `InvestmentAI.IsAvailable(ref Investment)` re-checks it daily: on the first day it fails, the
+   date goes into `m_requirementMissingDate`; when it passes again the date is cleared.
+   `UpdateInvestment` then counts `m_availableDaysBeforeBankrupt` (7) days down and scales the price
+   by days left ÷ 7, towards zero. If the city owns shares it shows `InvestmentWarningPanel` once
+   (`INVESTMENT_WARNING_TITLE`, `INVESTMENT_WARNING_MESSAGE` with the stock's name and the days
+   left), pausing the game while it is open unless Economy → Investments is already showing.
+   **Unverified:** what the share count and price are after day 7 (the calls show no payout and no
+   reset there).
+2. **The Stock Exchange is demolished.** `StockExchangeAI.ReleaseBuilding` calls
+   `EconomyManager.ResetAllInvestments`: every stock's `ResetInvestment` sets the city's shares and
+   spent money to nothing and clears the price history, and the earned-from-investments total, the
+   monthly figures and the last buy and sell dates are zeroed. No call adds money: the holdings are
+   lost, not sold.
+
+### What else is there to work with
+
+- **Earned-from-investments total** (`m_moneyEarnedFromInvestments`, fed by `AddInvestmentProfit`):
+  drives the Stock Exchange level (`StockExchangeAI.canBeUpdated` against `m_earnForUpgrade`). Wiki:
+  levels 2 to 5 need ₡50,000, ₡250,000, ₡750,000 and ₡1,500,000 earned plus a fee; losses do not
+  reduce it; each level raises the Financial offices' tax bonus (2% to 6%) and unlocks banks, plazas
+  and at level 5 the International Trade Building.
+- **Monthly and weekly figures:** `m_finalMonthlyEarned`, `m_finalSpendOnInvestment`,
+  `m_lastInvestmentBuy`, `m_lastInvestmentSell`, and `m_allIn` (the city put nearly all its cash
+  into stocks).
+- **Chirps the game already posts:** `CHIRP_INVESTMENT_RISING`, `CHIRP_INVESTMENT_FALLING` (a 5-day
+  change of 15% or more) and `CHIRP_CRYPTO_INVESTMENT_UPDATED`, through
+  `MessageManager.TryCreateInvestmentMessage`.
+- **A change event:** `EconomyManager.m_investmentsUpdated`.
+- **Banks:** cash transport vans collect from shops (`m_finalCashCollecting`); wiki: this lowers
+  crime risk there.
+- **Not found:** dividends, fees or taxes on trades, policies specific to the DLC, visitors or
+  tourism tied to the Stock Exchange.
