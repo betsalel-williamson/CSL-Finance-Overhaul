@@ -42,9 +42,9 @@ first proof that Finance Overhaul can edit native Financial Districts UI safely.
 
 - Rules: `ShareAmountInput.TryParse`, `ShareAmountEditor` and `SliderThumb` in the Market library
   (unit tested).
-- Host: `mod/Host/ShareAmountField.cs`, `mod/Host/SliderThumbSync.cs` plus `Patcher` postfixes on
-  `BuySellInvestmentPanel.Awake`, `ShowPanel`, `SetSliderValue`, `Update` (click outside), and a
-  prefix on `OnKeyDown`.
+- Host: `mod/Investments/ShareAmountField.cs`, `mod/Investments/SliderThumbSync.cs` plus `Patcher`
+  postfixes on `BuySellInvestmentPanel.Awake`, `ShowPanel`, `SetSliderValue`, `Update` (click
+  outside), and a prefix on `OnKeyDown`.
 
 ## Acceptance
 

@@ -132,9 +132,9 @@ Esc to close.
 ## Code
 
 - Rules: `StockMonitor`, `Sparkline`, `StockMonitorSettings` in the Market library (unit tested).
-- Host: `StockMonitorHost` (`mod/Host/StockMonitorWindow.cs`), added to the ticker root.
+- Host: `StockMonitorHost` (`mod/Windows/StockMonitorWindow.cs`), added to the ticker root.
 - Game UI scenarios `27-stock-monitor-list` and `29-tst-stock-monitor-detail` (UI only: no days
   advanced, no trades).
 - Detail numbers and wording: `StockDetail` (Market, unit tested); host `StockMonitorDetail.cs`.
-- Share charts: `mod/Host/ShareChart.cs`; scenario `32-tst-share-chart-dialog`.
+- Share charts: `mod/Investments/ShareChart.cs`; scenario `32-tst-share-chart-dialog`.
 - Figma: UI Map band 10; component `FO/ShareChart` restyled to match.
