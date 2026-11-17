@@ -69,6 +69,20 @@ namespace FinanceOverhaul
         }
 
         /// <summary>
+        /// Fades a whole window: its background, text, pills and charts together. A child
+        /// keeps the opacity it was last drawn with until it is redrawn, so every part of the
+        /// window is redrawn with the new value.
+        /// </summary>
+        public static void SetOpacity(UIComponent window, float opacity)
+        {
+            window.opacity = opacity;
+            foreach (UIComponent part in window.GetComponentsInChildren<UIComponent>(true))
+            {
+                part.Invalidate();
+            }
+        }
+
+        /// <summary>
         /// The font of the game's info view panel captions ("Electricity", "Water"…); null
         /// when that panel is not there, and the label then keeps the UI's default font.
         /// </summary>

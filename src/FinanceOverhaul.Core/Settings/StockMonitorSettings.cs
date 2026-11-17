@@ -26,10 +26,11 @@ namespace FinanceOverhaul.Core
 
         /// <summary>
         /// Like City Vitals' "Transparent Unhovered": the background sits at <see cref="Opacity"/>
-        /// and turns solid (<see cref="HoverOpacity"/>) while the mouse is over the window.
+        /// and turns solid while the mouse is over the window.
         /// </summary>
         public bool TransparentUnhovered = true;
 
+        /// <summary>Darkness of the panel behind the content when the window is fully solid.</summary>
         public const float HoverOpacity = 0.9f;
 
         /// <summary>Compact rows: one line per stock, names hidden.</summary>
@@ -53,8 +54,8 @@ namespace FinanceOverhaul.Core
         private float opacity = DefaultOpacity;
 
         /// <summary>
-        /// Background darkness, 0 (see-through) to 0.9: always, or only while the mouse is away
-        /// when <see cref="TransparentUnhovered"/> is on.
+        /// How solid the whole window is, 0 to 0.9: always, or only while the mouse is away
+        /// when <see cref="TransparentUnhovered"/> is on. See <see cref="WindowOpacity"/>.
         /// </summary>
         public float Opacity
         {
@@ -68,10 +69,23 @@ namespace FinanceOverhaul.Core
             }
         }
 
-        /// <summary>Target background opacity for the window right now.</summary>
-        public float BackgroundOpacity(bool hovered)
+        /// <summary>The window never fades below this, so it can always be found again.</summary>
+        public const float MinWindowOpacity = 0.15f;
+
+        /// <summary>
+        /// Opacity of the whole window right now: background, text, pills and charts fade
+        /// together (as City Vitals' panel does). Fully solid while hovered when
+        /// <see cref="TransparentUnhovered"/> is on; otherwise the chosen opacity, never below
+        /// <see cref="MinWindowOpacity"/>.
+        /// </summary>
+        public float WindowOpacity(bool hovered)
         {
-            return TransparentUnhovered && hovered ? Math.Max(Opacity, HoverOpacity) : Opacity;
+            if (TransparentUnhovered && hovered)
+            {
+                return 1f;
+            }
+
+            return Math.Max(MinWindowOpacity, Opacity);
         }
 
         private const string Prefix = "monitor.";

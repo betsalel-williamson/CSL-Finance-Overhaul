@@ -509,7 +509,30 @@ namespace FinanceOverhaul
                             + " color="
                             + Rgba(c.color)
                             + (t == null ? "" : " textColor=" + Rgba(t.textColor))
+                            + (
+                                t == null || t.font == null
+                                    ? ""
+                                    : " font=" + t.font.name + " scale=" + t.textScale
+                            )
+                            + " shownOpacity="
+                            + ShownOpacity(c).ToString("0.00")
                     );
+                    break;
+                }
+                case "log-fonts":
+                {
+                    // Every UI font the game has loaded, for choosing a weight.
+                    var names = new List<string>();
+                    foreach (UIFont f in Resources.FindObjectsOfTypeAll<UIFont>())
+                    {
+                        if (f != null && !names.Contains(f.name))
+                        {
+                            names.Add(f.name);
+                        }
+                    }
+
+                    names.Sort();
+                    ModLog.Info("uitest: fonts " + string.Join(", ", names.ToArray()));
                     break;
                 }
                 case "game-colors":
@@ -2322,6 +2345,18 @@ namespace FinanceOverhaul
             }
 
             return -1;
+        }
+
+        /// <summary>A control's own opacity times every parent's: what it is drawn with.</summary>
+        private static float ShownOpacity(UIComponent c)
+        {
+            float o = 1f;
+            for (UIComponent p = c; p != null; p = p.parent)
+            {
+                o *= p.opacity;
+            }
+
+            return o;
         }
 
         private static bool Same(Color32 x, Color32 y)

@@ -118,7 +118,7 @@ namespace FinanceOverhaul
             title.relativePosition = new Vector3(14f, 10f);
 
             // Opacity slider: our own track (no guessed game sprites), 5% steps.
-            UILabel opacityLabel = Label(popover, null, "Background opacity", 0.75f, White);
+            UILabel opacityLabel = Label(popover, null, "Window opacity", 0.75f, White);
             opacityLabel.relativePosition = new Vector3(14f, 40f);
             opacityValue = Label(popover, Prefix + "OpacityValue", "", 0.75f, Accent);
             opacityValue.autoSize = false;
@@ -156,7 +156,7 @@ namespace FinanceOverhaul
             UILabel range = Label(
                 popover,
                 null,
-                "0% (see-through, like City Vitals) – 90%",
+                "Text and charts fade with the background",
                 0.6f,
                 Muted
             );

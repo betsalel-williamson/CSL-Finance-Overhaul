@@ -338,12 +338,19 @@ namespace FinanceOverhaul.Core.Tests
         {
             var m = new StockMonitorSettings();
             Assert.True(m.TransparentUnhovered);
-            Assert.Equal(0.35f, m.BackgroundOpacity(false));
-            Assert.Equal(0.9f, m.BackgroundOpacity(true));
+            // The whole window (text, pills and charts with the background) fades together.
+            Assert.Equal(0.35f, m.WindowOpacity(false));
+            Assert.Equal(1f, m.WindowOpacity(true));
+            m.Opacity = 0.6f;
+            Assert.Equal(0.6f, m.WindowOpacity(false));
+            // Never invisible: a window at 0% could not be found again.
             m.Opacity = 0f;
-            Assert.Equal(0f, m.BackgroundOpacity(false));
+            Assert.Equal(StockMonitorSettings.MinWindowOpacity, m.WindowOpacity(false));
+            Assert.Equal(1f, m.WindowOpacity(true));
             m.TransparentUnhovered = false;
-            Assert.Equal(0f, m.BackgroundOpacity(true));
+            Assert.Equal(StockMonitorSettings.MinWindowOpacity, m.WindowOpacity(true));
+            m.Opacity = 0.9f;
+            Assert.Equal(0.9f, m.WindowOpacity(true));
             Assert.False(
                 SettingsFile
                     .Parse("monitor.transparentUnhovered=false")

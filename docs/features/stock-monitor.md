@@ -54,17 +54,19 @@ Over any row sparkline or the detail chart: a crosshair, a dot on the line and a
 day's price ("Oil · 8 days ago · ₡925", "today", "yesterday"), like City Vitals' value bubble.
 Hit-testing runs only while the mouse is over the window.
 
-## Background on hover
+## Opacity and hover
 
-Like City Vitals' "Transparent Unhovered": the background sits at the chosen opacity and fades to a
-solid 90% while the mouse is over the window (`monitor.transparentUnhovered`, on by default).
+Like City Vitals' "Transparent Unhovered": the whole window sits at the chosen opacity and turns
+fully solid while the mouse is over it (`monitor.transparentUnhovered`, on by default). Background,
+text, pills and charts fade together, as City Vitals' panel does. The window never goes below 15%,
+so it can always be found again.
 
 ## Settings popover (shipped)
 
 The gear opens a popover beside the window (it follows the window, and flips to the left near the
 screen edge):
 
-- **Background opacity** slider, 0% (see-through, like City Vitals) to 90%, in 5% steps.
+- **Window opacity** slider, 0% to 90% in 5% steps; the window is drawn at no less than 15%.
 - **Solid while the mouse is over it** (City Vitals' "Transparent Unhovered").
 - **Compact rows (hide names):** one line per stock — symbol, sparkline, price, pill.
 - **Show sparklines.**
