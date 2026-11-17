@@ -439,3 +439,71 @@ From `ICities.dll` (types listed with `tlist`):
   tourist counts (`District.m_tourist*Data`, `IncomingTourists`), Industries trade
   (`IndustryBuildingAI.ExchangeResource`), `m_taxMultiplier`. All are plain fields readable from the
   simulation thread without patching.
+
+## 11. Event dialogs and UI sounds
+
+For the IPO dialog and bell in [Local IPOs](../features/local-ipos.md#the-ipo-moment-planned).
+Method for this section: `Assembly-CSharp.dll` and `ColossalManaged.dll` decompiled with ILSpy, and
+the names of audio clips read as text from the game's `sharedassets*.assets` files. No sound was
+listened to.
+
+### The academic year report (Campus)
+
+- The panel is `AcademicYearReportPanel` (a `ToolsModifierControl`), fetched with
+  `UIView.library.Get<AcademicYearReportPanel>("AcademicYearReportPanel")`.
+- `DistrictManager.OnAcademicYearEnded` runs on the simulation thread, updates each campus, then
+  dispatches to the main thread and calls `PopupPanel(activeCampi, 0, wasTriggeredByButton: false)`.
+  `CampusWorldInfoPanel` calls the same method with `wasTriggeredByButton: true` to reopen the
+  report.
+- `PopupPanel` returns without showing when it was not triggered by a button and
+  `OptionsGameplayPanel.hideCampusAreaYearReport` is true. Otherwise it pauses the simulation
+  (`SimulationManager.SimulationPaused = true`), centres the panel and fades it in over
+  `m_ShowHideTime` (0.15 s).
+- The checkbox is the `UICheckBox` named `StopBotheringMe`; `OnCheckChanged` writes
+  `hideCampusAreaYearReport`, a `SavedBool` in the game settings file
+  (`Settings.hideCampusLevelUpNotifications`) that Options → Gameplay also shows.
+- `Hide` sets `SimulationPaused = false` whatever the state was before, then fades out. Esc and
+  Return close the panel (`OnKeyDown`). `OnViewCampus` moves the camera to the campus.
+- **The report plays no sound:** `AcademicYearReportPanel` has no `AudioClip` field and no
+  `PlaySound` call.
+
+### The Stock Exchange level-up dialog (Financial Districts)
+
+- `StockExchangeWorldInfoPanel.OnUpgradeButtonClicked` calls `StockExchangeAI.LevelUp`, then
+  `ParkAreaUnlockingPanel.OnMilestoneUnlocked` with the next level's milestone.
+- `ParkAreaUnlockingPanel` serves parks, industry areas, airports and the Stock Exchange
+  (`PanelType.StockExchange`). Its checkbox (also named `StopBotheringMe`) writes
+  `OptionsGameplayPanel.hideStockExchangeUnlockingNotifications`.
+- `ParkAreaUnlockingPanel`, `StockExchangeAI` and `StockExchangeWorldInfoPanel` have no `AudioClip`
+  field and no `PlaySound` call.
+
+### How the game plays UI sounds
+
+- `AudioManager.PlaySound(AudioClip clip, float volume)` (and overloads taking `AudioInfo` or a loop
+  flag) adds the clip to the manager's default group.
+- The default group's volume is the UI slider (`Settings.uiAudioVolume`); `PlayAudioImpl` updates it
+  with the main volume (`Settings.mainAudioVolume`) and does not silence it while the simulation is
+  paused. The effect group (world sounds) is silenced while paused or loading, or when `MuteAll` is
+  set.
+- Callers on panels: `BuySellInvestmentPanel.ShowPanel` plays `m_openingSound`; its
+  `OnButtonClicked` plays `m_buyingSound`, or `m_sellingSoundGood` / `m_sellingSoundBad`;
+  `EconomyPanel` plays `m_SwooshInSound` / `m_SwooshOutSound`; `ChirpPanel` plays
+  `m_NotificationSound` at the Chirper volume; `TutorialPanel` plays `m_NotificationSound`. These
+  are public `AudioClip` fields filled in on the prefabs, so the code does not name the clips.
+- Buttons play click sounds through `UIComponent.clickSound` and `UIView.playSoundDelegate`
+  (`ColossalManaged.dll`).
+
+### Bell and Stock Exchange audio
+
+- **No stock exchange bell by name.** The word "bell" appears in no type, field or string of
+  `Assembly-CSharp.dll`. Among asset names the only bell is the clip `tram_bell`
+  (`sharedassets11.assets`, with the vehicle and building sounds).
+- **`stock_exchange_levelup`** is a clip name in `sharedassets9.assets`, stored with the UI clips
+  `gain`, `gain2`, `loss`, `loan_take`, `economy_tab`, `window_swoosh_1`, `window_swoosh_2`,
+  `tutorial_alert`, `button_click` and `bulldozer_click`. Level-up clips elsewhere:
+  `level_up_fanfare`, `building_level_up`, `industry_area_level_up` (`sharedassets11.assets`).
+- **Unverified:** what `stock_exchange_levelup` sounds like (a bell or not); which prefab field
+  holds it and when the game plays it (no code names it, and the panels above have no sound field);
+  that `gain`, `gain2` and `loss` are the buy and sell sounds of `BuySellInvestmentPanel` (inference
+  from the names); how a mod best gets a clip that no public field is known to hold (finding the
+  loaded clip by name is the fallback; not tried in game).

@@ -18,6 +18,10 @@ instead of only the mod log. Figma UI Map band 13 and component `FO/ChirpNotice`
 Take-profit and trailing stop fills read like the stop-loss one ("target" or "stop"). Early bond
 repayment is the player's own click, so it is not chirped.
 
+Planned, not built: [Local IPOs](./local-ipos.md#the-ipo-moment-planned) add an IPO chirp from City
+Brokerage beside an IPO dialog. When the player hides that dialog, the chirp is the only
+announcement.
+
 ## Rules
 
 - **No flooding:** more than three order notices on one game day become one summary chirp

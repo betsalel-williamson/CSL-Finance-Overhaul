@@ -98,6 +98,11 @@ City index, sector ETFs, bonds, commodities, automated orders, and IPOs stay in
 [Market analogs](./market-analogs.md) until the stock hook is solid. Figma shows them as ghost
 frames with `planned` pins — not shippable chrome.
 
+Local IPOs plan one window and one preference
+([The IPO moment](./local-ipos.md#the-ipo-moment-planned)): an IPO dialog in the mod's own windows,
+and "Show a dialog when a local company goes public" (checkbox, on by default) under Preferences,
+shown while Local IPOs is on. Neither is shipped.
+
 ## Parity
 
 [UI parity](../glossary/ui-parity.md) is look and interaction parity with this catalog, not source
