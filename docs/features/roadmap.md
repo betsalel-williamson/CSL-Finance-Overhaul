@@ -137,6 +137,22 @@ Each with what the player would see, what drives it, dependencies, size and save
   error, nothing overwritten). The daily investment update costs about 0.005 ms at any size; adding
   many at once costs a one-off spike (43 ms for 239), and 254 run like 15 once settled.
 
+### Placeable ticker boards (new idea, parked 2026-11-17)
+
+- **Player sees:** a market display to place in the city, in the same LED family as the Stock
+  Exchange ticker: Medium shows 16 stocks, Large 32. Rows give the symbol, the price and the day's
+  change in points (as real boards do), wide enough for a six-digit price and a move in the
+  thousands (ChirperCrypto).
+- **Decided:** the boards are **props**, so players place them where they want. One board also comes
+  as a separate **building that attracts visitors** (tourism).
+- **Explored in Figma only** (UI Map band 15): three layouts per size, framing sizes, eight options,
+  and estimated memory and frame cost per layout. Nothing is built.
+- **Still open:** one-sided or two-sided, night glow, where it sits in the build menu, whether it
+  may show the city's holdings, which size the building uses with its cost and upkeep, and a cap on
+  boards (the estimates need measuring first: 1, 10 and 50 Large boards in view).
+- **Size / save:** M–L (new prop and building assets, a grid renderer beside the scrolling one);
+  props and a building in the save, so the save compatibility rules apply.
+
 ### Save compatibility matrix (loose end) — likely next after notices (user, 2026-11-15)
 
 **Why it matters:** the contract in [Save compatibility](./save-compatibility.md) promises that a
