@@ -55,9 +55,9 @@ and Figma is updated to match; the mod's own windows follow Figma.
 | Market               | `color/market/gain`, `loss`, `price`, `total`, `bar`, `color/icon/sector`                                                                                                                                                                                                                                                                                                                                                          |
 | Ticker               | `color/ticker/board` #1E303E, `board-lit` #38444B, `symbol` #EFB058, `gain` #4EF465, `loss` #E9424F, `unknown` (neutral, for `--`), `flat` (neutral, for `0.00`; aliases the same grey), `led-off` #293A46 (unlit LED dot); sampled from the Stock Exchange facade boards. From code: `frame` #0E1418 (board frame material), `led-off-bright` #1A2630, `led-off-brightest` #10181E (unlit dot at the two brighter Options levels) |
 | Scroll               | `color/scroll/track` (game sprite `ScrollbarTrack`), `color/scroll/thumb` (`ScrollbarThumb`); primitives `csl/scroll/track`, `csl/scroll/thumb`                                                                                                                                                                                                                                                                                    |
-| Chart                | `color/chart/bg`, `grid`, `line` (the game's own graph); the mod's chart overlay: `grid-line` (white, alpha 40), `hover-line` (white, alpha 150), `hover-dot` (white), `tip` (#090E11, alpha 235), `label` #9EA3AA                                                                                                                                                                                                                 |
-| Mod windows          | `color/text/white` #FFFFFF (title bar caption, selected tab, field text), `color/text/shadow` (black, alpha 220: label drop shadow), `color/icon/arrow` #E6ECF0 (sort arrow), `color/monitor/popover` (#090E11, alpha 235), `divider` (white, alpha 26), `slider-track` (white, alpha 64), `chart-back` (black at 35%), `badge-bg` #463418                                                                                         |
-| Game-panel additions | City bonds: `color/bonds/panel` (#181E24, alpha 245), `row` #242C34, `title` #E8D64D, `text` #E6ECF0, `button-text` #DCE4EC, `button-text-disabled` #788088, `term-off` #C8D2DC. Order ticket: `color/order/tab-text` #C8D2DC, `tab-text-off` #AAB4BE, `card-fallback` #20262C                                                                                                                                                     |
+| Chart                | `color/chart/bg`, `grid`, `line` (the game's own graph); the mod's chart overlay draws its grid in `grid` too; `hover-line` (white, alpha 150), `hover-dot` (white), `tip` (#090E11, alpha 235), `label` #9EA3AA                                                                                                                                                                                                                   |
+| Mod windows          | `color/text/white` #FFFFFF (field text; the title bar caption and a selected tab use `color/text/primary`), `color/text/shadow` (black, alpha 220: label drop shadow), `color/icon/arrow` #E6ECF0 (sort arrow), `color/monitor/popover` (#090E11, alpha 235), `divider` (white, alpha 26), `slider-track` (white, alpha 64), `chart-back` (black at 35%), `badge-bg` #463418                                                       |
+| Game-panel additions | City bonds: `color/bonds/panel` (#181E24, alpha 245), `row` #242C34, `title` and row labels #97EE00 (the game's Loans headings), `text`, `button-text` and `term-off` #FEFEFE (the game's panel text), `button-text-disabled` #5B616A (the game's "Take" button); the panel and row are the mod's own. Order ticket: `color/order/tab-text` #FEFEFE selected or not (the game's tab and button text), `card-fallback` #20262C      |
 | Annotation           | `color/bg/page`, `color/bg/pin`, `color/doc/text`, `muted`, `stroke`, `color/pin/marker`, `color/status/shipped`, `vanilla-host`, `planned`                                                                                                                                                                                                                                                                                        |
 | Spacing              | `space/xs` 4 · `sm` 8 · `md` 12 · `lg` 16 · `xl` 24                                                                                                                                                                                                                                                                                                                                                                                |
 | Radius               | `radius/sm` 4 · `md` 6                                                                                                                                                                                                                                                                                                                                                                                                             |
@@ -68,7 +68,7 @@ and Figma is updated to match; the mod's own windows follow Figma.
 | ---------------------- | --------------------- | --------------------------------------------------------------------------------------------- |
 | `FO/Game/Header`       | Open Sans SemiBold 18 | Modal title bar                                                                               |
 | `FO/Game/Title`        | Open Sans SemiBold 16 | Row name                                                                                      |
-| `FO/Game/Tab`          | Open Sans SemiBold 13 | Economy tabs                                                                                  |
+| `FO/Game/Tab`          | Open Sans SemiBold 16 | Economy tabs                                                                                  |
 | `FO/Game/Body`         | Open Sans SemiBold 13 | Label: value lines                                                                            |
 | `FO/Game/Section`      | Open Sans SemiBold 11 | Column headers                                                                                |
 | `FO/Game/Button`       | Open Sans SemiBold 13 | Buy / Sell                                                                                    |
@@ -98,7 +98,7 @@ each step at its size.
 | 1.1         | 17.6 | Welcome back title                                                                            |
 | 1.0         | 16   | Stock Monitor row symbol                                                                      |
 | 0.9         | 14.4 | Row price, popover title, detail action buttons; open-order card text (game row text × 0.9)   |
-| 0.875       | 14   | Welcome back lead and main button, order ticket tabs and estimate, Bonds you owe title        |
+| 0.875       | 14   | Welcome back lead and main button, order ticket estimate, Bonds you owe title                 |
 | 0.85        | 13.6 | Stock Monitor empty state                                                                     |
 | 0.8125      | 13   | Welcome back question and secondary button                                                    |
 | 0.8         | 12.8 | Change pill, detail name and change, popover labels, bond buttons and rows                    |
@@ -158,20 +158,28 @@ Textures the mod paints itself, drawn on the Foundations page with their tokens:
 The change pill, order badge and caret are not textures: they are `GenericPanelWhite` and
 `EmptySprite` tinted by the mod.
 
-## Known differences between code and Figma
+## Values read from the game
 
-Not resolved; recorded so neither side is changed by accident. The rule above decides which side
-should move.
+Read from the running game with the dev `dump CONTROL` scenario command (it logs each control's
+tint, sprites, text colour and scale). The mod's additions inside the game's panels use these.
 
-| Item                     | Code                                                          | Figma                                           | Rule favours                                                                                 |
-| ------------------------ | ------------------------------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Typed field tint         | `FoTheme.Field` #1C1C1C                                       | `color/bg/field` #1A1B1D                        | The game (fields sit in game panels): the tint the game's own share field uses, not yet read |
-| Chart grid               | `FoTheme.ChartGrid` white, alpha 40 (`color/chart/grid-line`) | `color/chart/grid` #75797C                      | The game in the Invest dialog; Figma in the Stock Monitor                                    |
-| Chart line               | Change colour (gain, loss or flat)                            | `color/chart/line` #FAEF00                      | The game in the Invest dialog; in the Stock Monitor Figma should say which it specifies      |
-| Title bar caption        | `Color.white` #FFFFFF                                         | `color/text/primary` #FAFBFF                    | Figma (the mod's own windows)                                                                |
-| City bonds colours       | Declared in `CityBondsSection` (`color/bonds/*`)              | Recorded from code, not sampled from the game   | The game (Economy panel): the values should come from the game's own panel                   |
-| Order ticket tab text    | #C8D2DC, #AAB4BE off, 14 px                                   | `FO/Game/Tab` 13 px, `color/text/label` #D2D5DA | The game (Invest dialog)                                                                     |
-| `color/ticker/board-lit` | Not used; the lit gap is computed by `LedPalette.Gap`         | #38444B                                         | Figma only; kept because components may bind it                                              |
+| Where                 | The game's value                                                                                        | Used for                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Invest dialog, shares | `LabelShareSliderNumber`: sprite `GenericPanelLight` tinted #343434, text #B9DDFE, scale 0.875          | `FoTheme.Field` and `GameFieldSprite`: every typed field      |
+| Invest dialog, chart  | `UIGraph`: curve #FFEB04 (3 wide), axes #7495A5, help axes #343E47; grid lines sample as about #75797C  | `FoTheme.GameChartLine` (the share chart's line), `ChartGrid` |
+| Economy tabs          | Sprites `GenericTab`, `GenericTabFocused`, `GenericTabHovered`; text #FEFEFE, scale 1, selected #101010 | `FoTheme.GameText`: order ticket tabs (scale 1), bond terms   |
+| Invest dialog buttons | Sprite `ButtonMenu`; text #FEFEFE, hovered #0784FF, disabled #2E2E2E                                    | `FoTheme.GameText`                                            |
+| Loans tab, offers     | Panel `UnlockingPanel2` tinted #4FDB00; bank name #97EE00 at 1.375; row labels #97EE00; values #B9DDFE  | `FoTheme.GameHeading`: City bonds title and row labels        |
+| Loans tab, "Take"     | Sprite `ButtonMenu`; text #FEFEFE, disabled #5B616A                                                     | `FoTheme.GameText`, `GameDisabledText`: bond buttons          |
+
+Decided where the game has no equivalent:
+
+- The Stock Monitor's detail chart draws its line in the change colour (gain, loss or flat), like
+  its sparklines. Only the chart over the game's own graph (Invest dialog) uses the game's yellow.
+- The City bonds panel (#181E24, alpha 245) and its rows (#242C34) are the mod's own: the Loans tab
+  has no dark panel to copy.
+- `color/ticker/board-lit` #38444B is not used by code (the lit gap is computed by
+  `LedPalette.Gap`); it stays in Figma for components that bind it.
 
 ## Components (Components page)
 

@@ -227,9 +227,87 @@ namespace FinanceOverhaul
         }
 
         /// <summary>Dev: logs a UI subtree (name, type, position, size, visibility).</summary>
+        /// <summary>How a control is drawn: tint, sprites, text colour and size.</summary>
+        private static string Look(ColossalFramework.UI.UIComponent c)
+        {
+            UnityEngine.Color32 k = c.color;
+            string s = " color=#" + k.r.ToString("X2") + k.g.ToString("X2") + k.b.ToString("X2");
+            if (k.a != 255)
+            {
+                s += " a=" + k.a;
+            }
+
+            var panel = c as ColossalFramework.UI.UIPanel;
+            if (panel != null && !string.IsNullOrEmpty(panel.backgroundSprite))
+            {
+                s += " bg='" + panel.backgroundSprite + "'";
+            }
+
+            var sprite = c as ColossalFramework.UI.UISprite;
+            if (sprite != null)
+            {
+                s += " sprite='" + sprite.spriteName + "'";
+            }
+
+            var button = c as ColossalFramework.UI.UIButton;
+            if (button != null)
+            {
+                UnityEngine.Color32 f = button.focusedTextColor;
+                UnityEngine.Color32 h = button.hoveredTextColor;
+                UnityEngine.Color32 d = button.disabledTextColor;
+                s +=
+                    " normalBg='"
+                    + button.normalBgSprite
+                    + "' focusedBg='"
+                    + button.focusedBgSprite
+                    + "' hoveredBg='"
+                    + button.hoveredBgSprite
+                    + "' focusedText=#"
+                    + f.r.ToString("X2")
+                    + f.g.ToString("X2")
+                    + f.b.ToString("X2")
+                    + " hoveredText=#"
+                    + h.r.ToString("X2")
+                    + h.g.ToString("X2")
+                    + h.b.ToString("X2")
+                    + " disabledText=#"
+                    + d.r.ToString("X2")
+                    + d.g.ToString("X2")
+                    + d.b.ToString("X2");
+            }
+
+            var lbl = c as ColossalFramework.UI.UILabel;
+            if (lbl != null && !string.IsNullOrEmpty(lbl.backgroundSprite))
+            {
+                s += " bg='" + lbl.backgroundSprite + "'";
+            }
+
+            var tf = c as ColossalFramework.UI.UITextField;
+            if (tf != null)
+            {
+                s += " normalBg='" + tf.normalBgSprite + "'";
+            }
+
+            var text = c as ColossalFramework.UI.UITextComponent;
+            if (text != null)
+            {
+                UnityEngine.Color32 t = text.textColor;
+                s +=
+                    " textColor=#"
+                    + t.r.ToString("X2")
+                    + t.g.ToString("X2")
+                    + t.b.ToString("X2")
+                    + " scale="
+                    + text.textScale
+                    + (text.font == null ? "" : " font=" + text.font.name);
+            }
+
+            return s;
+        }
+
         internal static void DumpTree(ColossalFramework.UI.UIComponent c, int depth)
         {
-            if (c == null || depth > 6)
+            if (c == null || depth > 9)
             {
                 return;
             }
@@ -255,6 +333,7 @@ namespace FinanceOverhaul
                             ? " text='" + ((ColossalFramework.UI.UIButton)c).text + "'"
                             : ""
                     )
+                    + Look(c)
             );
             foreach (ColossalFramework.UI.UIComponent child in c.components)
             {

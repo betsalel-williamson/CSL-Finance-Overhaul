@@ -31,7 +31,7 @@ namespace FinanceOverhaul
             }
 
             title.text = text;
-            title.textColor = Color.white;
+            title.textColor = FoTheme.TextPrimary;
             title.autoSize = false;
             title.size = new Vector2(width, TitleBarHeight);
             title.textAlignment = UIHorizontalAlignment.Center;

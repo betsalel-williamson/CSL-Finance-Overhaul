@@ -23,6 +23,27 @@ namespace FinanceOverhaul
         /// <summary>A money value, and a change of zero: EconomyPanel.m_neutralNumberColor.</summary>
         public static readonly Color32 GameValue = new Color32(185, 221, 254, 255);
 
+        /// <summary>Text on the game's panels, tabs and buttons (Economy panel, Invest dialog).</summary>
+        public static readonly Color32 GameText = new Color32(254, 254, 254, 255);
+
+        /// <summary>Text of a game button that can't be pressed (Loans tab, "Take").</summary>
+        public static readonly Color32 GameDisabledText = new Color32(91, 97, 106, 255);
+
+        /// <summary>A heading or row label on the Loans tab: the game uses its gain colour.</summary>
+        public static readonly Color32 GameHeading = GamePositive;
+
+        /// <summary>The price line of the game's own share chart (Invest dialog).</summary>
+        public static readonly Color32 GameChartLine = new Color32(255, 235, 4, 255);
+
+        /// <summary>
+        /// Tint of a typed field inside a game panel: the tint of the Invest dialog's own
+        /// share count, drawn on <see cref="GameFieldSprite"/>.
+        /// </summary>
+        public static readonly Color32 Field = new Color32(52, 52, 52, 255);
+
+        /// <summary>The sprite behind the Invest dialog's share count.</summary>
+        public const string GameFieldSprite = "GenericPanelLight";
+
         // The mod's own colours (windows and text the game has no equivalent for).
 
         /// <summary>Selected tab, switches on, accents. Figma: color/bg/tab-active.</summary>
@@ -46,9 +67,6 @@ namespace FinanceOverhaul
         /// <summary>A change of 0.00 and unknown values. Figma: color/ticker/flat.</summary>
         public static readonly Color32 TickerFlat = new Color32(159, 176, 192, 255);
 
-        /// <summary>Background of a typed field.</summary>
-        public static readonly Color32 Field = new Color32(28, 28, 28, 255);
-
         /// <summary>Figma: color/text/primary.</summary>
         public static readonly Color32 TextPrimary = new Color32(250, 251, 255, 255);
 
@@ -67,8 +85,14 @@ namespace FinanceOverhaul
         /// <summary>Ticker symbols and the order pill. Figma: color/ticker/symbol.</summary>
         public static readonly Color32 TickerSymbol = new Color32(239, 176, 88, 255);
 
-        /// <summary>Chart grid lines.</summary>
-        public static readonly Color32 ChartGrid = new Color32(255, 255, 255, 40);
+        /// <summary>Chart grid lines, as the game's share chart draws them. Figma: color/chart/grid.</summary>
+        public static readonly Color32 ChartGrid = new Color32(117, 121, 124, 255);
+
+        /// <summary>The City bonds section's own panel (the game has no dark panel on the Loans tab).</summary>
+        public static readonly Color32 BondsPanel = new Color32(24, 30, 36, 245);
+
+        /// <summary>A bond the city owes, as a row in that panel.</summary>
+        public static readonly Color32 BondsRow = new Color32(36, 44, 52, 255);
 
         /// <summary>The vertical line under the pointer on a chart.</summary>
         public static readonly Color32 HoverLine = new Color32(255, 255, 255, 150);

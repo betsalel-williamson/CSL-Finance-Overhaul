@@ -38,14 +38,14 @@ namespace FinanceOverhaul
         private Texture2D fadeTopTexture,
             fadeBottomTexture;
 
-        private static readonly Color32 Gold = new Color32(232, 214, 77, 255);
-        private static readonly Color32 Text = new Color32(230, 236, 240, 255);
+        private static readonly Color32 Heading = FoTheme.GameHeading;
+        private static readonly Color32 Text = FoTheme.GameText;
         private static readonly Color32 Muted = FoTheme.TextMuted;
         private static readonly Color32 Gain = FoTheme.GamePositive;
         private static readonly Color32 Price = FoTheme.GameValue;
         private static readonly Color32 Refused = FoTheme.GameNegative;
-        private static readonly Color32 Panel = new Color32(24, 30, 36, 245);
-        private static readonly Color32 RowColour = new Color32(36, 44, 52, 255);
+        private static readonly Color32 Panel = FoTheme.BondsPanel;
+        private static readonly Color32 RowColour = FoTheme.BondsRow;
 
         /// <summary>Game UI tests only: shows the section and allows selling with the flag off.</summary>
         public static bool ForceShow;
@@ -267,7 +267,6 @@ namespace FinanceOverhaul
             {
                 bool on = kv.Key == term;
                 kv.Value.normalBgSprite = on ? "ButtonMenuFocused" : "ButtonMenu";
-                kv.Value.textColor = on ? (Color32)Color.white : new Color32(200, 210, 220, 255);
             }
 
             long debt,

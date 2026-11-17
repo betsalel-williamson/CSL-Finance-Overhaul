@@ -120,7 +120,7 @@ namespace FinanceOverhaul
                 Prefix + "Title",
                 Strings.Get("bond.title"),
                 1.125f,
-                Gold
+                Heading
             );
             title.relativePosition = new Vector3(pad, 12f);
             UILabel about = Label(section, null, Strings.Get("bond.about"), 0.75f, Muted);
@@ -163,9 +163,9 @@ namespace FinanceOverhaul
             amount.readOnly = false;
             amount.horizontalAlignment = UIHorizontalAlignment.Right;
             amount.padding = new RectOffset(6, 8, 6, 4);
-            amount.normalBgSprite = "TextFieldPanel";
+            amount.normalBgSprite = FoTheme.GameFieldSprite;
             amount.hoveredBgSprite = "TextFieldPanelHovered";
-            amount.focusedBgSprite = "TextFieldPanel";
+            amount.focusedBgSprite = FoTheme.GameFieldSprite;
             amount.selectionSprite = "EmptySprite";
             amount.color = FoTheme.Field;
             amount.textColor = Color.white;
@@ -316,7 +316,10 @@ namespace FinanceOverhaul
 
         private UILabel Row(float left, ref float y, string label, string name)
         {
-            Label(section, null, label + ":", 0.75f, Text).relativePosition = new Vector3(left, y);
+            Label(section, null, label + ":", 0.75f, Heading).relativePosition = new Vector3(
+                left,
+                y
+            );
             UILabel v = Label(section, name, "", 0.75f, Muted);
             v.relativePosition = new Vector3(left + 160f, y);
             y += 18f;
@@ -381,8 +384,8 @@ namespace FinanceOverhaul
             b.pressedBgSprite = "ButtonMenuPressed";
             b.focusedBgSprite = "ButtonMenu";
             b.disabledBgSprite = "ButtonMenuDisabled";
-            b.textColor = new Color32(220, 228, 236, 255);
-            b.disabledTextColor = new Color32(120, 128, 136, 255);
+            b.textColor = FoTheme.GameText;
+            b.disabledTextColor = FoTheme.GameDisabledText;
             return b;
         }
     }

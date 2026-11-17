@@ -129,9 +129,9 @@ namespace FinanceOverhaul
 
                 field.textScale = label.textScale;
                 field.textColor = label.textColor;
-                field.normalBgSprite = "TextFieldPanel";
+                field.normalBgSprite = FoTheme.GameFieldSprite;
                 field.hoveredBgSprite = "TextFieldPanelHovered";
-                field.focusedBgSprite = "TextFieldPanel";
+                field.focusedBgSprite = FoTheme.GameFieldSprite;
                 field.selectionSprite = "EmptySprite";
                 field.color = FoTheme.Field;
                 field.tooltip = Strings.Get("order.shares.tip");

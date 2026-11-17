@@ -29,12 +29,12 @@ namespace FinanceOverhaul
             return b;
         }
 
-        /// <summary>A tab or chip that is the current choice looks pressed, with white text.</summary>
+        /// <summary>A tab or chip that is the current choice looks pressed, with primary text.</summary>
         public static void SetSelected(UIButton b, bool on)
         {
             b.normalBgSprite = on ? "ButtonMenuPressed" : "ButtonMenu";
             b.focusedBgSprite = b.normalBgSprite;
-            b.textColor = on ? (Color32)Color.white : FoTheme.TextLabel;
+            b.textColor = on ? FoTheme.TextPrimary : FoTheme.TextLabel;
         }
 
         /// <summary>

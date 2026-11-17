@@ -143,9 +143,9 @@ namespace FinanceOverhaul
             priceField.readOnly = false;
             priceField.horizontalAlignment = UIHorizontalAlignment.Right;
             priceField.padding = new RectOffset(6, 8, 6, 4);
-            priceField.normalBgSprite = "TextFieldPanel";
+            priceField.normalBgSprite = FoTheme.GameFieldSprite;
             priceField.hoveredBgSprite = "TextFieldPanelHovered";
-            priceField.focusedBgSprite = "TextFieldPanel";
+            priceField.focusedBgSprite = FoTheme.GameFieldSprite;
             priceField.selectionSprite = "EmptySprite";
             priceField.color = FoTheme.Field;
             priceField.textColor = Color.white;
@@ -187,14 +187,14 @@ namespace FinanceOverhaul
         {
             UIButton tab = parent.AddUIComponent<UIButton>();
             tab.text = text;
-            tab.size = new Vector2(108f, 28f);
-            tab.textScale = 0.875f;
+            tab.size = new Vector2(120f, 28f);
+            tab.textScale = 1f;
             tab.normalBgSprite = "ButtonMenu";
             tab.hoveredBgSprite = "ButtonMenuHovered";
             tab.pressedBgSprite = "ButtonMenuPressed";
             tab.focusedBgSprite = "ButtonMenu";
             tab.disabledBgSprite = "ButtonMenuDisabled";
-            tab.textColor = new Color32(200, 210, 220, 255);
+            tab.textColor = FoTheme.GameText;
             return tab;
         }
 
@@ -271,7 +271,6 @@ namespace FinanceOverhaul
                 bool on = t.Kind == active;
                 t.Button.normalBgSprite = on ? "ButtonMenuPressed" : "ButtonMenu";
                 t.Button.focusedBgSprite = t.Button.normalBgSprite;
-                t.Button.textColor = on ? (Color32)Color.white : new Color32(170, 180, 190, 255);
             }
         }
 
