@@ -305,7 +305,7 @@ namespace FinanceOverhaul
             }
         }
 
-        /// <summary>A checkbox: outlined box (cyan fill when on) and a label; the row toggles.</summary>
+        /// <summary>A checkbox (the game's own box and tick) and a label; the row toggles.</summary>
         private UIPanel CheckRow(
             UIComponent parent,
             string name,
@@ -320,17 +320,13 @@ namespace FinanceOverhaul
             UIPanel row = parent.AddUIComponent<UIPanel>();
             row.name = name;
             row.relativePosition = new Vector3(x, y);
-            UIPanel outline = Box(row, new Color32(255, 255, 255, 200), 14f, 14f, 0f, 1f);
-            UIPanel inner = Box(outline, FoTheme.Window, 10f, 10f, 2f, 2f);
+            Action<bool> show = FoCheckbox.AddBox(row, 0f, 0f);
             UILabel label = Label(row, null, text, scale, White);
-            label.relativePosition = new Vector3(20f, 0f);
-            row.size = new Vector2(label.width + 24f, 18f);
-            foreach (UIComponent c in new UIComponent[] { outline, inner, label })
-            {
-                c.isInteractive = false;
-            }
+            label.relativePosition = new Vector3(FoCheckbox.Size + 5f, 1f);
+            label.isInteractive = false;
+            row.size = new Vector2(label.width + FoCheckbox.Size + 9f, 18f);
 
-            Action paint = () => inner.color = get() ? Accent : FoTheme.Window;
+            Action paint = () => show(get());
             refreshers.Add(paint);
             row.eventClick += (c, p) =>
             {

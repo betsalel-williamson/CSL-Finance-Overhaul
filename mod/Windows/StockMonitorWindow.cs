@@ -22,7 +22,7 @@ namespace FinanceOverhaul
         public const string Prefix = "FinanceOverhaulStockMonitor";
 
         private const float Width = 360f;
-        private const float TitleHeight = 38f;
+        private const float TitleHeight = FoWindow.TitleBarHeight;
         private const float BarHeight = 34f;
         private const float RowHeight = 52f;
         private const float CompactRowHeight = 34f;
@@ -349,36 +349,17 @@ namespace FinanceOverhaul
             UIDragHandle drag = window.AddUIComponent<UIDragHandle>();
             drag.name = Prefix + "Drag";
             drag.target = window;
-            drag.size = new Vector2(Width - 80f, TitleHeight);
+            drag.size = new Vector2(Width - FoWindow.ButtonsWidth, TitleHeight);
             drag.relativePosition = Vector3.zero;
             drag.eventMouseUp += (c, p) => SaveWindowPosition();
 
-            UILabel title = Label(window, Prefix + "Title", "Stock Monitor", 1.1f, White);
-            title.autoSize = false;
-            title.size = new Vector2(Width, TitleHeight);
-            title.textAlignment = UIHorizontalAlignment.Center;
-            title.verticalAlignment = UIVerticalAlignment.Middle;
-            title.relativePosition = Vector3.zero;
-            title.isInteractive = false;
+            FoWindow.AddTitle(window, Prefix + "Title", "Stock Monitor", Width);
 
-            UIButton settings = window.AddUIComponent<UIButton>();
-            settings.name = Prefix + "Settings";
-            settings.size = new Vector2(30f, 30f);
-            settings.normalBgSprite = "RoundBackBig";
-            settings.hoveredBgSprite = "RoundBackBigHovered";
-            settings.pressedBgSprite = "RoundBackBigPressed";
-            settings.normalFgSprite = "Options";
-            settings.relativePosition = new Vector3(Width - 72f, 4f);
+            UIButton settings = FoWindow.AddGear(window, Prefix + "Settings", Width);
             settings.tooltip = "Stock Monitor settings";
             settings.eventClick += (c, p) => TogglePopover();
 
-            UIButton close = window.AddUIComponent<UIButton>();
-            close.name = Prefix + "Close";
-            close.size = new Vector2(32f, 32f);
-            close.normalBgSprite = "buttonclose";
-            close.hoveredBgSprite = "buttonclosehover";
-            close.pressedBgSprite = "buttonclosepressed";
-            close.relativePosition = new Vector3(Width - 38f, 3f);
+            UIButton close = FoWindow.AddClose(window, Prefix + "Close", Width);
             close.eventClick += (c, p) => SetOpen(false, true);
 
             // Filter tabs + sort.
