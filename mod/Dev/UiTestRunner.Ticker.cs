@@ -155,6 +155,66 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "turn-exchange":
+                {
+                    // turn-exchange DEGREES|restore — turns the first Stock Exchange where it
+                    // stands (as the game's relocate tool or Move It does) and puts it back.
+                    if (a == "restore")
+                    {
+                        RestoreExchange(ctx);
+                        yield return new WaitForSeconds(0.5f);
+                        break;
+                    }
+
+                    float degrees;
+                    if (!float.TryParse(a, out degrees))
+                    {
+                        r.Error = "turn-exchange needs degrees or restore";
+                        break;
+                    }
+
+                    Building[] all = BuildingManager.instance.m_buildings.m_buffer;
+                    ushort found = ctx.TurnedExchange;
+                    for (int i = 1; found == 0 && i < all.Length; i++)
+                    {
+                        if (
+                            (all[i].m_flags & Building.Flags.Created) != 0
+                            && all[i].Info != null
+                            && all[i].Info.m_buildingAI is StockExchangeAI
+                        )
+                        {
+                            found = (ushort)i;
+                            ctx.TurnedExchange = found;
+                            ctx.ExchangePositionBefore = all[i].m_position;
+                            ctx.ExchangeAngleBefore = all[i].m_angle;
+                        }
+                    }
+
+                    if (found == 0)
+                    {
+                        r.Error = "no Stock Exchange in this city";
+                        break;
+                    }
+
+                    Vector3 where = ctx.ExchangePositionBefore;
+                    float angle = ctx.ExchangeAngleBefore + degrees * Mathf.Deg2Rad;
+                    SimulationManager.instance.AddAction(() =>
+                        BuildingManager.instance.RelocateBuilding(found, where, angle)
+                    );
+                    break;
+                }
+                case "expect-ticker-on-building":
+                {
+                    // Every set of live boards stands where its Stock Exchange stands now.
+                    TickerOverlay overlay = UnityEngine.Object.FindObjectOfType<TickerOverlay>();
+                    string problem = overlay == null ? "no ticker overlay" : overlay.Misplaced();
+                    if (problem != null)
+                    {
+                        r.Error = problem;
+                    }
+
+                    break;
+                }
                 case "ticker-brightness":
                 {
                     // ticker-brightness classic|bright|brightest|restore — the LED boards'
@@ -248,6 +308,23 @@ namespace FinanceOverhaul
                     r.Unknown = true; // not one of this group's commands
                     yield break;
             }
+        }
+
+        /// <summary>Puts the Stock Exchange a scenario turned back as it stood.</summary>
+        private static void RestoreExchange(Context ctx)
+        {
+            if (ctx.TurnedExchange == 0)
+            {
+                return;
+            }
+
+            ushort id = ctx.TurnedExchange;
+            Vector3 where = ctx.ExchangePositionBefore;
+            float angle = ctx.ExchangeAngleBefore;
+            ctx.TurnedExchange = 0;
+            SimulationManager.instance.AddAction(() =>
+                BuildingManager.instance.RelocateBuilding(id, where, angle)
+            );
         }
     }
 }

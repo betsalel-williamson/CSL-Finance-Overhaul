@@ -107,6 +107,11 @@ namespace FinanceOverhaul
                 // Info views switch in OnInfoModeChanged; this catches Options changes.
                 ApplyShown(tickerOn);
 
+                if (tickerOn && !FollowBuildings())
+                {
+                    nextRescan = now; // one was removed or replaced: look for its successor now
+                }
+
                 if (now >= nextRescan)
                 {
                     nextRescan = now + RescanSeconds;
@@ -191,7 +196,82 @@ namespace FinanceOverhaul
             anyNear = nearAny;
         }
 
-        /// <summary>Finds Stock Exchanges (rare); placement is set once per building.</summary>
+        /// <summary>
+        /// Null when every set of boards stands where its Stock Exchange stands now, else
+        /// which one does not (game UI tests read it).
+        /// </summary>
+        internal string Misplaced()
+        {
+            Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
+            foreach (KeyValuePair<ushort, GameObject> kv in boards)
+            {
+                if (kv.Value == null)
+                {
+                    continue;
+                }
+
+                Vector3 at = kv.Value.transform.position;
+                float facing = Quaternion.Angle(
+                    kv.Value.transform.rotation,
+                    Facing(buffer[kv.Key].m_angle)
+                );
+                if ((at - buffer[kv.Key].m_position).sqrMagnitude > 0.0001f || facing > 0.1f)
+                {
+                    return "boards of building "
+                        + kv.Key
+                        + " are "
+                        + (at - buffer[kv.Key].m_position).magnitude.ToString("0.##")
+                        + " m and "
+                        + facing.ToString("0.#")
+                        + "° from it";
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Every frame: boards stay on their Stock Exchange when it is moved or turned (the
+        /// relocate tool and Move It keep the building's number). A handful of comparisons,
+        /// since a city has few exchanges. False when a building is gone or is no longer a
+        /// Stock Exchange, so the caller scans at once instead of waiting.
+        /// </summary>
+        private bool FollowBuildings()
+        {
+            bool allThere = true;
+            Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
+            foreach (KeyValuePair<ushort, GameObject> kv in boards)
+            {
+                GameObject group = kv.Value;
+                if (group == null)
+                {
+                    continue;
+                }
+
+                BuildingInfo info = buffer[kv.Key].Info;
+                if (
+                    (buffer[kv.Key].m_flags & Building.Flags.Created) == 0
+                    || info == null
+                    || !(info.m_buildingAI is StockExchangeAI)
+                )
+                {
+                    allThere = false;
+                    continue;
+                }
+
+                if (
+                    group.transform.position != buffer[kv.Key].m_position
+                    || group.transform.rotation != Facing(buffer[kv.Key].m_angle)
+                )
+                {
+                    Place(group, ref buffer[kv.Key], info, kv.Key);
+                }
+            }
+
+            return allThere;
+        }
+
+        /// <summary>Finds Stock Exchanges (rare): new ones get boards, removed ones lose them.</summary>
         private void Rescan()
         {
             EnsureMaterials();

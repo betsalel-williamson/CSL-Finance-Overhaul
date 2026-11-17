@@ -83,6 +83,11 @@ namespace FinanceOverhaul
             /// <summary>The player's LED brightness, kept while a scenario switches it.</summary>
             public LedBrightness? BrightnessBefore;
 
+            /// <summary>The Stock Exchange a scenario turned, and how it stood before.</summary>
+            public ushort TurnedExchange;
+            public Vector3 ExchangePositionBefore;
+            public float ExchangeAngleBefore;
+
             /// <summary>Bonds the city owed when the scenario started (the player's).</summary>
             public readonly HashSet<int> BondsBefore = new HashSet<int>();
             public readonly Dictionary<string, uint> Owned = new Dictionary<string, uint>();
@@ -181,6 +186,7 @@ namespace FinanceOverhaul
                 InfoManager.instance.SetCurrentMode(ctx.InfoBefore.Value, ctx.InfoSubBefore);
             }
 
+            RestoreExchange(ctx);
             if (ctx.BrightnessBefore.HasValue && Mod.Settings != null)
             {
                 Mod.Settings.TickerBrightness = ctx.BrightnessBefore.Value;

@@ -91,8 +91,9 @@ seconds per row); textures and materials are destroyed on hot reload.
 
 **Performance:** visibility (LOD) every 0.25 s; LED rows draw and scroll only within 600 m of the
 camera. When they come back into range the rows are refilled from today's values while still hidden.
-Stock Exchange scan every 5 s, placement set once per building. Verified 2026-11-13 with the dev
-in-game capture (`FinanceOverhaul.capture` trigger, `--dev` builds).
+Stock Exchange scan every 5 s (at once when a building with boards is removed); boards follow their
+building every frame, so a moved or turned Stock Exchange keeps them on its facade. Verified
+2026-11-13 with the dev in-game capture (`FinanceOverhaul.capture` trigger, `--dev` builds).
 
 **Step 4b (shipped): what each entry shows.** Options → **Stock Exchange ticker shows**
 (`TickerDisplay`, settings key `tickerShows`, visual only):

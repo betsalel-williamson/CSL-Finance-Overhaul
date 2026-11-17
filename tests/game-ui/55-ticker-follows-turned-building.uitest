@@ -1,0 +1,14 @@
+# Turning or moving a Stock Exchange (the relocate tool, Move It) keeps its building number, so
+# the live boards must follow it at once, not stay on the old side until the next building scan.
+name the ticker boards follow a Stock Exchange that is turned
+live-ticker on
+wait 6
+expect-ticker-on-building
+turn-exchange 90
+wait 1
+expect-ticker-on-building
+turn-exchange restore
+wait 1
+expect-ticker-on-building
+cleanup:
+turn-exchange restore

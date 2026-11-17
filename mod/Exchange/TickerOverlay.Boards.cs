@@ -297,14 +297,21 @@ namespace FinanceOverhaul
             }
         }
 
+        /// <summary>
+        /// The group faces into the building, so a quad's visible (−Z) side faces the street
+        /// and reads left-to-right. That is a 180° turn about Y: building (x, y, z) is group
+        /// (−x, y, −z).
+        /// </summary>
+        private static Quaternion Facing(float buildingAngle)
+        {
+            var front = new Vector3(-Mathf.Sin(buildingAngle), 0f, Mathf.Cos(buildingAngle));
+            return Quaternion.LookRotation(-front, Vector3.up);
+        }
+
         private void Place(GameObject group, ref Building b, BuildingInfo info, ushort id)
         {
-            var front = new Vector3(-Mathf.Sin(b.m_angle), 0f, Mathf.Cos(b.m_angle));
             group.transform.position = b.m_position;
-            // The group faces into the building, so a quad's visible (−Z) side faces the
-            // street and reads left-to-right. That is a 180° turn about Y: building
-            // (x, y, z) is group (−x, y, −z).
-            group.transform.rotation = Quaternion.LookRotation(-front, Vector3.up);
+            group.transform.rotation = Facing(b.m_angle);
             for (int i = 0; i < BoardCentres.Length; i++)
             {
                 Vector3 c = BoardCentres[i];
