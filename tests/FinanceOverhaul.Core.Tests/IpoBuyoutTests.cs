@@ -10,8 +10,8 @@ namespace FinanceOverhaul.Core.Tests
         public void ACompanyIsBoughtAboutFourTimesInAHundredYears()
         {
             var rules = new IpoRules();
-            // 365 daily chances make exactly the yearly chance.
-            double year = 1d - Math.Pow(1d - IpoBuyout.DailyChance(rules), 365);
+            // A year of monthly chances (365 ÷ 30 of them) makes exactly the yearly chance.
+            double year = 1d - Math.Pow(1d - IpoBuyout.PeriodChance(rules), 365d / 30d);
             Assert.Equal(0.04, year, 10);
             Assert.InRange(IpoBuyout.ExpectedYearsBetween(1, rules), 24d, 25d);
             Assert.InRange(IpoBuyout.ExpectedYearsBetween(12, rules), 2.0d, 2.1d);
@@ -26,17 +26,17 @@ namespace FinanceOverhaul.Core.Tests
         {
             var rules = new IpoRules();
             var dice = new IpoDice(4UL);
-            const int Days = 365 * 60_000;
+            const int Periods = 12 * 600_000;
             int bought = 0;
-            for (int day = 0; day < Days; day++)
+            for (int period = 0; period < Periods; period++)
             {
-                if (IpoBuyout.Draw(listed, rules, dice) >= 0)
+                if (IpoBuyout.DrawPeriod(listed, rules, dice).Happens)
                 {
                     bought++;
                 }
             }
 
-            Assert.InRange(Days / 365d / bought, years * 0.95, years * 1.05);
+            Assert.InRange(Periods * 30d / 365d / bought, years * 0.95, years * 1.05);
         }
 
         [Fact]
@@ -48,13 +48,13 @@ namespace FinanceOverhaul.Core.Tests
 
             var dice = new IpoDice(8UL);
             ulong before = dice.State;
-            Assert.Equal(-1, IpoBuyout.Draw(0, rules, dice));
+            Assert.False(IpoBuyout.DrawPeriod(0, rules, dice).Happens);
             Assert.Equal(before, dice.State);
 
             var off = new IpoRules { BuyoutPercentPerYear = 0 };
-            for (int day = 0; day < 100_000; day++)
+            for (int week = 0; week < 100_000; week++)
             {
-                Assert.Equal(-1, IpoBuyout.Draw(12, off, dice));
+                Assert.False(IpoBuyout.DrawPeriod(12, off, dice).Happens);
             }
         }
 
@@ -65,9 +65,9 @@ namespace FinanceOverhaul.Core.Tests
             var dice = new IpoDice(21UL);
             var picks = new int[6];
             int total = 0;
-            for (int day = 0; day < 1_000_000; day++)
+            for (int week = 0; week < 1_000_000; week++)
             {
-                int pick = IpoBuyout.Draw(picks.Length, rules, dice);
+                int pick = IpoBuyout.DrawPeriod(picks.Length, rules, dice).Index;
                 if (pick >= 0)
                 {
                     picks[pick]++;
@@ -129,9 +129,11 @@ namespace FinanceOverhaul.Core.Tests
             var b = new IpoDice(5UL);
             for (int day = 0; day < 20_000; day++)
             {
-                int pick = IpoBuyout.Draw(12, rules, a);
-                Assert.Equal(pick, IpoBuyout.Draw(12, rules, b));
-                if (pick >= 0)
+                PeriodDraw first = IpoBuyout.DrawPeriod(12, rules, a);
+                PeriodDraw second = IpoBuyout.DrawPeriod(12, rules, b);
+                Assert.Equal(first.Index, second.Index);
+                Assert.Equal(first.DayOffset, second.DayOffset);
+                if (first.Happens)
                 {
                     Assert.Equal(IpoBuyout.Premium(rules, a), IpoBuyout.Premium(rules, b));
                 }

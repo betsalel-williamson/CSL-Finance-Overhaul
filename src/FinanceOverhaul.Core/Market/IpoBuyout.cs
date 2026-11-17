@@ -6,8 +6,9 @@ namespace FinanceOverhaul.Core
     /// A buy-out: now and then a listed local company is bought and leaves the exchange, and the
     /// city is paid for its shares at a premium. Mergers are the most common reason a real
     /// company delists (about 4 to 6 in 100 a year), paid well above the market price. Here it is
-    /// a windfall the player cannot see coming: every company listed long enough has the same
-    /// small chance each day, at most one is bought a day, and the premium is drawn afresh each
+    /// a windfall the player cannot see coming: once a period (a month by default) it is decided
+    /// whether one of the companies listed long enough is bought in the coming period (each has the same small
+    /// chance), and on which day, and the premium is drawn afresh each
     /// time.
     /// </summary>
     public static class IpoBuyout
@@ -24,8 +25,8 @@ namespace FinanceOverhaul.Core
             return daysListed >= rules.BuyoutMinDaysListed;
         }
 
-        /// <summary>One company's chance on one day, from its chance in a year.</summary>
-        public static double DailyChance(IpoRules rules)
+        /// <summary>One company's chance in one period, from its chance in a year.</summary>
+        public static double PeriodChance(IpoRules rules)
         {
             if (rules == null || rules.BuyoutPercentPerYear <= 0)
             {
@@ -33,42 +34,41 @@ namespace FinanceOverhaul.Core
             }
 
             double year = Math.Min(100, rules.BuyoutPercentPerYear) / 100d;
-            return 1d - Math.Pow(1d - year, 1d / IpoRules.DaysPerYear);
+            return 1d
+                - Math.Pow(1d - year, (double)IpoCalendar.PeriodDays(rules) / IpoRules.DaysPerYear);
         }
 
-        /// <summary>The chance that some company is bought today, with this many eligible.</summary>
-        public static double ChanceToday(int eligible, IpoRules rules)
+        /// <summary>The chance that some company is bought this period, with this many eligible.</summary>
+        public static double ChanceThisPeriod(int eligible, IpoRules rules)
         {
-            return eligible <= 0 ? 0d : 1d - Math.Pow(1d - DailyChance(rules), eligible);
+            return eligible <= 0 ? 0d : 1d - Math.Pow(1d - PeriodChance(rules), eligible);
         }
 
         /// <summary>Average years between buy-outs with this many eligible companies (infinite with none).</summary>
         public static double ExpectedYearsBetween(int eligible, IpoRules rules)
         {
-            double chance = ChanceToday(eligible, rules);
-            return chance <= 0d ? double.PositiveInfinity : 1d / chance / IpoRules.DaysPerYear;
+            double chance = ChanceThisPeriod(eligible, rules);
+            return chance <= 0d
+                ? double.PositiveInfinity
+                : IpoCalendar.PeriodDays(rules) / chance / IpoRules.DaysPerYear;
         }
 
         /// <summary>
-        /// Today's draw: the index of the eligible company that is bought, or −1 for none. Takes
-        /// one number from the dice whenever a company is eligible. Every eligible company is
+        /// This period's draw: whether an eligible company is bought in the coming period,
+        /// which one, and on which day. Takes one number from the dice whenever a company is
+        /// eligible, and a second for the day when a buy-out happens. Every eligible company is
         /// equally likely.
         /// </summary>
-        public static int Draw(int eligible, IpoRules rules, IpoDice dice)
+        public static PeriodDraw DrawPeriod(int eligible, IpoRules rules, IpoDice dice)
         {
-            if (eligible <= 0)
-            {
-                return -1;
-            }
-
-            double chance = ChanceToday(eligible, rules);
-            double roll = dice.Next();
-            if (chance <= 0d || roll >= chance)
-            {
-                return -1;
-            }
-
-            return Math.Min(eligible - 1, (int)(roll / chance * eligible));
+            return eligible <= 0
+                ? PeriodDraw.Nothing
+                : IpoCalendar.Roll(
+                    eligible,
+                    ChanceThisPeriod(eligible, rules),
+                    IpoCalendar.PeriodDays(rules),
+                    dice
+                );
         }
 
         /// <summary>

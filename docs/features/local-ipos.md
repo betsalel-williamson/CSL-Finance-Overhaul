@@ -23,11 +23,11 @@ the Local IPOs flag.
 
 The first slice: `CandidateBook` counts healthy days per building (id plus build index, so a
 building that reuses an id starts from nothing) and lists the candidates in a fixed order;
-`IpoCalendar` gives every candidate the same daily chance, set so the reference pool lists once in
-the target years, and draws at most one a day from a repeatable dice (`IpoDice`) whose state is
-saved with the city. Unit tests simulate 60,000 city-years per pool size and check the average, that
-fewer candidates are rarer and none never lists, that every candidate is equally likely, and that
-nothing is drawn while an IPO runs or at the listing cap.
+`IpoCalendar` gives every candidate the same chance each period (a month by default), set so the
+reference pool lists once in the target years, and decides once a period, from a repeatable dice
+(`IpoDice`) whose state is saved with the city. Unit tests simulate 60,000 city-years per pool size
+and check the average, that fewer candidates are rarer and none never lists, that every candidate is
+equally likely, and that nothing is drawn while an IPO runs or at the listing cap.
 
 ## Levels and boundaries
 
@@ -78,8 +78,9 @@ any condition resets its healthy-day count; it stays a candidate only while heal
 Target: **about one IPO every 10 game years** in a city with the right conditions; a city without
 level-3 businesses that stay healthy never gets one.
 
-- Each candidate has the same small daily chance, so the odds follow the city's mix: a city with
-  many healthy offices sees office IPOs, a shopping city sees shop IPOs (the "numbers game").
+- Once a month the dice decide whether an IPO happens in the coming month. Each candidate has the
+  same small chance, so the odds follow the city's mix: a city with many healthy offices sees office
+  IPOs, a shopping city sees shop IPOs (the "numbers game").
 - The chance is set from the target: with the reference pool size of candidates, the expected time
   between IPOs equals the target years. Fewer candidates make it rarer, more make it more common,
   never more than one IPO in progress at a time.
@@ -97,7 +98,7 @@ first listing, sees the progress in Economy → Investments, and is never floode
    offices, 40 shops, 30 industrial buildings; one per 15 for a specialisation). A listing uses a
    slot; a buy-out or a delisting gives it back.
 3. **Chance:** only a kind with an open slot and at least one candidate can list. Each candidate
-   then has the daily chance from [How often](#how-often-rare-by-design), set so an open slot is
+   then has the monthly chance from [How often](#how-often-rare-by-design), set so an open slot is
    filled in about one to two game years.
 4. **Pacing:** at most 2 IPOs in a game year, and never two offering windows at once, so switching
    the feature on in a large city fills the board over years, not in one week.
@@ -188,9 +189,10 @@ Now and then a listed company is bought and leaves the exchange, and the city is
 above the price: a windfall, rare and not expected. It is the most common reason a real company
 delists ([Evidence](#evidence-for-the-sizes-2026-11-17)).
 
-- **How often:** every company listed for at least a year has the same small daily chance, 4% over a
-  year. One listed company is bought about once in 25 game years; a full board of 12 sees a buy-out
-  about every two. At most one a day.
+- **How often:** once a month it is decided whether a buy-out happens in the coming month. Every
+  company listed for at least a year has the same small chance, 4% over a year. One listed company
+  is bought about once in 25 game years; a full board of 12 sees a buy-out about every two. At most
+  one a month.
 - **No warning:** nothing announces it beforehand. On the day, a chirp from City Brokerage names the
   company, the buyer's price and what the city received.
 - **What the city gets:** every share is paid at the price plus a premium drawn afresh each time:
@@ -348,17 +350,24 @@ healthy days  = previous + 1 if healthy today, else 0 (also 0 if the building is
 candidate     = healthy days ≥ 365
 ```
 
-### When a candidate goes public (one roll a day)
+### When a candidate goes public (one roll a month)
+
+The dice are not rolled daily. Once a period (the option "Roll every", 30 days by default) it is
+decided whether an IPO happens in the coming period, which candidate it is, and on which day.
 
 ```text
-p (one candidate, one day) = 1 − (1 − 1 ÷ (target years × 365))^(1 ÷ reference pool)
-chance today (n candidates) = 1 − (1 − p)^n
-roll = Next();  IPO today if roll < chance today
-which candidate = floor(roll ÷ chance today × n)          (each equally likely)
+periods to the target = target years × 365 ÷ 30
+p (one candidate, one period) = 1 − (1 − 1 ÷ periods to the target)^(1 ÷ reference pool)
+chance this period (n candidates) = 1 − (1 − p)^n
+roll = Next();  an IPO this period if roll < chance this period
+which candidate = floor(roll ÷ chance this period × n)          (each equally likely)
+which day       = floor(Next() × 30)                             (each day equally likely)
 ```
 
-Defaults: target 10 years, reference pool 20, so 20 candidates list once in 3,650 days on average.
-No roll while an IPO is in progress, at the listing cap (12), or with no candidates.
+Defaults: target 10 years, reference pool 20, so 20 candidates list once in 3,650 days on average,
+the same as with a daily roll. At most one IPO a period. No roll while an IPO is in progress, at the
+listing cap (12), or with no candidates. If the chosen business is no longer a candidate on its day,
+that IPO does not happen (engine rule, not built).
 
 ### Offering price
 
@@ -382,13 +391,16 @@ With the defaults: the average pop is +15%, the middle one about +12%, about 29 
 **below** the offering price, more than half open between 0% and +50%, and about 5 in 100 open more
 than 50% up (400,000 simulated listings).
 
-### Buy-outs (one roll a day)
+### Buy-outs (one roll a month)
+
+Decided on the same cycle, with its own roll.
 
 ```text
-p (one company, one day) = 1 − (1 − 4%)^(1 ÷ 365)
+p (one company, one period) = 1 − (1 − 4%)^(30 ÷ 365)
 eligible = listed for at least 365 days
-chance today (n eligible) = 1 − (1 − p)^n
-roll = Next();  buy-out today if roll < chance today;  which = floor(roll ÷ chance today × n)
+chance this period (n eligible) = 1 − (1 − p)^n
+roll = Next();  a buy-out this period if roll < chance this period
+which company = floor(roll ÷ chance this period × n);  which day = floor(Next() × 30)
 premium = LogNormal(mean = 1 + 40%, sd = 15%) − 1, kept between +10% and +150%
 buyer's price a share = price × (1 + premium), rounded to a whole ₡
 the city receives = shares held × buyer's price a share
@@ -484,24 +496,25 @@ survival after 1 and 3 years; delisting by industry.
 All under an experimental "Local IPOs" group, off by default; every value is saved with the player's
 settings.
 
-| Option                             | Default   | What it changes                                       |
-| ---------------------------------- | --------- | ----------------------------------------------------- |
-| Local IPOs                         | Off       | The whole feature                                     |
-| Years between IPOs (target)        | 10        | Expected time between IPOs at the reference pool size |
-| Reference pool (candidates)        | 20        | Pool size at which the target applies                 |
-| Healthy days to become a candidate | 365       | How long a business must stay healthy                 |
-| Minimum jobs                       | 20        | Keeps small shops out                                 |
-| Land value floor                   | 50        | Minimum land value at the building                    |
-| Offering window (days)             | 7         | Days to buy at the offering price                     |
-| First-day pop: average / spread    | 15% / 25% | The first-day jump and how varied it is               |
-| Price-to-earnings multiple         | 20        | Offering price from measured earnings                 |
-| City's largest stake               | 10%       | What the full 1,000-share holding is of the company   |
-| New-listing volatility             | 2×        | Extra swing in the first year (settles to normal)     |
-| Local listing cap                  | 12        | Most local companies listed at once                   |
-| Buy-out chance a year              | 4%        | A listed company's chance of being bought in a year   |
-| Buy-out premium: average / spread  | 40% / 15% | What the buyer pays above the price                   |
-| No buy-out before (days listed)    | 365       | A new listing is not bought in its first year         |
-| Grace period after losing a home   | 90 days   | Before an un-homed company delists                    |
+| Option                             | Default   | What it changes                                           |
+| ---------------------------------- | --------- | --------------------------------------------------------- |
+| Local IPOs                         | Off       | The whole feature                                         |
+| Years between IPOs (target)        | 10        | Expected time between IPOs at the reference pool size     |
+| Reference pool (candidates)        | 20        | Pool size at which the target applies                     |
+| Healthy days to become a candidate | 365       | How long a business must stay healthy                     |
+| Minimum jobs                       | 20        | Keeps small shops out                                     |
+| Land value floor                   | 50        | Minimum land value at the building                        |
+| Offering window (days)             | 7         | Days to buy at the offering price                         |
+| First-day pop: average / spread    | 15% / 25% | The first-day jump and how varied it is                   |
+| Price-to-earnings multiple         | 20        | Offering price from measured earnings                     |
+| City's largest stake               | 10%       | What the full 1,000-share holding is of the company       |
+| New-listing volatility             | 2×        | Extra swing in the first year (settles to normal)         |
+| Local listing cap                  | 12        | Most local companies listed at once                       |
+| Roll every (days)                  | 30        | How often it is decided whether an IPO or buy-out happens |
+| Buy-out chance a year              | 4%        | A listed company's chance of being bought in a year       |
+| Buy-out premium: average / spread  | 40% / 15% | What the buyer pays above the price                       |
+| No buy-out before (days listed)    | 365       | A new listing is not bought in its first year             |
+| Grace period after losing a home   | 90 days   | Before an un-homed company delists                        |
 
 ## Save data
 

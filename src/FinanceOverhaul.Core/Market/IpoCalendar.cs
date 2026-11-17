@@ -29,6 +29,12 @@ namespace FinanceOverhaul.Core
         /// <summary>Most local companies listed at once.</summary>
         public int ListingCap = 12;
 
+        /// <summary>
+        /// How often the dice are rolled, in days: once a period it is decided whether an IPO
+        /// (and, separately, a buy-out) happens in the coming period. 30 is once a month.
+        /// </summary>
+        public int DrawEveryDays = 30;
+
         /// <summary>Company value = annual earnings × this multiple.</summary>
         public int PriceToEarnings = 20;
 
@@ -249,50 +255,75 @@ namespace FinanceOverhaul.Core
         }
     }
 
+    /// <summary>What a draw decided: nothing, or who and on which day of the coming period.</summary>
+    public struct PeriodDraw
+    {
+        /// <summary>Index of the one picked, or −1 for nothing this period.</summary>
+        public int Index;
+
+        /// <summary>Days from the draw to the event: 0 (the day of the draw) to the period's last day.</summary>
+        public int DayOffset;
+
+        public bool Happens
+        {
+            get { return Index >= 0; }
+        }
+
+        public static readonly PeriodDraw Nothing = new PeriodDraw { Index = -1 };
+    }
+
     /// <summary>
-    /// When a business goes public: rare by design. Every candidate has the same small chance
-    /// each day, set so that a city with the reference number of candidates sees one IPO every
-    /// target years on average. Fewer candidates make it rarer, more make it more common, and
-    /// a city with none never gets one. At most one business is picked a day, and none while an
-    /// IPO is in progress or the listing cap is reached.
+    /// When a business goes public: rare by design. Once a period (a month by default,
+    /// <see cref="IpoRules.DrawEveryDays"/>) the calendar decides whether an IPO happens in the
+    /// coming period, which candidate it is, and on which day. Every candidate has the same
+    /// small chance each period, set so that a city with the reference number of candidates sees
+    /// one IPO every target years on average. Fewer candidates make it rarer, more make it more
+    /// common, and a city with none never gets one. At most one a period, and none while an IPO
+    /// is in progress or the listing cap is reached.
     /// </summary>
     public static class IpoCalendar
     {
         /// <summary>
-        /// One candidate's chance on one day: p with 1 − (1 − p)^pool = 1 ÷ target days, so the
-        /// chance that any of a reference pool lists on a day is one in the target days.
+        /// One candidate's chance in one period: p with 1 − (1 − p)^pool = 1 ÷ target periods,
+        /// so the chance that any of a reference pool lists in a period is one in the target
+        /// periods.
         /// </summary>
-        public static double DailyChance(IpoRules rules)
+        public static double PeriodChance(IpoRules rules)
         {
             if (rules == null || rules.TargetYears <= 0 || rules.ReferencePool <= 0)
             {
                 return 0d;
             }
 
-            double anyInPool = 1d / ((double)rules.TargetYears * IpoRules.DaysPerYear);
-            return 1d - Math.Pow(1d - anyInPool, 1d / rules.ReferencePool);
+            double targetPeriods =
+                (double)rules.TargetYears * IpoRules.DaysPerYear / PeriodDays(rules);
+            if (targetPeriods <= 1d)
+            {
+                return 1d;
+            }
+
+            return 1d - Math.Pow(1d - 1d / targetPeriods, 1d / rules.ReferencePool);
         }
 
-        /// <summary>The chance that some candidate lists today, with this many candidates.</summary>
-        public static double ChanceToday(int candidates, IpoRules rules)
+        /// <summary>The chance that some candidate lists this period, with this many candidates.</summary>
+        public static double ChanceThisPeriod(int candidates, IpoRules rules)
         {
-            return candidates <= 0 ? 0d : 1d - Math.Pow(1d - DailyChance(rules), candidates);
+            return candidates <= 0 ? 0d : 1d - Math.Pow(1d - PeriodChance(rules), candidates);
         }
 
         /// <summary>Average days between IPOs with this many candidates (infinite with none).</summary>
         public static double ExpectedDaysBetween(int candidates, IpoRules rules)
         {
-            double chance = ChanceToday(candidates, rules);
-            return chance <= 0d ? double.PositiveInfinity : 1d / chance;
+            double chance = ChanceThisPeriod(candidates, rules);
+            return chance <= 0d ? double.PositiveInfinity : PeriodDays(rules) / chance;
         }
 
         /// <summary>
-        /// Today's draw: the index of the candidate that goes public, or −1 for none. One number
-        /// is taken from the dice whenever a draw is possible, whatever the outcome, so the
-        /// sequence does not depend on how many candidates there were. Every candidate is
-        /// equally likely to be the one.
+        /// This period's draw. One number is taken from the dice whenever a draw is possible;
+        /// if an IPO happens, a second number sets its day in the period. Every candidate is
+        /// equally likely to be the one, and every day of the period equally likely.
         /// </summary>
-        public static int Draw(
+        public static PeriodDraw DrawPeriod(
             int candidates,
             int listed,
             bool ipoInProgress,
@@ -302,18 +333,33 @@ namespace FinanceOverhaul.Core
         {
             if (candidates <= 0 || ipoInProgress || listed >= rules.ListingCap)
             {
-                return -1;
+                return PeriodDraw.Nothing;
             }
 
-            double chance = ChanceToday(candidates, rules);
+            return Roll(candidates, ChanceThisPeriod(candidates, rules), PeriodDays(rules), dice);
+        }
+
+        /// <summary>Days between draws: at least 1.</summary>
+        public static int PeriodDays(IpoRules rules)
+        {
+            return rules == null ? 1 : Math.Max(1, rules.DrawEveryDays);
+        }
+
+        /// <summary>The shared roll: happens with this chance, one of <paramref name="count"/>, on a day of the period.</summary>
+        internal static PeriodDraw Roll(int count, double chance, int periodDays, IpoDice dice)
+        {
             double roll = dice.Next();
             if (chance <= 0d || roll >= chance)
             {
-                return -1;
+                return PeriodDraw.Nothing;
             }
 
             // roll is uniform in [0, chance): spread it evenly over the candidates.
-            return Math.Min(candidates - 1, (int)(roll / chance * candidates));
+            return new PeriodDraw
+            {
+                Index = Math.Min(count - 1, (int)(roll / chance * count)),
+                DayOffset = Math.Min(periodDays - 1, (int)(dice.Next() * periodDays)),
+            };
         }
     }
 }

@@ -28,19 +28,22 @@ namespace FinanceOverhaul.Core.Tests
                 IpoCalendar.ExpectedDaysBetween(rules.ReferencePool, rules),
                 6
             );
-            Assert.Equal(1d / 3650d, IpoCalendar.ChanceToday(20, rules), 12);
+            Assert.Equal(30d / 3650d, IpoCalendar.ChanceThisPeriod(20, rules), 12);
+            var weekly = new IpoRules { DrawEveryDays = 7 };
+            Assert.Equal(7d / 3650d, IpoCalendar.ChanceThisPeriod(20, weekly), 12);
+            Assert.Equal(10d * 365d, IpoCalendar.ExpectedDaysBetween(20, weekly), 6);
         }
 
         [Fact]
         public void FewerCandidatesAreRarerMoreAreMoreCommonNoneNever()
         {
             var rules = new IpoRules();
-            Assert.Equal(0d, IpoCalendar.ChanceToday(0, rules));
+            Assert.Equal(0d, IpoCalendar.ChanceThisPeriod(0, rules));
             Assert.True(double.IsPositiveInfinity(IpoCalendar.ExpectedDaysBetween(0, rules)));
             double last = 0d;
             for (int n = 1; n <= 500; n++)
             {
-                double chance = IpoCalendar.ChanceToday(n, rules);
+                double chance = IpoCalendar.ChanceThisPeriod(n, rules);
                 Assert.True(chance > last, "more candidates, higher chance (n=" + n + ")");
                 Assert.True(chance < 1d);
                 last = chance;
@@ -54,22 +57,31 @@ namespace FinanceOverhaul.Core.Tests
         [InlineData(20, 10d)]
         [InlineData(5, 40d)]
         [InlineData(80, 2.5d)]
-        public void SixtyThousandCityYearsAverageTheTarget(int candidates, double years)
+        public void SixHundredThousandCityYearsAverageTheTarget(int candidates, double years)
         {
             // Simulated days, not the formula: counts the IPOs the dice actually deal.
             var rules = new IpoRules();
             var dice = new IpoDice(20261117UL);
-            const int Days = 365 * 60_000;
+            const int Periods = 12 * 600_000;
             int ipos = 0;
-            for (int day = 0; day < Days; day++)
+            var days = new int[30];
+            for (int period = 0; period < Periods; period++)
             {
-                if (IpoCalendar.Draw(candidates, 0, false, rules, dice) >= 0)
+                PeriodDraw draw = IpoCalendar.DrawPeriod(candidates, 0, false, rules, dice);
+                if (draw.Happens)
                 {
                     ipos++;
+                    days[draw.DayOffset]++;
                 }
             }
 
-            double averageYears = Days / 365d / ipos;
+            // Any day of the month is as likely as another.
+            foreach (int onDay in days)
+            {
+                Assert.InRange(onDay, ipos / 30 * 0.8, ipos / 30 * 1.2);
+            }
+
+            double averageYears = Periods * 30d / 365d / ipos;
             Assert.InRange(averageYears, years * 0.95, years * 1.05);
         }
 
@@ -80,9 +92,9 @@ namespace FinanceOverhaul.Core.Tests
             var dice = new IpoDice(7UL);
             var picks = new int[8];
             int total = 0;
-            for (int day = 0; day < 2_000_000; day++)
+            for (int week = 0; week < 2_000_000; week++)
             {
-                int pick = IpoCalendar.Draw(picks.Length, 0, false, rules, dice);
+                int pick = IpoCalendar.DrawPeriod(picks.Length, 0, false, rules, dice).Index;
                 if (pick >= 0)
                 {
                     picks[pick]++;
@@ -104,9 +116,11 @@ namespace FinanceOverhaul.Core.Tests
             ulong before = dice.State;
             for (int day = 0; day < 10_000; day++)
             {
-                Assert.Equal(-1, IpoCalendar.Draw(50, 0, true, rules, dice));
-                Assert.Equal(-1, IpoCalendar.Draw(50, rules.ListingCap, false, rules, dice));
-                Assert.Equal(-1, IpoCalendar.Draw(0, 0, false, rules, dice));
+                Assert.False(IpoCalendar.DrawPeriod(50, 0, true, rules, dice).Happens);
+                Assert.False(
+                    IpoCalendar.DrawPeriod(50, rules.ListingCap, false, rules, dice).Happens
+                );
+                Assert.False(IpoCalendar.DrawPeriod(0, 0, false, rules, dice).Happens);
             }
 
             Assert.Equal(before, dice.State); // and the dice were not touched
@@ -120,10 +134,11 @@ namespace FinanceOverhaul.Core.Tests
             var b = new IpoDice(42UL);
             for (int day = 0; day < 50_000; day++)
             {
-                Assert.Equal(
-                    IpoCalendar.Draw(20, 0, false, rules, a),
-                    IpoCalendar.Draw(20, 0, false, rules, b)
-                );
+                PeriodDraw first = IpoCalendar.DrawPeriod(20, 0, false, rules, a);
+                PeriodDraw second = IpoCalendar.DrawPeriod(20, 0, false, rules, b);
+                Assert.Equal(first.Index, second.Index);
+                Assert.Equal(first.DayOffset, second.DayOffset);
+                Assert.InRange(first.DayOffset, 0, 29);
             }
 
             // Saving the state and carrying on gives the same numbers as never stopping.
