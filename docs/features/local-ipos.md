@@ -222,22 +222,25 @@ can turn the dialog back on. The IPO dialog follows that pattern with the mod's 
 
 ### What the dialog shows
 
+Drawn in Figma: UI Map band 16, "The IPO dialog" (2026-11-17), built from the library's modal
+header, key-value rows, buttons and checkbox; the header art is a placeholder.
+
 One dialog per listing, opened on the day of the announcement (step 1 of [The IPO](#the-ipo)), when
 the offering window opens and the player can still act on it.
 
-| Region             | Content                                                                                                                     | Source in this design                        |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| Title              | "{Company} is going public"                                                                                                 | Company name, saved at the IPO               |
-| Header art         | An illustration for the listing (open decision 6)                                                                           | Not decided                                  |
-| Symbol and sector  | The ticker symbol and the sector (commercial, office, industry or the specialisation)                                       | Save data: symbol, sector                    |
-| Headquarters       | The building's name and district                                                                                            | Save data: building id and build index       |
-| Offering price     | ₡X a share                                                                                                                  | [IPO price](#ipo-price)                      |
-| Offering window    | "The city can buy at the offering price for 7 days", with the last day                                                      | Offering window option                       |
-| What the city gets | Up to 1,000 shares at the offering price; the price moves freely from the first trading day; the building is now Historical | Steps 2 to 4 of [The IPO](#the-ipo)          |
-| Buy                | "Buy at the offering price": closes the dialog and opens the game's buy dialog for the new listing                          | The listing is a game investment slot        |
-| View headquarters  | Closes the dialog and moves the camera to the building                                                                      | Same idea as the report's view-campus button |
-| Don't show again   | Checkbox: "Don't show this for future IPOs"                                                                                 | [Hiding the dialog](#hiding-the-dialog)      |
-| Close              | × in the header; Esc and Return also close                                                                                  | Same keys as the report                      |
+| Region             | Content                                                                                                                                                         | Source in this design                        |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| Title              | "{Company} is going public"                                                                                                                                     | Company name, saved at the IPO               |
+| Header art         | An illustration for the listing (open decision 6)                                                                                                               | Not decided                                  |
+| Symbol and sector  | The ticker symbol and the sector (commercial, office, industry or the specialisation)                                                                           | Save data: symbol, sector                    |
+| Headquarters       | The building's name and district                                                                                                                                | Save data: building id and build index       |
+| Offering price     | ₡X a share                                                                                                                                                      | [IPO price](#ipo-price)                      |
+| Offering window    | "The city can buy at the offering price for 7 days", with the last day                                                                                          | Offering window option                       |
+| What the city gets | Up to 1,000 shares at the offering price (a 10% stake, with what that costs); the price moves freely from the first trading day; the building is now Historical | Steps 2 to 4 of [The IPO](#the-ipo)          |
+| Buy                | "Buy at the offering price": closes the dialog and opens the game's buy dialog for the new listing                                                              | The listing is a game investment slot        |
+| View headquarters  | Closes the dialog and moves the camera to the building                                                                                                          | Same idea as the report's view-campus button |
+| Don't show again   | Checkbox: "Don't show this for future IPOs"                                                                                                                     | [Hiding the dialog](#hiding-the-dialog)      |
+| Close              | × in the header; Esc and Return also close                                                                                                                      | Same keys as the report                      |
 
 The dialog states only what is already fixed on the announcement day. It does not show the first-day
 pop, a forecast or a recommendation: the pop is drawn on the first trading day.
