@@ -92,7 +92,7 @@ namespace FinanceOverhaul
             v.to = FoText.Label(
                 v.Root,
                 name + "To",
-                Strings.Get("today"),
+                Strings.Get("chart.today"),
                 labelScale,
                 FoTheme.ChartLabel
             );

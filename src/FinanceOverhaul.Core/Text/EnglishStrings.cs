@@ -20,12 +20,23 @@ namespace FinanceOverhaul.Core
             { "daysLeft.other", "{0} days left" },
             { "daysAgo.one", "{0} day ago" },
             { "daysAgo.other", "{0} days ago" },
+            { "days.one", "{0} day" },
+            { "days.other", "{0} days" },
+            // Joining: two whole sentences, and items in a list.
+            { "join.sentences", "{0} {1}" },
+            { "join.list", "{0}, {1}" },
+            // Price charts (Stock Monitor detail, the Invest dialog, the portfolio tooltip): the
+            // right-hand end of the time axis. The left-hand end is "daysAgo".
+            { "chart.today", "today" },
             // Stock Monitor: window
             { "monitor.title", "Stock Monitor" },
             { "monitor.button.tip", "Stock Monitor (right-drag to move)" },
             { "monitor.settings.tip", "Stock Monitor settings" },
             { "monitor.pill.tip", "Click: show the change in ₡ or %" },
             { "monitor.footer", "Daily close · {0}" },
+            // The footer's date, as a .NET date pattern (day, short month name, year). Month
+            // names stay English.
+            { "monitor.footer.date", "d MMM yyyy" },
             // Stock Monitor: tabs
             { "monitor.filter.all", "All" },
             { "monitor.filter.portfolio", "Portfolio" },
@@ -75,6 +86,7 @@ namespace FinanceOverhaul.Core
             { "orders.compact", "{0} · {1} · {2}" },
             { "orders.summary.many", "{0} open (see Your Portfolio)" },
             // Stock Monitor: detail view
+            { "detail.back", "« All stocks" },
             { "detail.today", "Today" },
             { "detail.todayYesterday", "Today · yesterday {0}" },
             { "detail.yesterday", "Yesterday" },
@@ -92,6 +104,8 @@ namespace FinanceOverhaul.Core
             { "detail.trade.tip", "Buy / Sell open the game's Invest dialog (with order tabs)" },
             { "detail.sell.none", "The city holds no shares of {0}" },
             { "detail.history.limit", "the game keeps 30 daily prices" },
+            // Stock Exchange LED ticker: the boards draw Latin letters, digits and ₡ only.
+            { "ticker.waiting", "Waiting for market data" },
             // More than one copy of the mod switched on. The game's Yes / No dialog shows about
             // five short lines, so these stay brief.
             { "duplicate.title", "Finance Overhaul is switched on twice" },
@@ -116,14 +130,6 @@ namespace FinanceOverhaul.Core
             { "monitor.settings.changeCurrency", "Change as ₡ instead of %" },
             { "monitor.settings.stocks", "Stocks shown" },
             { "monitor.settings.note", "Kept per player (settings file), not in the city save." },
-            // Joining: two whole sentences, and items in a list.
-            { "join.sentences", "{0} {1}" },
-            { "join.list", "{0}, {1}" },
-            { "days.one", "{0} day" },
-            { "days.other", "{0} days" },
-            { "today", "today" },
-            // A .NET date pattern (day, short month name, year). Month names stay English.
-            { "date.short", "d MMM yyyy" },
             // Order ticket (the game's Invest dialog)
             { "order.tab.buyNow", "Buy now" },
             { "order.tab.sellNow", "Sell now" },
@@ -315,10 +321,6 @@ namespace FinanceOverhaul.Core
                 "A bond reached its end while the mod was off: its {0} is repaid today either way."
             },
             { "welcome.indexBack", "Your Index shares ({0}) are back." },
-            // Stock Monitor: detail view (more)
-            { "detail.back", "« All stocks" },
-            // LED ticker boards: the boards draw Latin letters, digits and ₡ only.
-            { "ticker.waiting", "Waiting for market data" },
             // Content Manager and Options page
             {
                 "mod.description",

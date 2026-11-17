@@ -365,7 +365,7 @@ namespace FinanceOverhaul.Core
         {
             return Strings.Format(
                 "monitor.footer",
-                gameDate.ToString(Strings.Get("date.short"), CultureInfo.InvariantCulture)
+                gameDate.ToString(Strings.Get("monitor.footer.date"), CultureInfo.InvariantCulture)
             );
         }
 
