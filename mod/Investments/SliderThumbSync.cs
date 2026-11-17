@@ -1,7 +1,6 @@
 using System;
 using System.Reflection;
 using ColossalFramework.UI;
-using HarmonyLib;
 
 namespace FinanceOverhaul
 {
@@ -16,15 +15,10 @@ namespace FinanceOverhaul
     /// </summary>
     internal static class SliderThumbSync
     {
-        private static readonly FieldInfo SliderField = AccessTools.Field(
-            typeof(BuySellInvestmentPanel),
-            "m_slider"
-        );
-        private static readonly MethodInfo UpdateValueIndicatorsMethod = AccessTools.Method(
-            typeof(UISlider),
-            "UpdateValueIndicators",
-            new[] { typeof(float) }
-        );
+        private static readonly FieldInfo SliderField = GameInternals.BuySell.Slider;
+        private static readonly MethodInfo UpdateValueIndicatorsMethod = GameInternals
+            .Ui
+            .SliderUpdateValueIndicators;
         private static bool failureLogged;
 
         /// <summary>Postfix helper: BuySellInvestmentPanel.SetSliderValue.</summary>

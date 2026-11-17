@@ -6,7 +6,6 @@ using System.IO;
 using System.Reflection;
 using ColossalFramework.UI;
 using FinanceOverhaul.Core;
-using HarmonyLib;
 using UnityEngine;
 
 namespace FinanceOverhaul
@@ -257,11 +256,11 @@ namespace FinanceOverhaul
                 {
                     // Opens Economy on the Investments tab (or `show-economy loans`), like the
                     // toolbar button.
-                    FieldInfo tabField = AccessTools.Field(
-                        typeof(EconomyPanel),
-                        a == "loans" ? "kLoansTab" : "kInvestmentTab"
+                    int tab = GameInternals.Economy.TabIndex(
+                        a == "loans"
+                            ? GameInternals.Economy.LoansTab
+                            : GameInternals.Economy.InvestmentTab
                     );
-                    int tab = tabField == null ? 3 : (int)tabField.GetValue(null);
                     ToolsModifierControl.mainToolbar.ShowEconomyPanel(tab);
                     yield return new WaitForSeconds(1f);
                     break;
@@ -273,9 +272,7 @@ namespace FinanceOverhaul
                     if (economy != null && economy.component.isVisible)
                     {
                         // Same as the panel's close button (it animates out).
-                        AccessTools
-                            .Method(typeof(EconomyPanel), "OnCloseButton")
-                            .Invoke(economy, null);
+                        GameInternals.Economy.OnCloseButton.Invoke(economy, null);
                     }
 
                     yield return new WaitForSeconds(0.8f);
@@ -286,9 +283,7 @@ namespace FinanceOverhaul
                     BuySellInvestmentPanel panel = BuySellInvestmentPanel.instance;
                     if (panel != null && panel.component.isVisible)
                     {
-                        AccessTools
-                            .Method(typeof(BuySellInvestmentPanel), "OnClosed")
-                            .Invoke(panel, null);
+                        GameInternals.BuySell.OnClosed.Invoke(panel, null);
                     }
 
                     yield return null;
@@ -1337,9 +1332,8 @@ namespace FinanceOverhaul
                     UIScrollablePanel listPanel =
                         economy == null
                             ? null
-                            : AccessTools
-                                .Field(typeof(EconomyPanel), "m_investmentsScrollablePanel")
-                                .GetValue(economy) as UIScrollablePanel;
+                            : GameInternals.Economy.InvestmentsList.GetValue(economy)
+                                as UIScrollablePanel;
                     if (listPanel == null)
                     {
                         r.Error = "open Economy → Investments first";
@@ -1358,9 +1352,8 @@ namespace FinanceOverhaul
                     System.Collections.IDictionary rows =
                         economy == null
                             ? null
-                            : AccessTools
-                                .Field(typeof(EconomyPanel), "m_purchasableInvestments")
-                                .GetValue(economy) as System.Collections.IDictionary;
+                            : GameInternals.Economy.PurchasableInvestments.GetValue(economy)
+                                as System.Collections.IDictionary;
                     if (rows == null)
                     {
                         r.Error = "open Economy → Investments first";
@@ -1394,8 +1387,9 @@ namespace FinanceOverhaul
                 {
                     // stress-panel — opens Economy → Investments and logs how long that takes
                     // (the call itself and the worst frame in the next second), then closes it.
-                    FieldInfo invTab = AccessTools.Field(typeof(EconomyPanel), "kInvestmentTab");
-                    int tabIndex = invTab == null ? 3 : (int)invTab.GetValue(null);
+                    int tabIndex = GameInternals.Economy.TabIndex(
+                        GameInternals.Economy.InvestmentTab
+                    );
                     var sw = System.Diagnostics.Stopwatch.StartNew();
                     ToolsModifierControl.mainToolbar.ShowEconomyPanel(tabIndex);
                     double openMs = sw.Elapsed.TotalMilliseconds;
@@ -2403,10 +2397,7 @@ namespace FinanceOverhaul
         /// <summary>The city's cash field itself (LastCashAmount only updates on a sim step).</summary>
         private static long RawCash(EconomyManager em)
         {
-            FieldInfo f = typeof(EconomyManager).GetField(
-                "m_cashAmount",
-                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
-            );
+            FieldInfo f = GameInternals.Manager.CashAmount;
             return f == null ? long.MinValue : Convert.ToInt64(f.GetValue(em));
         }
 

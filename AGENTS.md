@@ -32,9 +32,10 @@ tests in `tests/FinanceOverhaul.Core.Tests/`) never does: every calculation live
 rules and UI calculations (ordering, fitting, layout) alike, and everything unit tested is there.
 The mod (`mod/`) always does: hooks, save data and drawing only, no `#if` guards, and it does not
 build without the game. Harmony patches live only in `mod/Harmony/` (`Patcher` and its per-feature
-`Patcher.*` files); a patch method there only hands over to the feature's own class. A mod class
-that needs a test has a calculation in it that belongs in the library: move it there and have the
-mod call it.
+`Patcher.*` files); a patch method there only hands over to the feature's own class. Private game
+members are reached only through `GameInternals` in the same folder: no `AccessTools` or
+`BindingFlags` anywhere else. A mod class that needs a test has a calculation in it that belongs in
+the library: move it there and have the mod call it.
 
 ## Game UI tests and the test stock (TST)
 

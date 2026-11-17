@@ -2,7 +2,6 @@ using System;
 using System.Reflection;
 using ColossalFramework.UI;
 using FinanceOverhaul.Core;
-using HarmonyLib;
 using UnityEngine;
 
 namespace FinanceOverhaul
@@ -28,30 +27,14 @@ namespace FinanceOverhaul
         public const string HintName = "FinanceOverhaulLimitHint";
         public const string EstimateName = "FinanceOverhaulLimitEstimate";
 
-        private static readonly FieldInfo ModeField = AccessTools.Field(
-            typeof(BuySellInvestmentPanel),
-            "m_mode"
-        );
-        private static readonly FieldInfo IdField = AccessTools.Field(
-            typeof(BuySellInvestmentPanel),
-            "m_investmentID"
-        );
-        private static readonly FieldInfo ButtonField = AccessTools.Field(
-            typeof(BuySellInvestmentPanel),
-            "m_button"
-        );
-        private static readonly FieldInfo SliderValueField = AccessTools.Field(
-            typeof(BuySellInvestmentPanel),
-            "m_sliderValue"
-        );
-        private static readonly MethodInfo CloseMethod = AccessTools.Method(
-            typeof(BuySellInvestmentPanel),
-            "OnClosed"
-        );
-        private static readonly MethodInfo UpdatePriceMethod = AccessTools.Method(
-            typeof(BuySellInvestmentPanel),
-            "UpdatePriceNumbers"
-        );
+        private static readonly FieldInfo ModeField = GameInternals.BuySell.Mode;
+        private static readonly FieldInfo IdField = GameInternals.BuySell.InvestmentId;
+        private static readonly FieldInfo ButtonField = GameInternals.BuySell.Button;
+        private static readonly FieldInfo SliderValueField = GameInternals.BuySell.SliderValue;
+        private static readonly MethodInfo CloseMethod = GameInternals.BuySell.OnClosed;
+        private static readonly MethodInfo UpdatePriceMethod = GameInternals
+            .BuySell
+            .UpdatePriceNumbers;
 
         private static readonly Color32 HintColor = FoTheme.TextMuted;
         private static readonly Color32 ErrorColor = FoTheme.GameNegative;

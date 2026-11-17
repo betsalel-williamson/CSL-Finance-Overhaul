@@ -292,9 +292,7 @@ namespace FinanceOverhaul
         {
             try
             {
-                HarmonyLib
-                    .AccessTools.Method(typeof(EconomyManager), "InvestmentsUpdated")
-                    .Invoke(EconomyManager.instance, null);
+                GameInternals.Manager.InvestmentsUpdated.Invoke(EconomyManager.instance, null);
             }
             catch (Exception ex)
             {

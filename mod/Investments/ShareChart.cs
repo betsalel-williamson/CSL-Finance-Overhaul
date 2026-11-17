@@ -300,25 +300,21 @@ namespace FinanceOverhaul
     /// </summary>
     public static class ShareChartOverlay
     {
-        private static readonly FieldInfo DialogGraph = AccessTools(
-            "BuySellInvestmentPanel",
-            typeof(BuySellInvestmentPanel),
-            "m_graph"
+        private static readonly FieldInfo DialogGraph = Need(
+            GameInternals.BuySell.Graph,
+            "BuySellInvestmentPanel.m_graph"
         );
-        private static readonly FieldInfo DialogId = AccessTools(
-            "BuySellInvestmentPanel",
-            typeof(BuySellInvestmentPanel),
-            "m_investmentID"
+        private static readonly FieldInfo DialogId = Need(
+            GameInternals.BuySell.InvestmentId,
+            "BuySellInvestmentPanel.m_investmentID"
         );
-        private static readonly FieldInfo TipGraph = AccessTools(
-            "InvestmentTooltip",
-            typeof(InvestmentTooltip),
-            "m_graph"
+        private static readonly FieldInfo TipGraph = Need(
+            GameInternals.Tooltip.Graph,
+            "InvestmentTooltip.m_graph"
         );
-        private static readonly FieldInfo TipId = AccessTools(
-            "InvestmentTooltip",
-            typeof(InvestmentTooltip),
-            "m_investmentID"
+        private static readonly FieldInfo TipId = Need(
+            GameInternals.Tooltip.InvestmentId,
+            "InvestmentTooltip.m_investmentID"
         );
 
         /// <summary>UI units the game's chart panel stops short of the graph's bottom edge.</summary>
@@ -513,17 +509,12 @@ namespace FinanceOverhaul
             UiCleanup.RemoveChildrenWhere(graph, c => c.name == ShareChartView.Prefix);
         }
 
-        private static FieldInfo AccessTools(string owner, Type type, string field)
+        /// <summary>Says once which game member is missing; the vanilla chart is then kept.</summary>
+        private static FieldInfo Need(FieldInfo f, string what)
         {
-            FieldInfo f = type.GetField(
-                field,
-                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
-            );
             if (f == null)
             {
-                ModLog.Warn(
-                    "share chart: " + owner + "." + field + " not found; vanilla chart kept"
-                );
+                ModLog.Warn("share chart: " + what + " not found; vanilla chart kept");
             }
 
             return f;

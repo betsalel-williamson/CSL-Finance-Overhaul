@@ -2,7 +2,6 @@ using System;
 using System.Reflection;
 using ColossalFramework.UI;
 using FinanceOverhaul.Core;
-using HarmonyLib;
 using UnityEngine;
 
 namespace FinanceOverhaul
@@ -24,31 +23,17 @@ namespace FinanceOverhaul
     /// </summary>
     public static class ShareAmountField
     {
-        private static readonly FieldInfo LabelField = AccessTools.Field(
-            typeof(BuySellInvestmentPanel),
-            "m_labelShareSliderNumber"
-        );
-        private static readonly FieldInfo SliderField = AccessTools.Field(
-            typeof(BuySellInvestmentPanel),
-            "m_slider"
-        );
-        private static readonly FieldInfo SliderValueField = AccessTools.Field(
-            typeof(BuySellInvestmentPanel),
-            "m_sliderValue"
-        );
-        private static readonly MethodInfo SetSliderValueMethod = AccessTools.Method(
-            typeof(BuySellInvestmentPanel),
-            "SetSliderValue"
-        );
-        private static readonly MethodInfo GetMaximumMethod = AccessTools.Method(
-            typeof(BuySellInvestmentPanel),
-            "GetMaximumShareCount"
-        );
+        private static readonly FieldInfo LabelField = GameInternals.BuySell.ShareLabel;
+        private static readonly FieldInfo SliderField = GameInternals.BuySell.Slider;
+        private static readonly FieldInfo SliderValueField = GameInternals.BuySell.SliderValue;
+        private static readonly MethodInfo SetSliderValueMethod = GameInternals
+            .BuySell
+            .SetSliderValue;
+        private static readonly MethodInfo GetMaximumMethod = GameInternals
+            .BuySell
+            .GetMaximumShareCount;
 
-        private static readonly MethodInfo PixelsToUnitsMethod = AccessTools.Method(
-            typeof(UIComponent),
-            "PixelsToUnits"
-        );
+        private static readonly MethodInfo PixelsToUnitsMethod = GameInternals.Ui.PixelsToUnits;
 
         private const float DigitHeightEm = 0.87f;
         private const float DigitTopEm = 0f;
@@ -56,22 +41,10 @@ namespace FinanceOverhaul
         public const string FieldName = "FinanceOverhaulShareAmountField";
         public const string CaretName = "FinanceOverhaulShareAmountCaret";
 
-        private static readonly FieldInfo CursorIndexField = AccessTools.Field(
-            typeof(UITextField),
-            "m_CursorIndex"
-        );
-        private static readonly FieldInfo SelectionStartField = AccessTools.Field(
-            typeof(UITextField),
-            "m_SelectionStart"
-        );
-        private static readonly FieldInfo SelectionEndField = AccessTools.Field(
-            typeof(UITextField),
-            "m_SelectionEnd"
-        );
-        private static readonly FieldInfo ScrollIndexField = AccessTools.Field(
-            typeof(UITextField),
-            "m_ScrollIndex"
-        );
+        private static readonly FieldInfo CursorIndexField = GameInternals.Ui.TextCursorIndex;
+        private static readonly FieldInfo SelectionStartField = GameInternals.Ui.TextSelectionStart;
+        private static readonly FieldInfo SelectionEndField = GameInternals.Ui.TextSelectionEnd;
+        private static readonly FieldInfo ScrollIndexField = GameInternals.Ui.TextScrollIndex;
 
         private static readonly ShareAmountEditor Editor = new ShareAmountEditor();
 
