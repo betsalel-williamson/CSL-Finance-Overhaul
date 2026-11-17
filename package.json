@@ -23,7 +23,7 @@
     "format": "npm run docs:fix && npm run format:csharp",
     "format:check": "npm run format:csharp:check",
     "layer:lint": "python3 scripts/layer-import-lint.py",
-    "test:unit": "dotnet test tests/FinanceOverhaul.Market.Tests/FinanceOverhaul.Market.Tests.csproj --nologo --verbosity minimal",
+    "test:unit": "dotnet test tests/FinanceOverhaul.Core.Tests/FinanceOverhaul.Core.Tests.csproj --nologo --verbosity minimal",
     "build:mod": "bash scripts/build-mod.sh",
     "test": "npm run test:unit",
     "hooks:pre-commit": "bash scripts/hooks-pre-commit.sh",

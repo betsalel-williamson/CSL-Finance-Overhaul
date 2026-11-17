@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 using ColossalFramework.UI;
-using FinanceOverhaul.Market;
+using FinanceOverhaul.Core;
 using HarmonyLib;
 using UnityEngine;
 

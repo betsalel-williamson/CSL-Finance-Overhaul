@@ -2,11 +2,11 @@
 
 ## Layers
 
-| Project                        | Proves                                      | Cities? |
-| ------------------------------ | ------------------------------------------- | ------- |
-| `FinanceOverhaul.Market.Tests` | Index math, ticker, settings, perf budgets  | No      |
-| `npm run build:mod`            | The mod compiles against the game           | Yes     |
-| Local game + Automate          | Harmony patches against Financial Districts | Yes     |
+| Project                      | Proves                                      | Cities? |
+| ---------------------------- | ------------------------------------------- | ------- |
+| `FinanceOverhaul.Core.Tests` | Index math, ticker, settings, perf budgets  | No      |
+| `npm run build:mod`          | The mod compiles against the game           | Yes     |
+| Local game + Automate        | Harmony patches against Financial Districts | Yes     |
 
 ## Commands
 
@@ -71,7 +71,7 @@ CPU only, not Cities frame time.
 
 ## Layer rule
 
-`src/FinanceOverhaul.Market` must not reference Cities types — see
+`src/FinanceOverhaul.Core` must not reference Cities types — see
 [ADR 0003](../features/adr/0003-market-library-vs-mod-surface.md) and `npm run layer:lint`.
 
 ## Formal models (Alloy)

@@ -14,7 +14,7 @@ printf '==> pre-push on branch %s\n' "$branch"
 echo "==> pre-push: layer-lint"
 npm run layer:lint
 
-echo "==> pre-push: test:unit (Market business logic + perf)"
+echo "==> pre-push: test:unit (Core: calculations + perf)"
 npm run test:unit
 
 if [[ "${HOOKS_FORCE_FULL:-0}" == "1" || "$branch" == "main" ]]; then

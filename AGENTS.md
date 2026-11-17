@@ -21,14 +21,14 @@ it ships.
 
 ## Test layers
 
-| Command             | Layer                                     | Cities assemblies              |
-| ------------------- | ----------------------------------------- | ------------------------------ |
-| `npm run test:unit` | `FinanceOverhaul.Market` math/ticker/perf | Never                          |
-| `npm run build:mod` | The mod compiles (no tests of its own)    | Required; skipped without them |
-| Local game loop     | Harmony + Stock Exchange                  | Required on your machine       |
+| Command             | Layer                                   | Cities assemblies              |
+| ------------------- | --------------------------------------- | ------------------------------ |
+| `npm run test:unit` | `FinanceOverhaul.Core` math/ticker/perf | Never                          |
+| `npm run build:mod` | The mod compiles (no tests of its own)  | Required; skipped without them |
+| Local game loop     | Harmony + Stock Exchange                | Required on your machine       |
 
-Two projects, split by whether they reference the game. The library (`src/FinanceOverhaul.Market/`,
-tests in `tests/FinanceOverhaul.Market.Tests/`) never does: every calculation lives there, market
+Two projects, split by whether they reference the game. The library (`src/FinanceOverhaul.Core/`,
+tests in `tests/FinanceOverhaul.Core.Tests/`) never does: every calculation lives there, market
 rules and UI calculations (ordering, fitting, layout) alike, and everything unit tested is there.
 The mod (`mod/`) always does: hooks, save data and drawing only, no `#if` guards, and it does not
 build without the game. A mod class that needs a test has a calculation in it that belongs in the

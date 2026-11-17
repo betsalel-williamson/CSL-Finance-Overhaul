@@ -22,9 +22,12 @@ else
 fi
 ZIP="$(ls "$WORK"/FinanceOverhaul-*.zip | head -1)"
 unzip -q "$ZIP" -d "$WORK/x"
-for f in FinanceOverhaul.dll FinanceOverhaul.Market.dll CitiesHarmony.API.dll PreviewImage.png; do
+for f in FinanceOverhaul.dll CitiesHarmony.API.dll PreviewImage.png; do
   [[ -f "$WORK/x/FinanceOverhaul/$f" ]] || { echo "Release zip is missing $f" >&2; exit 1; }
 done
+# The library is FinanceOverhaul.Core.dll from 0.2.0; 0.1.0 shipped it as FinanceOverhaul.Market.dll.
+[[ -f "$WORK/x/FinanceOverhaul/FinanceOverhaul.Core.dll" || -f "$WORK/x/FinanceOverhaul/FinanceOverhaul.Market.dll" ]] \
+  || { echo "Release zip is missing the library DLL" >&2; exit 1; }
 
 if [[ -d "$DEST" ]]; then
   mkdir -p "$BACKUPS"

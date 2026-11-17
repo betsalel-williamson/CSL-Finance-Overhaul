@@ -8,7 +8,7 @@ namespace FinanceOverhaul
     /// <summary>
     /// Harmony entry — keeps HarmonyLib out of <see cref="Mod"/> so Content Manager
     /// can still load the type when Cities Harmony is missing. Stock math lives in
-    /// <c>FinanceOverhaul.Market</c>; this type only wires Cities assemblies. The hooks
+    /// <c>FinanceOverhaul.Core</c>; this type only wires Cities assemblies. The hooks
     /// themselves are grouped by feature in the other <c>Patcher.*.cs</c> files.
     /// </summary>
     public static partial class Patcher

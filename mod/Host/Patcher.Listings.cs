@@ -1,5 +1,5 @@
 using System;
-using FinanceOverhaul.Market;
+using FinanceOverhaul.Core;
 using HarmonyLib;
 
 namespace FinanceOverhaul

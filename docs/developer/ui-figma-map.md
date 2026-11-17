@@ -32,7 +32,7 @@ same numbers (Options `1` and Investments `1` are independent).
 | `vanilla-host` | Financial Districts Economy Investments (or related) chrome |
 | `planned`      | Documented in market analogs; not built                     |
 
-Market math stays Cities-free under `src/FinanceOverhaul.Market/`. Harmony and Options stay in
+Market math stays Cities-free under `src/FinanceOverhaul.Core/`. Harmony and Options stay in
 `mod/Host/`.
 
 ## Pin inventory
@@ -44,14 +44,14 @@ Numbers below are **per-frame**. Catalog ids stay stable for docs↔code.
 Pin 6 is on the new-UI panel only; the in-game screenshot predates the order flags (capture
 pending).
 
-| #   | Catalog id            | Title                                                                          | Docs                                                                        | Code evidence                                                                                                |
-| --- | --------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| 1   | `opt.title`           | Options / Content Manager title                                                | [Live reload](./live-reload.md)                                             | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs)                                                                   |
-| 2   | `opt.toggles`         | Feature toggles (live ticker, experimental Index)                              | [City Index stock](../client/city-index-fund.md)                            | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs), [`ModSettings`](../../src/FinanceOverhaul.Market/ModSettings.cs) |
-| 3   | `opt.built-utc`       | Dev Built (UTC) footer                                                         | [Live reload](./live-reload.md)                                             | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs)                                                                   |
-| 4   | `opt.built-local`     | Dev Built (local) footer                                                       | [Live reload](./live-reload.md)                                             | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs)                                                                   |
-| 5   | `opt.copy-build-info` | Copy build info button                                                         | [Live reload](./live-reload.md)                                             | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs)                                                                   |
-| 6   | `opt.order-flags`     | Order type flags (limit buy, stop-loss, take-profit, trailing stop; temporary) | [Automated orders](../features/automated-orders.md#options-flags-temporary) | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs), [`ModSettings`](../../src/FinanceOverhaul.Market/ModSettings.cs) |
+| #   | Catalog id            | Title                                                                          | Docs                                                                        | Code evidence                                                                                                       |
+| --- | --------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| 1   | `opt.title`           | Options / Content Manager title                                                | [Live reload](./live-reload.md)                                             | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs)                                                                          |
+| 2   | `opt.toggles`         | Feature toggles (live ticker, experimental Index)                              | [City Index stock](../client/city-index-fund.md)                            | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs), [`ModSettings`](../../src/FinanceOverhaul.Core/Settings/ModSettings.cs) |
+| 3   | `opt.built-utc`       | Dev Built (UTC) footer                                                         | [Live reload](./live-reload.md)                                             | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs)                                                                          |
+| 4   | `opt.built-local`     | Dev Built (local) footer                                                       | [Live reload](./live-reload.md)                                             | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs)                                                                          |
+| 5   | `opt.copy-build-info` | Copy build info button                                                         | [Live reload](./live-reload.md)                                             | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs)                                                                          |
+| 6   | `opt.order-flags`     | Order type flags (limit buy, stop-loss, take-profit, trailing stop; temporary) | [Automated orders](../features/automated-orders.md#options-flags-temporary) | [`mod/Host/Mod.cs`](../../mod/Host/Mod.cs), [`ModSettings`](../../src/FinanceOverhaul.Core/Settings/ModSettings.cs) |
 
 ### Investments frame (`vanilla-host`)
 

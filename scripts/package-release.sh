@@ -13,7 +13,7 @@ trap 'rm -rf "$STAGE"' EXIT
 bash "$ROOT/scripts/install-mod-local.sh" >/dev/null # release build (no --dev), also installs locally
 
 mkdir -p "$STAGE/FinanceOverhaul" "$OUT"
-for f in FinanceOverhaul.dll FinanceOverhaul.Market.dll CitiesHarmony.API.dll; do
+for f in FinanceOverhaul.dll FinanceOverhaul.Core.dll CitiesHarmony.API.dll; do
   [[ -f "$BIN/$f" ]] || { echo "Missing $BIN/$f" >&2; exit 1; }
   cp "$BIN/$f" "$STAGE/FinanceOverhaul/"
 done

@@ -5,7 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using ColossalFramework.UI;
-using FinanceOverhaul.Market;
+using FinanceOverhaul.Core;
 using HarmonyLib;
 using UnityEngine;
 

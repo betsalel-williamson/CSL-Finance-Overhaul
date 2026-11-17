@@ -1,5 +1,5 @@
 using System;
-using FinanceOverhaul.Market;
+using FinanceOverhaul.Core;
 using ICities;
 
 namespace FinanceOverhaul

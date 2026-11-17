@@ -55,8 +55,8 @@ dotnet build "${BUILD_ARGS[@]}"
 
 mkdir -p "${DEST}"
 echo "Build finished (post-build should have deployed to ${DEST})."
-if [[ ! -f "${DEST}/FinanceOverhaul.Market.dll" ]]; then
-  echo "Missing ${DEST}/FinanceOverhaul.Market.dll — Content Manager needs the Market library beside the mod DLL." >&2
+if [[ ! -f "${DEST}/FinanceOverhaul.Core.dll" ]]; then
+  echo "Missing ${DEST}/FinanceOverhaul.Core.dll — Content Manager needs the Core library beside the mod DLL." >&2
   exit 1
 fi
 echo "Cities auto-reloads when AssemblyVersion changes — see docs/developer/live-reload.md"

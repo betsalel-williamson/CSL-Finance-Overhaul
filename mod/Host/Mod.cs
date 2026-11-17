@@ -1,5 +1,5 @@
 using CitiesHarmony.API;
-using FinanceOverhaul.Market;
+using FinanceOverhaul.Core;
 using ICities;
 
 namespace FinanceOverhaul

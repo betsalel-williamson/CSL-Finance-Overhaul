@@ -46,7 +46,7 @@ gh release create v<version> dist/FinanceOverhaul-<version>.zip \
   --title "Finance Overhaul <version>" --notes-file <notes from CHANGELOG.md>
 ```
 
-The zip holds one `FinanceOverhaul/` folder: `FinanceOverhaul.dll`, `FinanceOverhaul.Market.dll`,
+The zip holds one `FinanceOverhaul/` folder: `FinanceOverhaul.dll`, `FinanceOverhaul.Core.dll`,
 `CitiesHarmony.API.dll` and `PreviewImage.png`. 0.1.0:
 [v0.1.0](https://github.com/betsalel-williamson/CSL-Finance-Overhaul/releases/tag/v0.1.0).
 

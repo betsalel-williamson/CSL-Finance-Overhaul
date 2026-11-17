@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using FinanceOverhaul.Market;
+using FinanceOverhaul.Core;
 
 namespace FinanceOverhaul
 {

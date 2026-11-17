@@ -1,6 +1,6 @@
 using System;
 using System.Globalization;
-using FinanceOverhaul.Market;
+using FinanceOverhaul.Core;
 
 namespace FinanceOverhaul
 {

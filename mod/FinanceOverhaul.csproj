@@ -1,5 +1,5 @@
 <!--
-  CSL mod surface — IUserMod, Harmony, Options. References FinanceOverhaul.Market
+  CSL mod surface — IUserMod, Harmony, Options. References FinanceOverhaul.Core
   for stock math. Always built against the game's managed assemblies (CitiesManaged); it does
   not build without them. Everything unit tested lives in the library project.
 -->
@@ -72,16 +72,18 @@
     Condition="'$(SkipModDeploy)' != 'true' And '$(CitiesMods)' != ''"
   >
     <MakeDir Directories="$(ModDeployDir)" />
+    <!-- The library was FinanceOverhaul.Market.dll up to 0.1.0; a leftover copy would load too. -->
+    <Delete Files="$(ModDeployDir)/FinanceOverhaul.Market.dll" />
     <Copy
       SourceFiles="$(TargetPath)"
       DestinationFiles="$(ModDeployDir)/FinanceOverhaul.dll"
       OverwriteReadOnlyFiles="true"
     />
     <Copy
-      SourceFiles="$(TargetDir)FinanceOverhaul.Market.dll"
+      SourceFiles="$(TargetDir)FinanceOverhaul.Core.dll"
       DestinationFolder="$(ModDeployDir)"
       OverwriteReadOnlyFiles="true"
-      Condition="Exists('$(TargetDir)FinanceOverhaul.Market.dll')"
+      Condition="Exists('$(TargetDir)FinanceOverhaul.Core.dll')"
     />
     <Copy
       SourceFiles="$(TargetDir)CitiesHarmony.API.dll"
@@ -105,7 +107,7 @@
     />
   </Target>
   <ItemGroup>
-    <ProjectReference Include="..\src\FinanceOverhaul.Market\FinanceOverhaul.Market.csproj" />
+    <ProjectReference Include="..\src\FinanceOverhaul.Core\FinanceOverhaul.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ColossalFramework.UI;
-using FinanceOverhaul.Market;
+using FinanceOverhaul.Core;
 using UnityEngine;
 
 namespace FinanceOverhaul

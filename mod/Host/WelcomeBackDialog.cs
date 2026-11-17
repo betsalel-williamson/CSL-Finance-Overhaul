@@ -1,6 +1,6 @@
 using System;
 using ColossalFramework.UI;
-using FinanceOverhaul.Market;
+using FinanceOverhaul.Core;
 using UnityEngine;
 
 namespace FinanceOverhaul
