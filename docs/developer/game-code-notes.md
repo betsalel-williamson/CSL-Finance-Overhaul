@@ -507,3 +507,16 @@ listened to.
   that `gain`, `gain2` and `loss` are the buy and sell sounds of `BuySellInvestmentPanel` (inference
   from the names); how a mod best gets a clip that no public field is known to hold (finding the
   loaded clip by name is the fallback; not tried in game).
+
+## 12. What Esc does (`GameKeyShortcuts`)
+
+- `OnProcessKeyEvent` calls `Escape()` for the Esc key when no modal has the input
+  (`UIView.HasModalInput`); with a modal up it calls `EscapeFromModal`, which only closes the
+  unlocking panel. `SteamEscape` is the same list for a controller.
+- `Escape()` closes one thing per press, in this order: free camera, tutorial panels, Chirper, world
+  info panels, the city info panel, the unlocking panel, the hotel chain panel, a relocation or the
+  current tool, `BuySellInvestmentPanel` (`HidePanel`), the toolbar's open panel, the info views
+  panel and the current info view; when nothing is left it shows the pause menu
+  (`UIView.library.ShowModal("PauseMenu")`).
+- A mod window is not on that list, so Esc skips it and opens the pause menu. The mod's prefix on
+  `Escape` and `SteamEscape` gives the Stock Monitor its turn first.

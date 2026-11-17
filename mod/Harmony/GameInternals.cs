@@ -12,6 +12,39 @@ namespace FinanceOverhaul
     /// </summary>
     internal static class GameInternals
     {
+        /// <summary>The game's keyboard shortcuts while a city is loaded (<see cref="GameKeyShortcuts"/>).</summary>
+        internal static class Keys
+        {
+            /// <summary>What Esc does: closes one open thing, or opens the pause menu.</summary>
+            public static readonly MethodInfo Escape = AccessTools.Method(
+                typeof(GameKeyShortcuts),
+                "Escape"
+            );
+
+            /// <summary>The same list for a controller's menu button.</summary>
+            public static readonly MethodInfo SteamEscape = AccessTools.Method(
+                typeof(GameKeyShortcuts),
+                "SteamEscape"
+            );
+
+            /// <summary>
+            /// Game UI tests: runs the game's own Esc handling, as a key press would. False when
+            /// the game has no such handler loaded.
+            /// </summary>
+            public static bool PressEscape()
+            {
+                GameKeyShortcuts shortcuts =
+                    UnityEngine.Object.FindObjectOfType<GameKeyShortcuts>();
+                if (shortcuts == null || Escape == null)
+                {
+                    return false;
+                }
+
+                Escape.Invoke(shortcuts, null);
+                return true;
+            }
+        }
+
         /// <summary>The Buy / Sell dialog (<see cref="BuySellInvestmentPanel"/>).</summary>
         internal static class BuySell
         {

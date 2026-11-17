@@ -198,6 +198,36 @@ namespace FinanceOverhaul
             SetOpen(open, true);
         }
 
+        /// <summary>
+        /// Esc, before the game acts on it: closes the settings popover if it is open, else the
+        /// window. False (the game handles the key) when the window is closed or the game's
+        /// Buy/Sell dialog is open, which the game closes first.
+        /// </summary>
+        public bool HandleEscape()
+        {
+            if (window == null || !window.isVisible)
+            {
+                return false;
+            }
+
+            BuySellInvestmentPanel dialog = BuySellInvestmentPanel.instance;
+            if (dialog != null && dialog.isVisible)
+            {
+                return false;
+            }
+
+            if (popover != null && popover.isVisible)
+            {
+                HidePopover();
+            }
+            else
+            {
+                SetOpen(false, true);
+            }
+
+            return true;
+        }
+
         public void Toggle()
         {
             SetOpen(window == null || !window.isVisible, true);

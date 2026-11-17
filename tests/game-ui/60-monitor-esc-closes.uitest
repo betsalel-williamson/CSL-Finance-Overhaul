@@ -1,0 +1,18 @@
+# Esc closes the Stock Monitor like the game's own windows: first the settings popover if it is
+# open, then the window, and the pause menu does not open for those presses. Runs the game's own
+# Esc handling. Puts the player's monitor settings back.
+name Stock Monitor: Esc closes the settings popover, then the window, without the pause menu
+monitor remember
+monitor open
+expect-visible FinanceOverhaulStockMonitor
+click FinanceOverhaulStockMonitorSettings
+expect-visible FinanceOverhaulStockMonitorSettingsPanel
+game-escape
+expect-hidden FinanceOverhaulStockMonitorSettingsPanel
+expect-visible FinanceOverhaulStockMonitor
+expect-hidden PauseMenu
+game-escape
+expect-hidden FinanceOverhaulStockMonitor
+expect-hidden PauseMenu
+cleanup:
+monitor restore

@@ -164,6 +164,17 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "game-escape":
+                {
+                    // game-escape — the game's own Esc handling, as the key would run it.
+                    if (!GameInternals.Keys.PressEscape())
+                    {
+                        r.Error = "the game's Esc handler is not available";
+                    }
+
+                    yield return new WaitForSeconds(0.3f);
+                    break;
+                }
                 case "monitor":
                 {
                     // monitor remember|restore — snapshot the player's monitor settings so a

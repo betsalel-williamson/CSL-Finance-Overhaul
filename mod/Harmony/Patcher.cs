@@ -37,6 +37,7 @@ namespace FinanceOverhaul
                 int index = ApplyIndexPatches(harmony) + ApplyChartPatches(harmony);
                 int ui = ApplyShareFieldPatches(harmony);
                 int ticker = ApplyDailyPatches(harmony);
+                ApplyKeyPatches(harmony);
                 patched = true;
                 ModLog.Info(
                     "harmony patched index=" + index + " shareField=" + ui + " ticker=" + ticker

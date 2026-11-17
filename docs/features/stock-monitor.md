@@ -11,7 +11,10 @@ a phone stocks app, styled like the City Vitals window players already know.
   remembered). The button looks pressed while the window is open.
 - **Window:** centred title, the game's own gear and close buttons, a dark background behind the
   rows (35% by default; the gear cycles 35% → 60% → 90% → 0% until the settings popover ships). Drag
-  the title to move it; the position is remembered.
+  the title to move it; the position is remembered. Esc closes the settings popover if it is open,
+  then the window, taking its turn before the game's pause menu; while the game's Buy/Sell dialog is
+  open Esc closes that first, as in the game (a prefix on `GameKeyShortcuts.Escape`; game UI
+  scenario 60).
 - **Filters:** All · Portfolio (stocks the city holds) · Orders (stocks with open orders). **Sort**
   (click it) cycles Change (biggest gain first) → Symbol → Price → Value held. Change follows what
   the pills show and names its unit: "Sort: Change %" with % pills; with ₡ pills it orders by that ₡
