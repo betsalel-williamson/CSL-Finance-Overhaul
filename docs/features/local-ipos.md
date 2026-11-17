@@ -1,9 +1,31 @@
 # Local IPOs (design, Level 1)
 
 Priority 2 of the [Roadmap](./roadmap.md): a business that has done well in the city for a long time
-can go public and trade as a stock. Status: **designed, not built**. Grounded in the game code
+can go public and trade as a stock. Status: **designed; first library slice built** (see
+[Build progress](#build-progress)), nothing in the game yet. Grounded in the game code
 ([Game code notes](../developer/game-code-notes.md)); design rule: fun first, with real-world
 patterns as the source of the rules.
+
+## Build progress
+
+Built one slice at a time (maths with proofs → engine → Figma → UI → game UI test → docs), behind
+the Local IPOs flag.
+
+| Slice                                                     | Where                                       | Status               |
+| --------------------------------------------------------- | ------------------------------------------- | -------------------- |
+| Candidate rule and healthy-day count; the rare daily draw | `Market/IpoCalendar.cs`, `IpoCalendarTests` | **Built 2026-11-17** |
+| Offering price, first-day pop, drift and volatility       | Library                                     | Next                 |
+| Company registry, moving and delisting, save data         | Library                                     | Not started          |
+| Reading businesses from the game; the listing; the flag   | Mod engine                                  | Not started          |
+| IPO dialog, bell, chirps, Figma                           | Mod windows                                 | Not started          |
+
+The first slice: `CandidateBook` counts healthy days per building (id plus build index, so a
+building that reuses an id starts from nothing) and lists the candidates in a fixed order;
+`IpoCalendar` gives every candidate the same daily chance, set so the reference pool lists once in
+the target years, and draws at most one a day from a repeatable dice (`IpoDice`) whose state is
+saved with the city. Unit tests simulate 60,000 city-years per pool size and check the average, that
+fewer candidates are rarer and none never lists, that every candidate is equally likely, and that
+nothing is drawn while an IPO runs or at the listing cap.
 
 ## Levels and boundaries
 
