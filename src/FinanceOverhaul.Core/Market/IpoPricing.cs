@@ -73,19 +73,13 @@ namespace FinanceOverhaul.Core
         {
             double mean = 1d + rules.PopAveragePercent / 100d;
             double spread = Math.Max(0, rules.PopSpreadPercent) / 100d;
-            double u1 = 1d - dice.Next(); // (0, 1]: the logarithm below is finite
-            double u2 = dice.Next();
+            double jump = dice.LogNormal(mean, spread);
             if (mean <= 0d)
             {
                 return MinPop;
             }
 
-            // Log-normal with the wanted mean and standard deviation.
-            double sigma2 = Math.Log(1d + spread * spread / (mean * mean));
-            double mu = Math.Log(mean) - sigma2 / 2d;
-            double normal = Math.Sqrt(-2d * Math.Log(u1)) * Math.Cos(2d * Math.PI * u2);
-            double pop = Math.Exp(mu + Math.Sqrt(sigma2) * normal) - 1d;
-            return Math.Max(MinPop, Math.Min(MaxPop, pop));
+            return Math.Max(MinPop, Math.Min(MaxPop, jump - 1d));
         }
 
         /// <summary>The opening price on the first trading day: whole ₡, inside the same range.</summary>

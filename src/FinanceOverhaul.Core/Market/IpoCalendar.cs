@@ -43,6 +43,18 @@ namespace FinanceOverhaul.Core
 
         /// <summary>How varied the first-day jump is (its standard deviation), in percent.</summary>
         public int PopSpreadPercent = 25;
+
+        /// <summary>A listed company's chance of being bought out in a year, in percent.</summary>
+        public int BuyoutPercentPerYear = 4;
+
+        /// <summary>No buy-out until a company has been listed this many days.</summary>
+        public int BuyoutMinDaysListed = 365;
+
+        /// <summary>What a buyer pays above the price on average, in percent.</summary>
+        public int BuyoutPremiumAveragePercent = 40;
+
+        /// <summary>How varied that premium is (its standard deviation), in percent.</summary>
+        public int BuyoutPremiumSpreadPercent = 15;
     }
 
     /// <summary>What the mod reads from the game about one zoned business on one day.</summary>
@@ -201,6 +213,25 @@ namespace FinanceOverhaul.Core
         public IpoDice(ulong seed)
         {
             State = seed;
+        }
+
+        /// <summary>
+        /// A log-normal number with this mean and standard deviation (most near the mean, a few
+        /// far above it, never below zero). Takes two numbers from the dice.
+        /// </summary>
+        public double LogNormal(double mean, double deviation)
+        {
+            double u1 = 1d - Next(); // (0, 1]: the logarithm below is finite
+            double u2 = Next();
+            if (mean <= 0d)
+            {
+                return 0d;
+            }
+
+            double sigma2 = Math.Log(1d + deviation * deviation / (mean * mean));
+            double mu = Math.Log(mean) - sigma2 / 2d;
+            double normal = Math.Sqrt(-2d * Math.Log(u1)) * Math.Cos(2d * Math.PI * u2);
+            return Math.Exp(mu + Math.Sqrt(sigma2) * normal);
         }
 
         /// <summary>The next number in [0, 1).</summary>

@@ -15,6 +15,7 @@ the Local IPOs flag.
 | --------------------------------------------------------- | ------------------------------------------- | -------------------- |
 | Candidate rule and healthy-day count; the rare daily draw | `Market/IpoCalendar.cs`, `IpoCalendarTests` | **Built 2026-11-17** |
 | Offering price and first-day pop                          | `Market/IpoPricing.cs`, `IpoPricingTests`   | **Built 2026-11-17** |
+| Buy-outs: chance, premium, payout                         | `Market/IpoBuyout.cs`, `IpoBuyoutTests`     | **Built 2026-11-17** |
 | Drift and volatility after listing                        | Library                                     | Next                 |
 | Company registry, moving and delisting, save data         | Library                                     | Not started          |
 | Reading businesses from the game; the listing; the flag   | Mod engine                                  | Not started          |
@@ -132,6 +133,26 @@ the offering price, more than half open between 0% and +50%, and a few percent o
   shareholders, and chirps "{Company} moved its headquarters". If none exists, it stays listed for a
   grace period with a falling price, then delists and the city's shares are paid out at the last
   price.
+
+### Buy-outs (decided 2026-11-17; maths built)
+
+Now and then a listed company is bought and leaves the exchange, and the city is paid for its shares
+above the price: a windfall, rare and not expected. It is the most common reason a real company
+delists ([Evidence](#evidence-for-the-sizes-2026-11-17)).
+
+- **How often:** every company listed for at least a year has the same small daily chance, 4% over a
+  year. One listed company is bought about once in 25 game years; a full board of 12 sees a buy-out
+  about every two. At most one a day.
+- **No warning:** nothing announces it beforehand. On the day, a chirp from City Brokerage names the
+  company, the buyer's price and what the city received.
+- **What the city gets:** every share is paid at the price plus a premium drawn afresh each time:
+  40% on average, now and then much more (about one in ten is above 60%), never under 10% nor over
+  150%. A holding of 1,000 shares at ₡52 with a 40% premium pays ₡73,000.
+- **Afterwards:** the company is delisted and its slot is free for a later IPO; the building stays
+  Historical. A city that holds no shares still gets the chirp.
+- **Built:** `IpoBuyout` (chance, draw, premium, payout) with unit tests that simulate 60,000
+  city-years for 1, 6 and 12 listings. Not built: the engine that applies it, the chirp, the save
+  data.
 
 ## The IPO moment (planned)
 
@@ -315,17 +336,16 @@ survival after 1 and 3 years; delisting by industry.
 - **How often:** history is one new listing a year for every 11 to 20 listed companies. With the cap
   of 12 that is one IPO every one to two game years, not the design's ten.
 - **Leaving:** for cause is already the building's fate (abandoned, demolished, no new home).
-  Mergers are the larger real cause: a listed company is bought out with a chance of about 4–5% a
-  year, the city paid about 40% above the price, which also frees a slot (the design's "acquisition"
-  made a regular event rather than only at the cap). Together about 60% of listings would still be
-  there after five years, as in history.
+  Mergers are the larger real cause: **decided and built**, see
+  [Buy-outs](#buy-outs-decided-2026-11-17-maths-built). Together about 60% of listings would still
+  be there after five years, as in history.
 
 ## Limits and room for later
 
 - The game holds **254 investments** (measured, scenario 51). Local IPOs get a **cap** (default 12)
   so the rest stays free for external exchanges and other investment types.
-- **At the cap:** no new IPOs; candidates keep waiting. Option: a listed company can be **acquired**
-  (taken private at a premium, the city's shares paid out) to free a slot.
+- **At the cap:** no new IPOs; candidates keep waiting until a listed company leaves (a
+  [buy-out](#buy-outs-decided-2026-11-17-maths-built), or losing its home).
 - **The UI is the real limit today:** the vanilla Investments panel is one long list. Going from a
   dozen to 50 listings needs the many-company interface (search, sector groups, watchlist; roadmap
   idea 14) as a slice of this epic before the cap is raised.
@@ -349,7 +369,9 @@ settings.
 | City's largest stake               | 10%       | What the full 1,000-share holding is of the company   |
 | New-listing volatility             | 2×        | Extra swing in the first year (settles to normal)     |
 | Local listing cap                  | 12        | Most local companies listed at once                   |
-| Acquisitions at the cap            | Off       | Free a slot by taking a company private               |
+| Buy-out chance a year              | 4%        | A listed company's chance of being bought in a year   |
+| Buy-out premium: average / spread  | 40% / 15% | What the buyer pays above the price                   |
+| No buy-out before (days listed)    | 365       | A new listing is not bought in its first year         |
 | Grace period after losing a home   | 90 days   | Before an un-homed company delists                    |
 
 ## Save data
@@ -364,7 +386,8 @@ settings.
 
 ## Open decisions
 
-1. At the cap: wait only, or acquisitions too (on by default?).
+1. Decided: buy-outs are a regular rare event for any company listed a year or more, not a rule that
+   only applies at the cap.
 2. Measure income by the game's formula or by the before-and-after reading.
 3. Whether the city may sell IPO shares during the offering window.
 4. The bell: confirm by ear that `stock_exchange_levelup` suits; if not, pick another shipped clip
