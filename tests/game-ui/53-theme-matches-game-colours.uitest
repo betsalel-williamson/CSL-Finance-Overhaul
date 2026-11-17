@@ -1,0 +1,8 @@
+# The mod's additions inside the Economy panel are drawn in the game's own colours. FoTheme
+# holds copies of them; this fails if the game's values differ (a game update, another mod).
+name the theme's game colours are the game's own (Economy panel gain, loss and value)
+show-economy
+wait 1
+game-colors expect
+cleanup:
+close-economy

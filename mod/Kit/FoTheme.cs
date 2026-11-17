@@ -9,6 +9,21 @@ namespace FinanceOverhaul
     /// </summary>
     internal static class FoTheme
     {
+        // The game's own colours, read from the running game (Economy panel). Anything the mod
+        // adds inside the game's panels uses these, so it reads as part of the game. Game UI
+        // scenario 53 fails if the game's values ever differ from these.
+
+        /// <summary>Money that went up: EconomyPanel.m_positiveNumberColor.</summary>
+        public static readonly Color32 GamePositive = new Color32(151, 238, 0, 255);
+
+        /// <summary>Money that went down: EconomyPanel.m_negativeNumberColor.</summary>
+        public static readonly Color32 GameNegative = new Color32(254, 150, 89, 255);
+
+        /// <summary>A money value, and a change of zero: EconomyPanel.m_neutralNumberColor.</summary>
+        public static readonly Color32 GameValue = new Color32(185, 221, 254, 255);
+
+        // The mod's own colours (windows and text the game has no equivalent for).
+
         /// <summary>Selected tab, switches on, accents. Figma: color/bg/tab-active.</summary>
         public static readonly Color32 Accent = new Color32(101, 214, 248, 255);
 
@@ -27,17 +42,8 @@ namespace FinanceOverhaul
         /// <summary>Figma: color/text/muted.</summary>
         public static readonly Color32 TextMuted = new Color32(155, 154, 159, 255);
 
-        /// <summary>Hints and secondary lines inside the Economy panel.</summary>
-        public static readonly Color32 Hint = new Color32(160, 172, 182, 255);
-
         /// <summary>Chart axis labels and secondary text in the Stock Monitor.</summary>
         public static readonly Color32 ChartLabel = new Color32(158, 163, 170, 255);
-
-        /// <summary>A buy order, an estimate that is fine.</summary>
-        public static readonly Color32 Buy = new Color32(78, 205, 96, 255);
-
-        /// <summary>A sell order, a refused bond.</summary>
-        public static readonly Color32 Sell = new Color32(233, 150, 66, 255);
 
         /// <summary>A falling price, an error. Figma: color/ticker/loss.</summary>
         public static readonly Color32 Loss = new Color32(233, 66, 79, 255);

@@ -40,10 +40,10 @@ namespace FinanceOverhaul
 
         private static readonly Color32 Gold = new Color32(232, 214, 77, 255);
         private static readonly Color32 Text = new Color32(230, 236, 240, 255);
-        private static readonly Color32 Muted = FoTheme.Hint;
-        private static readonly Color32 Gain = new Color32(98, 205, 96, 255);
-        private static readonly Color32 Price = new Color32(120, 196, 255, 255);
-        private static readonly Color32 Refused = FoTheme.Sell;
+        private static readonly Color32 Muted = FoTheme.TextMuted;
+        private static readonly Color32 Gain = FoTheme.GamePositive;
+        private static readonly Color32 Price = FoTheme.GameValue;
+        private static readonly Color32 Refused = FoTheme.GameNegative;
         private static readonly Color32 Panel = new Color32(24, 30, 36, 245);
         private static readonly Color32 RowColour = new Color32(36, 44, 52, 255);
 

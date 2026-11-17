@@ -506,7 +506,51 @@ namespace FinanceOverhaul
                                         + ((UILabel)c).autoSize
                                     : ""
                             )
+                            + " color="
+                            + Rgba(c.color)
+                            + (t == null ? "" : " textColor=" + Rgba(t.textColor))
                     );
+                    break;
+                }
+                case "game-colors":
+                {
+                    // The colours the game itself uses for money that went up, down or
+                    // stayed (Economy panel), so mod UI inside that panel can be checked
+                    // against them.
+                    EconomyPanel economy = UnityEngine.Object.FindObjectOfType<EconomyPanel>();
+                    if (economy == null)
+                    {
+                        r.Error = "no Economy panel";
+                        break;
+                    }
+
+                    ModLog.Info(
+                        "uitest: game-colors positive="
+                            + Rgba(economy.m_positiveNumberColor)
+                            + " negative="
+                            + Rgba(economy.m_negativeNumberColor)
+                            + " neutral="
+                            + Rgba(economy.m_neutralNumberColor)
+                    );
+                    // "game-colors expect": the theme's copies must still be the game's values.
+                    if (
+                        a == "expect"
+                        && (
+                            !Same(economy.m_positiveNumberColor, FoTheme.GamePositive)
+                            || !Same(economy.m_negativeNumberColor, FoTheme.GameNegative)
+                            || !Same(economy.m_neutralNumberColor, FoTheme.GameValue)
+                        )
+                    )
+                    {
+                        r.Error =
+                            "FoTheme no longer matches the game: theme positive="
+                            + Rgba(FoTheme.GamePositive)
+                            + " negative="
+                            + Rgba(FoTheme.GameNegative)
+                            + " value="
+                            + Rgba(FoTheme.GameValue);
+                    }
+
                     break;
                 }
                 case "who-covers":
@@ -2278,6 +2322,16 @@ namespace FinanceOverhaul
             }
 
             return -1;
+        }
+
+        private static bool Same(Color32 x, Color32 y)
+        {
+            return x.r == y.r && x.g == y.g && x.b == y.b && x.a == y.a;
+        }
+
+        private static string Rgba(Color32 c)
+        {
+            return "(" + c.r + ", " + c.g + ", " + c.b + ", " + c.a + ")";
         }
 
         /// <summary>Replaces each <c>$owned:SYMBOL</c> with the shares owned now.</summary>

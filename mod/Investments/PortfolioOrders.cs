@@ -34,9 +34,9 @@ namespace FinanceOverhaul
         private const float DetailGap = 8f;
         private const float DetailMinScale = 0.6f;
         private const float CancelRight = 10f;
-        private static readonly Color32 BuyColor = FoTheme.Buy;
-        private static readonly Color32 MutedColor = FoTheme.Hint;
-        private static readonly Color32 SellColor = FoTheme.Sell;
+        private static readonly Color32 BuyColor = FoTheme.GamePositive;
+        private static readonly Color32 MutedColor = FoTheme.TextMuted;
+        private static readonly Color32 SellColor = FoTheme.GameNegative;
 
         private EconomyPanel economy;
         private string shownSignature;

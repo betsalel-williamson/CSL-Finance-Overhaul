@@ -53,9 +53,9 @@ namespace FinanceOverhaul
             "UpdatePriceNumbers"
         );
 
-        private static readonly Color32 HintColor = FoTheme.Hint;
-        private static readonly Color32 ErrorColor = FoTheme.Loss;
-        private static readonly Color32 EstimateColor = FoTheme.Buy;
+        private static readonly Color32 HintColor = FoTheme.TextMuted;
+        private static readonly Color32 ErrorColor = FoTheme.GameNegative;
+        private static readonly Color32 EstimateColor = FoTheme.GamePositive;
 
         /// <summary>One tab: an order kind, or null for the vanilla trade.</summary>
         private sealed class Tab
