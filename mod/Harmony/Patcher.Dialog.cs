@@ -121,6 +121,7 @@ namespace FinanceOverhaul
             try
             {
                 ShareAmountField.Tick();
+                OrderTicket.Tick();
             }
             catch
             {

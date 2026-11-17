@@ -1,0 +1,11 @@
+# The order ticket's price box groups thousands as the number is typed, and the order is placed
+# at the number typed. Places nothing: only the box, the estimate and the hint are read.
+name the limit price box groups thousands as it is typed
+show-buy Oil
+click FinanceOverhaulOrderTab-Limit
+type FinanceOverhaulLimitPriceField 1500000
+wait 0.3
+expect-text-is FinanceOverhaulLimitPriceField 1,500,000
+expect-text FinanceOverhaulLimitHint 1,500,000
+cleanup:
+close-dialog

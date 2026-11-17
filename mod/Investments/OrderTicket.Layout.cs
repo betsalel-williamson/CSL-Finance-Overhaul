@@ -134,9 +134,8 @@ namespace FinanceOverhaul
             priceField.name = PriceFieldName;
             priceField.size = new Vector2(96f, 27f);
             priceField.relativePosition = new Vector3(dark.width - 96f - 32f, 5f);
-            priceField.numericalOnly = true;
-            priceField.allowFloats = false;
-            priceField.maxLength = 7; // ₡9,999,999 per share: far above any listing
+            priceField.numericalOnly = false; // separators are put in for the player; digits only stay
+            priceField.maxLength = PriceMaxDigits + 2; // ₡9,999,999 per share: far above any listing
             priceField.selectOnFocus = true;
             priceField.submitOnFocusLost = true;
             priceField.builtinKeyNavigation = true;
@@ -155,6 +154,7 @@ namespace FinanceOverhaul
                 priceField.font = shareLabel.font;
             }
 
+            priceGrouping = new FoGroupedField(priceField, PriceMaxDigits);
             priceField.eventTextChanged += (c, t) => Refresh();
             hint = pricePanel.AddUIComponent<UILabel>();
             hint.name = HintName;

@@ -103,6 +103,8 @@ namespace FinanceOverhaul
         private static UIPanel pricePanel;
         private static UILabel caption;
         private static UITextField priceField;
+        private const int PriceMaxDigits = 7;
+        private static FoGroupedField priceGrouping;
         private static UILabel hint;
         private static UILabel priceText; // vanilla, only ever repaired (never rewritten)
         private static UIComponent buyStats; // vanilla Price row + "can't afford"
@@ -254,6 +256,15 @@ namespace FinanceOverhaul
         }
 
         /// <summary>Postfix target: SetSliderValue — keeps the rule and estimate current.</summary>
+        /// <summary>Once a frame while the dialog is open: keeps the typed price grouped.</summary>
+        public static void Tick()
+        {
+            if (priceGrouping != null && priceField != null && priceField.isVisible)
+            {
+                priceGrouping.Tick();
+            }
+        }
+
         public static void Refresh()
         {
             if (hint == null || !active.HasValue)
@@ -387,6 +398,7 @@ namespace FinanceOverhaul
             pricePanel = null;
             caption = null;
             priceField = null;
+            priceGrouping = null;
             hint = null;
             estimate = null;
             buyStats = null;

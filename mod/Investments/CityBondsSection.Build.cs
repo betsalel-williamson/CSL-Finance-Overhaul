@@ -175,6 +175,7 @@ namespace FinanceOverhaul
             }
 
             amount.text = "500,000";
+            amountGrouping = new FoGroupedField(amount, AmountMaxDigits);
             amount.eventTextChanged += (c, t) => Refresh(true);
             y += 30f;
             hint = Wrapped(section, HintName, colW, 0.7f, Muted);
