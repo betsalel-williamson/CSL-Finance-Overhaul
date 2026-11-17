@@ -14,7 +14,8 @@ the Local IPOs flag.
 | Slice                                                     | Where                                       | Status               |
 | --------------------------------------------------------- | ------------------------------------------- | -------------------- |
 | Candidate rule and healthy-day count; the rare daily draw | `Market/IpoCalendar.cs`, `IpoCalendarTests` | **Built 2026-11-17** |
-| Offering price, first-day pop, drift and volatility       | Library                                     | Next                 |
+| Offering price and first-day pop                          | `Market/IpoPricing.cs`, `IpoPricingTests`   | **Built 2026-11-17** |
+| Drift and volatility after listing                        | Library                                     | Next                 |
 | Company registry, moving and delisting, save data         | Library                                     | Not started          |
 | Reading businesses from the game; the listing; the flag   | Mod engine                                  | Not started          |
 | IPO dialog, bell, chirps, Figma                           | Mod windows                                 | Not started          |
@@ -102,7 +103,19 @@ level-3 businesses that stay healthy never gets one.
 From what the business earns: the game books income to the city by category only, so the mod
 measures the building's own income (the game's income formula for its type and level × its activity,
 or the city's income just before and after the building's step). Offering price = annual earnings ×
-a price-to-earnings multiple ÷ shares, kept inside the range of the game's own stocks.
+a price-to-earnings multiple ÷ 1,000, in whole ₡, kept inside ₡1 to ₡100,000 (the range of the
+game's own stocks).
+
+**Why ÷ 1,000 (decided 2026-11-17):** the game has no share count and no volume. A stock is its last
+30 daily prices plus the city's own holding (shares owned, money spent), and each stock type caps
+that holding (`InvestmentAI.m_maximumShareCount`, 1,000). The city is the only trader. So the price
+is set so that the full 1,000-share holding is worth the whole company: a business earning ₡26,000 a
+year is worth ₡520,000 and lists at ₡520 a share (`IpoPricing.OfferingPriceCents`).
+
+**First-day pop (built):** a log-normal jump with the two options as its average (+15%) and standard
+deviation (25%), cut off at −50% and +300%. In 400,000 simulated listings about 3 in 10 open below
+the offering price, more than half open between 0% and +50%, and a few percent open more than 50% up
+(`IpoPricing.FirstDayPop`, `IpoPricingTests`).
 
 ### After the IPO
 

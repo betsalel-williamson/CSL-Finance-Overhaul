@@ -28,6 +28,15 @@ namespace FinanceOverhaul.Core
 
         /// <summary>Most local companies listed at once.</summary>
         public int ListingCap = 12;
+
+        /// <summary>Company value = annual earnings × this multiple.</summary>
+        public int PriceToEarnings = 20;
+
+        /// <summary>The first-day jump on average, in percent.</summary>
+        public int PopAveragePercent = 15;
+
+        /// <summary>How varied the first-day jump is (its standard deviation), in percent.</summary>
+        public int PopSpreadPercent = 25;
     }
 
     /// <summary>What the mod reads from the game about one zoned business on one day.</summary>
