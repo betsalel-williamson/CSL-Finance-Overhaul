@@ -30,6 +30,21 @@ it ships.
 Stock business logic and performance budgets live only under `src/FinanceOverhaul.Market/` and
 `tests/FinanceOverhaul.Market.Tests/`. Cities Harmony / `ICities` stay in `mod/Host/`.
 
+## Game UI tests and the test stock (TST)
+
+`scripts/game-ui-test.sh [tests/game-ui/x.uitest]` drives the running game (a `--dev` install,
+enabled, city with a Stock Exchange loaded); a rebuild with `scripts/install-mod-local.sh --dev`
+reloads the mod live, no restart. Reproduce a UI bug as a scenario first, then fix it. Commands:
+`docs/developer/testing.md`.
+
+Real stocks move on their own and depend on what the save holds (a scenario that assumes "the city
+owns Oil" fails elsewhere). For a controlled test use the dev **Test Stock (TST)**: Options →
+Feature flags → Test Stock, in a test save only. `set-price TST 100` fixes its price from the next
+day, `run-days N` advances time, and buying or selling TST gives a known holding, cost basis and
+order triggers. Name such scenarios `NN-tst-*.uitest`; they are skipped unless `FO_TST=1` or passed
+by path. For manual control without a scenario, write `buy SHARES LIMIT NAME`, `cancel ID` or `list`
+to the `FinanceOverhaul.order` trigger file (`docs/developer/live-reload.md`).
+
 ## Git hooks
 
 - **pre-commit** — lint-staged (prettier + csharpier)
