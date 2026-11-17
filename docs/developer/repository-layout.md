@@ -17,13 +17,13 @@ the library and draws; a calculation worth a unit test belongs in the library.
 
 One flat namespace, `FinanceOverhaul.Core`; the folders only group files.
 
-| Folder      | Holds                                                                             |
-| ----------- | --------------------------------------------------------------------------------- |
-| `Market/`   | Rules: orders, bonds, the Index, price bias, cost basis, ticker feed, symbols     |
-| `Views/`    | What a window shows: Stock Monitor rows, sorting and filters, stock detail        |
-| `Text/`     | Wording: order, bond and notice text, build info                                  |
-| `Layout/`   | UI calculations: label fit, scroll fade, sparkline, caret, slider thumb, LED text |
-| `Settings/` | Options and their file format                                                     |
+| Folder      | Holds                                                                                |
+| ----------- | ------------------------------------------------------------------------------------ |
+| `Market/`   | Rules: orders, bonds, the Index, price bias, cost basis, ticker feed, symbols        |
+| `Views/`    | What a window shows: Stock Monitor rows, sorting and filters, stock detail           |
+| `Text/`     | Wording: the string table (`Strings`, `EnglishStrings`), order, bond and notice text |
+| `Layout/`   | UI calculations: label fit, scroll fade, sparkline, caret, slider thumb, LED text    |
+| `Settings/` | Options and their file format                                                        |
 
 ## Mod folders (`mod/`)
 

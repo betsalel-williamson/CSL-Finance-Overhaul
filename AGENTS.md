@@ -37,6 +37,16 @@ members are reached only through `GameInternals` in the same folder: no `AccessT
 `BindingFlags` anywhere else. A mod class that needs a test has a calculation in it that belongs in
 the library: move it there and have the mod call it.
 
+## Wording
+
+Text the player reads comes from the string table, never a literal in UI code: add an id and its
+English text to `src/FinanceOverhaul.Core/Text/EnglishStrings.cs` and read it with `Strings.Get`,
+`Strings.Format` (placeholders) or `Strings.Plural` (counts). One entry per whole sentence, with
+`{0}` placeholders, never words glued together: word order differs between languages. The mod
+follows the game's language (`mod/GameLanguage.cs`); a language without a table reads as English.
+`npm run layer:lint` fails on a literal in `mod/Windows` or `mod/Kit`, and on more literals than
+before anywhere else in the mod (lower `PENDING_MAX` in `scripts/strings-lint.py` as files move).
+
 ## Game UI tests and the test stock (TST)
 
 `scripts/game-ui-test.sh [tests/game-ui/x.uitest]` drives the running game (a `--dev` install,

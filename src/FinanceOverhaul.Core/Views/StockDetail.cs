@@ -55,8 +55,8 @@ namespace FinanceOverhaul.Core
         public static string YesterdayLine(float? yesterday)
         {
             return yesterday.HasValue
-                ? "Today · yesterday " + StockMonitor.PriceText(yesterday.Value)
-                : "Today";
+                ? Strings.Format("detail.todayYesterday", StockMonitor.PriceText(yesterday.Value))
+                : Strings.Get("detail.today");
         }
 
         public static string RangeChip(int days)
@@ -66,12 +66,12 @@ namespace FinanceOverhaul.Core
 
         public static string HighLabel(int days)
         {
-            return days.ToString(CultureInfo.InvariantCulture) + "-day high";
+            return Strings.Format("detail.high", days.ToString(CultureInfo.InvariantCulture));
         }
 
         public static string LowLabel(int days)
         {
-            return days.ToString(CultureInfo.InvariantCulture) + "-day low";
+            return Strings.Format("detail.low", days.ToString(CultureInfo.InvariantCulture));
         }
 
         public static float High(float[] range)
@@ -121,7 +121,9 @@ namespace FinanceOverhaul.Core
         /// <summary>"Gain" or "Loss" and its amount, as the game's Your Portfolio shows it.</summary>
         public static string GainLossLabel(long invested, uint owned, float price)
         {
-            return GainLoss(invested, owned, price) < 0 ? "Loss" : "Gain";
+            return Strings.Get(
+                GainLoss(invested, owned, price) < 0 ? "detail.loss" : "detail.gain"
+            );
         }
 
         public static long GainLoss(long invested, uint owned, float price)
@@ -143,9 +145,12 @@ namespace FinanceOverhaul.Core
         public static string SharesText(uint owned)
         {
             return owned == 0
-                ? "none"
-                : owned.ToString("N0", CultureInfo.InvariantCulture)
-                    + (owned == 1 ? " share" : " shares");
+                ? Strings.Get("detail.noShares")
+                : Strings.Plural(
+                    "shares",
+                    owned,
+                    owned.ToString("N0", CultureInfo.InvariantCulture)
+                );
         }
 
         /// <summary>
@@ -162,8 +167,10 @@ namespace FinanceOverhaul.Core
 
             if (orders.Count > 2)
             {
-                return orders.Count.ToString(CultureInfo.InvariantCulture)
-                    + " open (see Your Portfolio)";
+                return Strings.Format(
+                    "orders.summary.many",
+                    orders.Count.ToString(CultureInfo.InvariantCulture)
+                );
             }
 
             var parts = new string[orders.Count];
@@ -177,19 +184,20 @@ namespace FinanceOverhaul.Core
 
         private static string Short(TradeOrder o)
         {
-            string p = "₡" + o.TriggerPrice.ToString("N0", CultureInfo.InvariantCulture);
+            string p = o.TriggerPrice.ToString("N0", CultureInfo.InvariantCulture);
             switch (o.Kind)
             {
                 case OrderKind.StopLossSell:
-                    return "SELL ≤ " + p + " (stop)";
+                    return Strings.Format("orders.short.stopLoss", p);
                 case OrderKind.TakeProfitSell:
-                    return "SELL ≥ " + p + " (target)";
+                    return Strings.Format("orders.short.takeProfit", p);
                 case OrderKind.TrailingStopSell:
-                    return "SELL, "
-                        + o.TrailPercent.ToString(CultureInfo.InvariantCulture)
-                        + "% trail";
+                    return Strings.Format(
+                        "orders.short.trailingStop",
+                        o.TrailPercent.ToString(CultureInfo.InvariantCulture)
+                    );
                 default:
-                    return "BUY ≤ " + p;
+                    return Strings.Format("orders.short.limitBuy", p);
             }
         }
     }

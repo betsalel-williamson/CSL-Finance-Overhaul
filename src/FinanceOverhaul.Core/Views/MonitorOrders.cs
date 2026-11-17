@@ -79,11 +79,11 @@ namespace FinanceOverhaul.Core
             switch (sort)
             {
                 case OrdersSort.Expires:
-                    return "Sort: Expires";
+                    return Strings.Get("monitor.sort.expires");
                 case OrdersSort.Symbol:
-                    return "Sort: Symbol";
+                    return Strings.Get("monitor.sort.symbol");
                 default:
-                    return "Sort: Nearest";
+                    return Strings.Get("monitor.sort.nearest");
             }
         }
 
@@ -100,25 +100,28 @@ namespace FinanceOverhaul.Core
             switch (sort)
             {
                 case OrdersSort.Expires:
-                    what = reversed ? "Latest first" : "Soonest first";
+                    what = reversed ? "monitor.direction.latest" : "monitor.direction.soonest";
                     break;
                 case OrdersSort.Symbol:
-                    what = reversed ? "Z → A" : "A → Z";
+                    what = reversed ? "monitor.direction.za" : "monitor.direction.az";
                     break;
                 default:
-                    what = reversed ? "Farthest first" : "Nearest first";
+                    what = reversed ? "monitor.direction.farthest" : "monitor.direction.nearest";
                     break;
             }
 
-            return what + " (click to flip)";
+            return Strings.Format("monitor.direction.flip", Strings.Get(what));
         }
 
         /// <summary>"Orders (6)" on the tab; plain "Orders" when there are none.</summary>
         public static string TabLabel(int openOrders)
         {
             return openOrders > 0
-                ? "Orders (" + openOrders.ToString(CultureInfo.InvariantCulture) + ")"
-                : "Orders";
+                ? Strings.Format(
+                    "monitor.filter.ordersCount",
+                    openOrders.ToString(CultureInfo.InvariantCulture)
+                )
+                : Strings.Get("monitor.filter.orders");
         }
 
         /// <summary>
@@ -147,9 +150,9 @@ namespace FinanceOverhaul.Core
             }
 
             double gap = Math.Abs((double)price - trigger);
-            if (Math.Round(gap, 2) < 0.005)
+            if (AtTrigger(gap))
             {
-                return "at the trigger";
+                return Strings.Get("orders.atTrigger");
             }
 
             string digits =
@@ -157,45 +160,53 @@ namespace FinanceOverhaul.Core
                     ? Math.Max(0.01, Math.Round(gap, 2))
                         .ToString("0.00", CultureInfo.InvariantCulture)
                     : Math.Round(gap).ToString("N0", CultureInfo.InvariantCulture);
-            return "₡" + digits + " away";
+            return Strings.Format("orders.away", digits);
         }
 
         /// <summary>"₡6 away · 9.1%". Null when unknown.</summary>
         public static string DistanceText(float price, int trigger)
         {
             string amount = DistanceAmountText(price, trigger);
-            if (amount == null)
+            if (amount == null || AtTrigger(Math.Abs((double)price - trigger)))
             {
-                return null;
+                return amount;
             }
 
             double percent = DistancePercent(price, trigger);
-            return amount == "at the trigger"
-                ? amount
-                : amount + " · " + percent.ToString("0.0", CultureInfo.InvariantCulture) + "%";
+            return Strings.Format(
+                "orders.awayPercent",
+                amount,
+                percent.ToString("0.0", CultureInfo.InvariantCulture)
+            );
+        }
+
+        private static bool AtTrigger(double gap)
+        {
+            return Math.Round(gap, 2) < 0.005;
         }
 
         /// <summary>"BUY · Limit", "SELL · Trailing stop", with " · paused in Options" when paused.</summary>
         public static string TypeText(OrderKind kind, bool paused)
         {
-            string type;
+            string id;
             switch (kind)
             {
                 case OrderKind.StopLossSell:
-                    type = "SELL · Stop-loss";
+                    id = "orders.type.stopLoss";
                     break;
                 case OrderKind.TakeProfitSell:
-                    type = "SELL · Take-profit";
+                    id = "orders.type.takeProfit";
                     break;
                 case OrderKind.TrailingStopSell:
-                    type = "SELL · Trailing stop";
+                    id = "orders.type.trailingStop";
                     break;
                 default:
-                    type = "BUY · Limit";
+                    id = "orders.type.limitBuy";
                     break;
             }
 
-            return paused ? type + " · paused in Options" : type;
+            string type = Strings.Get(id);
+            return paused ? Strings.Format("orders.paused", type) : type;
         }
 
         /// <summary>
@@ -204,37 +215,40 @@ namespace FinanceOverhaul.Core
         /// </summary>
         public static string CompactText(TradeOrder order, int today, bool paused)
         {
-            string price = "₡" + order.TriggerPrice.ToString("N0", CultureInfo.InvariantCulture);
+            string price = order.TriggerPrice.ToString("N0", CultureInfo.InvariantCulture);
             string what;
             switch (order.Kind)
             {
                 case OrderKind.StopLossSell:
-                    what = "SELL ≤ " + price + " (stop)";
+                    what = Strings.Format("orders.short.stopLoss", price);
                     break;
                 case OrderKind.TakeProfitSell:
-                    what = "SELL ≥ " + price + " (target)";
+                    what = Strings.Format("orders.short.takeProfit", price);
                     break;
                 case OrderKind.TrailingStopSell:
-                    what =
-                        "SELL, "
-                        + order.TrailPercent.ToString(CultureInfo.InvariantCulture)
-                        + "% trail · stop "
-                        + price;
+                    what = Strings.Format(
+                        "orders.compact.trailingStop",
+                        order.TrailPercent.ToString(CultureInfo.InvariantCulture),
+                        price
+                    );
                     break;
                 default:
-                    what = "BUY ≤ " + price;
+                    what = Strings.Format("orders.short.limitBuy", price);
                     break;
             }
 
             int left = Math.Max(0, order.ExpiresDay - today);
-            return what
-                + " · "
-                + order.Shares.ToString("N0", CultureInfo.InvariantCulture)
-                + (order.Shares == 1 ? " share" : " shares")
-                + " · "
-                + left.ToString(CultureInfo.InvariantCulture)
-                + (left == 1 ? " day left" : " days left")
-                + (paused ? " · paused in Options" : string.Empty);
+            string line = Strings.Format(
+                "orders.compact",
+                what,
+                Strings.Plural(
+                    "shares",
+                    order.Shares,
+                    order.Shares.ToString("N0", CultureInfo.InvariantCulture)
+                ),
+                Strings.Plural("daysLeft", left, left.ToString(CultureInfo.InvariantCulture))
+            );
+            return paused ? Strings.Format("orders.paused", line) : line;
         }
 
         /// <summary>One order as the tab shows it, against today's price of its stock.</summary>

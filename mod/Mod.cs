@@ -63,6 +63,7 @@ namespace FinanceOverhaul
             );
 
             ModLog.Info("mod enabled product=" + (ModBuildInfo.GetProductVersionDisplay() ?? "?"));
+            GameLanguage.Follow();
 
             try
             {
@@ -91,6 +92,7 @@ namespace FinanceOverhaul
             {
                 // ignore
             }
+            GameLanguage.Unfollow();
             Settings = null;
             ModLog.Info("mod disabled");
         }

@@ -156,10 +156,11 @@ namespace FinanceOverhaul.Core
         {
             bool desc = IsDescending(sort, reversed);
             string what =
-                sort == MonitorSort.Symbol ? (desc ? "Z → A" : "A → Z")
-                : desc ? "Highest first"
-                : "Lowest first";
-            return what + " (click to flip)";
+                sort == MonitorSort.Symbol
+                    ? (desc ? "monitor.direction.za" : "monitor.direction.az")
+                : desc ? "monitor.direction.highest"
+                : "monitor.direction.lowest";
+            return Strings.Format("monitor.direction.flip", Strings.Get(what));
         }
 
         private static int Compare(
@@ -217,11 +218,11 @@ namespace FinanceOverhaul.Core
             switch (filter)
             {
                 case MonitorFilter.Portfolio:
-                    return "Portfolio";
+                    return Strings.Get("monitor.filter.portfolio");
                 case MonitorFilter.Orders:
-                    return "Orders";
+                    return Strings.Get("monitor.filter.orders");
                 default:
-                    return "All";
+                    return Strings.Get("monitor.filter.all");
             }
         }
 
@@ -232,7 +233,7 @@ namespace FinanceOverhaul.Core
         public static string SortLabel(MonitorSort sort, bool changeInCurrency)
         {
             return sort == MonitorSort.Change && changeInCurrency
-                ? "Sort: Change ₡"
+                ? Strings.Get("monitor.sort.changeCurrency")
                 : SortLabel(sort);
         }
 
@@ -267,13 +268,13 @@ namespace FinanceOverhaul.Core
             switch (sort)
             {
                 case MonitorSort.Symbol:
-                    return "Sort: Symbol";
+                    return Strings.Get("monitor.sort.symbol");
                 case MonitorSort.Price:
-                    return "Sort: Price";
+                    return Strings.Get("monitor.sort.price");
                 case MonitorSort.ValueHeld:
-                    return "Sort: Value held";
+                    return Strings.Get("monitor.sort.valueHeld");
                 default:
-                    return "Sort: Change %";
+                    return Strings.Get("monitor.sort.change");
             }
         }
 
@@ -352,14 +353,20 @@ namespace FinanceOverhaul.Core
                 return null;
             }
 
-            return openOrders.ToString(CultureInfo.InvariantCulture)
-                + (openOrders == 1 ? " order" : " orders");
+            return Strings.Plural(
+                "monitor.badge",
+                openOrders,
+                openOrders.ToString(CultureInfo.InvariantCulture)
+            );
         }
 
         /// <summary>Footer, e.g. "Daily close · 29 Oct 2077" (prices move once per game day).</summary>
         public static string Footer(DateTime gameDate)
         {
-            return "Daily close · " + gameDate.ToString("d MMM yyyy", CultureInfo.InvariantCulture);
+            return Strings.Format(
+                "monitor.footer",
+                gameDate.ToString("d MMM yyyy", CultureInfo.InvariantCulture)
+            );
         }
 
         /// <summary>
@@ -371,13 +378,12 @@ namespace FinanceOverhaul.Core
         {
             int ago = Math.Max(0, count - 1 - index);
             string when =
-                ago == 0 ? "today"
-                : ago == 1 ? "yesterday"
-                : ago.ToString(CultureInfo.InvariantCulture) + " days ago";
-            return (string.IsNullOrEmpty(symbol) ? "" : symbol + " · ")
-                + when
-                + " · "
-                + PriceText(price);
+                ago == 0 ? Strings.Get("monitor.hover.today")
+                : ago == 1 ? Strings.Get("monitor.hover.yesterday")
+                : Strings.Plural("daysAgo", ago, ago.ToString(CultureInfo.InvariantCulture));
+            return string.IsNullOrEmpty(symbol)
+                ? Strings.Format("monitor.hover", when, PriceText(price))
+                : Strings.Format("monitor.hover.symbol", symbol, when, PriceText(price));
         }
 
         /// <summary>Text shown when a filter leaves nothing to list.</summary>
@@ -386,11 +392,11 @@ namespace FinanceOverhaul.Core
             switch (filter)
             {
                 case MonitorFilter.Portfolio:
-                    return "The city holds no shares yet.";
+                    return Strings.Get("monitor.empty.portfolio");
                 case MonitorFilter.Orders:
-                    return "No open orders.";
+                    return Strings.Get("monitor.empty.orders");
                 default:
-                    return "No stocks are listed yet.";
+                    return Strings.Get("monitor.empty.all");
             }
         }
     }

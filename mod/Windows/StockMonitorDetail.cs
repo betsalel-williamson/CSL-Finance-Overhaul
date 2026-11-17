@@ -112,7 +112,7 @@ namespace FinanceOverhaul
             UILabel note = Label(
                 detail,
                 Prefix + "DetailNote",
-                "the game keeps 30 daily prices",
+                Strings.Get("detail.history.limit"),
                 0.6f,
                 Muted
             );
@@ -189,14 +189,14 @@ namespace FinanceOverhaul
 
             dBuy = ActionButton(
                 Prefix + "DetailBuy",
-                "Buy",
+                Strings.Get("detail.buy"),
                 12f,
                 y + 12f,
                 BuySellInvestmentPanel.Mode.Buy
             );
             dSell = ActionButton(
                 Prefix + "DetailSell",
-                "Sell",
+                Strings.Get("detail.sell"),
                 188f,
                 y + 12f,
                 BuySellInvestmentPanel.Mode.Sell
@@ -204,7 +204,7 @@ namespace FinanceOverhaul
             UILabel hint = Label(
                 detail,
                 Prefix + "DetailHint",
-                "Buy / Sell open the game's Invest dialog (with order tabs)",
+                Strings.Get("detail.trade.tip"),
                 0.6f,
                 Muted
             );
@@ -340,12 +340,12 @@ namespace FinanceOverhaul
 
             StyleRange(dRange7, detailDays == StockDetail.ShortRange);
             StyleRange(dRange30, detailDays == StockDetail.LongRange);
-            dFromLabel.text = range.Length.ToString() + " days ago";
+            dFromLabel.text = Strings.Plural("daysAgo", range.Length, range.Length.ToString());
             dRangeShown = range;
             dSymbolShown = symbol;
             DrawChart(range, colour);
 
-            SetStat(0, 0, "Today", StockMonitor.PriceText(price), White);
+            SetStat(0, 0, Strings.Get("detail.today"), StockMonitor.PriceText(price), White);
             SetStat(
                 0,
                 1,
@@ -356,7 +356,7 @@ namespace FinanceOverhaul
             SetStat(
                 1,
                 0,
-                "Yesterday",
+                Strings.Get("detail.yesterday"),
                 yesterday.HasValue ? StockMonitor.PriceText(yesterday.Value) : "--",
                 White
             );
@@ -367,11 +367,11 @@ namespace FinanceOverhaul
                 StockMonitor.PriceText(StockDetail.Low(range)),
                 White
             );
-            SetStat(2, 0, "You own", StockDetail.SharesText(owned), White);
+            SetStat(2, 0, Strings.Get("detail.youOwn"), StockDetail.SharesText(owned), White);
             SetStat(
                 2,
                 1,
-                "Avg cost / share",
+                Strings.Get("detail.avgCost"),
                 CostBasis.FormatAverage(
                     invested,
                     owned,
@@ -392,20 +392,20 @@ namespace FinanceOverhaul
             SetStat(
                 3,
                 1,
-                "Current value",
+                Strings.Get("detail.currentValue"),
                 owned > 0 ? StockMonitor.PriceText(OrderRules.Price(price, owned)) : "—",
                 White
             );
             SetStat(
                 4,
                 0,
-                "Open orders",
+                Strings.Get("detail.openOrders"),
                 StockDetail.OrdersSummary(orders),
                 orders.Count > 0 ? Gold : Muted
             );
 
             dSell.isEnabled = owned > 0;
-            dSell.tooltip = owned > 0 ? "" : "The city holds no shares of " + symbol;
+            dSell.tooltip = owned > 0 ? "" : Strings.Format("detail.sell.none", symbol);
 
             window.height = TitleHeight + DetailHeight;
             background.size = window.size;

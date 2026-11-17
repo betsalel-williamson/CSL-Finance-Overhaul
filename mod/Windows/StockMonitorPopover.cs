@@ -111,14 +111,20 @@ namespace FinanceOverhaul
             UILabel title = Label(
                 popover,
                 Prefix + "SettingsTitle",
-                "Stock Monitor settings",
+                Strings.Get("monitor.settings.title"),
                 0.9f,
                 White
             );
             title.relativePosition = new Vector3(14f, 10f);
 
             // Opacity slider: our own track (no guessed game sprites), 5% steps.
-            UILabel opacityLabel = Label(popover, null, "Window opacity", 0.75f, White);
+            UILabel opacityLabel = Label(
+                popover,
+                null,
+                Strings.Get("monitor.settings.opacity"),
+                0.75f,
+                White
+            );
             opacityLabel.relativePosition = new Vector3(14f, 40f);
             opacityValue = Label(popover, Prefix + "OpacityValue", "", 0.75f, Accent);
             opacityValue.autoSize = false;
@@ -156,7 +162,7 @@ namespace FinanceOverhaul
             UILabel range = Label(
                 popover,
                 null,
-                "Text and charts fade with the background",
+                Strings.Get("monitor.settings.opacity.note"),
                 0.6f,
                 Muted
             );
@@ -165,34 +171,40 @@ namespace FinanceOverhaul
             float y = 100f;
             y = Toggle(
                 "SolidOnHover",
-                "Solid while the mouse is over it",
+                Strings.Get("monitor.settings.solidOnHover"),
                 y,
                 () => Settings.TransparentUnhovered,
                 v => Settings.TransparentUnhovered = v
             );
             y = Toggle(
                 "Compact",
-                "Compact rows (hide names)",
+                Strings.Get("monitor.settings.compact"),
                 y,
                 () => Settings.CompactRows,
                 v => Settings.CompactRows = v
             );
             y = Toggle(
                 "Sparklines",
-                "Show sparklines",
+                Strings.Get("monitor.settings.sparklines"),
                 y,
                 () => Settings.ShowSparklines,
                 v => Settings.ShowSparklines = v
             );
             y = Toggle(
                 "ChangeCurrency",
-                "Change as ₡ instead of %",
+                Strings.Get("monitor.settings.changeCurrency"),
                 y,
                 () => Settings.ChangeAsCurrency,
                 v => Settings.ChangeAsCurrency = v
             );
 
-            UILabel stocks = Label(popover, null, "Stocks shown", 0.8f, White);
+            UILabel stocks = Label(
+                popover,
+                null,
+                Strings.Get("monitor.settings.stocks"),
+                0.8f,
+                White
+            );
             stocks.relativePosition = new Vector3(14f, y + 6f);
 
             fixedRefreshers = refreshers.Count;
@@ -266,7 +278,7 @@ namespace FinanceOverhaul
                 note = Label(
                     popover,
                     Prefix + "SettingsNote",
-                    "Kept per player (settings file), not in the city save.",
+                    Strings.Get("monitor.settings.note"),
                     0.6f,
                     Muted
                 );

@@ -245,7 +245,7 @@ namespace FinanceOverhaul
             button.hoveredBgSprite = "RoundBackBigHovered";
             button.pressedBgSprite = "RoundBackBigPressed";
             button.focusedBgSprite = "RoundBackBig";
-            button.tooltip = "Stock Monitor (right-drag to move)";
+            button.tooltip = Strings.Get("monitor.button.tip");
             button.playAudioEvents = true;
             button.eventClick += (c, p) =>
             {
@@ -372,10 +372,10 @@ namespace FinanceOverhaul
             drag.relativePosition = Vector3.zero;
             drag.eventMouseUp += (c, p) => SaveWindowPosition();
 
-            FoWindow.AddTitle(window, Prefix + "Title", "Stock Monitor", Width);
+            FoWindow.AddTitle(window, Prefix + "Title", Strings.Get("monitor.title"), Width);
 
             UIButton settings = FoWindow.AddGear(window, Prefix + "Settings", Width);
-            settings.tooltip = "Stock Monitor settings";
+            settings.tooltip = Strings.Get("monitor.settings.tip");
             settings.eventClick += (c, p) => TogglePopover();
 
             UIButton close = FoWindow.AddClose(window, Prefix + "Close", Width);
@@ -873,7 +873,7 @@ namespace FinanceOverhaul
 
             // ...except the pill, which flips ₡ / % (Figma pin 6).
             r.Change.isInteractive = true;
-            r.Change.tooltip = "Click: show the change in ₡ or %";
+            r.Change.tooltip = Strings.Get("monitor.pill.tip");
             r.Change.eventClick += (c, p) =>
             {
                 p.Use();
