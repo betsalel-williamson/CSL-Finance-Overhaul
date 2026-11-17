@@ -10,7 +10,8 @@ namespace FinanceOverhaul
     /// <summary>
     /// The City bonds section on Economy → Loans (Figma UI Map band 11): it takes the place of
     /// the vanilla help strip and the gap above the three loan cards. Left: sell a bond (term,
-    /// amount, live quote, Sell). Right: bonds the city owes, each with Repay now. Shown when
+    /// amount, live quote, Sell). Right: bonds the city owes, each a card laid out like the game's loan cards (a name the
+    /// player can change, the loan-style fields, Repay). Shown when
     /// Options → City bonds is on, or while the city still owes a bond; otherwise the vanilla
     /// strip is back untouched. Lives on the overlay root, so hot reload removes it
     /// (<see cref="OnDestroy"/> restores the strip).
@@ -27,6 +28,8 @@ namespace FinanceOverhaul
         public const string FooterName = Prefix + "Footer";
         public const string RowPrefix = Prefix + "Row-";
         public const string RepayPrefix = Prefix + "Repay-";
+        public const string NamePrefix = Prefix + "Name-";
+        public const string CardValuePrefix = Prefix + "Value-";
         public const string TermPrefix = Prefix + "Term-";
         public const string OwedListName = Prefix + "OwedList";
         public const string OwedScrollbarName = Prefix + "OwedScrollbar";
@@ -45,7 +48,6 @@ namespace FinanceOverhaul
         private static readonly Color32 Price = FoTheme.GameValue;
         private static readonly Color32 Refused = FoTheme.GameNegative;
         private static readonly Color32 Panel = FoTheme.BondsPanel;
-        private static readonly Color32 RowColour = FoTheme.BondsRow;
 
         /// <summary>Game UI tests only: shows the section and allows selling with the flag off.</summary>
         public static bool ForceShow;
@@ -365,7 +367,7 @@ namespace FinanceOverhaul
                 return;
             }
 
-            if (sig != shownRows)
+            if (sig != shownRows && !NameBeingTyped())
             {
                 RebuildRows(book, today);
                 shownRows = sig;
@@ -389,33 +391,24 @@ namespace FinanceOverhaul
             bonds.Sort((a, b) => a.Id.CompareTo(b.Id));
             foreach (IssuedBond b in bonds)
             {
-                UIPanel row = owedList.AddUIComponent<UIPanel>();
-                row.name = RowPrefix + b.Id;
-                row.size = new Vector2(owedList.width - 4f, 44f);
-                row.backgroundSprite = "GenericPanelWhite";
-                row.color = RowColour;
-                UILabel t = Label(
-                    row,
-                    null,
-                    BondText.RowTitle(b, DateIn(b.DueDay(b.Terms.Periods) - today)),
-                    0.8f,
-                    Text
-                );
-                t.relativePosition = new Vector3(10f, 5f);
-                UILabel n = Label(row, null, BondText.RowNext(b, today), 0.65f, Muted);
-                n.relativePosition = new Vector3(10f, 25f);
-                int id = b.Id;
-                UIButton repay = Button(
-                    row,
-                    RepayPrefix + id,
-                    Strings.Format("bond.repay", BondText.Money(BondText.RepayCents(b, today))),
-                    170f
-                );
-                repay.relativePosition = new Vector3(row.width - 178f, 8f);
-                repay.eventClick += (c, p) => OnRepay(id);
+                BuildCard(b, today);
             }
 
             UpdateFades();
+        }
+
+        /// <summary>A name box on a card has the keyboard: the cards wait until it lets go.</summary>
+        private bool NameBeingTyped()
+        {
+            foreach (UITextField f in owedList.GetComponentsInChildren<UITextField>())
+            {
+                if (f.hasFocus)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void OnSell()
@@ -436,6 +429,22 @@ namespace FinanceOverhaul
                 ModLog.Info("bonds: repaid #" + id + " early from the Loans tab");
                 shownRows = null;
                 Refresh(false);
+            }
+        }
+
+        /// <summary>Keeps the typed name (tidied); an empty box goes back to "Bond #63".</summary>
+        private void OnRename(int id, UITextField box)
+        {
+            string name = BondText.NameToKeep(box.text, id);
+            if (BondDesk.Rename(id, name))
+            {
+                ModLog.Info("bonds: #" + id + " named '" + name + "'");
+            }
+
+            IssuedBond bond = BondDesk.Snapshot().Find(id);
+            if (bond != null && box.text != BondText.CardTitle(bond))
+            {
+                box.text = BondText.CardTitle(bond);
             }
         }
 

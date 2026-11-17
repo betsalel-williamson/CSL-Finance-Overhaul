@@ -32,6 +32,12 @@ namespace FinanceOverhaul
         /// <summary>A heading or row label on the Loans tab: the game uses its gain colour.</summary>
         public static readonly Color32 GameHeading = GamePositive;
 
+        /// <summary>The panel sprite of the game's loan cards (Economy → Loans).</summary>
+        public const string GameLoanCardSprite = "UnlockingPanel2";
+
+        /// <summary>A bond card's tint on that sprite: the blue of a loan the city has taken.</summary>
+        public static readonly Color32 BondCard = new Color32(90, 150, 255, 255);
+
         /// <summary>
         /// Tint of a typed field inside a game panel: the tint of the Invest dialog's own
         /// share count, drawn on <see cref="GameFieldSprite"/>.
@@ -87,9 +93,6 @@ namespace FinanceOverhaul
 
         /// <summary>The City bonds section's own panel (the game has no dark panel on the Loans tab).</summary>
         public static readonly Color32 BondsPanel = new Color32(24, 30, 36, 245);
-
-        /// <summary>A bond the city owes, as a row in that panel.</summary>
-        public static readonly Color32 BondsRow = new Color32(36, 44, 52, 255);
 
         /// <summary>The vertical line under the pointer on a chart.</summary>
         public static readonly Color32 HoverLine = new Color32(255, 255, 255, 150);

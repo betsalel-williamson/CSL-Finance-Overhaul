@@ -129,53 +129,97 @@ namespace FinanceOverhaul.Core
             return Strings.Plural("bond.years", (int)term, Number((int)term));
         }
 
-        /// <summary>"#1 · 5-year · 4.58% · ₡500,000"</summary>
-        public static string RowTitle(IssuedBond b)
+        /// <summary>Longest name a bond can be given.</summary>
+        public const int MaxNameLength = 32;
+
+        /// <summary>The card's title: the name the player gave it, else "Bond #63".</summary>
+        public static string CardTitle(IssuedBond b)
         {
-            return Strings.Format(
-                "bond.row.title",
-                Number(b.Id),
-                Number(b.Terms.Periods / 12),
-                BondPricing.RateText(b.Terms.RateBasisPoints),
-                WholeMoney(b.Terms.FaceCents)
-            );
+            return string.IsNullOrEmpty(b.Name)
+                ? Strings.Format("bond.card.defaultName", Number(b.Id))
+                : b.Name;
         }
 
-        /// <summary>"#1 · 5-year · 4.58% · ₡500,000 · repaid 01/02/2031" (the host formats the date).</summary>
-        public static string RowTitle(IssuedBond b, string repaidDate)
+        /// <summary>
+        /// What to keep of a typed name: trimmed, without line breaks or the save format's
+        /// separator, at most <see cref="MaxNameLength"/> characters. Empty (the bond goes back
+        /// to "Bond #63") when nothing is left or the default was typed.
+        /// </summary>
+        public static string NameToKeep(string typed, int id)
         {
-            return Strings.Format(
-                "bond.row.titleRepaid",
-                Number(b.Id),
-                Number(b.Terms.Periods / 12),
-                BondPricing.RateText(b.Terms.RateBasisPoints),
-                WholeMoney(b.Terms.FaceCents),
-                repaidDate
-            );
-        }
-
-        /// <summary>"Next coupon ₡1,908.33 in 12 days · 58 of 60 left" (the face comes with the last).</summary>
-        public static string RowNext(IssuedBond b, int today)
-        {
-            int left = b.Terms.Periods - b.CouponsPaid;
-            if (left <= 0)
+            var kept = new System.Text.StringBuilder();
+            foreach (char ch in typed ?? string.Empty)
             {
-                return Strings.Get("bond.row.repaid");
+                if (ch != '|' && !char.IsControl(ch))
+                {
+                    kept.Append(ch);
+                }
             }
 
-            long coupon = BondMath.Schedule(b.Terms)[b.CouponsPaid].Interest;
-            int days = Math.Max(0, b.DueDay(b.CouponsPaid + 1) - today);
-            return Strings.Plural(
-                left == 1 ? "bond.row.nextFace" : "bond.row.next",
-                days,
-                Money(coupon),
-                Number(days),
-                Number(left),
+            string name = kept.ToString().Trim();
+            if (name.Length > MaxNameLength)
+            {
+                name = name.Substring(0, MaxNameLength).Trim();
+            }
+
+            return name == Strings.Format("bond.card.defaultName", Number(id))
+                ? string.Empty
+                : name;
+        }
+
+        /// <summary>"₡500,000": what the bond raised and repays at the end.</summary>
+        public static string CardAmount(IssuedBond b)
+        {
+            return WholeMoney(b.Terms.FaceCents);
+        }
+
+        /// <summary>"5 years"</summary>
+        public static string CardTerm(IssuedBond b)
+        {
+            int years = b.Terms.Periods / 12;
+            return Strings.Plural("bond.years", years, Number(years));
+        }
+
+        /// <summary>"4.58%"</summary>
+        public static string CardInterest(IssuedBond b)
+        {
+            return BondPricing.RateText(b.Terms.RateBasisPoints);
+        }
+
+        /// <summary>Days until the next coupon is paid (0 when it is due or none is left).</summary>
+        public static int NextCouponInDays(IssuedBond b, int today)
+        {
+            return b.CouponsPaid >= b.Terms.Periods
+                ? 0
+                : Math.Max(0, b.DueDay(b.CouponsPaid + 1) - today);
+        }
+
+        /// <summary>"₡1,908.34 on 01/03/2026" (the host formats the date); "—" when none is left.</summary>
+        public static string CardNextCoupon(IssuedBond b, string date)
+        {
+            if (b.CouponsPaid >= b.Terms.Periods)
+            {
+                return "—";
+            }
+
+            return Strings.Format(
+                "bond.card.nextCoupon.value",
+                Money(BondMath.Schedule(b.Terms)[b.CouponsPaid].Interest),
+                date
+            );
+        }
+
+        /// <summary>"58 of 60"</summary>
+        public static string CardCouponsLeft(IssuedBond b)
+        {
+            return Strings.Format(
+                "bond.card.couponsLeft.value",
+                Number(Math.Max(0, b.Terms.Periods - b.CouponsPaid)),
                 Number(b.Terms.Periods)
             );
         }
 
-        /// <summary>What "Repay now" costs today: the face plus interest accrued this period.</summary>
+        /// <summary>What Pay Now costs today (the card's Total): the face plus interest accrued this period.</summary>
         public static long RepayCents(IssuedBond b, int today)
         {
             return BondMath.RedemptionAmount(b.Terms, b.CouponsPaid, today - b.LastCouponDay);

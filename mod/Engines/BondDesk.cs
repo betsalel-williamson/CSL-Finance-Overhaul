@@ -272,6 +272,22 @@ namespace FinanceOverhaul
             }
         }
 
+        /// <summary>Names a bond (empty: back to its number). False if unknown or unchanged.</summary>
+        public static bool Rename(int id, string name)
+        {
+            lock (Sync)
+            {
+                BondBook b = Book();
+                if (!b.Rename(id, name))
+                {
+                    return false;
+                }
+
+                Save(b);
+                return true;
+            }
+        }
+
         /// <summary>Game UI tests: moves a bond's schedule this many days earlier.</summary>
         public static bool Backdate(int id, int days)
         {

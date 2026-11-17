@@ -38,6 +38,9 @@ namespace FinanceOverhaul.Core
         public int IssueDay;
         public int CouponsPaid;
 
+        /// <summary>The name the player gave it (the project it pays for); null or empty for none.</summary>
+        public string Name;
+
         /// <summary>The day coupon <paramref name="period"/> (1-based) falls due.</summary>
         public int DueDay(int period)
         {
@@ -191,6 +194,19 @@ namespace FinanceOverhaul.Core
             return true;
         }
 
+        /// <summary>Names a bond (null or empty: no name). False if unknown or unchanged.</summary>
+        public bool Rename(int id, string name)
+        {
+            IssuedBond bond = Find(id);
+            if (bond == null || (bond.Name ?? string.Empty) == (name ?? string.Empty))
+            {
+                return false;
+            }
+
+            bond.Name = string.IsNullOrEmpty(name) ? null : name;
+            return true;
+        }
+
         public IssuedBond Find(int id)
         {
             foreach (IssuedBond b in Bonds)
@@ -241,6 +257,10 @@ namespace FinanceOverhaul.Core
         private const string Version = "v1";
         private const string IssuedTag = "issued";
 
+        // A name is a line of its own, after the bonds: a build from before names skips it and
+        // still reads every bond.
+        private const string NameTag = "name";
+
         public static string Format(BondBook book)
         {
             var sb = new StringBuilder();
@@ -266,6 +286,19 @@ namespace FinanceOverhaul.Core
                     .Append('\n');
             }
 
+            foreach (IssuedBond b in book.Bonds)
+            {
+                if (!string.IsNullOrEmpty(b.Name))
+                {
+                    sb.Append(NameTag)
+                        .Append('|')
+                        .Append(Int(b.Id))
+                        .Append('|')
+                        .Append(b.Name.Replace('\n', ' ').Replace('\r', ' '))
+                        .Append('\n');
+                }
+            }
+
             return sb.ToString();
         }
 
@@ -283,6 +316,8 @@ namespace FinanceOverhaul.Core
                 return book;
             }
 
+            var names = new Dictionary<int, string>();
+
             for (int i = 1; i < lines.Length; i++)
             {
                 string line = lines[i].Trim('\r');
@@ -292,6 +327,19 @@ namespace FinanceOverhaul.Core
                     if (TryInt(line.Substring(5), out next) && next > 0)
                     {
                         book.NextId = Math.Max(book.NextId, next);
+                    }
+
+                    continue;
+                }
+
+                if (line.StartsWith(NameTag + "|", StringComparison.Ordinal))
+                {
+                    // name|ID|TEXT: the text is everything after the second separator.
+                    string[] n = line.Split(new[] { '|' }, 3);
+                    int named;
+                    if (n.Length == 3 && TryInt(n[1], out named) && n[2].Length > 0)
+                    {
+                        names[named] = n[2];
                     }
 
                     continue;
@@ -353,6 +401,15 @@ namespace FinanceOverhaul.Core
                     }
                 );
                 book.NextId = Math.Max(book.NextId, id + 1);
+            }
+
+            foreach (KeyValuePair<int, string> n in names)
+            {
+                IssuedBond bond = book.Find(n.Key);
+                if (bond != null)
+                {
+                    bond.Name = n.Value;
+                }
             }
 
             return book;

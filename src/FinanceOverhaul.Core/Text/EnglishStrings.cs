@@ -219,7 +219,7 @@ namespace FinanceOverhaul.Core
             { "bond.owedTitle", "Bonds you owe" },
             { "bond.owedTitle.count", "Bonds you owe ({0})" },
             { "bond.none", "None yet. Coupons and repayments show in the budget under loans." },
-            { "bond.repay", "Repay {0}" },
+            { "bond.repay", "Pay Now" },
             {
                 "bond.hint.off",
                 "Selling new bonds is off (Options → City bonds). Bonds already sold keep paying."
@@ -235,16 +235,17 @@ namespace FinanceOverhaul.Core
             { "bond.reason.noIncome", "the city has no income to borrow against" },
             { "bond.reason.badInput", "invalid bond request" },
             { "bond.rateLine", "{0} a year ({1} + {2})" },
-            { "bond.row.title", "#{0} · {1}-year · {2} · {3}" },
-            { "bond.row.titleRepaid", "#{0} · {1}-year · {2} · {3} · repaid {4}" },
-            { "bond.row.repaid", "Repaid" },
-            { "bond.row.next.one", "Next coupon {0} in {1} day · {2} of {3} left" },
-            { "bond.row.next.other", "Next coupon {0} in {1} days · {2} of {3} left" },
-            { "bond.row.nextFace.one", "Next coupon {0} + the face in {1} day · {2} of {3} left" },
-            {
-                "bond.row.nextFace.other",
-                "Next coupon {0} + the face in {1} days · {2} of {3} left"
-            },
+            { "bond.card.defaultName", "Bond #{0}" },
+            { "bond.card.nameTip", "Name this bond, for example after the project it pays for." },
+            { "bond.card.amount", "Amount" },
+            { "bond.card.term", "Term" },
+            { "bond.card.interest", "Interest" },
+            { "bond.card.total", "Total" },
+            { "bond.card.nextCoupon", "Next Coupon" },
+            { "bond.card.nextCoupon.value", "{0} on {1}" },
+            { "bond.card.repaidOn", "Repaid On" },
+            { "bond.card.couponsLeft", "Coupons Left" },
+            { "bond.card.couponsLeft.value", "{0} of {1}" },
             { "bond.owed", "Owed: loans {0} + bonds {1} = {2} · {3} annual income (cap {4}×)" },
             // Chirper notices
             { "notice.sender.brokerage", "City Brokerage" },

@@ -227,6 +227,142 @@ namespace FinanceOverhaul
             owedList.eventScrollPositionChanged += (c, p) => UpdateFades();
         }
 
+        private const float CardHeight = 116f;
+        private const float CardRowTop = 38f;
+        private const float CardRowPitch = 17f; // the loan cards' row pitch
+        private const float CardTextScale = 0.8f;
+        private const float RepayWidth = 84f;
+
+        /// <summary>
+        /// One owed bond as a card in the look of the game's loan cards: the name on top, green
+        /// labels right-aligned against pale blue values, Total (what paying
+        /// now costs: the face plus interest accrued this period) and Pay Now bottom right. The
+        /// fields sit in two columns because the list is short.
+        /// </summary>
+        private void BuildCard(IssuedBond b, int today)
+        {
+            int id = b.Id;
+            UIPanel card = owedList.AddUIComponent<UIPanel>();
+            card.name = RowPrefix + id;
+            card.size = new Vector2(owedList.width - 4f, CardHeight);
+            card.backgroundSprite = FoTheme.GameLoanCardSprite;
+            card.color = FoTheme.BondCard;
+
+            UITextField name = card.AddUIComponent<UITextField>();
+            name.name = NamePrefix + id;
+            name.size = new Vector2(Mathf.Min(320f, card.width - 24f), 26f);
+            name.relativePosition = new Vector3((card.width - name.width) / 2f, 6f);
+            name.maxLength = BondText.MaxNameLength;
+            name.selectOnFocus = true;
+            name.submitOnFocusLost = true;
+            name.builtinKeyNavigation = true;
+            name.horizontalAlignment = UIHorizontalAlignment.Center;
+            name.padding = new RectOffset(6, 6, 5, 3);
+            name.normalBgSprite = FoTheme.GameFieldSprite;
+            name.hoveredBgSprite = "TextFieldPanelHovered";
+            name.focusedBgSprite = FoTheme.GameFieldSprite;
+            name.selectionSprite = "EmptySprite";
+            name.color = FoTheme.Field;
+            name.textColor = Heading;
+            name.textScale = 1f;
+            if (font != null)
+            {
+                name.font = font;
+            }
+
+            name.tooltip = Strings.Get("bond.card.nameTip");
+            name.text = BondText.CardTitle(b);
+            name.eventTextSubmitted += (c, t) => OnRename(id, name);
+            name.eventTextCancelled += (c, t) => OnRename(id, name);
+
+            float next = CardColumn(
+                card,
+                id,
+                12f,
+                new[]
+                {
+                    Strings.Get("bond.card.amount"),
+                    Strings.Get("bond.card.term"),
+                    Strings.Get("bond.card.interest"),
+                    Strings.Get("bond.card.total"),
+                },
+                new[]
+                {
+                    BondText.CardAmount(b),
+                    BondText.CardTerm(b),
+                    BondText.CardInterest(b),
+                    BondText.Money(BondText.RepayCents(b, today)),
+                },
+                new[] { "Amount", "Term", "Interest", "Total" } // not shown: control names for tests
+            );
+
+            CardColumn(
+                card,
+                id,
+                next + 20f,
+                new[]
+                {
+                    Strings.Get("bond.card.nextCoupon"),
+                    Strings.Get("bond.card.repaidOn"),
+                    Strings.Get("bond.card.couponsLeft"),
+                },
+                new[]
+                {
+                    BondText.CardNextCoupon(b, DateIn(BondText.NextCouponInDays(b, today))),
+                    DateIn(b.DueDay(b.Terms.Periods) - today),
+                    BondText.CardCouponsLeft(b),
+                },
+                new[] { "NextCoupon", "RepaidOn", "CouponsLeft" } // not shown: control names for tests
+            );
+
+            UIButton repay = Button(card, RepayPrefix + id, Strings.Get("bond.repay"), RepayWidth);
+            repay.relativePosition = new Vector3(
+                card.width - RepayWidth - 8f,
+                CardHeight - repay.height - 6f
+            );
+            repay.eventClick += (c, p) => OnRepay(id);
+        }
+
+        /// <summary>
+        /// A column of label and value pairs: labels end on one line, values start on the next.
+        /// Returns the column's right edge.
+        /// </summary>
+        private float CardColumn(
+            UIPanel card,
+            int id,
+            float left,
+            string[] labels,
+            string[] values,
+            string[] names
+        )
+        {
+            var made = new UILabel[labels.Length];
+            float labelW = 0f;
+            for (int i = 0; i < labels.Length; i++)
+            {
+                made[i] = Label(card, null, labels[i], CardTextScale, Heading);
+                labelW = Mathf.Max(labelW, made[i].width);
+            }
+
+            float right = left + labelW;
+            for (int i = 0; i < labels.Length; i++)
+            {
+                float y = CardRowTop + i * CardRowPitch;
+                made[i].relativePosition = new Vector3(left + labelW - made[i].width, y);
+                UILabel v = Label(
+                    card,
+                    CardValuePrefix + names[i] + "-" + id,
+                    values[i],
+                    CardTextScale,
+                    Price
+                );
+                v.relativePosition = new Vector3(left + labelW + 6f, y);
+                right = Mathf.Max(right, left + labelW + 6f + v.width);
+            }
+
+            return right;
+        }
+
         private UITextureSprite Fade(string name, Texture2D texture, float y)
         {
             UITextureSprite s = section.AddUIComponent<UITextureSprite>();

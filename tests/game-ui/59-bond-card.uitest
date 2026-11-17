@@ -1,0 +1,43 @@
+# A bond the city owes is a card in the look of the game's loan cards: a name box on top, the
+# loan-style fields, Total and Pay Now bottom right. A large bond's values must not run under the
+# button, and the name the player types is kept. Sells one ₡1,500,000 5-year bond against fixed
+# finances and repays it in cleanup (a few cents of interest at most).
+name bond card: fields clear the Repay button and the bond keeps the name typed for it
+show-economy loans
+bonds-section show
+bond-finances 0 1,000,000
+bonds-term 5
+bonds-amount 1,500,000
+click FinanceOverhaulBondsSell
+expect-log bonds: sold #
+wait 0.8
+expect-visible FinanceOverhaulBondsRow-$bond
+expect-text-is FinanceOverhaulBondsValue-Amount-$bond ₡1,500,000
+expect-text-is FinanceOverhaulBondsValue-Term-$bond 5 years
+expect-text-is FinanceOverhaulBondsValue-CouponsLeft-$bond 60 of 60
+expect-text FinanceOverhaulBondsValue-NextCoupon-$bond on
+expect-text-is FinanceOverhaulBondsRepay-$bond Pay Now
+expect-text FinanceOverhaulBondsValue-Total-$bond ₡1,500,000
+expect-no-overlap FinanceOverhaulBondsValue-NextCoupon-$bond FinanceOverhaulBondsRepay-$bond
+expect-no-overlap FinanceOverhaulBondsValue-RepaidOn-$bond FinanceOverhaulBondsRepay-$bond
+expect-no-overlap FinanceOverhaulBondsValue-CouponsLeft-$bond FinanceOverhaulBondsRepay-$bond
+expect-no-overlap FinanceOverhaulBondsValue-Total-$bond FinanceOverhaulBondsRepay-$bond
+expect-no-overlap FinanceOverhaulBondsName-$bond FinanceOverhaulBondsRepay-$bond
+expect-text FinanceOverhaulBondsName-$bond Bond #
+capture bond-card
+# typing replaces the default name; leaving the box keeps it
+keys FinanceOverhaulBondsName-$bond H o s p i t a l
+blur FinanceOverhaulBondsName-$bond
+expect-log named 'Hospital'
+wait 0.8
+expect-text-is FinanceOverhaulBondsName-$bond Hospital
+capture bond-card-named
+# an emptied box goes back to the bond's number
+keys FinanceOverhaulBondsName-$bond backspace
+blur FinanceOverhaulBondsName-$bond
+wait 0.8
+expect-text FinanceOverhaulBondsName-$bond Bond #
+cleanup:
+redeem-new-bonds
+bonds-section auto
+close-economy
