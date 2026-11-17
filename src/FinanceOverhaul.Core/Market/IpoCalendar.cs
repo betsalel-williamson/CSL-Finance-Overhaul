@@ -5,17 +5,36 @@ namespace FinanceOverhaul.Core
 {
     /// <summary>
     /// The tuning values of Local IPOs (Options, while the feel is tuned). Defaults are the
-    /// design's: about one IPO every 10 game years in a city with 20 candidates.
+    /// design's: a kind of business unlocks at 200 squares, earns listing slots as it grows, an
+    /// open slot fills in about a year and a half, and at most two companies list in a year.
     /// </summary>
     public sealed class IpoRules
     {
         public const int DaysPerYear = 365;
 
-        /// <summary>Expected years between IPOs when the city has <see cref="ReferencePool"/> candidates.</summary>
-        public int TargetYears = 10;
+        /// <summary>Squares of a kind of business the city needs before that kind can list (its first slot).</summary>
+        public int GateSquares = 200;
 
-        /// <summary>The number of candidates at which <see cref="TargetYears"/> applies.</summary>
-        public int ReferencePool = 20;
+        /// <summary>Top-level shops for each further commercial listing slot.</summary>
+        public int SlotEveryCommercial = 40;
+
+        /// <summary>Top-level offices for each further office listing slot.</summary>
+        public int SlotEveryOffice = 25;
+
+        /// <summary>Top-level industrial buildings for each further industry listing slot.</summary>
+        public int SlotEveryIndustry = 30;
+
+        /// <summary>Buildings of a specialisation for each further listing slot of it.</summary>
+        public int SlotEverySpecialised = 15;
+
+        /// <summary>Days an open slot waits for its IPO on average (548 = a year and a half).</summary>
+        public int SlotFillDays = 548;
+
+        /// <summary>Most IPOs in any 365 days, so a large city is not flooded.</summary>
+        public int MaxIposPerYear = 2;
+
+        /// <summary>Local listings the board holds for each map tile the city owns (up to <see cref="ListingCap"/>).</summary>
+        public int ListingsPerTile = 2;
 
         /// <summary>Days in a row a business must stay healthy to become a candidate.</summary>
         public int HealthyDays = 365;
@@ -63,9 +82,27 @@ namespace FinanceOverhaul.Core
         public int BuyoutPremiumSpreadPercent = 15;
     }
 
+    /// <summary>The kinds of business that list separately: the three zones and each specialisation.</summary>
+    public enum BusinessKind
+    {
+        Commercial,
+        Office,
+        Industry,
+        ItCluster,
+        Leisure,
+        Tourism,
+        Organic,
+        Farming,
+        Forestry,
+        Oil,
+        Ore,
+    }
+
     /// <summary>What the mod reads from the game about one zoned business on one day.</summary>
     public struct BusinessFacts
     {
+        public BusinessKind Kind;
+
         /// <summary>At the top level of its kind (level 3, or the only level of a specialisation).</summary>
         public bool TopLevel;
 
@@ -118,6 +155,8 @@ namespace FinanceOverhaul.Core
         private readonly Dictionary<BuildingKey, int> healthyDays =
             new Dictionary<BuildingKey, int>();
         private readonly HashSet<BuildingKey> seenToday = new HashSet<BuildingKey>();
+        private readonly Dictionary<BuildingKey, BusinessKind> kinds =
+            new Dictionary<BuildingKey, BusinessKind>();
 
         /// <summary>Healthy enough to count today: top level, staffed, no problems, big and valuable enough.</summary>
         public static bool Healthy(BusinessFacts facts, IpoRules rules)
@@ -135,8 +174,11 @@ namespace FinanceOverhaul.Core
             if (!Healthy(facts, rules))
             {
                 healthyDays.Remove(building);
+                kinds.Remove(building);
                 return;
             }
+
+            kinds[building] = facts.Kind;
 
             int days;
             healthyDays.TryGetValue(building, out days);
@@ -159,6 +201,7 @@ namespace FinanceOverhaul.Core
             foreach (BuildingKey building in gone)
             {
                 healthyDays.Remove(building);
+                kinds.Remove(building);
             }
 
             seenToday.Clear();
@@ -172,12 +215,32 @@ namespace FinanceOverhaul.Core
         }
 
         /// <summary>Sets a count read from the save.</summary>
-        public void Restore(BuildingKey building, int days)
+        public void Restore(
+            BuildingKey building,
+            int days,
+            BusinessKind kind = BusinessKind.Commercial
+        )
         {
             if (days > 0)
             {
                 healthyDays[building] = days;
+                kinds[building] = kind;
             }
+        }
+
+        /// <summary>The kind a counted business was last seen as.</summary>
+        public BusinessKind KindOf(BuildingKey building)
+        {
+            BusinessKind kind;
+            return kinds.TryGetValue(building, out kind) ? kind : BusinessKind.Commercial;
+        }
+
+        /// <summary>The candidates of one kind, in the same fixed order.</summary>
+        public List<BuildingKey> Candidates(IpoRules rules, BusinessKind kind)
+        {
+            List<BuildingKey> all = Candidates(rules);
+            all.RemoveAll(b => KindOf(b) != kind);
+            return all;
         }
 
         /// <summary>Every business being counted, with its healthy days (for the save).</summary>
@@ -273,72 +336,12 @@ namespace FinanceOverhaul.Core
     }
 
     /// <summary>
-    /// When a business goes public: rare by design. Once a period (a month by default,
-    /// <see cref="IpoRules.DrawEveryDays"/>) the calendar decides whether an IPO happens in the
-    /// coming period, which candidate it is, and on which day. Every candidate has the same
-    /// small chance each period, set so that a city with the reference number of candidates sees
-    /// one IPO every target years on average. Fewer candidates make it rarer, more make it more
-    /// common, and a city with none never gets one. At most one a period, and none while an IPO
-    /// is in progress or the listing cap is reached.
+    /// The dice cycle shared by IPOs and buy-outs: once a period (a month by default,
+    /// <see cref="IpoRules.DrawEveryDays"/>) it is decided whether one happens in the coming
+    /// period, which one, and on which day. What may list is <see cref="IpoBoard"/>'s rule.
     /// </summary>
     public static class IpoCalendar
     {
-        /// <summary>
-        /// One candidate's chance in one period: p with 1 − (1 − p)^pool = 1 ÷ target periods,
-        /// so the chance that any of a reference pool lists in a period is one in the target
-        /// periods.
-        /// </summary>
-        public static double PeriodChance(IpoRules rules)
-        {
-            if (rules == null || rules.TargetYears <= 0 || rules.ReferencePool <= 0)
-            {
-                return 0d;
-            }
-
-            double targetPeriods =
-                (double)rules.TargetYears * IpoRules.DaysPerYear / PeriodDays(rules);
-            if (targetPeriods <= 1d)
-            {
-                return 1d;
-            }
-
-            return 1d - Math.Pow(1d - 1d / targetPeriods, 1d / rules.ReferencePool);
-        }
-
-        /// <summary>The chance that some candidate lists this period, with this many candidates.</summary>
-        public static double ChanceThisPeriod(int candidates, IpoRules rules)
-        {
-            return candidates <= 0 ? 0d : 1d - Math.Pow(1d - PeriodChance(rules), candidates);
-        }
-
-        /// <summary>Average days between IPOs with this many candidates (infinite with none).</summary>
-        public static double ExpectedDaysBetween(int candidates, IpoRules rules)
-        {
-            double chance = ChanceThisPeriod(candidates, rules);
-            return chance <= 0d ? double.PositiveInfinity : PeriodDays(rules) / chance;
-        }
-
-        /// <summary>
-        /// This period's draw. One number is taken from the dice whenever a draw is possible;
-        /// if an IPO happens, a second number sets its day in the period. Every candidate is
-        /// equally likely to be the one, and every day of the period equally likely.
-        /// </summary>
-        public static PeriodDraw DrawPeriod(
-            int candidates,
-            int listed,
-            bool ipoInProgress,
-            IpoRules rules,
-            IpoDice dice
-        )
-        {
-            if (candidates <= 0 || ipoInProgress || listed >= rules.ListingCap)
-            {
-                return PeriodDraw.Nothing;
-            }
-
-            return Roll(candidates, ChanceThisPeriod(candidates, rules), PeriodDays(rules), dice);
-        }
-
         /// <summary>Days between draws: at least 1.</summary>
         public static int PeriodDays(IpoRules rules)
         {
@@ -354,7 +357,7 @@ namespace FinanceOverhaul.Core
                 return PeriodDraw.Nothing;
             }
 
-            // roll is uniform in [0, chance): spread it evenly over the candidates.
+            // roll is uniform in [0, chance): spread it evenly over the choices.
             return new PeriodDraw
             {
                 Index = Math.Min(count - 1, (int)(roll / chance * count)),

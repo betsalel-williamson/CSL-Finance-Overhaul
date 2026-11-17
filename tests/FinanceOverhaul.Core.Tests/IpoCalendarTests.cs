@@ -20,130 +20,41 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
-        public void TheReferencePoolListsOnceInTheTargetYears()
+        public void TheSameSeedDealsTheSameNumbers()
         {
-            var rules = new IpoRules();
-            Assert.Equal(
-                10d * 365d,
-                IpoCalendar.ExpectedDaysBetween(rules.ReferencePool, rules),
-                6
-            );
-            Assert.Equal(30d / 3650d, IpoCalendar.ChanceThisPeriod(20, rules), 12);
-            var weekly = new IpoRules { DrawEveryDays = 7 };
-            Assert.Equal(7d / 3650d, IpoCalendar.ChanceThisPeriod(20, weekly), 12);
-            Assert.Equal(10d * 365d, IpoCalendar.ExpectedDaysBetween(20, weekly), 6);
-        }
-
-        [Fact]
-        public void FewerCandidatesAreRarerMoreAreMoreCommonNoneNever()
-        {
-            var rules = new IpoRules();
-            Assert.Equal(0d, IpoCalendar.ChanceThisPeriod(0, rules));
-            Assert.True(double.IsPositiveInfinity(IpoCalendar.ExpectedDaysBetween(0, rules)));
-            double last = 0d;
-            for (int n = 1; n <= 500; n++)
-            {
-                double chance = IpoCalendar.ChanceThisPeriod(n, rules);
-                Assert.True(chance > last, "more candidates, higher chance (n=" + n + ")");
-                Assert.True(chance < 1d);
-                last = chance;
-            }
-
-            // One candidate waits about twenty times as long as twenty do.
-            Assert.InRange(IpoCalendar.ExpectedDaysBetween(1, rules), 72_000d, 74_000d);
-        }
-
-        [Theory]
-        [InlineData(20, 10d)]
-        [InlineData(5, 40d)]
-        [InlineData(80, 2.5d)]
-        public void SixHundredThousandCityYearsAverageTheTarget(int candidates, double years)
-        {
-            // Simulated days, not the formula: counts the IPOs the dice actually deal.
-            var rules = new IpoRules();
-            var dice = new IpoDice(20261117UL);
-            const int Periods = 12 * 600_000;
-            int ipos = 0;
-            var days = new int[30];
-            for (int period = 0; period < Periods; period++)
-            {
-                PeriodDraw draw = IpoCalendar.DrawPeriod(candidates, 0, false, rules, dice);
-                if (draw.Happens)
-                {
-                    ipos++;
-                    days[draw.DayOffset]++;
-                }
-            }
-
-            // Any day of the month is as likely as another.
-            foreach (int onDay in days)
-            {
-                Assert.InRange(onDay, ipos / 30 * 0.8, ipos / 30 * 1.2);
-            }
-
-            double averageYears = Periods * 30d / 365d / ipos;
-            Assert.InRange(averageYears, years * 0.95, years * 1.05);
-        }
-
-        [Fact]
-        public void EveryCandidateIsEquallyLikely()
-        {
-            var rules = new IpoRules { TargetYears = 1, ReferencePool = 1 }; // frequent, to count
-            var dice = new IpoDice(7UL);
-            var picks = new int[8];
-            int total = 0;
-            for (int week = 0; week < 2_000_000; week++)
-            {
-                int pick = IpoCalendar.DrawPeriod(picks.Length, 0, false, rules, dice).Index;
-                if (pick >= 0)
-                {
-                    picks[pick]++;
-                    total++;
-                }
-            }
-
-            foreach (int count in picks)
-            {
-                Assert.InRange(count, total / 8 * 0.9, total / 8 * 1.1);
-            }
-        }
-
-        [Fact]
-        public void NoDrawWhileAnIpoRunsOrAtTheCap()
-        {
-            var rules = new IpoRules { TargetYears = 1, ReferencePool = 1 };
-            var dice = new IpoDice(1UL);
-            ulong before = dice.State;
-            for (int day = 0; day < 10_000; day++)
-            {
-                Assert.False(IpoCalendar.DrawPeriod(50, 0, true, rules, dice).Happens);
-                Assert.False(
-                    IpoCalendar.DrawPeriod(50, rules.ListingCap, false, rules, dice).Happens
-                );
-                Assert.False(IpoCalendar.DrawPeriod(0, 0, false, rules, dice).Happens);
-            }
-
-            Assert.Equal(before, dice.State); // and the dice were not touched
-        }
-
-        [Fact]
-        public void TheSameSeedDealsTheSameDays()
-        {
-            var rules = new IpoRules { TargetYears = 1 };
             var a = new IpoDice(42UL);
             var b = new IpoDice(42UL);
-            for (int day = 0; day < 50_000; day++)
+            for (int i = 0; i < 1000; i++)
             {
-                PeriodDraw first = IpoCalendar.DrawPeriod(20, 0, false, rules, a);
-                PeriodDraw second = IpoCalendar.DrawPeriod(20, 0, false, rules, b);
-                Assert.Equal(first.Index, second.Index);
-                Assert.Equal(first.DayOffset, second.DayOffset);
-                Assert.InRange(first.DayOffset, 0, 29);
+                Assert.Equal(a.Next(), b.Next());
             }
 
             // Saving the state and carrying on gives the same numbers as never stopping.
             var resumed = new IpoDice(a.State);
             Assert.Equal(a.Next(), resumed.Next());
+        }
+
+        [Fact]
+        public void CandidatesAreListedByKind()
+        {
+            var rules = new IpoRules { HealthyDays = 1 };
+            var book = new CandidateBook();
+            BusinessFacts office = Good;
+            office.Kind = BusinessKind.Office;
+            book.Observe(B(1), Good, rules);
+            book.Observe(B(2), office, rules);
+            book.Observe(B(3), office, rules);
+            book.EndDay();
+            Assert.Equal(
+                new List<BuildingKey> { B(1) },
+                book.Candidates(rules, BusinessKind.Commercial)
+            );
+            Assert.Equal(
+                new List<BuildingKey> { B(2), B(3) },
+                book.Candidates(rules, BusinessKind.Office)
+            );
+            Assert.Empty(book.Candidates(rules, BusinessKind.Oil));
+            Assert.Equal(BusinessKind.Office, book.KindOf(B(3)));
         }
 
         [Fact]
