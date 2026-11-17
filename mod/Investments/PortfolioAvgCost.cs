@@ -18,7 +18,6 @@ namespace FinanceOverhaul
     {
         public const string RowPrefix = "FinanceOverhaulAvgCost-";
         public const string ValuePrefix = "FinanceOverhaulAvgCostValue-";
-        public const string Label = "Avg cost / share:";
 
         // Vanilla rows end their label at x 212 and start the value at x 220.
         private const float LabelRight = 212f;
@@ -120,7 +119,7 @@ namespace FinanceOverhaul
             label.size = new Vector2(LabelBox, 17f);
             label.textAlignment = UIHorizontalAlignment.Right;
             label.relativePosition = new Vector3(LabelRight - LabelBox, 0f);
-            label.text = Label;
+            label.text = Strings.Get("portfolio.avgCost");
 
             UILabel value = row.AddUIComponent<UILabel>();
             Copy(valueStyle, value);

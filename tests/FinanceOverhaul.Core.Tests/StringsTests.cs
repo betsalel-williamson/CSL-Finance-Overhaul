@@ -151,5 +151,88 @@ namespace FinanceOverhaul.Core.Tests
                 }
             }
         }
+
+        [Fact]
+        public void EveryOrderKindHasItsWording()
+        {
+            foreach (OrderKind kind in ModSettings.OrderKinds)
+            {
+                foreach (
+                    string id in new[]
+                    {
+                        "order.tab.",
+                        "order.place.",
+                        "order.caption.",
+                        "order.estimate.",
+                        "order.hint.",
+                        "order.card.side.",
+                        "order.card." + OrderText.Key(kind) + ".other|",
+                        "notice.title.",
+                        "notice.filled.",
+                        "options.flag.",
+                    }
+                )
+                {
+                    string full = id.EndsWith("|", StringComparison.Ordinal)
+                        ? id.TrimEnd('|')
+                        : id + OrderText.Key(kind);
+                    Assert.Contains(full, Strings.Ids);
+                }
+            }
+        }
+
+        [Fact]
+        public void OrdersBondsAndNoticesFollowTheLanguage()
+        {
+            Strings.AddLanguage(
+                "de",
+                new Dictionary<string, string>
+                {
+                    { "order.card.limit.one", "{0} Aktie zu höchstens ₡{1}" },
+                    { "order.card.limit.other", "{0} Aktien zu höchstens ₡{1}" },
+                    { "daysLeft.other", "noch {0} Tage" },
+                    { "notice.sender.brokerage", "Stadtmakler" },
+                    {
+                        "notice.filled.limit",
+                        "Limitkauf ausgeführt: {0} {1} zu {2} gekauft (Limit {3}), {4}."
+                    },
+                    { "bond.row.repaid", "Getilgt" },
+                    { "welcome.title", "Willkommen zurück" },
+                }
+            );
+            try
+            {
+                Strings.Language = "de";
+                Assert.Equal(
+                    "1 Aktie zu höchstens ₡80 · noch 5 Tage",
+                    OrderText.CardDetail(OrderKind.LimitBuy, 1, 80, 5)
+                );
+                Notice n = NoticeText.Filled(OrderKind.LimitBuy, 10, "OIL", 79f, 80, 790);
+                Assert.Equal("Stadtmakler", n.Sender);
+                Assert.Equal(
+                    "Limitkauf ausgeführt: 10 OIL zu ₡79 gekauft (Limit ₡80), ₡790. #orders",
+                    n.Text
+                );
+                Assert.Equal("Willkommen zurück", WelcomeText.Title);
+                // No German entry: English, sentence by sentence.
+                Assert.Equal("Stop-loss", OrderText.TabLabel(OrderKind.StopLossSell));
+            }
+            finally
+            {
+                Strings.Language = Strings.DefaultLanguage;
+                Strings.RemoveLanguage("de");
+            }
+        }
+
+        [Fact]
+        public void OneShareReadsAsOneShare()
+        {
+            Assert.Equal(
+                "1 share at or below ₡80 · 1 day left",
+                OrderText.CardDetail(OrderKind.LimitBuy, 1, 80, 1)
+            );
+            Assert.Equal("#orders", Strings.Get("notice.tag.orders"));
+            Assert.Equal("IDX, GGI, Oil", Strings.List(new[] { "IDX", "GGI", "Oil" }));
+        }
     }
 }

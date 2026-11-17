@@ -117,7 +117,7 @@ namespace FinanceOverhaul
             foreach (Tab t in AllTabs)
             {
                 Tab tab = t;
-                tab.Button = AddTab(tabs, tab.Label);
+                tab.Button = AddTab(tabs, tab.Label());
                 tab.Button.name = TabPrefix + tab.Key + (tab.Buy ? string.Empty : "Sell");
                 tab.Button.eventClick += (c, p) => SetKind(tab.Kind);
             }
@@ -149,7 +149,7 @@ namespace FinanceOverhaul
             priceField.selectionSprite = "EmptySprite";
             priceField.color = FoTheme.Field;
             priceField.textColor = Color.white;
-            priceField.tooltip = "Whole ₡ per share · orders trade at the daily price";
+            priceField.tooltip = Strings.Get("order.price.tip");
             if (shareLabel != null && shareLabel.font != null)
             {
                 priceField.font = shareLabel.font;
@@ -236,7 +236,7 @@ namespace FinanceOverhaul
             }
             catch
             {
-                label = buy ? "Buy" : "Sell";
+                label = Strings.Get(buy ? "detail.buy" : "detail.sell");
             }
 
             button.text = label;

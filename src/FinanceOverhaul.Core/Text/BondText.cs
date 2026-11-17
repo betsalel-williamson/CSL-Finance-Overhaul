@@ -86,12 +86,30 @@ namespace FinanceOverhaul.Core
         public static string RateLine(BondOffer offer)
         {
             int baseRate = BondPricing.BaseRate(offer.Term);
-            return BondPricing.RateText(offer.RateBasisPoints)
-                + " a year ("
-                + BondPricing.RateText(baseRate)
-                + " + "
-                + BondPricing.RateText(offer.RateBasisPoints - baseRate)
-                + ")";
+            return Strings.Format(
+                "bond.rateLine",
+                BondPricing.RateText(offer.RateBasisPoints),
+                BondPricing.RateText(baseRate),
+                BondPricing.RateText(offer.RateBasisPoints - baseRate)
+            );
+        }
+
+        /// <summary>Why an offer was refused, in the player's language.</summary>
+        public static string ReasonText(string reason)
+        {
+            if (reason == BondPricing.ReasonDebtCap)
+            {
+                return Strings.Get("bond.reason.debtCap");
+            }
+
+            if (reason == BondPricing.ReasonNoIncome)
+            {
+                return Strings.Get("bond.reason.noIncome");
+            }
+
+            return reason == BondPricing.ReasonBadInput
+                ? Strings.Get("bond.reason.badInput")
+                : reason ?? string.Empty;
         }
 
         /// <summary>The largest coupon (the first; later ones may be a cent less).</summary>
@@ -102,20 +120,38 @@ namespace FinanceOverhaul.Core
 
         public static string TermText(BondTerm term)
         {
-            return (int)term + "-year";
+            return Strings.Format("bond.termName", Number((int)term));
+        }
+
+        /// <summary>A term button: "1 year", "5 years".</summary>
+        public static string YearsText(BondTerm term)
+        {
+            return Strings.Plural("bond.years", (int)term, Number((int)term));
         }
 
         /// <summary>"#1 · 5-year · 4.58% · ₡500,000"</summary>
         public static string RowTitle(IssuedBond b)
         {
-            return "#"
-                + b.Id
-                + " · "
-                + (b.Terms.Periods / 12)
-                + "-year · "
-                + BondPricing.RateText(b.Terms.RateBasisPoints)
-                + " · "
-                + WholeMoney(b.Terms.FaceCents);
+            return Strings.Format(
+                "bond.row.title",
+                Number(b.Id),
+                Number(b.Terms.Periods / 12),
+                BondPricing.RateText(b.Terms.RateBasisPoints),
+                WholeMoney(b.Terms.FaceCents)
+            );
+        }
+
+        /// <summary>"#1 · 5-year · 4.58% · ₡500,000 · repaid 01/02/2031" (the host formats the date).</summary>
+        public static string RowTitle(IssuedBond b, string repaidDate)
+        {
+            return Strings.Format(
+                "bond.row.titleRepaid",
+                Number(b.Id),
+                Number(b.Terms.Periods / 12),
+                BondPricing.RateText(b.Terms.RateBasisPoints),
+                WholeMoney(b.Terms.FaceCents),
+                repaidDate
+            );
         }
 
         /// <summary>"Next coupon ₡1,908.33 in 12 days · 58 of 60 left" (the face comes with the last).</summary>
@@ -124,22 +160,19 @@ namespace FinanceOverhaul.Core
             int left = b.Terms.Periods - b.CouponsPaid;
             if (left <= 0)
             {
-                return "Repaid";
+                return Strings.Get("bond.row.repaid");
             }
 
             long coupon = BondMath.Schedule(b.Terms)[b.CouponsPaid].Interest;
             int days = Math.Max(0, b.DueDay(b.CouponsPaid + 1) - today);
-            return "Next coupon "
-                + Money(coupon)
-                + (left == 1 ? " + the face" : "")
-                + " in "
-                + days
-                + (days == 1 ? " day" : " days")
-                + " · "
-                + left
-                + " of "
-                + b.Terms.Periods
-                + " left";
+            return Strings.Plural(
+                left == 1 ? "bond.row.nextFace" : "bond.row.next",
+                days,
+                Money(coupon),
+                Number(days),
+                Number(left),
+                Number(b.Terms.Periods)
+            );
         }
 
         /// <summary>What "Repay now" costs today: the face plus interest accrued this period.</summary>
@@ -159,17 +192,19 @@ namespace FinanceOverhaul.Core
                         CultureInfo.InvariantCulture
                     ) + "×"
                     : "—";
-            return "Owed: loans "
-                + WholeMoney(loanCents)
-                + " + bonds "
-                + WholeMoney(bondCents)
-                + " = "
-                + WholeMoney(total)
-                + " · "
-                + leverage
-                + " annual income (cap "
-                + BondPricing.MaxLeverage
-                + "×)";
+            return Strings.Format(
+                "bond.owed",
+                WholeMoney(loanCents),
+                WholeMoney(bondCents),
+                WholeMoney(total),
+                leverage,
+                Number(BondPricing.MaxLeverage)
+            );
+        }
+
+        private static string Number(int value)
+        {
+            return value.ToString(CultureInfo.InvariantCulture);
         }
     }
 }

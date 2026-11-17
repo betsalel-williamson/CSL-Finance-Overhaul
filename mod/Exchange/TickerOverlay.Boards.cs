@@ -51,7 +51,7 @@ namespace FinanceOverhaul
         /// <summary>One marquee row with its ring texture (readable, so columns can be repainted).</summary>
         private void CreateRow(int r)
         {
-            var marquee = new LedMarquee(ScreenDots, r == 1 ? "Waiting for market data" : null);
+            var marquee = new LedMarquee(ScreenDots, r == 1 ? Strings.Get("ticker.waiting") : null);
             marquee.Display = DisplayNow(); // the first screen already in the chosen style
             int w = marquee.RingDots * TexelsPerDot;
             int h = LedFont.Height * TexelsPerDot;

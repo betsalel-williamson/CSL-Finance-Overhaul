@@ -89,7 +89,13 @@ namespace FinanceOverhaul
             v.from = FoText.Label(v.Root, name + "From", "", labelScale, FoTheme.ChartLabel);
             v.from.relativePosition = new Vector3(8f, 6f + plot.y + 3f);
             v.from.isInteractive = false;
-            v.to = FoText.Label(v.Root, name + "To", "today", labelScale, FoTheme.ChartLabel);
+            v.to = FoText.Label(
+                v.Root,
+                name + "To",
+                Strings.Get("today"),
+                labelScale,
+                FoTheme.ChartLabel
+            );
             v.to.isInteractive = false;
             v.to.relativePosition = new Vector3(
                 8f + plot.x - 30f * labelScale / 0.7f,
@@ -135,7 +141,7 @@ namespace FinanceOverhaul
                 );
             }
 
-            from.text = values.Length + " days ago";
+            from.text = Strings.Plural("daysAgo", values.Length, values.Length.ToString());
             var px = new Color32[w * h];
             var dash = new Color32(colour.r, colour.g, colour.b, 200);
             var gridColour = FoTheme.ChartGrid;

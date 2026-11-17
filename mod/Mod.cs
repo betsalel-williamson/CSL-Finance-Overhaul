@@ -14,8 +14,7 @@ namespace FinanceOverhaul
     {
         public string Name => ModBuildInfo.OptionsTitle;
 
-        public string Description =>
-            "Stock Exchange overhaul for Financial Districts: limit, stop-loss, take-profit and trailing stop orders, a Stock Monitor, an Index stock, city bonds, a live LED ticker and Chirper notices.";
+        public string Description => Strings.Get("mod.description");
 
         public static ModSettings Settings { get; private set; }
 

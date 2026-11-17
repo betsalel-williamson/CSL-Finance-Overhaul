@@ -280,44 +280,38 @@ namespace FinanceOverhaul
                 face > 0 ? BondPricing.Offer(term, debt, face, income) : default(BondOffer);
             if (!enabled)
             {
-                hint.text =
-                    "Selling new bonds is off (Options → City bonds). Bonds already sold keep paying.";
+                hint.text = Strings.Get("bond.hint.off");
                 hint.textColor = Muted;
             }
             else if (face <= 0)
             {
-                hint.text =
-                    "Type a whole amount in ₡. Up to "
-                    + BondText.WholeMoney(max)
-                    + " before the city owes 3× its annual income.";
+                hint.text = Strings.Format("bond.hint.amount", BondText.WholeMoney(max));
                 hint.textColor = Muted;
             }
             else if (face > BondTerms.MaxFaceCents)
             {
-                hint.text =
-                    "Refused: one bond can raise at most "
-                    + BondText.WholeMoney(BondTerms.MaxFaceCents)
-                    + ".";
+                hint.text = Strings.Format(
+                    "bond.refused.max",
+                    BondText.WholeMoney(BondTerms.MaxFaceCents)
+                );
                 hint.textColor = Refused;
             }
             else if (!offer.Allowed)
             {
-                hint.text =
-                    "Refused: "
-                    + offer.Reason
-                    + ". Most you can raise: "
-                    + BondText.WholeMoney(max)
-                    + ".";
+                hint.text = Strings.Format(
+                    "bond.refused",
+                    BondText.ReasonText(offer.Reason),
+                    BondText.WholeMoney(max)
+                );
                 hint.textColor = Refused;
             }
             else
             {
-                hint.text =
-                    "Up to "
-                    + BondText.WholeMoney(max)
-                    + " before the city owes 3× its annual income ("
-                    + BondText.WholeMoney(income)
-                    + ").";
+                hint.text = Strings.Format(
+                    "bond.hint.room",
+                    BondText.WholeMoney(max),
+                    BondText.WholeMoney(income)
+                );
                 hint.textColor = Muted;
             }
 
@@ -328,14 +322,18 @@ namespace FinanceOverhaul
                 rate.textColor = Price;
                 coupon.text = BondText.Money(BondText.CouponCents(t));
                 interest.text = BondText.Money(BondMath.TotalInterest(t));
-                repaid.text = DateIn(t.TermDays) + " · " + BondText.WholeMoney(face);
-                sell.text = "Sell bond · receive " + BondText.WholeMoney(face);
+                repaid.text = Strings.Format(
+                    "bond.repaidOn.value",
+                    DateIn(t.TermDays),
+                    BondText.WholeMoney(face)
+                );
+                sell.text = Strings.Format("bond.sell.receive", BondText.WholeMoney(face));
             }
             else
             {
                 rate.text = coupon.text = interest.text = repaid.text = "—";
                 rate.textColor = Muted;
-                sell.text = "Sell bond";
+                sell.text = Strings.Get("bond.sell");
             }
 
             sell.isEnabled = enabled && face > 0 && offer.Allowed;
@@ -365,16 +363,10 @@ namespace FinanceOverhaul
         private void RebuildRows(BondBook book, int today)
         {
             UiCleanup.RemoveChildrenWhere(owedList, c => true);
-            owedTitle.text = "Bonds you owe (" + book.Bonds.Count + ")";
+            owedTitle.text = Strings.Format("bond.owedTitle.count", book.Bonds.Count.ToString());
             if (book.Bonds.Count == 0)
             {
-                Label(
-                    owedList,
-                    null,
-                    "None yet. Coupons and repayments show in the budget under loans.",
-                    0.7f,
-                    Muted
-                );
+                Label(owedList, null, Strings.Get("bond.none"), 0.7f, Muted);
                 UpdateFades();
                 return;
             }
@@ -391,7 +383,7 @@ namespace FinanceOverhaul
                 UILabel t = Label(
                     row,
                     null,
-                    BondText.RowTitle(b) + " · repaid " + DateIn(b.DueDay(b.Terms.Periods) - today),
+                    BondText.RowTitle(b, DateIn(b.DueDay(b.Terms.Periods) - today)),
                     0.8f,
                     Text
                 );
@@ -402,7 +394,7 @@ namespace FinanceOverhaul
                 UIButton repay = Button(
                     row,
                     RepayPrefix + id,
-                    "Repay " + BondText.Money(BondText.RepayCents(b, today)),
+                    Strings.Format("bond.repay", BondText.Money(BondText.RepayCents(b, today))),
                     170f
                 );
                 repay.relativePosition = new Vector3(row.width - 178f, 8f);

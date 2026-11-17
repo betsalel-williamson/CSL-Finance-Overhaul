@@ -73,7 +73,7 @@ namespace FinanceOverhaul.Core
             return string.CompareOrdinal(a.Path ?? "", b.Path ?? "") < 0;
         }
 
-        private const string Product = "Finance Overhaul ";
+        private const string Product = "Finance Overhaul "; // not shown: the mod's own name
 
         /// <summary>
         /// A copy by its version and where it is installed, e.g. "0.1.0 (Workshop)",

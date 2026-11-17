@@ -46,8 +46,10 @@ English text to `src/FinanceOverhaul.Core/Text/EnglishStrings.cs` and read it wi
 `Strings.Format` (placeholders) or `Strings.Plural` (counts). One entry per whole sentence, with
 `{0}` placeholders, never words glued together: word order differs between languages. The mod
 follows the game's language (`mod/GameLanguage.cs`); a language without a table reads as English.
-`npm run layer:lint` fails on a literal in `mod/Windows` or `mod/Kit`, and on more literals than
-before anywhere else in the mod (lower `PENDING_MAX` in `scripts/strings-lint.py` as files move).
+`npm run layer:lint` fails on a literal the player would read anywhere in the mod (outside `Dev/`
+and `Harmony/`) or in the library's wording (`Text/`, `Views/`). Log lines stay English literals:
+the log is for whoever fixes a bug. A literal that only looks like wording gets `// not shown` and
+the reason on its line.
 
 ## Game UI tests and the test stock (TST)
 

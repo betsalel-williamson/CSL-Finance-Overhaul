@@ -94,7 +94,13 @@ namespace FinanceOverhaul
             detail.size = new Vector2(Width, DetailHeight);
             detail.relativePosition = new Vector3(0f, TitleHeight);
 
-            UILabel back = FoText.Label(detail, Prefix + "Back", "« All stocks", 0.75f, Accent);
+            UILabel back = FoText.Label(
+                detail,
+                Prefix + "Back",
+                Strings.Get("detail.back"),
+                0.75f,
+                Accent
+            );
             back.relativePosition = new Vector3(12f, 2f);
             back.isInteractive = true;
             back.eventClick += (c, p) => ShowList();
@@ -148,7 +154,7 @@ namespace FinanceOverhaul
 
             dFromLabel = FoText.Label(detail, Prefix + "DetailFrom", "", 0.6f, Muted);
             dFromLabel.relativePosition = new Vector3(ChartX, ChartY + ChartH + 4f);
-            dToLabel = FoText.Label(detail, Prefix + "DetailTo", "today", 0.6f, Muted);
+            dToLabel = FoText.Label(detail, Prefix + "DetailTo", Strings.Get("today"), 0.6f, Muted);
             dToLabel.relativePosition = new Vector3(ChartX + ChartW - 28f, ChartY + ChartH + 4f);
 
             // Four rows of two cells, then Open orders across the full width (an order summary

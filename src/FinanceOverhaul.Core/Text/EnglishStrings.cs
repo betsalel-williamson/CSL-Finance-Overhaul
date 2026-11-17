@@ -116,6 +116,244 @@ namespace FinanceOverhaul.Core
             { "monitor.settings.changeCurrency", "Change as ₡ instead of %" },
             { "monitor.settings.stocks", "Stocks shown" },
             { "monitor.settings.note", "Kept per player (settings file), not in the city save." },
+            // Joining: two whole sentences, and items in a list.
+            { "join.sentences", "{0} {1}" },
+            { "join.list", "{0}, {1}" },
+            { "days.one", "{0} day" },
+            { "days.other", "{0} days" },
+            { "today", "today" },
+            // A .NET date pattern (day, short month name, year). Month names stay English.
+            { "date.short", "d MMM yyyy" },
+            // Order ticket (the game's Invest dialog)
+            { "order.tab.buyNow", "Buy now" },
+            { "order.tab.sellNow", "Sell now" },
+            { "order.tab.limit", "Limit" },
+            { "order.tab.stopLoss", "Stop-loss" },
+            { "order.tab.takeProfit", "Take-profit" },
+            { "order.tab.trailingStop", "Trailing stop" },
+            { "order.place.limit", "Place limit order" },
+            { "order.place.stopLoss", "Place stop-loss" },
+            { "order.place.takeProfit", "Place take-profit" },
+            { "order.place.trailingStop", "Place trailing stop" },
+            { "order.caption.limit", "Limit price (₡ per share)" },
+            { "order.caption.stopLoss", "Stop price (₡ per share)" },
+            { "order.caption.takeProfit", "Target price (₡ per share)" },
+            { "order.caption.trailingStop", "Trail (% below the peak)" },
+            { "order.estimate.limit", "Est. cost (at limit): ₡{0}" },
+            { "order.estimate.stopLoss", "Est. proceeds (at stop): ₡{0}" },
+            { "order.estimate.takeProfit", "Est. proceeds (at target): ₡{0}" },
+            { "order.estimate.trailingStop", "Est. proceeds (at today's stop): ₡{0}" },
+            { "order.estimate.problem", "{0} — {1}" },
+            { "order.hint.limit", "Buys when the daily price is at or below ₡{0}." },
+            {
+                "order.hint.stopLoss",
+                "Sells when the daily price is at or below ₡{0}. After a sharp drop it can sell for less."
+            },
+            {
+                "order.hint.takeProfit",
+                "Sells when the daily price is at or above ₡{0}. After a sharp rise it can sell for more."
+            },
+            {
+                "order.hint.trailingStop",
+                "Sells if the daily price falls {0}% below its highest since you place it (stop now ₡{1}). The stop only moves up."
+            },
+            { "order.hint.goodFor.one", "Good for {0} day." },
+            { "order.hint.goodFor.other", "Good for {0} days." },
+            { "order.problem.trail", "Set the trail between {0}% and {1}%." },
+            { "order.problem.stop", "Set the stop below today's price (₡{0})." },
+            { "order.problem.target", "Set the target above today's price (₡{0})." },
+            { "order.problem.afford", "The city can't afford this many shares at your limit." },
+            { "order.problem.failed", "The order could not be placed." },
+            { "order.enter.price", "Enter a price in whole ₡." },
+            { "order.enter.trail", "Enter the trail in whole percent." },
+            { "order.enter.priceShares", "Enter a price in whole ₡ and at least one share." },
+            {
+                "order.enter.trailShares",
+                "Enter the trail in whole percent and at least one share."
+            },
+            { "order.price.tip", "Whole ₡ per share · orders trade at the daily price" },
+            { "order.shares.tip", "Type a share amount · Enter/Tab apply · Esc reverts" },
+            // Your Portfolio: open order cards
+            { "order.card.side.limit", "Open order · BUY" },
+            { "order.card.side.stopLoss", "Open order · SELL (stop-loss)" },
+            { "order.card.side.takeProfit", "Open order · SELL (take-profit)" },
+            { "order.card.side.trailingStop", "Open order · SELL (trailing stop)" },
+            { "order.card.limit.one", "{0} share at or below ₡{1}" },
+            { "order.card.limit.other", "{0} shares at or below ₡{1}" },
+            { "order.card.stopLoss.one", "{0} share if the price drops to ₡{1}" },
+            { "order.card.stopLoss.other", "{0} shares if the price drops to ₡{1}" },
+            { "order.card.takeProfit.one", "{0} share if the price rises to ₡{1}" },
+            { "order.card.takeProfit.other", "{0} shares if the price rises to ₡{1}" },
+            { "order.card.trailingStop.one", "{0} share, {1}% trail, stop ₡{2}" },
+            { "order.card.trailingStop.other", "{0} shares, {1}% trail, stop ₡{2}" },
+            { "order.card.detail", "{0} · {1}" },
+            { "order.card.cancel", "Cancel" },
+            { "portfolio.avgCost", "Avg cost / share:" },
+            // City bonds (Economy → Loans)
+            { "bond.title", "City bonds" },
+            {
+                "bond.about",
+                "You can only have three loans at once. Bonds don't use a loan slot: the city pays a coupon every 30 days and repays the face at maturity."
+            },
+            { "bond.sellTitle", "Sell a bond" },
+            { "bond.term", "Term" },
+            { "bond.years.one", "{0} year" },
+            { "bond.years.other", "{0} years" },
+            { "bond.termName", "{0}-year" },
+            { "bond.amount", "Amount (₡)" },
+            { "bond.rate", "Rate" },
+            { "bond.coupon", "Coupon every 30 days" },
+            { "bond.interest", "Total interest" },
+            { "bond.repaidOn", "Repaid on" },
+            { "bond.repaidOn.value", "{0} · {1}" },
+            { "bond.sell", "Sell bond" },
+            { "bond.sell.receive", "Sell bond · receive {0}" },
+            { "bond.owedTitle", "Bonds you owe" },
+            { "bond.owedTitle.count", "Bonds you owe ({0})" },
+            { "bond.none", "None yet. Coupons and repayments show in the budget under loans." },
+            { "bond.repay", "Repay {0}" },
+            {
+                "bond.hint.off",
+                "Selling new bonds is off (Options → City bonds). Bonds already sold keep paying."
+            },
+            {
+                "bond.hint.amount",
+                "Type a whole amount in ₡. Up to {0} before the city owes 3× its annual income."
+            },
+            { "bond.hint.room", "Up to {0} before the city owes 3× its annual income ({1})." },
+            { "bond.refused.max", "Refused: one bond can raise at most {0}." },
+            { "bond.refused", "Refused: {0}. Most you can raise: {1}." },
+            { "bond.reason.debtCap", "the city would owe more than 3× its annual income" },
+            { "bond.reason.noIncome", "the city has no income to borrow against" },
+            { "bond.reason.badInput", "invalid bond request" },
+            { "bond.rateLine", "{0} a year ({1} + {2})" },
+            { "bond.row.title", "#{0} · {1}-year · {2} · {3}" },
+            { "bond.row.titleRepaid", "#{0} · {1}-year · {2} · {3} · repaid {4}" },
+            { "bond.row.repaid", "Repaid" },
+            { "bond.row.next.one", "Next coupon {0} in {1} day · {2} of {3} left" },
+            { "bond.row.next.other", "Next coupon {0} in {1} days · {2} of {3} left" },
+            { "bond.row.nextFace.one", "Next coupon {0} + the face in {1} day · {2} of {3} left" },
+            {
+                "bond.row.nextFace.other",
+                "Next coupon {0} + the face in {1} days · {2} of {3} left"
+            },
+            { "bond.owed", "Owed: loans {0} + bonds {1} = {2} · {3} annual income (cap {4}×)" },
+            // Chirper notices
+            { "notice.sender.brokerage", "City Brokerage" },
+            { "notice.sender.treasury", "City Treasury" },
+            { "notice.tag.orders", "#orders" },
+            { "notice.tag.bonds", "#citybonds" },
+            { "notice.tagged", "{0} {1}" },
+            { "notice.title.limit", "Limit buy" },
+            { "notice.title.stopLoss", "Stop-loss" },
+            { "notice.title.takeProfit", "Take-profit" },
+            { "notice.title.trailingStop", "Trailing stop" },
+            {
+                "notice.filled.limit",
+                "Limit buy filled: bought {0} {1} at {2} (limit {3}) for {4}."
+            },
+            {
+                "notice.filled.stopLoss",
+                "Stop-loss filled: sold {0} {1} at {2} (stop {3}) for {4}."
+            },
+            {
+                "notice.filled.takeProfit",
+                "Take-profit filled: sold {0} {1} at {2} (target {3}) for {4}."
+            },
+            {
+                "notice.filled.trailingStop",
+                "Trailing stop filled: sold {0} {1} at {2} (stop {3}) for {4}."
+            },
+            { "notice.expired.one", "{0} for {1} {2} expired after {3} day without filling." },
+            { "notice.expired.other", "{0} for {1} {2} expired after {3} days without filling." },
+            { "notice.cancelled", "{0} for {1} {2} cancelled: {3}." },
+            { "notice.why.funds", "not enough cash" },
+            { "notice.why.fundsNeeds", "not enough cash (needs {0})" },
+            { "notice.why.shareLimit", "the exchange has no more shares to sell" },
+            { "notice.why.noShares", "the city no longer holds any {0}" },
+            { "notice.why.cancelled", "cancelled" },
+            { "notice.bond.matured", "Bond #{0} repaid at maturity: {1}." },
+            {
+                "notice.bond.maturedCoupon",
+                "Bond #{0} repaid at maturity: {1} plus the last {2} coupon."
+            },
+            { "notice.bond.coupon", "Bond #{0} coupon paid: {1} ({2} of {3} left)." },
+            {
+                "notice.index.restored",
+                "Your Index shares ({0}) are back. They were kept safe while Finance Overhaul was off."
+            },
+            { "notice.summary", "{0} order updates today: {1}. Details in Economy → Investments." },
+            { "notice.summary.filled", "{0} filled ({1})" },
+            { "notice.summary.expired", "{0} expired ({1})" },
+            { "notice.summary.cancelled", "{0} cancelled ({1})" },
+            // Welcome back dialog
+            { "welcome.title", "Welcome back" },
+            { "welcome.lead.one", "Finance Overhaul was off for {0} day in this city." },
+            { "welcome.lead.other", "Finance Overhaul was off for {0} days in this city." },
+            {
+                "welcome.ask",
+                "Your city bonds did not make their payments while it was off. How do you want to handle them?"
+            },
+            { "welcome.pay", "Pay what was missed ({0})" },
+            {
+                "welcome.payHelp.one",
+                "Pays the {0} day of bond payments today, as if the mod had been on."
+            },
+            {
+                "welcome.payHelp.other",
+                "Pays the {0} days of bond payments today, as if the mod had been on."
+            },
+            { "welcome.skip", "Start fresh from today" },
+            {
+                "welcome.skipHelp",
+                "Skips the missed payments. Payments carry on as normal from today."
+            },
+            { "welcome.footer", "This choice only affects this city." },
+            { "welcome.close.tip", "Close: start fresh from today (the default)" },
+            {
+                "welcome.matured",
+                "A bond reached its end while the mod was off: its {0} is repaid today either way."
+            },
+            { "welcome.indexBack", "Your Index shares ({0}) are back." },
+            // Stock Monitor: detail view (more)
+            { "detail.back", "« All stocks" },
+            // LED ticker boards: the boards draw Latin letters, digits and ₡ only.
+            { "ticker.waiting", "Waiting for market data" },
+            // Content Manager and Options page
+            {
+                "mod.description",
+                "Stock Exchange overhaul for Financial Districts: limit, stop-loss, take-profit and trailing stop orders, a Stock Monitor, an Index stock, city bonds, a live LED ticker and Chirper notices."
+            },
+            { "options.ticker.live", "Live Stock Exchange ticker (visual only)" },
+            { "options.ticker.shows", "Stock Exchange ticker shows" },
+            { "options.ticker.shows.percent", "Change % (+3.22%)" },
+            { "options.ticker.shows.price", "Price and ₡ change (₡951 +₡30)" },
+            {
+                "options.ticker.infoViews",
+                "Show the LED ticker in info views (traffic, population…)"
+            },
+            { "options.ticker.brightness", "LED ticker brightness" },
+            { "options.ticker.brightness.classic", "Classic" },
+            { "options.ticker.brightness.bright", "Bright" },
+            { "options.ticker.brightness.brightest", "Brightest (daylight)" },
+            { "options.orders.lifetime", "Orders stay open for (new orders)" },
+            { "options.notices", "Order and bond notices in Chirper" },
+            { "options.notices.coupons", "Also chirp every bond coupon" },
+            { "options.flags", "Feature flags (dev builds only)" },
+            { "options.flag.limit", "Orders: Limit buys" },
+            { "options.flag.stopLoss", "Orders: Stop-loss sells" },
+            { "options.flag.takeProfit", "Orders: Take-profit sells" },
+            { "options.flag.trailingStop", "Orders: Trailing stop sells" },
+            { "options.flag.monitor", "Stock Monitor window" },
+            { "options.flag.charts", "Share value charts in the Stock Monitor style" },
+            { "options.flag.index", "Index stock (adds an investment to saves)" },
+            { "options.flag.bonds", "City bonds (sell bonds to raise money; adds mod save data)" },
+            {
+                "options.flag.testStock",
+                "Dev: Test Stock (TST) for game UI tests (adds a listing; use a test save)"
+            },
+            { "options.copyBuildInfo", "Copy build info" },
+            { "options.copiedBuildInfo", "Copied build info" },
         };
     }
 }

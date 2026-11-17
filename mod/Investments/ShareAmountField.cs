@@ -134,7 +134,7 @@ namespace FinanceOverhaul
                 field.focusedBgSprite = "TextFieldPanel";
                 field.selectionSprite = "EmptySprite";
                 field.color = FoTheme.Field;
-                field.tooltip = "Type a share amount · Enter/Tab apply · Esc reverts";
+                field.tooltip = Strings.Get("order.shares.tip");
                 field.text = label.text;
                 Recenter(true);
                 field.eventGotFocus += OnGotFocus;

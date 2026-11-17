@@ -93,8 +93,8 @@ namespace FinanceOverhaul.Core.Tests
                 OrderText.Hint(OrderKind.LimitBuy, 80)
             );
             Assert.Equal(
-                "Est. proceeds (at stop): ₡",
-                OrderText.EstimateLabel(OrderKind.StopLossSell)
+                "Est. proceeds (at stop): ₡1,200",
+                OrderText.EstimateText(OrderKind.StopLossSell, 1200)
             );
         }
 

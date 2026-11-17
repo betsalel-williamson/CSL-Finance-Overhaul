@@ -401,7 +401,7 @@ namespace FinanceOverhaul
                 + Money(c.Cents)
                 + " ("
                 + c.Cents
-                + " cents, due day "
+                + " cents, due day " // not shown: a log line
                 + c.Day
                 + ")";
             if (moved != c.Cents)

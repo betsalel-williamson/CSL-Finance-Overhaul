@@ -110,6 +110,23 @@ namespace FinanceOverhaul.Core
             }
         }
 
+        /// <summary>Items as one list in the current language: "IDX, GGI, Oil".</summary>
+        public static string List(IList<string> items)
+        {
+            if (items == null || items.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            string text = items[0];
+            for (int i = 1; i < items.Count; i++)
+            {
+                text = Format("join.list", text, items[i]);
+            }
+
+            return text;
+        }
+
         /// <summary>
         /// The entry for a count: <paramref name="id"/> plus ".one", ".few", ".many" or
         /// ".other" by the current language's plural rule, falling back to ".other".

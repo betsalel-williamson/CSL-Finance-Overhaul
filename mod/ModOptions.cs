@@ -18,24 +18,33 @@ namespace FinanceOverhaul
             // Preferences: how shipped features look and behave. Every build.
             UIHelperBase group = helper.AddGroup(ModBuildInfo.OptionsTitle);
             group.AddCheckbox(
-                "Live Stock Exchange ticker (visual only)",
+                Strings.Get("options.ticker.live"),
                 Settings.LiveTickerEnabled,
                 OnLiveTickerChanged
             );
             group.AddDropdown(
-                "Stock Exchange ticker shows",
-                new[] { "Change % (+3.22%)", "Price and ₡ change (₡951 +₡30)" },
+                Strings.Get("options.ticker.shows"),
+                new[]
+                {
+                    Strings.Get("options.ticker.shows.percent"),
+                    Strings.Get("options.ticker.shows.price"),
+                },
                 Settings.TickerShows == TickerDisplay.PriceAndChange ? 1 : 0,
                 OnTickerShowsChanged
             );
             group.AddCheckbox(
-                "Show the LED ticker in info views (traffic, population…)",
+                Strings.Get("options.ticker.infoViews"),
                 Settings.TickerInInfoViews,
                 OnTickerInInfoViewsChanged
             );
             group.AddDropdown(
-                "LED ticker brightness",
-                new[] { "Classic", "Bright", "Brightest (daylight)" },
+                Strings.Get("options.ticker.brightness"),
+                new[]
+                {
+                    Strings.Get("options.ticker.brightness.classic"),
+                    Strings.Get("options.ticker.brightness.bright"),
+                    Strings.Get("options.ticker.brightness.brightest"),
+                },
                 (int)Settings.TickerBrightness,
                 OnTickerBrightnessChanged
             );
@@ -54,13 +63,13 @@ namespace FinanceOverhaul
             }
 
             group.AddDropdown(
-                "Orders stay open for (new orders)",
+                Strings.Get("options.orders.lifetime"),
                 lifetimeLabels,
                 selected,
                 OnOrderLifetimeChanged
             );
             group.AddCheckbox(
-                "Order and bond notices in Chirper",
+                Strings.Get("options.notices"),
                 Settings.NoticesEnabled,
                 v =>
                 {
@@ -72,7 +81,7 @@ namespace FinanceOverhaul
             if (BuildInfo.ShowDevBuildIdentity || Settings.CityBondsEnabled)
             {
                 group.AddCheckbox(
-                    "Also chirp every bond coupon",
+                    Strings.Get("options.notices.coupons"),
                     Settings.NoticesBondCoupons,
                     v =>
                     {
@@ -86,7 +95,7 @@ namespace FinanceOverhaul
             // use ModSettings.PinReleaseFlags.
             if (BuildInfo.ShowDevBuildIdentity)
             {
-                UIHelperBase flags = helper.AddGroup("Feature flags (dev builds only)");
+                UIHelperBase flags = helper.AddGroup(Strings.Get("options.flags"));
                 foreach (OrderKind kind in ModSettings.OrderKinds)
                 {
                     OrderKind k = kind;
@@ -98,27 +107,27 @@ namespace FinanceOverhaul
                 }
 
                 flags.AddCheckbox(
-                    "Stock Monitor window",
+                    Strings.Get("options.flag.monitor"),
                     Settings.Monitor.Enabled,
                     OnStockMonitorChanged
                 );
                 flags.AddCheckbox(
-                    "Share value charts in the Stock Monitor style",
+                    Strings.Get("options.flag.charts"),
                     Settings.ShareChartsEnabled,
                     OnShareChartsChanged
                 );
                 flags.AddCheckbox(
-                    "Index stock (adds an investment to saves)",
+                    Strings.Get("options.flag.index"),
                     Settings.IndexStockEnabled,
                     OnIndexStockChanged
                 );
                 flags.AddCheckbox(
-                    "City bonds (sell bonds to raise money; adds mod save data)",
+                    Strings.Get("options.flag.bonds"),
                     Settings.CityBondsEnabled,
                     OnCityBondsChanged
                 );
                 flags.AddCheckbox(
-                    "Dev: Test Stock (TST) for game UI tests (adds a listing; use a test save)",
+                    Strings.Get("options.flag.testStock"),
                     Settings.DevTestStockEnabled,
                     OnDevTestStockChanged
                 );
@@ -133,11 +142,9 @@ namespace FinanceOverhaul
             // Always available (dev and release): one click puts version, assembly identity
             // and build time on the clipboard for bug reports.
             copyBuildInfoButton =
-                helper.AddButton(CopyBuildInfoLabel, OnCopyBuildInfo)
+                helper.AddButton(Strings.Get("options.copyBuildInfo"), OnCopyBuildInfo)
                 as ColossalFramework.UI.UIButton;
         }
-
-        private const string CopyBuildInfoLabel = "Copy build info";
 
         private static ColossalFramework.UI.UIButton copyBuildInfoButton;
 
@@ -150,7 +157,7 @@ namespace FinanceOverhaul
                 ModLog.Info("build info copied: " + text.Replace("\n", " | "));
                 if (copyBuildInfoButton != null)
                 {
-                    copyBuildInfoButton.text = "Copied build info";
+                    copyBuildInfoButton.text = Strings.Get("options.copiedBuildInfo");
                 }
             }
             catch (Exception ex)

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
 
 namespace FinanceOverhaul.Core
 {
@@ -47,10 +46,15 @@ namespace FinanceOverhaul.Core
     /// </summary>
     public static class NoticeText
     {
-        public const string Brokerage = "City Brokerage";
-        public const string Treasury = "City Treasury";
-        public const string OrdersTag = " #orders";
-        public const string BondsTag = " #citybonds";
+        public static string Brokerage
+        {
+            get { return Strings.Get("notice.sender.brokerage"); }
+        }
+
+        public static string Treasury
+        {
+            get { return Strings.Get("notice.sender.treasury"); }
+        }
 
         /// <param name="price">The daily price the order filled at.</param>
         /// <param name="amount">Whole ₡ paid (buy) or received (sell).</param>
@@ -63,40 +67,27 @@ namespace FinanceOverhaul.Core
             long amount
         )
         {
-            bool sell = kind != OrderKind.LimitBuy;
-            string text =
-                Title(kind)
-                + " filled: "
-                + (sell ? "sold " : "bought ")
-                + Count(shares)
-                + " "
-                + symbol
-                + " at "
-                + StockMonitor.PriceText(price)
-                + " ("
-                + OrderText.TriggerWord(kind)
-                + " "
-                + Whole(trigger)
-                + ") for "
-                + Whole(amount)
-                + "."
-                + OrdersTag;
+            string text = Strings.Format(
+                "notice.filled." + OrderText.Key(kind),
+                Count(shares),
+                symbol,
+                StockMonitor.PriceText(price),
+                Whole(trigger),
+                Whole(amount)
+            );
             return Order(NoticeKind.Filled, symbol, text);
         }
 
         public static Notice Expired(OrderKind kind, uint shares, string symbol, int lifetimeDays)
         {
-            string text =
-                Title(kind)
-                + " for "
-                + Count(shares)
-                + " "
-                + symbol
-                + " expired after "
-                + lifetimeDays
-                + (lifetimeDays == 1 ? " day" : " days")
-                + " without filling."
-                + OrdersTag;
+            string text = Strings.Plural(
+                "notice.expired",
+                lifetimeDays,
+                Title(kind),
+                Count(shares),
+                symbol,
+                lifetimeDays.ToString(CultureInfo.InvariantCulture)
+            );
             return Order(NoticeKind.Expired, symbol, text);
         }
 
@@ -113,53 +104,51 @@ namespace FinanceOverhaul.Core
             string why;
             if (reason == OrderRules.ReasonFunds)
             {
-                why = "not enough cash" + (cost > 0 ? " (needs " + Whole(cost) + ")" : "");
+                why =
+                    cost > 0
+                        ? Strings.Format("notice.why.fundsNeeds", Whole(cost))
+                        : Strings.Get("notice.why.funds");
             }
             else if (reason == OrderRules.ReasonShareLimit)
             {
-                why = "the exchange has no more shares to sell";
+                why = Strings.Get("notice.why.shareLimit");
             }
             else if (reason == OrderRules.ReasonNoShares)
             {
-                why = "the city no longer holds any " + symbol;
+                why = Strings.Format("notice.why.noShares", symbol);
             }
             else
             {
-                why = reason ?? "cancelled";
+                why = reason ?? Strings.Get("notice.why.cancelled");
             }
 
-            string text =
-                Title(kind)
-                + " for "
-                + Count(shares)
-                + " "
-                + symbol
-                + " cancelled: "
-                + why
-                + "."
-                + OrdersTag;
+            string text = Strings.Format(
+                "notice.cancelled",
+                Title(kind),
+                Count(shares),
+                symbol,
+                why
+            );
             return Order(NoticeKind.Cancelled, symbol, text);
         }
 
         public static Notice BondMatured(int bondId, long faceCents, long lastCouponCents)
         {
+            string id = bondId.ToString(CultureInfo.InvariantCulture);
             string text =
-                "Bond #"
-                + bondId
-                + " repaid at maturity: "
-                + BondText.WholeMoney(faceCents)
-                + (
-                    lastCouponCents > 0
-                        ? " plus the last " + BondText.Money(lastCouponCents) + " coupon"
-                        : ""
-                )
-                + "."
-                + BondsTag;
+                lastCouponCents > 0
+                    ? Strings.Format(
+                        "notice.bond.maturedCoupon",
+                        id,
+                        BondText.WholeMoney(faceCents),
+                        BondText.Money(lastCouponCents)
+                    )
+                    : Strings.Format("notice.bond.matured", id, BondText.WholeMoney(faceCents));
             return new Notice
             {
                 Kind = NoticeKind.BondMatured,
                 Sender = Treasury,
-                Text = text,
+                Text = Tagged(text, "notice.tag.bonds"),
             };
         }
 
@@ -170,48 +159,43 @@ namespace FinanceOverhaul.Core
             {
                 Kind = NoticeKind.IndexRestored,
                 Sender = Brokerage,
-                Text =
-                    WelcomeText.IndexBack(shares)
-                    + " They were kept safe while Finance Overhaul was off."
-                    + OrdersTag,
+                Text = Tagged(
+                    Strings.Format(
+                        "notice.index.restored",
+                        shares.ToString("#,0", CultureInfo.InvariantCulture)
+                    ),
+                    "notice.tag.orders"
+                ),
                 Symbol = "IDX",
             };
         }
 
         public static Notice BondCoupon(int bondId, long couponCents, int left, int periods)
         {
-            string text =
-                "Bond #"
-                + bondId
-                + " coupon paid: "
-                + BondText.Money(couponCents)
-                + " ("
-                + left
-                + " of "
-                + periods
-                + " left)."
-                + BondsTag;
+            string text = Strings.Format(
+                "notice.bond.coupon",
+                bondId.ToString(CultureInfo.InvariantCulture),
+                BondText.Money(couponCents),
+                left.ToString(CultureInfo.InvariantCulture),
+                periods.ToString(CultureInfo.InvariantCulture)
+            );
             return new Notice
             {
                 Kind = NoticeKind.BondCoupon,
                 Sender = Treasury,
-                Text = text,
+                Text = Tagged(text, "notice.tag.bonds"),
             };
         }
 
         public static string Title(OrderKind kind)
         {
-            switch (kind)
-            {
-                case OrderKind.StopLossSell:
-                    return "Stop-loss";
-                case OrderKind.TakeProfitSell:
-                    return "Take-profit";
-                case OrderKind.TrailingStopSell:
-                    return "Trailing stop";
-                default:
-                    return "Limit buy";
-            }
+            return Strings.Get("notice.title." + OrderText.Key(kind));
+        }
+
+        /// <summary>A notice's sentence followed by its hashtag.</summary>
+        internal static string Tagged(string text, string tagId)
+        {
+            return Strings.Format("notice.tagged", text, Strings.Get(tagId));
         }
 
         private static Notice Order(NoticeKind kind, string symbol, string text)
@@ -220,7 +204,7 @@ namespace FinanceOverhaul.Core
             {
                 Kind = kind,
                 Sender = Brokerage,
-                Text = text,
+                Text = Tagged(text, "notice.tag.orders"),
                 Symbol = symbol,
             };
         }
@@ -283,15 +267,22 @@ namespace FinanceOverhaul.Core
 
         private static Notice Summary(List<Notice> orders)
         {
-            var sb = new StringBuilder();
-            sb.Append(orders.Count).Append(" order updates today: ");
-            bool first = true;
+            var parts = new List<string>();
             foreach (
                 KeyValuePair<NoticeKind, string> part in new[]
                 {
-                    new KeyValuePair<NoticeKind, string>(NoticeKind.Filled, "filled"),
-                    new KeyValuePair<NoticeKind, string>(NoticeKind.Expired, "expired"),
-                    new KeyValuePair<NoticeKind, string>(NoticeKind.Cancelled, "cancelled"),
+                    new KeyValuePair<NoticeKind, string>(
+                        NoticeKind.Filled,
+                        "notice.summary.filled"
+                    ),
+                    new KeyValuePair<NoticeKind, string>(
+                        NoticeKind.Expired,
+                        "notice.summary.expired"
+                    ),
+                    new KeyValuePair<NoticeKind, string>(
+                        NoticeKind.Cancelled,
+                        "notice.summary.cancelled"
+                    ),
                 }
             )
             {
@@ -304,31 +295,28 @@ namespace FinanceOverhaul.Core
                     }
                 }
 
-                if (symbols.Count == 0)
+                if (symbols.Count > 0)
                 {
-                    continue;
+                    parts.Add(
+                        Strings.Format(
+                            part.Value,
+                            symbols.Count.ToString(CultureInfo.InvariantCulture),
+                            Strings.List(symbols)
+                        )
+                    );
                 }
-
-                if (!first)
-                {
-                    sb.Append(", ");
-                }
-
-                first = false;
-                sb.Append(symbols.Count)
-                    .Append(' ')
-                    .Append(part.Value)
-                    .Append(" (")
-                    .Append(string.Join(", ", symbols.ToArray()))
-                    .Append(')');
             }
 
-            sb.Append(". Details in Economy → Investments.").Append(NoticeText.OrdersTag);
+            string text = Strings.Format(
+                "notice.summary",
+                orders.Count.ToString(CultureInfo.InvariantCulture),
+                Strings.List(parts)
+            );
             return new Notice
             {
                 Kind = NoticeKind.Summary,
                 Sender = NoticeText.Brokerage,
-                Text = sb.ToString(),
+                Text = NoticeText.Tagged(text, "notice.tag.orders"),
             };
         }
     }

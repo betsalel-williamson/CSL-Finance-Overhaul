@@ -289,7 +289,7 @@ namespace FinanceOverhaul
 
             UIButton cancel = card.AddUIComponent<UIButton>();
             cancel.name = CancelPrefix + order.Id;
-            cancel.text = "Cancel";
+            cancel.text = Strings.Get("order.card.cancel");
             cancel.size =
                 sellStyle != null
                     ? new Vector2(Mathf.Max(70f, sellStyle.width + 16f), sellStyle.height)

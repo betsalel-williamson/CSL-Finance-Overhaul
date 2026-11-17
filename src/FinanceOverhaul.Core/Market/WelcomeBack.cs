@@ -164,48 +164,64 @@ namespace FinanceOverhaul.Core
     /// <summary>The Welcome back dialog's words (Figma band 14). Kept short and plain.</summary>
     public static class WelcomeText
     {
-        public const string Title = "Welcome back";
-        public const string Skip = "Start fresh from today";
-        public const string SkipHelp =
-            "Skips the missed payments. Payments carry on as normal from today.";
-        public const string Footer = "This choice only affects this city.";
+        public static string Title
+        {
+            get { return Strings.Get("welcome.title"); }
+        }
+
+        public static string Skip
+        {
+            get { return Strings.Get("welcome.skip"); }
+        }
+
+        public static string SkipHelp
+        {
+            get { return Strings.Get("welcome.skipHelp"); }
+        }
+
+        public static string Footer
+        {
+            get { return Strings.Get("welcome.footer"); }
+        }
 
         /// <summary>Tooltip on ×: closing picks the default.</summary>
-        public const string CloseTip = "Close: start fresh from today (the default)";
+        public static string CloseTip
+        {
+            get { return Strings.Get("welcome.close.tip"); }
+        }
 
-        public const string Ask =
-            "Your city bonds did not make their payments while it was off. How do you want to handle them?";
+        public static string Ask
+        {
+            get { return Strings.Get("welcome.ask"); }
+        }
 
         public static string Lead(int daysAway)
         {
-            return "Finance Overhaul was off for " + Days(daysAway) + " in this city.";
+            return Strings.Plural("welcome.lead", daysAway, Days(daysAway));
         }
 
         public static string Pay(long cents)
         {
-            return "Pay what was missed (" + Amount(cents) + ")";
+            return Strings.Format("welcome.pay", Amount(cents));
         }
 
         public static string PayHelp(int daysAway)
         {
-            return "Pays the "
-                + Days(daysAway)
-                + " of bond payments today, as if the mod had been on.";
+            return Strings.Plural("welcome.payHelp", daysAway, Days(daysAway));
         }
 
         /// <summary>Only when a bond matured while the mod was off.</summary>
         public static string Matured(long cents)
         {
-            return "A bond reached its end while the mod was off: its "
-                + Amount(cents)
-                + " is repaid today either way.";
+            return Strings.Format("welcome.matured", Amount(cents));
         }
 
         public static string IndexBack(long shares)
         {
-            return "Your Index shares ("
-                + shares.ToString("#,0", CultureInfo.InvariantCulture)
-                + ") are back.";
+            return Strings.Format(
+                "welcome.indexBack",
+                shares.ToString("#,0", CultureInfo.InvariantCulture)
+            );
         }
 
         /// <summary>Cents up to ₡9.99, whole ₡ from ₡10 (the mod's one ₡ rule).</summary>
@@ -216,7 +232,7 @@ namespace FinanceOverhaul.Core
 
         private static string Days(int n)
         {
-            return n == 1 ? "1 day" : n.ToString(CultureInfo.InvariantCulture) + " days";
+            return n.ToString(CultureInfo.InvariantCulture);
         }
     }
 }

@@ -9,65 +9,50 @@ namespace FinanceOverhaul.Core
     /// </summary>
     public static class OrderText
     {
-        public static string TabLabel(OrderKind kind)
+        /// <summary>The id suffix the string table uses for an order kind.</summary>
+        public static string Key(OrderKind kind)
         {
             switch (kind)
             {
                 case OrderKind.StopLossSell:
-                    return "Stop-loss";
+                    return "stopLoss";
                 case OrderKind.TakeProfitSell:
-                    return "Take-profit";
+                    return "takeProfit";
                 case OrderKind.TrailingStopSell:
-                    return "Trailing stop";
+                    return "trailingStop";
                 default:
-                    return "Limit";
+                    return "limit";
             }
+        }
+
+        public static string TabLabel(OrderKind kind)
+        {
+            return Strings.Get("order.tab." + Key(kind));
         }
 
         public static string ButtonLabel(OrderKind kind)
         {
-            switch (kind)
-            {
-                case OrderKind.StopLossSell:
-                    return "Place stop-loss";
-                case OrderKind.TakeProfitSell:
-                    return "Place take-profit";
-                case OrderKind.TrailingStopSell:
-                    return "Place trailing stop";
-                default:
-                    return "Place limit order";
-            }
+            return Strings.Get("order.place." + Key(kind));
         }
 
         public static string PriceCaption(OrderKind kind)
         {
-            switch (kind)
-            {
-                case OrderKind.StopLossSell:
-                    return "Stop price (₡ per share)";
-                case OrderKind.TakeProfitSell:
-                    return "Target price (₡ per share)";
-                case OrderKind.TrailingStopSell:
-                    return "Trail (% below the peak)";
-                default:
-                    return "Limit price (₡ per share)";
-            }
+            return Strings.Get("order.caption." + Key(kind));
         }
 
-        /// <summary>Label before the amount, e.g. "Est. proceeds (at target): ₡".</summary>
-        public static string EstimateLabel(OrderKind kind)
+        /// <summary>The estimate row, e.g. "Est. proceeds (at target): ₡1,200".</summary>
+        public static string EstimateText(OrderKind kind, long amount)
         {
-            switch (kind)
-            {
-                case OrderKind.StopLossSell:
-                    return "Est. proceeds (at stop): ₡";
-                case OrderKind.TakeProfitSell:
-                    return "Est. proceeds (at target): ₡";
-                case OrderKind.TrailingStopSell:
-                    return "Est. proceeds (at today's stop): ₡";
-                default:
-                    return "Est. cost (at limit): ₡";
-            }
+            return Strings.Format("order.estimate." + Key(kind), Money(amount));
+        }
+
+        /// <summary>The estimate row with why the order can't be placed after it.</summary>
+        public static string EstimateText(OrderKind kind, long amount, string problem)
+        {
+            string estimate = EstimateText(kind, amount);
+            return string.IsNullOrEmpty(problem)
+                ? estimate
+                : Strings.Format("order.estimate.problem", estimate, problem);
         }
 
         /// <param name="price">The field's value: ₡ per share, or the trail percent.</param>
@@ -79,30 +64,20 @@ namespace FinanceOverhaul.Core
             int lifetimeDays = TradeOrder.DefaultLifetimeDays
         )
         {
-            string p = Money(price);
-            string good = " Good for " + TradeOrder.ClampLifetime(lifetimeDays) + " days.";
-            switch (kind)
-            {
-                case OrderKind.TrailingStopSell:
-                    return "Sells if the daily price falls "
-                        + p
-                        + "% below its highest since you place it (stop now ₡"
-                        + Money(TradeOrder.TrailingStop(mark, price))
-                        + "). The stop only moves up."
-                        + good;
-                case OrderKind.StopLossSell:
-                    return "Sells when the daily price is at or below ₡"
-                        + p
-                        + ". After a sharp drop it can sell for less."
-                        + good;
-                case OrderKind.TakeProfitSell:
-                    return "Sells when the daily price is at or above ₡"
-                        + p
-                        + ". After a sharp rise it can sell for more."
-                        + good;
-                default:
-                    return "Buys when the daily price is at or below ₡" + p + "." + good;
-            }
+            int days = TradeOrder.ClampLifetime(lifetimeDays);
+            string rule =
+                kind == OrderKind.TrailingStopSell
+                    ? Strings.Format(
+                        "order.hint.trailingStop",
+                        Money(price),
+                        Money(TradeOrder.TrailingStop(mark, price))
+                    )
+                    : Strings.Format("order.hint." + Key(kind), Money(price));
+            return Strings.Format(
+                "join.sentences",
+                rule,
+                Strings.Plural("order.hint.goodFor", days, Whole(days))
+            );
         }
 
         /// <summary>
@@ -153,11 +128,11 @@ namespace FinanceOverhaul.Core
                 && (price < OrderRules.MinTrailPercent || price > OrderRules.MaxTrailPercent)
             )
             {
-                return "Set the trail between "
-                    + OrderRules.MinTrailPercent
-                    + "% and "
-                    + OrderRules.MaxTrailPercent
-                    + "%.";
+                return Strings.Format(
+                    "order.problem.trail",
+                    Whole(OrderRules.MinTrailPercent),
+                    Whole(OrderRules.MaxTrailPercent)
+                );
             }
 
             if (float.IsNaN(mark) || float.IsInfinity(mark) || mark <= 0f)
@@ -167,14 +142,12 @@ namespace FinanceOverhaul.Core
 
             if (kind == OrderKind.StopLossSell && price >= mark)
             {
-                return "Set the stop below today's price (₡" + Money((int)Math.Floor(mark)) + ").";
+                return Strings.Format("order.problem.stop", Money((int)Math.Floor(mark)));
             }
 
             if (kind == OrderKind.TakeProfitSell && price <= mark)
             {
-                return "Set the target above today's price (₡"
-                    + Money((int)Math.Floor(mark))
-                    + ").";
+                return Strings.Format("order.problem.target", Money((int)Math.Floor(mark)));
             }
 
             return null;
@@ -183,127 +156,71 @@ namespace FinanceOverhaul.Core
         /// <summary>Options dropdown entry for an order lifetime, e.g. "90 days".</summary>
         public static string LifetimeLabel(int days)
         {
-            return days.ToString(CultureInfo.InvariantCulture) + " days";
+            return Strings.Plural("days", days, Whole(days));
         }
 
         /// <summary>Options toggle label for an order type's feature flag.</summary>
         public static string OptionLabel(OrderKind kind)
         {
-            switch (kind)
-            {
-                case OrderKind.StopLossSell:
-                    return "Orders: Stop-loss sells";
-                case OrderKind.TakeProfitSell:
-                    return "Orders: Take-profit sells";
-                case OrderKind.TrailingStopSell:
-                    return "Orders: Trailing stop sells";
-                default:
-                    return "Orders: Limit buys";
-            }
+            return Strings.Get("options.flag." + Key(kind));
         }
 
         /// <summary>Side line of a card whose order type is switched off in Options.</summary>
         public static string CardSide(OrderKind kind, bool paused)
         {
-            return paused ? CardSide(kind) + " · paused in Options" : CardSide(kind);
+            return paused ? Strings.Format("orders.paused", CardSide(kind)) : CardSide(kind);
         }
 
         /// <summary>The Your Portfolio card's side line.</summary>
         public static string CardSide(OrderKind kind)
         {
-            switch (kind)
-            {
-                case OrderKind.StopLossSell:
-                    return "Open order · SELL (stop-loss)";
-                case OrderKind.TakeProfitSell:
-                    return "Open order · SELL (take-profit)";
-                case OrderKind.TrailingStopSell:
-                    return "Open order · SELL (trailing stop)";
-                default:
-                    return "Open order · BUY";
-            }
+            return Strings.Get("order.card.side." + Key(kind));
         }
 
         /// <summary>The Your Portfolio card's detail line, e.g. "10 shares if the price rises to ₡120 · 5 days left".</summary>
         public static string CardDetail(OrderKind kind, uint shares, int price, int daysLeft)
         {
-            string what;
-            switch (kind)
-            {
-                case OrderKind.StopLossSell:
-                    what = " shares if the price drops to ₡";
-                    break;
-                case OrderKind.TakeProfitSell:
-                    what = " shares if the price rises to ₡";
-                    break;
-                default:
-                    what = " shares at or below ₡";
-                    break;
-            }
-
-            int left = Math.Max(0, daysLeft);
-            return Money(shares)
-                + what
-                + Money(price)
-                + " · "
-                + left.ToString(CultureInfo.InvariantCulture)
-                + (left == 1 ? " day left" : " days left");
+            string id =
+                kind == OrderKind.StopLossSell || kind == OrderKind.TakeProfitSell
+                    ? "order.card." + Key(kind)
+                    : "order.card.limit";
+            return WithDaysLeft(Strings.Plural(id, shares, Money(shares), Money(price)), daysLeft);
         }
 
         /// <summary>The Your Portfolio card's detail line for an open order.</summary>
         public static string CardDetail(TradeOrder order, int today)
         {
+            int daysLeft = order.ExpiresDay - today;
             if (order.Kind != OrderKind.TrailingStopSell)
             {
-                return CardDetail(
-                    order.Kind,
+                return CardDetail(order.Kind, order.Shares, order.TriggerPrice, daysLeft);
+            }
+
+            return WithDaysLeft(
+                Strings.Plural(
+                    "order.card.trailingStop",
                     order.Shares,
-                    order.TriggerPrice,
-                    order.ExpiresDay - today
-                );
-            }
-
-            int left = Math.Max(0, order.ExpiresDay - today);
-            return Money(order.Shares)
-                + " shares, "
-                + order.TrailPercent.ToString(CultureInfo.InvariantCulture)
-                + "% trail, stop ₡"
-                + Money(order.TriggerPrice)
-                + " · "
-                + left.ToString(CultureInfo.InvariantCulture)
-                + (left == 1 ? " day left" : " days left");
+                    Money(order.Shares),
+                    Whole(order.TrailPercent),
+                    Money(order.TriggerPrice)
+                ),
+                daysLeft
+            );
         }
 
-        /// <summary>Log name, e.g. "take-profit sell".</summary>
-        public static string LogName(OrderKind kind)
+        private static string WithDaysLeft(string what, int daysLeft)
         {
-            switch (kind)
-            {
-                case OrderKind.StopLossSell:
-                    return "stop-loss sell";
-                case OrderKind.TakeProfitSell:
-                    return "take-profit sell";
-                case OrderKind.TrailingStopSell:
-                    return "trailing stop sell";
-                default:
-                    return "limit buy";
-            }
+            int left = Math.Max(0, daysLeft);
+            return Strings.Format(
+                "order.card.detail",
+                what,
+                Strings.Plural("daysLeft", left, Whole(left))
+            );
         }
 
-        /// <summary>Log word for the trigger, e.g. "target".</summary>
-        public static string TriggerWord(OrderKind kind)
+        private static string Whole(long value)
         {
-            switch (kind)
-            {
-                case OrderKind.StopLossSell:
-                    return "stop";
-                case OrderKind.TakeProfitSell:
-                    return "target";
-                case OrderKind.TrailingStopSell:
-                    return "stop";
-                default:
-                    return "limit";
-            }
+            return value.ToString(CultureInfo.InvariantCulture);
         }
 
         private static string Money(long value)

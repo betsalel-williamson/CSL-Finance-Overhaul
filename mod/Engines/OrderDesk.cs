@@ -126,7 +126,7 @@ namespace FinanceOverhaul
                             "orders: placed #"
                                 + order.Id
                                 + " "
-                                + OrderText.LogName(kind)
+                                + OrderLog.Name(kind)
                                 + " "
                                 + shares
                                 + " "
@@ -339,7 +339,7 @@ namespace FinanceOverhaul
                             + " at "
                             + mark.ToString("0.##")
                             + " ("
-                            + OrderText.TriggerWord(order.Kind)
+                            + OrderLog.TriggerWord(order.Kind)
                             + " "
                             + order.TriggerPrice
                             + ") for "
@@ -406,7 +406,7 @@ namespace FinanceOverhaul
                         "orders: cancelled #"
                             + order.Id
                             + " "
-                            + OrderText.LogName(order.Kind)
+                            + OrderLog.Name(order.Kind)
                             + " "
                             + order.Shares
                             + " "

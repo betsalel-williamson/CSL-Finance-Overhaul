@@ -115,39 +115,33 @@ namespace FinanceOverhaul
         {
             float w = section.width;
             float pad = 16f;
-            UILabel title = Label(section, Prefix + "Title", "City bonds", 1.125f, Gold);
-            title.relativePosition = new Vector3(pad, 12f);
-            UILabel about = Label(
+            UILabel title = Label(
                 section,
-                null,
-                "You can only have three loans at once. Bonds don't use a loan slot: the city pays a coupon every 30 days and repays the face at maturity.",
-                0.75f,
-                Muted
+                Prefix + "Title",
+                Strings.Get("bond.title"),
+                1.125f,
+                Gold
             );
+            title.relativePosition = new Vector3(pad, 12f);
+            UILabel about = Label(section, null, Strings.Get("bond.about"), 0.75f, Muted);
             about.relativePosition = new Vector3(pad + title.width + 12f, 16f);
 
             // Left column: sell a bond.
             float left = pad,
                 colW = Mathf.Min(560f, w * 0.46f);
             float y = 44f;
-            Label(section, null, "Sell a bond", 0.875f, Text).relativePosition = new Vector3(
-                left,
-                y
-            );
+            Label(section, null, Strings.Get("bond.sellTitle"), 0.875f, Text).relativePosition =
+                new Vector3(left, y);
             y += 24f;
-            Label(section, null, "Term", 0.75f, Muted).relativePosition = new Vector3(left, y + 6f);
+            Label(section, null, Strings.Get("bond.term"), 0.75f, Muted).relativePosition =
+                new Vector3(left, y + 6f);
             float x = left + 48f;
             foreach (
                 BondTerm t in new[] { BondTerm.OneYear, BondTerm.TwoYears, BondTerm.FiveYears }
             )
             {
                 BondTerm captured = t;
-                UIButton b = Button(
-                    section,
-                    TermPrefix + (int)t,
-                    (int)t + ((int)t == 1 ? " year" : " years"),
-                    84f
-                );
+                UIButton b = Button(section, TermPrefix + (int)t, BondText.YearsText(t), 84f);
                 b.relativePosition = new Vector3(x, y);
                 b.eventClick += (c, p) => SetTerm(captured);
                 termButtons[t] = b;
@@ -155,10 +149,8 @@ namespace FinanceOverhaul
             }
 
             y += 32f;
-            Label(section, null, "Amount (₡)", 0.75f, Muted).relativePosition = new Vector3(
-                left,
-                y + 6f
-            );
+            Label(section, null, Strings.Get("bond.amount"), 0.75f, Muted).relativePosition =
+                new Vector3(left, y + 6f);
             amount = section.AddUIComponent<UITextField>();
             amount.name = AmountFieldName;
             amount.size = new Vector2(140f, 27f);
@@ -188,19 +180,19 @@ namespace FinanceOverhaul
             hint = Wrapped(section, HintName, colW, 0.7f, Muted);
             hint.relativePosition = new Vector3(left, y);
             y += 34f; // two lines of hint
-            rate = Row(left, ref y, "Rate", RateName);
-            coupon = Row(left, ref y, "Coupon every 30 days", Prefix + "Coupon");
-            interest = Row(left, ref y, "Total interest", Prefix + "Interest");
-            repaid = Row(left, ref y, "Repaid on", Prefix + "Repaid");
+            rate = Row(left, ref y, Strings.Get("bond.rate"), RateName);
+            coupon = Row(left, ref y, Strings.Get("bond.coupon"), Prefix + "Coupon");
+            interest = Row(left, ref y, Strings.Get("bond.interest"), Prefix + "Interest");
+            repaid = Row(left, ref y, Strings.Get("bond.repaidOn"), Prefix + "Repaid");
             y += 4f;
-            sell = Button(section, SellName, "Sell bond", 260f);
+            sell = Button(section, SellName, Strings.Get("bond.sell"), 260f);
             sell.relativePosition = new Vector3(left, y);
             sell.eventClick += (c, p) => OnSell();
 
             // Right column: bonds owed.
             float right = left + colW + 24f;
             float rightW = w - right - pad;
-            owedTitle = Label(section, OwedTitleName, "Bonds you owe", 0.875f, Text);
+            owedTitle = Label(section, OwedTitleName, Strings.Get("bond.owedTitle"), 0.875f, Text);
             owedTitle.relativePosition = new Vector3(right, 44f);
             // The footer may wrap to two lines; the list ends above both.
             footer = Wrapped(section, FooterName, rightW, 0.7f, Muted);

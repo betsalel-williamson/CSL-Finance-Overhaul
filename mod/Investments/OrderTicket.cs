@@ -46,7 +46,14 @@ namespace FinanceOverhaul
             public string Key;
             public OrderKind? Kind;
             public bool Buy;
-            public string Label;
+
+            public string Label()
+            {
+                return Kind.HasValue
+                    ? OrderText.TabLabel(Kind.Value)
+                    : Strings.Get(Buy ? "order.tab.buyNow" : "order.tab.sellNow");
+            }
+
             public UIButton Button;
         }
 
@@ -57,42 +64,36 @@ namespace FinanceOverhaul
                 Key = "Market",
                 Kind = null,
                 Buy = true,
-                Label = "Buy now",
             },
             new Tab
             {
                 Key = "Limit",
                 Kind = OrderKind.LimitBuy,
                 Buy = true,
-                Label = "Limit",
             },
             new Tab
             {
                 Key = "Market",
                 Kind = null,
                 Buy = false,
-                Label = "Sell now",
             },
             new Tab
             {
                 Key = "StopLoss",
                 Kind = OrderKind.StopLossSell,
                 Buy = false,
-                Label = OrderText.TabLabel(OrderKind.StopLossSell),
             },
             new Tab
             {
                 Key = "TakeProfit",
                 Kind = OrderKind.TakeProfitSell,
                 Buy = false,
-                Label = OrderText.TabLabel(OrderKind.TakeProfitSell),
             },
             new Tab
             {
                 Key = "TrailingStop",
                 Kind = OrderKind.TrailingStopSell,
                 Buy = false,
-                Label = OrderText.TabLabel(OrderKind.TrailingStopSell),
             },
         };
 
@@ -209,9 +210,11 @@ namespace FinanceOverhaul
             if (!TryPrice(out price) || shares == 0)
             {
                 ShowError(
-                    active.Value == OrderKind.TrailingStopSell
-                        ? "Enter the trail in whole percent and at least one share."
-                        : "Enter a price in whole ₡ and at least one share."
+                    Strings.Get(
+                        active.Value == OrderKind.TrailingStopSell
+                            ? "order.enter.trailShares"
+                            : "order.enter.priceShares"
+                    )
                 );
                 return true; // never fall through to a market trade
             }
@@ -230,7 +233,7 @@ namespace FinanceOverhaul
                     : OrderDesk.PlaceSell(active.Value, id, shares, price);
             if (order == null)
             {
-                ShowError("The order could not be placed.");
+                ShowError(Strings.Get("order.problem.failed"));
                 return true;
             }
 
@@ -244,7 +247,7 @@ namespace FinanceOverhaul
         {
             if (kind == OrderKind.LimitBuy && (long)price * shares > EconomyManager.playerMoney)
             {
-                return "The city can't afford this many shares at your limit.";
+                return Strings.Get("order.problem.afford");
             }
 
             return OrderText.PlacementProblem(kind, price, mark);
@@ -263,9 +266,11 @@ namespace FinanceOverhaul
             if (!TryPrice(out price))
             {
                 ShowError(
-                    active.Value == OrderKind.TrailingStopSell
-                        ? "Enter the trail in whole percent."
-                        : "Enter a price in whole ₡."
+                    Strings.Get(
+                        active.Value == OrderKind.TrailingStopSell
+                            ? "order.enter.trail"
+                            : "order.enter.price"
+                    )
                 );
                 return;
             }
@@ -309,10 +314,7 @@ namespace FinanceOverhaul
             long amount = (long)OrderText.EstimatePerShare(kind, price, mark) * shares;
             string problem = Problem(kind, price, shares, mark);
             estimate.textColor = problem == null ? EstimateColor : ErrorColor;
-            estimate.text =
-                OrderText.EstimateLabel(kind)
-                + amount.ToString("N0")
-                + (problem == null ? string.Empty : " — " + problem);
+            estimate.text = OrderText.EstimateText(kind, amount, problem);
             UIButton button = ButtonField.GetValue(owner) as UIButton;
             if (button != null)
             {
