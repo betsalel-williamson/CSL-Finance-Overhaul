@@ -1,0 +1,35 @@
+# Real key presses in the City bonds amount box: the number regroups as each digit lands, the
+# caret stays beside the digit it was beside, and Backspace or Delete on a separator takes the
+# digit next to it. Sells nothing.
+name bond amount box: typing regroups, the caret keeps its digit, deleting skips separators
+show-economy loans
+bonds-section show
+bonds-amount 500,000
+# a 1 in front of 500,000
+keys FinanceOverhaulBondsAmount home 1
+expect-text-is FinanceOverhaulBondsAmount 1,500,000
+expect-caret FinanceOverhaulBondsAmount 1
+# Delete with the caret before the separator takes the 5
+keys FinanceOverhaulBondsAmount delete
+expect-text-is FinanceOverhaulBondsAmount 100,000
+expect-caret FinanceOverhaulBondsAmount 1
+# Backspace with the caret after a separator takes the digit before it
+keys FinanceOverhaulBondsAmount end left left left backspace
+expect-text-is FinanceOverhaulBondsAmount 10,000
+expect-caret FinanceOverhaulBondsAmount 2
+# typing in the middle
+keys FinanceOverhaulBondsAmount 7
+expect-text-is FinanceOverhaulBondsAmount 107,000
+expect-caret FinanceOverhaulBondsAmount 3
+# backspacing the whole number never sticks on a separator
+keys FinanceOverhaulBondsAmount end backspace backspace backspace backspace backspace backspace
+expect-text-is FinanceOverhaulBondsAmount
+keys FinanceOverhaulBondsAmount 2 5 0 0 0 0 0
+expect-text-is FinanceOverhaulBondsAmount 2,500,000
+expect-caret FinanceOverhaulBondsAmount 9
+expect-text FinanceOverhaulBondsSell receive ₡2,500,000
+cleanup:
+blur FinanceOverhaulBondsAmount
+bonds-amount 500,000
+bonds-section auto
+close-economy

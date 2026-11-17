@@ -51,7 +51,10 @@ offline), `inspect-parents CONTROL` (a control and every parent: absolute box, b
 — for measuring vanilla UI), `inspect CONTROL` (one control: box, text, colour, text colour, font
 and scale, and the opacity it is drawn with), `game-colors [expect]` (logs the game's own gain, loss
 and value colours from the Economy panel; with `expect`, fails unless the theme's copies match —
-scenario 53), `log-fonts` (every UI font the game has loaded), `turn-exchange DEGREES|restore` and
+scenario 53), `log-fonts` (every UI font the game has loaded), `keys CONTROL TOKEN…` (real key
+presses through the field's own key handling, one a frame: a character types it; `home`, `end`,
+`left`, `right`, `backspace`, `delete` press that key), `blur CONTROL` and `expect-caret CONTROL N`
+(scenarios 57–58: typing regroups thousands), `turn-exchange DEGREES|restore` and
 `expect-ticker-on-building` (turns the first Stock Exchange where it stands and checks the live
 boards stand on it — scenario 55), `duplicate-alert preview|close` (shows the "switched on twice"
 dialog for every installed copy without changing anything, or closes it; needs a second copy

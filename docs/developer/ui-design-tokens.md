@@ -68,7 +68,7 @@ and Figma is updated to match; the mod's own windows follow Figma.
 | ---------------------- | --------------------- | --------------------------------------------------------------------------------------------- |
 | `FO/Game/Header`       | Open Sans SemiBold 18 | Modal title bar                                                                               |
 | `FO/Game/Title`        | Open Sans SemiBold 16 | Row name                                                                                      |
-| `FO/Game/Tab`          | Open Sans SemiBold 13 | Economy tabs                                                                                  |
+| `FO/Game/Tab`          | Open Sans SemiBold 16 | Economy tabs                                                                                  |
 | `FO/Game/Body`         | Open Sans SemiBold 13 | Label: value lines                                                                            |
 | `FO/Game/Section`      | Open Sans SemiBold 11 | Column headers                                                                                |
 | `FO/Game/Button`       | Open Sans SemiBold 13 | Buy / Sell                                                                                    |
@@ -173,8 +173,9 @@ tint, sprites, text colour and scale). The mod's additions inside the game's pan
 | Loans tab, offers     | Panel `UnlockingPanel2` tinted #4FDB00; bank name #97EE00 at 1.375; row labels #97EE00; values #B9DDFE  | `FoTheme.GameHeading`: City bonds title and row labels       |
 | Loans tab, "Take"     | Sprite `ButtonMenu`; text #FEFEFE, disabled #5B616A                                                     | `FoTheme.GameText`, `GameDisabledText`: bond buttons         |
 
-The game's Economy tabs measure 16 px (scale 1); the Figma style `FO/Game/Tab` is still 13 and has
-not been changed, because the UI Map mockups that use it would need checking one by one.
+`FO/Game/Tab` is 16 px, as the game's Economy tabs measure (scale 1): it styles `FO/EconomyTab` and
+`FO/OrderTab`. Texts that are not 16 px tabs in the mod no longer use it: the open-order row title
+and "Order filled" use `FO/Game/Body`, the bond term buttons `FO/Game/Button` (both 13).
 
 Figma variables follow these values: `color/bg/field` (primitive `csl/field/tint`),
 `color/bonds/text`, `button-text`, `term-off` and `color/order/tab-text`, `tab-text-off`

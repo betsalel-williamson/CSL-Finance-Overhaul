@@ -110,6 +110,69 @@ namespace FinanceOverhaul
             public static readonly FieldInfo TextSelectionEnd = TextField("m_SelectionEnd");
             public static readonly FieldInfo TextScrollIndex = TextField("m_ScrollIndex");
 
+            /// <summary>The text field's own handlers for a key going down and a typed character.</summary>
+            public static readonly MethodInfo TextOnKeyDown = AccessTools.Method(
+                typeof(UITextField),
+                "OnKeyDown"
+            );
+            public static readonly MethodInfo TextOnKeyPress = AccessTools.Method(
+                typeof(UITextField),
+                "OnKeyPress"
+            );
+
+            /// <summary>
+            /// A key event as the game's input hands one to a control (its constructor is not
+            /// public): no modifiers held. Null when the game's type has changed shape.
+            /// </summary>
+            public static UIKeyEventParameter KeyEvent(
+                UIComponent source,
+                UnityEngine.KeyCode key,
+                char character
+            )
+            {
+                foreach (
+                    ConstructorInfo c in AccessTools.GetDeclaredConstructors(
+                        typeof(UIKeyEventParameter)
+                    )
+                )
+                {
+                    ParameterInfo[] ps = c.GetParameters();
+                    var args = new object[ps.Length];
+                    bool known = true;
+                    for (int i = 0; i < ps.Length; i++)
+                    {
+                        System.Type t = ps[i].ParameterType;
+                        if (t == typeof(UnityEngine.KeyCode))
+                        {
+                            args[i] = key;
+                        }
+                        else if (t == typeof(char))
+                        {
+                            args[i] = character;
+                        }
+                        else if (t == typeof(bool))
+                        {
+                            args[i] = false;
+                        }
+                        else if (t.IsAssignableFrom(typeof(UIComponent)))
+                        {
+                            args[i] = source;
+                        }
+                        else
+                        {
+                            known = false;
+                        }
+                    }
+
+                    if (known)
+                    {
+                        return c.Invoke(args) as UIKeyEventParameter;
+                    }
+                }
+
+                return null;
+            }
+
             private static FieldInfo TextField(string name)
             {
                 return AccessTools.Field(typeof(UITextField), name);

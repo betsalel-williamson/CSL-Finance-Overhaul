@@ -120,6 +120,101 @@ namespace FinanceOverhaul
                     yield return null;
                     break;
                 }
+                case "keys":
+                {
+                    // keys CONTROL TOKEN… — real key presses, one a frame, through the field's
+                    // own key handling (so the caret, selection and the mod's regrouping are
+                    // the player's): a character types it; home, end, left, right, backspace
+                    // and delete press that key. The field keeps focus (see `blur`).
+                    UITextField f = FindControl(a) as UITextField;
+                    if (f == null)
+                    {
+                        r.Error = "no visible text field " + a;
+                        break;
+                    }
+
+                    if (!f.hasFocus)
+                    {
+                        f.Focus();
+                        yield return null;
+                    }
+
+                    if (!f.hasFocus)
+                    {
+                        r.Error = a + " did not take focus";
+                        break;
+                    }
+
+                    foreach (
+                        string token in (b ?? string.Empty).Split(
+                            new[] { ' ' },
+                            StringSplitOptions.RemoveEmptyEntries
+                        )
+                    )
+                    {
+                        KeyCode key =
+                            token == "home" ? KeyCode.Home
+                            : token == "end" ? KeyCode.End
+                            : token == "left" ? KeyCode.LeftArrow
+                            : token == "right" ? KeyCode.RightArrow
+                            : token == "backspace" ? KeyCode.Backspace
+                            : token == "delete" ? KeyCode.Delete
+                            : KeyCode.None;
+                        if (key != KeyCode.None)
+                        {
+                            r.Error = PressKey(f, key, '\0');
+                        }
+                        else
+                        {
+                            foreach (char ch in token)
+                            {
+                                r.Error = r.Error ?? PressKey(f, KeyCode.None, ch);
+                            }
+                        }
+
+                        if (r.Error != null)
+                        {
+                            break;
+                        }
+
+                        // A frame for the field, one for whoever regroups its text.
+                        yield return null;
+                        yield return null;
+                    }
+
+                    break;
+                }
+                case "blur":
+                {
+                    // blur CONTROL — the field gives up focus (applies what was typed).
+                    UITextField f = FindControl(a) as UITextField;
+                    if (f != null && f.hasFocus)
+                    {
+                        f.Unfocus();
+                    }
+
+                    yield return null;
+                    break;
+                }
+                case "expect-caret":
+                {
+                    // expect-caret CONTROL N — the caret stands after N characters.
+                    UITextField f = FindControl(a) as UITextField;
+                    if (f == null || GameInternals.Ui.TextCursorIndex == null)
+                    {
+                        r.Error = "no visible text field " + a;
+                        break;
+                    }
+
+                    int caret = (int)GameInternals.Ui.TextCursorIndex.GetValue(f);
+                    if (caret.ToString() != b)
+                    {
+                        r.Error =
+                            a + " caret is at " + caret + " in '" + f.text + "', expected " + b;
+                    }
+
+                    break;
+                }
                 case "set-text":
                 {
                     // Simulates a stale label (e.g. left by an older build).
@@ -359,6 +454,23 @@ namespace FinanceOverhaul
                     r.Unknown = true; // not one of this group's commands
                     yield break;
             }
+        }
+
+        /// <summary>One key through the field's own handlers; an error text, or null.</summary>
+        private static string PressKey(UITextField field, KeyCode key, char character)
+        {
+            UIKeyEventParameter p = GameInternals.Ui.KeyEvent(field, key, character);
+            System.Reflection.MethodInfo handler =
+                key == KeyCode.None
+                    ? GameInternals.Ui.TextOnKeyPress
+                    : GameInternals.Ui.TextOnKeyDown;
+            if (p == null || handler == null)
+            {
+                return "the game's key handling was not found";
+            }
+
+            handler.Invoke(field, new object[] { p });
+            return null;
         }
     }
 }

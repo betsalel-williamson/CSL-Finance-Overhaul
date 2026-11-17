@@ -1,0 +1,26 @@
+# Real key presses in the order ticket's price box: the same regrouping, caret and delete rules
+# as the bond amount box. Places nothing.
+name limit price box: typing regroups, the caret keeps its digit, deleting skips separators
+show-buy Oil
+click FinanceOverhaulOrderTab-Limit
+keys FinanceOverhaulLimitPriceField end backspace backspace backspace backspace backspace backspace backspace
+expect-text-is FinanceOverhaulLimitPriceField
+keys FinanceOverhaulLimitPriceField 5 0 0 0 0 0
+expect-text-is FinanceOverhaulLimitPriceField 500,000
+expect-caret FinanceOverhaulLimitPriceField 7
+keys FinanceOverhaulLimitPriceField home 1
+expect-text-is FinanceOverhaulLimitPriceField 1,500,000
+expect-caret FinanceOverhaulLimitPriceField 1
+keys FinanceOverhaulLimitPriceField right backspace
+expect-text-is FinanceOverhaulLimitPriceField 500,000
+expect-caret FinanceOverhaulLimitPriceField 0
+keys FinanceOverhaulLimitPriceField right right right delete
+expect-text-is FinanceOverhaulLimitPriceField 50,000
+expect-caret FinanceOverhaulLimitPriceField 4
+# an eighth digit is not taken
+keys FinanceOverhaulLimitPriceField end 1 2 3
+expect-text-is FinanceOverhaulLimitPriceField 5,000,012
+expect-text FinanceOverhaulLimitHint 5,000,012
+cleanup:
+blur FinanceOverhaulLimitPriceField
+close-dialog
