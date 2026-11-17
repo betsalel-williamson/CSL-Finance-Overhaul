@@ -131,7 +131,7 @@ namespace FinanceOverhaul
             hoverLine = window.AddUIComponent<UIPanel>();
             hoverLine.name = Prefix + "HoverLine";
             hoverLine.backgroundSprite = "EmptySprite";
-            hoverLine.color = new Color32(255, 255, 255, 150);
+            hoverLine.color = FoTheme.HoverLine;
             hoverLine.isInteractive = false;
 
             hoverDot = window.AddUIComponent<UIPanel>();
@@ -143,7 +143,7 @@ namespace FinanceOverhaul
 
             hoverTip = Label(window, Prefix + "HoverTip", "", 0.7f, White);
             hoverTip.backgroundSprite = "GenericPanelWhite";
-            hoverTip.color = new Color32(9, 14, 17, 235);
+            hoverTip.color = FoTheme.Tip;
             hoverTip.padding = new RectOffset(6, 6, 3, 2);
             hoverTip.isInteractive = false;
         }

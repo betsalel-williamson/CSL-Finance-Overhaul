@@ -47,7 +47,7 @@ namespace FinanceOverhaul
         // (x, width) of each stats cell, in dStats order.
         private readonly List<Vector2> dCells = new List<Vector2>();
 
-        private static readonly Color32 Accent = new Color32(101, 214, 248, 255);
+        private static readonly Color32 Accent = FoTheme.Accent;
 
         private void ShowDetail(int id)
         {
@@ -484,8 +484,8 @@ namespace FinanceOverhaul
 
             var px = new Color32[w * h];
             var dash = new Color32(colour.r, colour.g, colour.b, 200);
-            var gridColour = new Color32(255, 255, 255, 40);
-            var clear = new Color32(0, 0, 0, 0);
+            var gridColour = FoTheme.ChartGrid;
+            var clear = FoTheme.Clear;
             for (int y = 0; y < h; y++)
             {
                 byte areaAlpha = (byte)(80 * (1f - y / (float)h));

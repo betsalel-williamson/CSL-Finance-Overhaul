@@ -38,13 +38,13 @@ namespace FinanceOverhaul
             SparkScale = 2;
 
         private static readonly Color32 White = new Color32(245, 247, 250, 255);
-        private static readonly Color32 Muted = new Color32(158, 163, 170, 255);
-        private static readonly Color32 Cyan = new Color32(101, 214, 248, 255);
-        private static readonly Color32 Gold = new Color32(239, 176, 88, 255);
+        private static readonly Color32 Muted = FoTheme.ChartLabel;
+        private static readonly Color32 Cyan = FoTheme.Accent;
+        private static readonly Color32 Gold = FoTheme.TickerSymbol;
         private static readonly Color32 GoldBack = new Color32(70, 52, 24, 255);
-        private static readonly Color32 PillText = new Color32(9, 14, 17, 255); // black reads best on the light game colours
-        private static readonly Color32 Gain = new Color32(78, 244, 101, 255);
-        private static readonly Color32 Loss = new Color32(233, 66, 79, 255);
+        private static readonly Color32 PillText = FoTheme.Header; // black reads best on the light game colours
+        private static readonly Color32 Gain = FoTheme.TickerGain;
+        private static readonly Color32 Loss = FoTheme.Loss;
         private static readonly Color32 Flat = new Color32(159, 176, 192, 255);
         private static readonly Color32 Divider = new Color32(255, 255, 255, 26);
 
@@ -317,7 +317,7 @@ namespace FinanceOverhaul
                 {
                     // texture rows go bottom-up; centre the 36-pixel line vertically
                     px[(s - 1 - (y + 8)) * s + x] =
-                        mask[y * s + x] == Sparkline.Line ? Gain : new Color32(0, 0, 0, 0);
+                        mask[y * s + x] == Sparkline.Line ? Gain : FoTheme.Clear;
                 }
             }
 
@@ -339,7 +339,7 @@ namespace FinanceOverhaul
             background = window.AddUIComponent<UIPanel>();
             background.name = Prefix + "Background";
             background.backgroundSprite = "GenericPanelWhite";
-            background.color = new Color32(10, 13, 15, 255);
+            background.color = FoTheme.Window;
             background.size = window.size;
             background.relativePosition = Vector3.zero;
             background.isInteractive = false;
@@ -501,11 +501,7 @@ namespace FinanceOverhaul
                 for (int x = 0; x < w; x++)
                 {
                     bool lit = x >= w / 2 - half && x < w / 2 + half;
-                    t.SetPixel(
-                        x,
-                        y,
-                        lit ? new Color32(230, 236, 240, 255) : new Color32(0, 0, 0, 0)
-                    );
+                    t.SetPixel(x, y, lit ? new Color32(230, 236, 240, 255) : FoTheme.Clear);
                 }
             }
 
@@ -869,7 +865,7 @@ namespace FinanceOverhaul
             byte[] mask = Sparkline.Render(history, w, h, SparkScale + 1);
             var px = new Color32[w * h];
             var dash = new Color32(colour.r, colour.g, colour.b, 200);
-            var clear = new Color32(0, 0, 0, 0);
+            var clear = FoTheme.Clear;
             for (int y = 0; y < h; y++)
             {
                 for (int x = 0; x < w; x++)

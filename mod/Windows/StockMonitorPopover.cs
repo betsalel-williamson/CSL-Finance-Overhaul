@@ -321,7 +321,7 @@ namespace FinanceOverhaul
             row.name = name;
             row.relativePosition = new Vector3(x, y);
             UIPanel outline = Box(row, new Color32(255, 255, 255, 200), 14f, 14f, 0f, 1f);
-            UIPanel inner = Box(outline, new Color32(10, 13, 15, 255), 10f, 10f, 2f, 2f);
+            UIPanel inner = Box(outline, FoTheme.Window, 10f, 10f, 2f, 2f);
             UILabel label = Label(row, null, text, scale, White);
             label.relativePosition = new Vector3(20f, 0f);
             row.size = new Vector2(label.width + 24f, 18f);
@@ -330,7 +330,7 @@ namespace FinanceOverhaul
                 c.isInteractive = false;
             }
 
-            Action paint = () => inner.color = get() ? Accent : new Color32(10, 13, 15, 255);
+            Action paint = () => inner.color = get() ? Accent : FoTheme.Window;
             refreshers.Add(paint);
             row.eventClick += (c, p) =>
             {

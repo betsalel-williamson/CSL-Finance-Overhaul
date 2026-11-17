@@ -80,7 +80,7 @@ namespace FinanceOverhaul
                     name + "Axis-" + i,
                     "",
                     labelScale,
-                    new Color32(158, 163, 170, 255)
+                    FoTheme.ChartLabel
                 );
                 l.isInteractive = false;
                 v.axis.Add(l);
@@ -91,7 +91,7 @@ namespace FinanceOverhaul
                 name + "From",
                 "",
                 labelScale,
-                new Color32(158, 163, 170, 255)
+                FoTheme.ChartLabel
             );
             v.from.relativePosition = new Vector3(8f, 6f + plot.y + 3f);
             v.from.isInteractive = false;
@@ -100,7 +100,7 @@ namespace FinanceOverhaul
                 name + "To",
                 "today",
                 labelScale,
-                new Color32(158, 163, 170, 255)
+                FoTheme.ChartLabel
             );
             v.to.isInteractive = false;
             v.to.relativePosition = new Vector3(
@@ -150,8 +150,8 @@ namespace FinanceOverhaul
             from.text = values.Length + " days ago";
             var px = new Color32[w * h];
             var dash = new Color32(colour.r, colour.g, colour.b, 200);
-            var gridColour = new Color32(255, 255, 255, 40);
-            var clear = new Color32(0, 0, 0, 0);
+            var gridColour = FoTheme.ChartGrid;
+            var clear = FoTheme.Clear;
             for (int y = 0; y < h; y++)
             {
                 byte areaAlpha = (byte)(80 * (1f - y / (float)h));
@@ -217,7 +217,7 @@ namespace FinanceOverhaul
                 ) / (float)Scale;
             if (hoverTip == null)
             {
-                hoverLine = Box(new Color32(255, 255, 255, 150));
+                hoverLine = Box(FoTheme.HoverLine);
                 hoverDot = Box(Color.white);
                 hoverDot.size = new Vector2(6f, 6f);
                 hoverTip = StockMonitorHost.Label(
@@ -228,7 +228,7 @@ namespace FinanceOverhaul
                     Color.white
                 );
                 hoverTip.backgroundSprite = "GenericPanelWhite";
-                hoverTip.color = new Color32(9, 14, 17, 235);
+                hoverTip.color = FoTheme.Tip;
                 hoverTip.padding = new RectOffset(6, 6, 3, 2);
                 hoverTip.isInteractive = false;
             }

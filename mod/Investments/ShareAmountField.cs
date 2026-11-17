@@ -160,7 +160,7 @@ namespace FinanceOverhaul
                 field.hoveredBgSprite = "TextFieldPanelHovered";
                 field.focusedBgSprite = "TextFieldPanel";
                 field.selectionSprite = "EmptySprite";
-                field.color = new Color32(28, 28, 28, 255);
+                field.color = FoTheme.Field;
                 field.tooltip = "Type a share amount · Enter/Tab apply · Esc reverts";
                 field.text = label.text;
                 Recenter(true);

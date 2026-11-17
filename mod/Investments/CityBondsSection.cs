@@ -40,10 +40,10 @@ namespace FinanceOverhaul
 
         private static readonly Color32 Gold = new Color32(232, 214, 77, 255);
         private static readonly Color32 Text = new Color32(230, 236, 240, 255);
-        private static readonly Color32 Muted = new Color32(160, 172, 182, 255);
+        private static readonly Color32 Muted = FoTheme.Hint;
         private static readonly Color32 Gain = new Color32(98, 205, 96, 255);
         private static readonly Color32 Price = new Color32(120, 196, 255, 255);
-        private static readonly Color32 Refused = new Color32(233, 150, 66, 255);
+        private static readonly Color32 Refused = FoTheme.Sell;
         private static readonly Color32 Panel = new Color32(24, 30, 36, 245);
         private static readonly Color32 RowColour = new Color32(36, 44, 52, 255);
 
@@ -420,7 +420,7 @@ namespace FinanceOverhaul
             amount.hoveredBgSprite = "TextFieldPanelHovered";
             amount.focusedBgSprite = "TextFieldPanel";
             amount.selectionSprite = "EmptySprite";
-            amount.color = new Color32(28, 28, 28, 255);
+            amount.color = FoTheme.Field;
             amount.textColor = Color.white;
             if (font != null)
             {

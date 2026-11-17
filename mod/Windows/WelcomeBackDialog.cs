@@ -19,12 +19,12 @@ namespace FinanceOverhaul
         private const float Pad = 20f;
 
         private static readonly Color32 Frame = new Color32(50, 55, 58, 255);
-        private static readonly Color32 Header = new Color32(9, 14, 17, 255);
+        private static readonly Color32 Header = FoTheme.Header;
         private static readonly Color32 Card = new Color32(24, 29, 35, 255);
-        private static readonly Color32 White = new Color32(250, 251, 255, 255);
+        private static readonly Color32 White = FoTheme.TextPrimary;
         private static readonly Color32 Body = new Color32(210, 213, 218, 255);
-        private static readonly Color32 Muted = new Color32(155, 154, 159, 255);
-        private static readonly Color32 Good = new Color32(101, 214, 248, 255);
+        private static readonly Color32 Muted = FoTheme.TextMuted;
+        private static readonly Color32 Good = FoTheme.Accent;
 
         private UIPanel panel;
         private float nextCheck;

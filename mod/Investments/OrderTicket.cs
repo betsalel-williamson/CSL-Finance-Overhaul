@@ -53,9 +53,9 @@ namespace FinanceOverhaul
             "UpdatePriceNumbers"
         );
 
-        private static readonly Color32 HintColor = new Color32(160, 172, 182, 255);
-        private static readonly Color32 ErrorColor = new Color32(233, 66, 79, 255);
-        private static readonly Color32 EstimateColor = new Color32(78, 205, 96, 255);
+        private static readonly Color32 HintColor = FoTheme.Hint;
+        private static readonly Color32 ErrorColor = FoTheme.Loss;
+        private static readonly Color32 EstimateColor = FoTheme.Buy;
 
         /// <summary>One tab: an order kind, or null for the vanilla trade.</summary>
         private sealed class Tab
@@ -551,7 +551,7 @@ namespace FinanceOverhaul
             priceField.hoveredBgSprite = "TextFieldPanelHovered";
             priceField.focusedBgSprite = "TextFieldPanel";
             priceField.selectionSprite = "EmptySprite";
-            priceField.color = new Color32(28, 28, 28, 255);
+            priceField.color = FoTheme.Field;
             priceField.textColor = Color.white;
             priceField.tooltip = "Whole ₡ per share · orders trade at the daily price";
             if (shareLabel != null && shareLabel.font != null)
