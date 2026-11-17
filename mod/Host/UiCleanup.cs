@@ -1,4 +1,3 @@
-#if HAS_CITIES
 using System.Collections.Generic;
 using ColossalFramework.UI;
 
@@ -75,4 +74,3 @@ namespace FinanceOverhaul
         }
     }
 }
-#endif

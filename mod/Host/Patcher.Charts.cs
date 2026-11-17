@@ -1,4 +1,3 @@
-#if HAS_CITIES
 using HarmonyLib;
 
 namespace FinanceOverhaul
@@ -67,4 +66,3 @@ namespace FinanceOverhaul
         }
     }
 }
-#endif

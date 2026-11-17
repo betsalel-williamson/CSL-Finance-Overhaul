@@ -1,4 +1,3 @@
-#if HAS_CITIES
 using System;
 using System.Collections.Generic;
 using FinanceOverhaul.Market;
@@ -150,4 +149,3 @@ namespace FinanceOverhaul
         }
     }
 }
-#endif

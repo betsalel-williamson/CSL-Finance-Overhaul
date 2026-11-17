@@ -14,7 +14,6 @@ namespace FinanceOverhaul
         {
             get
             {
-#if HAS_CITIES
                 try
                 {
                     return System.IO.Path.Combine(
@@ -26,7 +25,6 @@ namespace FinanceOverhaul
                 {
                     // fall through to temp
                 }
-#endif
                 return System.IO.Path.Combine(System.IO.Path.GetTempPath(), SettingsFile.FileName);
             }
         }

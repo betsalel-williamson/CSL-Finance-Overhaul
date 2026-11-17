@@ -1,4 +1,3 @@
-#if HAS_CITIES
 using ICities;
 
 namespace FinanceOverhaul
@@ -90,4 +89,3 @@ namespace FinanceOverhaul
         }
     }
 }
-#endif

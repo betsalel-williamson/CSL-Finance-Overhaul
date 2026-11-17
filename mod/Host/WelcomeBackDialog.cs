@@ -1,4 +1,3 @@
-#if HAS_CITIES
 using System;
 using ColossalFramework.UI;
 using FinanceOverhaul.Market;
@@ -249,4 +248,3 @@ namespace FinanceOverhaul
         }
     }
 }
-#endif

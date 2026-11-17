@@ -22,3 +22,4 @@ Product and architecture contracts for Finance Overhaul.
 - [ADR 0001 — Reflective stock hooks (superseded)](./adr/0001-reflective-stock-hooks.md)
 - [ADR 0002 — Live reload identity](./adr/0002-live-reload-identity.md)
 - [ADR 0003 — Market library vs CSL mod surface](./adr/0003-market-library-vs-mod-surface.md)
+- [ADR 0004 — The project boundary is the game](./adr/0004-project-boundary-is-the-game.md)

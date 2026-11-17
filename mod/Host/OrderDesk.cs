@@ -1,4 +1,3 @@
-#if HAS_CITIES
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -559,4 +558,3 @@ namespace FinanceOverhaul
         }
     }
 }
-#endif

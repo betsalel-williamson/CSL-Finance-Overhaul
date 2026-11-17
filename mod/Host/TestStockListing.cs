@@ -1,4 +1,3 @@
-#if HAS_CITIES
 using System;
 using FinanceOverhaul.Market;
 using UnityEngine;
@@ -261,4 +260,3 @@ namespace FinanceOverhaul
         }
     }
 }
-#endif

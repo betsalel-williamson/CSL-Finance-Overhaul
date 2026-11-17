@@ -2,18 +2,18 @@
 
 ## Layers
 
-| Project                        | Proves                                      | Cities?       |
-| ------------------------------ | ------------------------------------------- | ------------- |
-| `FinanceOverhaul.Market.Tests` | Index math, ticker, settings, perf budgets  | No            |
-| `FinanceOverhaul.Mod.Tests`    | Product/assembly identity for live reload   | No (refs off) |
-| Local game + Automate          | Harmony patches against Financial Districts | Yes           |
+| Project                        | Proves                                      | Cities? |
+| ------------------------------ | ------------------------------------------- | ------- |
+| `FinanceOverhaul.Market.Tests` | Index math, ticker, settings, perf budgets  | No      |
+| `npm run build:mod`            | The mod compiles against the game           | Yes     |
+| Local game + Automate          | Harmony patches against Financial Districts | Yes     |
 
 ## Commands
 
 ```bash
 npm run test:unit              # Market only — agents/CI default
-npm run test:mod               # Mod host without Cities
-npm test                       # both
+npm run build:mod              # compile the mod (needs the game; skipped without it)
+npm test                       # same as test:unit
 npm run hooks:agent-validate   # full trunk gate
 npm run test:game              # game UI scenarios (running game, --dev build)
 ```

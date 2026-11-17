@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Agentic gate — agents MUST run this (or npm run hooks:agent-validate) before
-# claiming a trunk merge is ready. Full suite without requiring Cities installs.
+# claiming a trunk merge is ready. Unit tests need no game; the mod itself is compiled where the game is installed.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=ensure-tool-path.sh
@@ -12,8 +12,8 @@ echo "==> agent-validate: layer-lint"
 npm run layer:lint
 echo "==> agent-validate: test:unit"
 npm run test:unit
-echo "==> agent-validate: test:mod"
-npm run test:mod
+echo "==> agent-validate: build:mod (needs the game; skipped without it)"
+npm run build:mod
 echo "==> agent-validate: format:check"
 npm run format:check
 echo "==> agent-validate: docs"

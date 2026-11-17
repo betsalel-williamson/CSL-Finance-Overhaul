@@ -1,8 +1,6 @@
-using FinanceOverhaul.Market;
-#if HAS_CITIES
 using CitiesHarmony.API;
+using FinanceOverhaul.Market;
 using ICities;
-#endif
 
 namespace FinanceOverhaul
 {
@@ -12,10 +10,7 @@ namespace FinanceOverhaul
     /// they are saved to is <see cref="ModSettingsStore"/>, the version text is
     /// <see cref="ModBuildInfo"/>.
     /// </summary>
-    public class Mod
-#if HAS_CITIES
-        : IUserMod
-#endif
+    public class Mod : IUserMod
     {
         public string Name => ModBuildInfo.OptionsTitle;
 
@@ -69,7 +64,6 @@ namespace FinanceOverhaul
 
             ModLog.Info("mod enabled product=" + (ModBuildInfo.GetProductVersionDisplay() ?? "?"));
 
-#if HAS_CITIES
             try
             {
                 HarmonyHelper.DoOnHarmonyReady(Patcher.PatchAll);
@@ -82,12 +76,10 @@ namespace FinanceOverhaul
             {
                 Patcher.LogHarmonyMissingOnce();
             }
-#endif
         }
 
         public void OnDisabled()
         {
-#if HAS_CITIES
             try
             {
                 if (HarmonyHelper.IsHarmonyInstalled)
@@ -99,12 +91,10 @@ namespace FinanceOverhaul
             {
                 // ignore
             }
-#endif
             Settings = null;
             ModLog.Info("mod disabled");
         }
 
-#if HAS_CITIES
         public void OnSettingsUI(UIHelperBase helper)
         {
             if (helper != null)
@@ -112,6 +102,5 @@ namespace FinanceOverhaul
                 ModOptions.Build(helper);
             }
         }
-#endif
     }
 }

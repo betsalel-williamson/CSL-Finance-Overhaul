@@ -1,4 +1,3 @@
-#if HAS_CITIES
 using System;
 using FinanceOverhaul.Market;
 using HarmonyLib;
@@ -182,4 +181,3 @@ namespace FinanceOverhaul
         }
     }
 }
-#endif

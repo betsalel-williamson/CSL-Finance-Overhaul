@@ -54,7 +54,6 @@ namespace FinanceOverhaul
                 }
             }
 
-#if HAS_CITIES
             try
             {
                 UnityEngine.Debug.Log("[FinanceOverhaul] " + message);
@@ -63,7 +62,6 @@ namespace FinanceOverhaul
             {
                 // fail soft
             }
-#endif
         }
     }
 }

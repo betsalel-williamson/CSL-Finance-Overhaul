@@ -1,6 +1,7 @@
 <!--
   CSL mod surface — IUserMod, Harmony, Options. References FinanceOverhaul.Market
-  for stock math. Tests / CI: -p:EnableCitiesRefs=false when ICities.dll is missing.
+  for stock math. Always built against the game's managed assemblies (CitiesManaged); it does
+  not build without them. Everything unit tested lives in the library project.
 -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -68,7 +69,7 @@
   <Target
     Name="DeployToCitiesMods"
     AfterTargets="Build"
-    Condition="'$(SkipModDeploy)' != 'true' And '$(EnableCitiesRefs)' != 'false' And Exists('$(CitiesManaged)/ICities.dll') And '$(CitiesMods)' != ''"
+    Condition="'$(SkipModDeploy)' != 'true' And '$(CitiesMods)' != ''"
   >
     <MakeDir Directories="$(ModDeployDir)" />
     <Copy
@@ -97,9 +98,12 @@
     />
     <Message Importance="high" Text="Deployed → $(ModDeployDir)/FinanceOverhaul.dll" />
   </Target>
-  <ItemGroup>
-    <InternalsVisibleTo Include="FinanceOverhaul.Mod.Tests" />
-  </ItemGroup>
+  <Target Name="RequireCitiesAssemblies" BeforeTargets="ResolveAssemblyReferences">
+    <Error
+      Condition="!Exists('$(CitiesManaged)/ICities.dll')"
+      Text="Cities: Skylines assemblies not found at '$(CitiesManaged)'. The mod project only builds with the game installed; pass -p:CitiesManaged=&lt;path to Managed&gt;. Unit tests live in the library and need no game."
+    />
+  </Target>
   <ItemGroup>
     <ProjectReference Include="..\src\FinanceOverhaul.Market\FinanceOverhaul.Market.csproj" />
   </ItemGroup>
@@ -110,15 +114,12 @@
       PrivateAssets="all"
     />
   </ItemGroup>
-  <ItemGroup Condition="Exists('$(CitiesManaged)/ICities.dll') And '$(EnableCitiesRefs)' != 'false'">
+  <ItemGroup>
     <PackageReference Include="CitiesHarmony.API" Version="2.2.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
-  <PropertyGroup Condition="Exists('$(CitiesManaged)/ICities.dll') And '$(EnableCitiesRefs)' != 'false'">
-    <DefineConstants>$(DefineConstants);HAS_CITIES</DefineConstants>
-  </PropertyGroup>
-  <ItemGroup Condition="Exists('$(CitiesManaged)/ICities.dll') And '$(EnableCitiesRefs)' != 'false'">
+  <ItemGroup>
     <Reference Include="ICities">
       <HintPath>$(CitiesManaged)/ICities.dll</HintPath>
       <Private>false</Private>

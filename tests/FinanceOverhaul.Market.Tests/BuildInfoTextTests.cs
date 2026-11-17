@@ -8,6 +8,29 @@ namespace FinanceOverhaul.Market.Tests
     public class BuildInfoTextTests
     {
         [Fact]
+        public void AssemblyIdentityComesFromThePackageVersion()
+        {
+            // Both projects take Major.Minor from package.json and let the build fill in
+            // build and revision, so Cities sees a new identity on every build (live reload).
+            System.Reflection.Assembly library = typeof(BuildInfoText).Assembly;
+            Version identity = library.GetName().Version;
+            Assert.Equal(4, identity.ToString().Split('.').Length);
+            Assert.True(identity.Build > 0, "build number is generated per build");
+
+            object[] info = library.GetCustomAttributes(
+                typeof(System.Reflection.AssemblyInformationalVersionAttribute),
+                false
+            );
+            string product = (
+                (System.Reflection.AssemblyInformationalVersionAttribute)info[0]
+            ).InformationalVersion;
+            string[] parts = product.Split('+')[0].Split('.');
+            Assert.True(parts.Length >= 3, "product version is semver: " + product);
+            Assert.Equal(identity.Major, int.Parse(parts[0], CultureInfo.InvariantCulture));
+            Assert.Equal(identity.Minor, int.Parse(parts[1], CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
         public void FormatsEveryLineForBugReports()
         {
             string text = BuildInfoText.Format(

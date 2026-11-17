@@ -9,8 +9,8 @@ green.
 npm run hooks:agent-validate
 ```
 
-That runs layer lint, Market unit+perf tests, Mod host tests (no Cities), csharpier check, and
-Merlon docs. Do **not** claim merge-ready without it.
+That runs layer lint, Market unit+perf tests, a build of the mod (where the game is installed),
+csharpier check, and Merlon docs. Do **not** claim merge-ready without it.
 
 ## Changesets
 
@@ -24,11 +24,15 @@ it ships.
 | Command             | Layer                                     | Cities assemblies              |
 | ------------------- | ----------------------------------------- | ------------------------------ |
 | `npm run test:unit` | `FinanceOverhaul.Market` math/ticker/perf | Never                          |
-| `npm run test:mod`  | Mod host identity                         | Off (`EnableCitiesRefs=false`) |
+| `npm run build:mod` | The mod compiles (no tests of its own)    | Required; skipped without them |
 | Local game loop     | Harmony + Stock Exchange                  | Required on your machine       |
 
-Stock business logic and performance budgets live only under `src/FinanceOverhaul.Market/` and
-`tests/FinanceOverhaul.Market.Tests/`. Cities Harmony / `ICities` stay in `mod/Host/`.
+Two projects, split by whether they reference the game. The library (`src/FinanceOverhaul.Market/`,
+tests in `tests/FinanceOverhaul.Market.Tests/`) never does: every calculation lives there, market
+rules and UI calculations (ordering, fitting, layout) alike, and everything unit tested is there.
+The mod (`mod/`) always does: hooks, save data and drawing only, no `#if` guards, and it does not
+build without the game. A mod class that needs a test has a calculation in it that belongs in the
+library: move it there and have the mod call it.
 
 ## Game UI tests and the test stock (TST)
 
@@ -49,7 +53,7 @@ to the `FinanceOverhaul.order` trigger file (`docs/developer/live-reload.md`).
 
 - **pre-commit** — lint-staged (prettier + csharpier)
 - **commit-msg** — commitlint conventional commits
-- **pre-push** — layer lint + `test:unit` + docs; on `main` also `test:mod` + format:check
+- **pre-push** — layer lint + `test:unit` + docs; on `main` also `build:mod` + format:check
 
 ## Docs
 
