@@ -1,7 +1,7 @@
 #if HAS_CITIES
 using System;
+using System.Collections.Generic;
 using System.Reflection;
-using FinanceOverhaul.Market;
 using HarmonyLib;
 
 namespace FinanceOverhaul
@@ -9,14 +9,21 @@ namespace FinanceOverhaul
     /// <summary>
     /// Harmony entry — keeps HarmonyLib out of <see cref="Mod"/> so Content Manager
     /// can still load the type when Cities Harmony is missing. Stock math lives in
-    /// <c>FinanceOverhaul.Market</c>; this type only wires Cities assemblies.
+    /// <c>FinanceOverhaul.Market</c>; this type only wires Cities assemblies. The hooks
+    /// themselves are grouped by feature in the other <c>Patcher.*.cs</c> files.
     /// </summary>
-    public static class Patcher
+    public static partial class Patcher
     {
         public const string HarmonyId = "com.betsalel.financeoverhaul";
 
         private static bool patched;
         private static bool harmonyMissingLogged;
+
+        // What this assembly patched. A second copy of the mod (Workshop and local, or the
+        // assembly from before a hot reload) uses the same Harmony id, so unpatching by id
+        // would also take that copy's hooks away.
+        private static readonly List<KeyValuePair<MethodBase, MethodInfo>> ownPatches =
+            new List<KeyValuePair<MethodBase, MethodInfo>>();
 
         public static void PatchAll()
         {
@@ -28,27 +35,9 @@ namespace FinanceOverhaul
             try
             {
                 Harmony harmony = new Harmony(HarmonyId);
-                int index = ApplyIndexPatches(harmony);
+                int index = ApplyIndexPatches(harmony) + ApplyChartPatches(harmony);
                 int ui = ApplyShareFieldPatches(harmony);
-                int ticker = TryPatch(
-                    harmony,
-                    AccessTools.Method(typeof(EconomyManager), "SimulationStepInvestments"),
-                    null,
-                    nameof(TickerSimulationStepPostfix)
-                );
-                TryPatch(
-                    harmony,
-                    AccessTools.Method(typeof(EconomyManager), "SimulationStepInvestments"),
-                    nameof(StressStepPrefix),
-                    nameof(StressStepPostfix)
-                );
-                // Game bug: a loaded investment table lists used slots as free (scenario 51).
-                TryPatch(
-                    harmony,
-                    AccessTools.Method(typeof(EconomyManager), "DeserializeInvestments"),
-                    null,
-                    nameof(RepairFreeSlotsPostfix)
-                );
+                int ticker = ApplyDailyPatches(harmony);
                 patched = true;
                 ModLog.Info(
                     "harmony patched index=" + index + " shareField=" + ui + " ticker=" + ticker
@@ -95,13 +84,24 @@ namespace FinanceOverhaul
             try
             {
                 Harmony harmony = new Harmony(HarmonyId);
-                harmony.UnpatchAll(HarmonyId);
+                foreach (KeyValuePair<MethodBase, MethodInfo> patch in ownPatches)
+                {
+                    try
+                    {
+                        harmony.Unpatch(patch.Key, patch.Value);
+                    }
+                    catch
+                    {
+                        // keep removing the rest
+                    }
+                }
             }
             catch
             {
                 // ignore
             }
 
+            ownPatches.Clear();
             patched = false;
         }
 
@@ -128,256 +128,6 @@ namespace FinanceOverhaul
             ModLog.Warn(line);
         }
 
-        private static int ApplyIndexPatches(Harmony harmony)
-        {
-            int applied = 0;
-            applied += TryPatch(
-                harmony,
-                AccessTools.Method(typeof(InvestmentCollection), "Awake"),
-                null,
-                nameof(IndexCollectionAwakePostfix)
-            );
-            applied += TryPatch(
-                harmony,
-                AccessTools.Method(typeof(InvestmentCollection), "OnDestroy"),
-                nameof(IndexCollectionOnDestroyPrefix),
-                null
-            );
-            // One hook for every investment type: SafeCalculateValue is declared on the
-            // base class and runs after vanilla random variance, so Index carries none.
-            applied += TryPatch(
-                harmony,
-                AccessTools.Method(typeof(InvestmentAI), "CreateInvestment"),
-                null,
-                nameof(IndexCreateInvestmentPostfix)
-            );
-            applied += TryPatch(
-                harmony,
-                AccessTools.Method(typeof(InvestmentAI), "SafeCalculateValue"),
-                null,
-                nameof(IndexSafeCalculateValuePostfix)
-            );
-            applied += TryPatch(
-                harmony,
-                AccessTools.Method(typeof(InvestmentAI), "GetLocalizedName"),
-                nameof(IndexLocalizedNamePrefix),
-                null
-            );
-            applied += TryPatch(
-                harmony,
-                AccessTools.Method(typeof(InvestmentAI), "GetLocalizedDescription"),
-                nameof(IndexLocalizedDescriptionPrefix),
-                null
-            );
-            // Display only: vanilla resamples history so the chart's last point lands
-            // between yesterday and today; end it on today's actual price.
-            applied += TryPatch(
-                harmony,
-                AccessTools.Method(typeof(Investment), "FillGraphValues"),
-                null,
-                nameof(GraphEndsAtTodayPostfix)
-            );
-            if (ShareChartOverlay.IsReady)
-            {
-                applied += TryPatch(
-                    harmony,
-                    AccessTools.Method(typeof(BuySellInvestmentPanel), "UpdateBindings"),
-                    null,
-                    nameof(ShareChartDialogPostfix)
-                );
-                applied += TryPatch(
-                    harmony,
-                    AccessTools.Method(typeof(InvestmentTooltip), "Update"),
-                    null,
-                    nameof(ShareChartTooltipPostfix)
-                );
-            }
-            return applied;
-        }
-
-        private static int ApplyShareFieldPatches(Harmony harmony)
-        {
-            if (!ShareAmountField.IsReady)
-            {
-                ModLog.Warn(
-                    "share field: vanilla BuySellInvestmentPanel members changed; skipping"
-                );
-                return 0;
-            }
-
-            int applied = 0;
-            applied += TryPatch(
-                harmony,
-                AccessTools.Method(typeof(BuySellInvestmentPanel), "Awake"),
-                null,
-                nameof(ShareFieldAwakePostfix)
-            );
-            // Hot reload / mid-game enable: the panel's Awake already ran, so also attach
-            // the first time the dialog is shown.
-            applied += TryPatch(
-                harmony,
-                AccessTools.Method(typeof(BuySellInvestmentPanel), "ShowPanel"),
-                null,
-                nameof(ShareFieldShowPanelPostfix)
-            );
-            applied += TryPatch(
-                harmony,
-                AccessTools.Method(typeof(BuySellInvestmentPanel), "SetSliderValue"),
-                null,
-                nameof(ShareFieldSetSliderValuePostfix)
-            );
-            applied += TryPatch(
-                harmony,
-                AccessTools.Method(typeof(BuySellInvestmentPanel), "Update"),
-                null,
-                nameof(ShareFieldUpdatePostfix)
-            );
-            applied += TryPatch(
-                harmony,
-                AccessTools.Method(typeof(BuySellInvestmentPanel), "OnKeyDown"),
-                nameof(ShareFieldOnKeyDownPrefix),
-                null
-            );
-            applied += TryPatch(
-                harmony,
-                AccessTools.Method(typeof(BuySellInvestmentPanel), "OnButtonClicked"),
-                nameof(OrderTicketButtonPrefix),
-                null
-            );
-            applied += TryPatch(
-                harmony,
-                AccessTools.Method(typeof(EconomyPanel), "UpdateInvestments"),
-                null,
-                nameof(PortfolioOrdersArrangePostfix)
-            );
-            applied += TryPatch(
-                harmony,
-                AccessTools.Method(typeof(BuySellInvestmentPanel), "UpdatePriceNumbers"),
-                null,
-                nameof(OrderTicketPricePostfix)
-            );
-            return applied;
-        }
-
-        private static void ShareFieldAwakePostfix(BuySellInvestmentPanel __instance)
-        {
-            try
-            {
-                ShareAmountField.Attach(__instance);
-            }
-            catch
-            {
-                // fail soft — vanilla slider still works
-            }
-
-            try
-            {
-                OrderTicket.Attach(__instance);
-            }
-            catch
-            {
-                // fail soft — vanilla Buy still works
-            }
-        }
-
-        private static void ShareFieldShowPanelPostfix(BuySellInvestmentPanel __result)
-        {
-            try
-            {
-                ShareAmountField.Attach(__result);
-                ShareAmountField.MirrorFromLabel();
-            }
-            catch
-            {
-                // fail soft
-            }
-
-            try
-            {
-                OrderTicket.Attach(__result);
-            }
-            catch
-            {
-                // fail soft
-            }
-        }
-
-        private static void ShareFieldUpdatePostfix()
-        {
-            try
-            {
-                ShareAmountField.Tick();
-            }
-            catch
-            {
-                // fail soft — never break the dialog's frame update
-            }
-        }
-
-        private static void ShareFieldSetSliderValuePostfix(BuySellInvestmentPanel __instance)
-        {
-            try
-            {
-                SliderThumbSync.Redraw(__instance);
-                ShareAmountField.MirrorFromLabel();
-                OrderTicket.Refresh();
-            }
-            catch
-            {
-                // fail soft
-            }
-        }
-
-        /// <summary>Right after vanilla sorts Your Portfolio, put order cards back in place.</summary>
-        private static void PortfolioOrdersArrangePostfix(EconomyPanel __instance)
-        {
-            try
-            {
-                PortfolioOrders.Arrange(__instance);
-                PortfolioAvgCost.Apply(__instance);
-            }
-            catch
-            {
-                // fail soft — vanilla list kept
-            }
-        }
-
-        private static void OrderTicketPricePostfix()
-        {
-            try
-            {
-                OrderTicket.AfterVanillaPrice();
-            }
-            catch
-            {
-                // fail soft
-            }
-        }
-
-        /// <summary>Prefix: a limit order replaces the vanilla buy; otherwise vanilla runs.</summary>
-        private static bool OrderTicketButtonPrefix(BuySellInvestmentPanel __instance)
-        {
-            try
-            {
-                return !OrderTicket.HandleButton(__instance);
-            }
-            catch (Exception ex)
-            {
-                // Never market-buy when the player chose Limit and something broke.
-                ModLog.Warn("order ticket: place failed: " + ex.Message);
-                return !OrderTicket.OrderActive;
-            }
-        }
-
-        /// <summary>
-        /// Vanilla OnKeyDown maps Enter to clicking Buy. While the typed field has
-        /// focus, let the field consume keys so Enter submits the number instead.
-        /// </summary>
-        private static bool ShareFieldOnKeyDownPrefix()
-        {
-            return !ShareAmountField.HasFocus && !OrderTicket.PriceHasFocus;
-        }
-
         private static int TryPatch(
             Harmony harmony,
             MethodBase target,
@@ -393,25 +143,23 @@ namespace FinanceOverhaul
 
             try
             {
-                HarmonyMethod prefix =
-                    prefixName == null
-                        ? null
-                        : new HarmonyMethod(
-                            typeof(Patcher).GetMethod(
-                                prefixName,
-                                BindingFlags.Static | BindingFlags.NonPublic
-                            )
-                        );
-                HarmonyMethod postfix =
-                    postfixName == null
-                        ? null
-                        : new HarmonyMethod(
-                            typeof(Patcher).GetMethod(
-                                postfixName,
-                                BindingFlags.Static | BindingFlags.NonPublic
-                            )
-                        );
-                harmony.Patch(target, prefix: prefix, postfix: postfix);
+                MethodInfo prefix = Own(prefixName);
+                MethodInfo postfix = Own(postfixName);
+                harmony.Patch(
+                    target,
+                    prefix: prefix == null ? null : new HarmonyMethod(prefix),
+                    postfix: postfix == null ? null : new HarmonyMethod(postfix)
+                );
+                if (prefix != null)
+                {
+                    ownPatches.Add(new KeyValuePair<MethodBase, MethodInfo>(target, prefix));
+                }
+
+                if (postfix != null)
+                {
+                    ownPatches.Add(new KeyValuePair<MethodBase, MethodInfo>(target, postfix));
+                }
+
                 return 1;
             }
             catch (Exception ex)
@@ -421,193 +169,11 @@ namespace FinanceOverhaul
             }
         }
 
-        private static void IndexCollectionAwakePostfix(InvestmentCollection __instance)
+        private static MethodInfo Own(string name)
         {
-            try
-            {
-                IndexListing.Register(__instance);
-                TestStockListing.Register(__instance);
-            }
-            catch
-            {
-                // fail soft
-            }
-        }
-
-        private static void IndexCollectionOnDestroyPrefix(InvestmentCollection __instance)
-        {
-            try
-            {
-                IndexListing.Unregister();
-                TestStockListing.Unregister();
-            }
-            catch
-            {
-                // fail soft
-            }
-        }
-
-        private static void TickerSimulationStepPostfix()
-        {
-            try
-            {
-                TickerFeed.OnInvestmentsStepped();
-            }
-            catch
-            {
-                // fail soft — never break simulation ticks
-            }
-
-            try
-            {
-                OrderDesk.OnInvestmentsStepped();
-            }
-            catch (Exception ex)
-            {
-                ModLog.Warn("orders: daily check failed: " + ex.Message);
-            }
-
-            try
-            {
-                BondDesk.OnInvestmentsStepped();
-            }
-            catch (Exception ex)
-            {
-                ModLog.Warn("bonds: daily payments failed: " + ex.Message);
-            }
-        }
-
-        private static void IndexCreateInvestmentPostfix(
-            InvestmentAI __instance,
-            ref Investment data
-        )
-        {
-            try
-            {
-                if (IndexListing.IsIndex(__instance))
-                {
-                    IndexListing.BackfillHistory(ref data);
-                    IndexListing.RestoreInto(ref data);
-                }
-            }
-            catch
-            {
-                // fail soft
-            }
-        }
-
-        private static void IndexSafeCalculateValuePostfix(
-            InvestmentAI __instance,
-            ref Investment data,
-            ref float __result
-        )
-        {
-            try
-            {
-                IndexListing.ApplyMark(__instance, ref data, ref __result);
-                TestStockListing.ApplyMark(__instance, ref data, ref __result);
-            }
-            catch
-            {
-                // fail soft — never break simulation ticks
-            }
-        }
-
-        private static void ShareChartDialogPostfix(BuySellInvestmentPanel __instance)
-        {
-            ShareChartOverlay.OnDialogBindings(__instance);
-        }
-
-        private static void ShareChartTooltipPostfix(InvestmentTooltip __instance)
-        {
-            ShareChartOverlay.OnTooltipUpdate(__instance);
-        }
-
-        private static void GraphEndsAtTodayPostfix(ref Investment __instance, float[] graphValues)
-        {
-            try
-            {
-                if (
-                    graphValues != null
-                    && graphValues.Length > 0
-                    && __instance.allValues != null
-                    && __instance.allValues.Count > 0
-                )
-                {
-                    graphValues[graphValues.Length - 1] = __instance.value;
-                }
-            }
-            catch
-            {
-                // fail soft — vanilla chart kept
-            }
-        }
-
-        private static void RepairFreeSlotsPostfix()
-        {
-            try
-            {
-                StressStocks.RepairFreeSlots();
-            }
-            catch (Exception ex)
-            {
-                ModLog.Warn("investments: free-slot repair failed: " + ex.Message);
-            }
-        }
-
-        private static void StressStepPrefix()
-        {
-            StressStocks.StepBegin();
-        }
-
-        private static void StressStepPostfix()
-        {
-            StressStocks.StepEnd();
-        }
-
-        private static bool IndexLocalizedNamePrefix(InvestmentAI __instance, ref string __result)
-        {
-            if (StressStocks.IsStress(__instance))
-            {
-                __result = StressStock.DisplayName(__instance.m_info.m_name);
-                return false;
-            }
-
-            if (TestStockListing.IsTest(__instance))
-            {
-                __result = TestStock.DisplayName;
-                return false;
-            }
-
-            if (!IndexListing.IsIndex(__instance))
-            {
-                return true;
-            }
-
-            __result = CityIndexBasket.IndexName;
-            return false;
-        }
-
-        private static bool IndexLocalizedDescriptionPrefix(
-            InvestmentAI __instance,
-            ref string __result
-        )
-        {
-            if (TestStockListing.IsTest(__instance))
-            {
-                __result =
-                    "Dev-only test listing for automated game UI scenarios. Its price only moves when a test sets it. Not a real company.";
-                return false;
-            }
-
-            if (!IndexListing.IsIndex(__instance))
-            {
-                return true;
-            }
-
-            __result =
-                "Equal-weight city index of every unlocked sector stock. Each day it moves by the geometric average of their price changes, so one sector crash hurts less than holding it alone.";
-            return false;
+            return name == null
+                ? null
+                : typeof(Patcher).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
         }
     }
 }
