@@ -32,9 +32,6 @@ namespace FinanceOverhaul
         /// <summary>A heading or row label on the Loans tab: the game uses its gain colour.</summary>
         public static readonly Color32 GameHeading = GamePositive;
 
-        /// <summary>The price line of the game's own share chart (Invest dialog).</summary>
-        public static readonly Color32 GameChartLine = new Color32(255, 235, 4, 255);
-
         /// <summary>
         /// Tint of a typed field inside a game panel: the tint of the Invest dialog's own
         /// share count, drawn on <see cref="GameFieldSprite"/>.

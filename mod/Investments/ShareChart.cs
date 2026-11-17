@@ -395,8 +395,18 @@ namespace FinanceOverhaul
                 var history = new float[Investment.kPastValueCount];
                 buffer[id].FillGraphValues(history);
                 float[] range = StockDetail.Range(history, StockDetail.LongRange);
-                // Over the game's own chart, so its line is the game's line colour.
-                view.Draw(range, FoTheme.GameChartLine, StockSymbols.For(buffer[id].Info));
+                // One rule everywhere: the game's change rate (list, pills, Economy panel, LED).
+                Color32 colour = FoTheme.Change(
+                    StockMonitor.ChangeColour(
+                        buffer[id]
+                            .Info.m_investmentAI.CalculateChangeRate(
+                                (byte)id,
+                                ref buffer[id],
+                                TickerFeed.PanelChangeRateWindow
+                            )
+                    )
+                );
+                view.Draw(range, colour, StockSymbols.For(buffer[id].Info));
 
                 // UIGraph draws its curves and labels above its children, so the overlay can't
                 // cover them: clear the curve vanilla just added (it re-adds it on its next

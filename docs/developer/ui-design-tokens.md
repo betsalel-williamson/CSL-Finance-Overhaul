@@ -163,19 +163,20 @@ The change pill, order badge and caret are not textures: they are `GenericPanelW
 Read from the running game with the dev `dump CONTROL` scenario command (it logs each control's
 tint, sprites, text colour and scale). The mod's additions inside the game's panels use these.
 
-| Where                 | The game's value                                                                                        | Used for                                                      |
-| --------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Invest dialog, shares | `LabelShareSliderNumber`: sprite `GenericPanelLight` tinted #343434, text #B9DDFE, scale 0.875          | `FoTheme.Field` and `GameFieldSprite`: every typed field      |
-| Invest dialog, chart  | `UIGraph`: curve #FFEB04 (3 wide), axes #7495A5, help axes #343E47; grid lines sample as about #75797C  | `FoTheme.GameChartLine` (the share chart's line), `ChartGrid` |
-| Economy tabs          | Sprites `GenericTab`, `GenericTabFocused`, `GenericTabHovered`; text #FEFEFE, scale 1, selected #101010 | `FoTheme.GameText`: order ticket tabs (scale 1), bond terms   |
-| Invest dialog buttons | Sprite `ButtonMenu`; text #FEFEFE, hovered #0784FF, disabled #2E2E2E                                    | `FoTheme.GameText`                                            |
-| Loans tab, offers     | Panel `UnlockingPanel2` tinted #4FDB00; bank name #97EE00 at 1.375; row labels #97EE00; values #B9DDFE  | `FoTheme.GameHeading`: City bonds title and row labels        |
-| Loans tab, "Take"     | Sprite `ButtonMenu`; text #FEFEFE, disabled #5B616A                                                     | `FoTheme.GameText`, `GameDisabledText`: bond buttons          |
+| Where                 | The game's value                                                                                        | Used for                                                     |
+| --------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Invest dialog, shares | `LabelShareSliderNumber`: sprite `GenericPanelLight` tinted #343434, text #B9DDFE, scale 0.875          | `FoTheme.Field` and `GameFieldSprite`: every typed field     |
+| Invest dialog, chart  | `UIGraph`: curve #FFEB04 (3 wide), axes #7495A5, help axes #343E47; grid lines sample as about #75797C  | `FoTheme.ChartGrid` only; the line is not copied (see below) |
+| Economy tabs          | Sprites `GenericTab`, `GenericTabFocused`, `GenericTabHovered`; text #FEFEFE, scale 1, selected #101010 | `FoTheme.GameText`: order ticket tabs (scale 1), bond terms  |
+| Invest dialog buttons | Sprite `ButtonMenu`; text #FEFEFE, hovered #0784FF, disabled #2E2E2E                                    | `FoTheme.GameText`                                           |
+| Loans tab, offers     | Panel `UnlockingPanel2` tinted #4FDB00; bank name #97EE00 at 1.375; row labels #97EE00; values #B9DDFE  | `FoTheme.GameHeading`: City bonds title and row labels       |
+| Loans tab, "Take"     | Sprite `ButtonMenu`; text #FEFEFE, disabled #5B616A                                                     | `FoTheme.GameText`, `GameDisabledText`: bond buttons         |
 
 Decided where the game has no equivalent:
 
-- The Stock Monitor's detail chart draws its line in the change colour (gain, loss or flat), like
-  its sparklines. Only the chart over the game's own graph (Invest dialog) uses the game's yellow.
+- Share charts (Invest dialog and Stock Monitor) draw their line in the change colour: green for a
+  gain, red for a loss, grey when flat. The game's yellow line is not used; only the grid matches
+  the game's chart.
 - The City bonds panel (#181E24, alpha 245) and its rows (#242C34) are the mod's own: the Loans tab
   has no dark panel to copy.
 - `color/ticker/board-lit` #38444B is not used by code (the lit gap is computed by
