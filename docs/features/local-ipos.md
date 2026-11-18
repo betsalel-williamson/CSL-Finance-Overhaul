@@ -409,9 +409,20 @@ healthy today = top level AND no problem icons AND at most 10% of jobs unfilled
                 AND (industry kinds, or land value ≥ 41)
 jobs floor (a kind) = the jobs of the business that closes the top third of that kind in the
                 city, by jobs (ties with it count too)
-healthy days  = previous + 1 if healthy today, else 0 (also 0 if the building is gone or replaced)
-candidate     = healthy days ≥ 365
+healthy days  = min(previous + 1, 365) if healthy today
+                previous − 4 (not below 0) if not healthy today
+                0 if the building is gone or replaced
+candidate     = healthy days ≥ 329 (90% of 365)
 ```
+
+**Steady, not perfect (2026-11-18).** The first rule set the count back to 0 on any unhealthy day.
+In the test city staffing swings daily (offices short of workers went from 48 to 131 between two
+scans), so no business held 365 days in a row: the 62 businesses the look behind credited fell to 10
+and then to 0 within about a game year. Now a bad day costs 4 days (`BadDayCost`), the count stops
+at 365, and a business is a candidate with 90% of that (`SteadyPercent`). A business healthy four
+days in five holds its place; one healthy two days in three loses ground and drops out; a business
+at the top can have nine bad days in a row before it does. Both numbers are in `IpoRules` and are
+first guesses from one city.
 
 **The look behind (once per city).** The mod can only count healthy days while Local IPOs runs. On
 its first scan of a city it therefore gives every business that is healthy that day the full 365

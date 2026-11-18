@@ -422,6 +422,11 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "ipo-look-behind":
+                    // ipo-look-behind — dev: the next scan credits healthy businesses with the
+                    // full period again, as the first scan of a city does.
+                    CompanyDesk.TestLookBehindAgain();
+                    break;
                 case "ipo-forget-pacing":
                     // ipo-forget-pacing — dev clean-up: forgets the IPO days counted towards
                     // the year's limit (test listings used to leave theirs behind).

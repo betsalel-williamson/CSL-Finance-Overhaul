@@ -68,7 +68,14 @@ namespace FinanceOverhaul.Core.Tests
         /// <summary>Rules under which the first draw is certain to schedule an IPO.</summary>
         private static IpoRules Certain()
         {
-            return new IpoRules { SlotFillDays = 1, BuyoutPercentPerYear = 0 };
+            // One bad day costs the whole count here, so a test can take a business out of the
+            // running in a day.
+            return new IpoRules
+            {
+                SlotFillDays = 1,
+                BuyoutPercentPerYear = 0,
+                BadDayCost = 365,
+            };
         }
 
         [Fact]

@@ -489,6 +489,18 @@ namespace FinanceOverhaul
         }
 
         /// <summary>
+        /// Dev: the next scan looks behind again, as on the first scan of a city (for a test
+        /// city whose first look behind was spent under an older rule).
+        /// </summary>
+        public static void TestLookBehindAgain()
+        {
+            lock (Sync)
+            {
+                Book().LookedBehind = false;
+            }
+        }
+
+        /// <summary>
         /// Dev clean-up: forgets the days counted towards "at most N IPOs a year", so the next
         /// monthly draw is free to list. Returns how many were forgotten.
         /// </summary>

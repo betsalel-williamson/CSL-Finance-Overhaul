@@ -30,8 +30,23 @@ namespace FinanceOverhaul.Core
         /// <summary>Local listings the board holds for each map tile the city owns (up to <see cref="ListingCap"/>).</summary>
         public int ListingsPerTile = 2;
 
-        /// <summary>Days in a row a business must stay healthy to become a candidate.</summary>
+        /// <summary>The full period of healthy days a business can have to its name (a year).</summary>
         public int HealthyDays = 365;
+
+        /// <summary>
+        /// Healthy days a business loses for a day it is not healthy (staffing swings from day
+        /// to day; a single bad day must not cost a whole year). At 4, a business that is
+        /// healthy four days out of five holds its count; one that is healthy less often
+        /// loses ground and never qualifies.
+        /// </summary>
+        public int BadDayCost = 4;
+
+        /// <summary>
+        /// A business is a candidate with this share of <see cref="HealthyDays"/> to its name:
+        /// steady, not perfect. The count stops at the full period, so at 90 a business at the
+        /// top can have about nine bad days in a row before it drops out.
+        /// </summary>
+        public int SteadyPercent = 90;
 
         /// <summary>
         /// A business must be among the larger employers of its kind in this city: in the top
@@ -154,9 +169,11 @@ namespace FinanceOverhaul.Core
 
     /// <summary>
     /// Which businesses could go public: the game does not count how long a business has been
-    /// healthy, so this does. A business seen healthy today has one more healthy day; one seen
-    /// unhealthy, or not seen at all (demolished, replaced), starts again from nothing. It is a
-    /// candidate once it has <see cref="IpoRules.HealthyDays"/> healthy days in a row.
+    /// healthy, so this does. A business seen healthy today has one more healthy day, up to the
+    /// full period; one seen unhealthy loses <see cref="IpoRules.BadDayCost"/> of them; one
+    /// not seen at all (demolished, replaced) starts again from nothing. It is a candidate
+    /// while it has <see cref="IpoRules.SteadyPercent"/> of <see cref="IpoRules.HealthyDays"/>
+    /// to its name: steady, not perfect.
     /// </summary>
     public sealed class CandidateBook
     {
@@ -197,24 +214,47 @@ namespace FinanceOverhaul.Core
         /// <summary>One business as the game shows it today. Call once per business, then <see cref="EndDay"/>.</summary>
         public void Observe(BuildingKey building, BusinessFacts facts, IpoRules rules)
         {
+            int days;
+            healthyDays.TryGetValue(building, out days);
             if (!Healthy(facts, rules))
             {
-                healthyDays.Remove(building);
-                kinds.Remove(building);
+                // A bad day costs some of the count, not all of it: steady, not perfect.
+                days -= Math.Max(1, rules.BadDayCost);
+                if (days <= 0)
+                {
+                    healthyDays.Remove(building);
+                    kinds.Remove(building);
+                    return;
+                }
+
+                healthyDays[building] = days;
+                seenToday.Add(building); // still standing: only its count went down
                 return;
             }
 
             kinds[building] = facts.Kind;
-
-            int days;
-            healthyDays.TryGetValue(building, out days);
             if (!LookedBehind && days < rules.HealthyDays)
             {
                 days = rules.HealthyDays - 1; // today makes it the full period
             }
 
-            healthyDays[building] = days == int.MaxValue ? days : days + 1;
+            // The count stops at the full period: a long healthy past is no licence for a
+            // long unhealthy stretch.
+            healthyDays[building] = Math.Max(days, Math.Min(days + 1, rules.HealthyDays));
             seenToday.Add(building);
+        }
+
+        /// <summary>Healthy days a business needs to its name to be a candidate.</summary>
+        public static int DaysNeeded(IpoRules rules)
+        {
+            int percent = Math.Max(1, Math.Min(100, rules.SteadyPercent));
+            return Math.Max(1, (int)Math.Ceiling(rules.HealthyDays * percent / 100.0));
+        }
+
+        /// <summary>Steady for long enough to go public.</summary>
+        public bool IsCandidate(BuildingKey building, IpoRules rules)
+        {
+            return HealthyDaysOf(building) >= DaysNeeded(rules);
         }
 
         /// <summary>Closes the day: a business that was not observed healthy today is forgotten.</summary>
@@ -290,7 +330,7 @@ namespace FinanceOverhaul.Core
             var list = new List<BuildingKey>();
             foreach (KeyValuePair<BuildingKey, int> kv in healthyDays)
             {
-                if (kv.Value >= rules.HealthyDays)
+                if (kv.Value >= DaysNeeded(rules))
                 {
                     list.Add(kv.Key);
                 }

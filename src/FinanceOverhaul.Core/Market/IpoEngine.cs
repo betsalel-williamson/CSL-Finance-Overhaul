@@ -381,7 +381,7 @@ namespace FinanceOverhaul.Core
         {
             BuildingKey business = registry.IpoBusiness;
             bool stillQualifies =
-                candidates.HealthyDaysOf(business) >= rules.HealthyDays
+                candidates.IsCandidate(business, rules)
                 && candidates.KindOf(business) == registry.IpoKind
                 && !registry.IsHome(business);
             if (stillQualifies)

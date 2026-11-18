@@ -68,19 +68,20 @@ buildings, candidates, slots and why businesses fail the health check) and
 `expect-company offering|trading|gone [listed|unlisted]` and `ipo-remove-test` (scenario 66: a
 company lists as a stock, opens and is bought out), `expect-company-cards` (scenario 68: a card per
 kind of business in Economy → Investments), `ipo-dialog on|off|close` and `ipo-buy SHARES` (scenario
-67: the IPO dialog and the chirps), `ipo-forget-pacing` (dev clean-up: forgets the IPO days counted
-towards the year's limit), `ipo-remove-all` (dev clean-up: every local company removed as if none
-had listed, mod data rewritten), `historical-off NAME` (takes the Historical flag off businesses of
-that name), `ipo-income` (per zone: the income the game reports and the offering prices its
-businesses would list at — scenario 65), `log-loan-expenses` and `expect-loan-expenses ₡MIN` (what
-Economy shows as loan expenses — scenario 63), `dump-library NAME` and `peek-library NAME` (log the
-tree of one of the game's own dialogs, such as `ParkAreaUnlockingPanel`, or show it for two seconds
-for a capture of its look), `expect-wheel-step LIST MIN` (pixels the mouse wheel moves a list a
-notch — scenario 69), `log-prices` (logs every listed stock's kept daily prices, up to 30 and newest
-first, with its price rule, for measuring how the game's stocks move), `local-ipos keep` and
-`ipo-list-now keep` (switch the flag on for good and leave the company listed: for trying the
-feature in a test city, not for scenarios), `ipo-view`, `expect-building-panel`, `expect-fireworks`
-and `expect-company-first` (scenario 70: View headquarters opens the building's info panel with the
+67: the IPO dialog and the chirps), `ipo-look-behind` (dev: the next scan looks behind again, as on
+a city's first scan), `ipo-forget-pacing` (dev clean-up: forgets the IPO days counted towards the
+year's limit), `ipo-remove-all` (dev clean-up: every local company removed as if none had listed,
+mod data rewritten), `historical-off NAME` (takes the Historical flag off businesses of that name),
+`ipo-income` (per zone: the income the game reports and the offering prices its businesses would
+list at — scenario 65), `log-loan-expenses` and `expect-loan-expenses ₡MIN` (what Economy shows as
+loan expenses — scenario 63), `dump-library NAME` and `peek-library NAME` (log the tree of one of
+the game's own dialogs, such as `ParkAreaUnlockingPanel`, or show it for two seconds for a capture
+of its look), `expect-wheel-step LIST MIN` (pixels the mouse wheel moves a list a notch — scenario
+69), `log-prices` (logs every listed stock's kept daily prices, up to 30 and newest first, with its
+price rule, for measuring how the game's stocks move), `local-ipos keep` and `ipo-list-now keep`
+(switch the flag on for good and leave the company listed: for trying the feature in a test city,
+not for scenarios), `ipo-view`, `expect-building-panel`, `expect-fireworks` and
+`expect-company-first` (scenario 70: View headquarters opens the building's info panel with the
 camera framed on it, fireworks go off, and the new company is the first card), `log-effects PATTERN`
 (the game's loaded effects by name), `dump building-panel` (the tree of the game's zoned building
 info panel; scenario 71 checks what the mod adds to it for a listed company), `share-charts on|off`

@@ -97,7 +97,7 @@ namespace FinanceOverhaul.Core.Tests
             book.Observe(B(3), Good, rules);
             book.EndDay();
             Assert.Equal(new List<BuildingKey> { B(1) }, book.Candidates(rules));
-            Assert.Equal(366, book.HealthyDaysOf(B(1)));
+            Assert.Equal(365, book.HealthyDaysOf(B(1))); // the count stops at the full period
             Assert.Equal(1, book.HealthyDaysOf(B(2)));
             Assert.Equal(1, book.HealthyDaysOf(B(3)));
         }
@@ -190,10 +190,74 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
+        public void ABadDayCostsSomeOfTheCountNotAllOfIt()
+        {
+            var rules = new IpoRules
+            {
+                HealthyDays = 365,
+                BadDayCost = 4,
+                SteadyPercent = 90,
+            };
+            Assert.Equal(329, CandidateBook.DaysNeeded(rules));
+            var book = new CandidateBook { LookedBehind = true };
+            book.Restore(B(1), 365);
+            BusinessFacts poor = Good;
+            poor.FullyStaffed = false;
+
+            // Nine bad days in a row: still steady enough.
+            for (int day = 0; day < 9; day++)
+            {
+                book.Observe(B(1), poor, rules);
+                book.EndDay();
+            }
+
+            Assert.Equal(329, book.HealthyDaysOf(B(1)));
+            Assert.True(book.IsCandidate(B(1), rules));
+
+            // A tenth drops it out; it is not forgotten, and good days bring it back.
+            book.Observe(B(1), poor, rules);
+            book.EndDay();
+            Assert.Equal(325, book.HealthyDaysOf(B(1)));
+            Assert.False(book.IsCandidate(B(1), rules));
+            for (int day = 0; day < 4; day++)
+            {
+                book.Observe(B(1), Good, rules);
+                book.EndDay();
+            }
+
+            Assert.True(book.IsCandidate(B(1), rules));
+        }
+
+        [Fact]
+        public void HealthyFourDaysInFiveHoldsItsPlaceAndLessOftenLosesIt()
+        {
+            var rules = new IpoRules
+            {
+                HealthyDays = 365,
+                BadDayCost = 4,
+                SteadyPercent = 90,
+            };
+            BusinessFacts poor = Good;
+            poor.FullyStaffed = false;
+            var book = new CandidateBook { LookedBehind = true };
+            book.Restore(B(1), 365); // healthy four days in five
+            book.Restore(B(2), 365); // healthy two days in three
+            for (int day = 0; day < 365; day++)
+            {
+                book.Observe(B(1), day % 5 == 4 ? poor : Good, rules);
+                book.Observe(B(2), day % 3 == 2 ? poor : Good, rules);
+                book.EndDay();
+            }
+
+            Assert.True(book.IsCandidate(B(1), rules));
+            Assert.False(book.IsCandidate(B(2), rules));
+        }
+
+        [Fact]
         public void ABuildingThatIsGoneOrReplacedIsForgotten()
         {
-            var rules = new IpoRules { HealthyDays = 1 };
-            var book = new CandidateBook();
+            var rules = new IpoRules { HealthyDays = 2, SteadyPercent = 50 };
+            var book = new CandidateBook { LookedBehind = true };
             book.Observe(B(1), Good, rules);
             book.Observe(B(2), Good, rules);
             book.EndDay();
@@ -216,7 +280,7 @@ namespace FinanceOverhaul.Core.Tests
             var book = new CandidateBook();
             book.Restore(B(7), 10);
             book.Restore(B(3), 400);
-            book.Restore(B(5), 9); // one day short
+            book.Restore(B(5), 8); // one day short of nine in ten
             book.Restore(B(9), 0); // nothing to keep
             Assert.Equal(new List<BuildingKey> { B(3), B(7) }, book.Candidates(rules));
             int counted = 0;
