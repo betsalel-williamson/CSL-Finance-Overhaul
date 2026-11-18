@@ -26,6 +26,9 @@ expect-no-overflow FinanceOverhaulBuildingListing
 # the game's workers block keeps its place above the section
 expect-no-overlap ZoneTypeInfo FinanceOverhaulBuildingListing
 expect-no-overlap FinanceOverhaulBuildingListing MakeHistoricalPanel
+# a listed company's headquarters stays Historical: the tick is shown, not offered
+expect-headquarters historical
+expect-headquarters locked
 capture building-panel-offering
 ipo-buy 250
 ipo-first-day

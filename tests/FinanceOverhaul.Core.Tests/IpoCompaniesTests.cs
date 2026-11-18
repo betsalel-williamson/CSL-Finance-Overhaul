@@ -131,6 +131,7 @@ namespace FinanceOverhaul.Core.Tests
                     HeldShares = 250,
                     HeldSpent = 1_300_000,
                     History = new[] { 61f, 59.5f, 52f },
+                    WasHistorical = true,
                 }
             );
             registry.Companies.Add(
@@ -170,6 +171,9 @@ namespace FinanceOverhaul.Core.Tests
             LocalCompany wso = back.Find(3);
             Assert.Equal("Westdale Software | Tech Park", wso.Name); // a name may hold the separator
             Assert.Equal("WSO", wso.Symbol);
+            // Whether the building was Historical before the listing is kept per company.
+            Assert.True(wso.WasHistorical);
+            Assert.False(back.Find(7).WasHistorical);
             Assert.Equal(BusinessKind.ItCluster, wso.Kind);
             Assert.Equal(new BuildingKey(700, 12345), wso.Home);
             Assert.Equal(4007, wso.FirstTradingDay);

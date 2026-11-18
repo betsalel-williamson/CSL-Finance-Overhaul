@@ -33,6 +33,13 @@ namespace FinanceOverhaul.Core
 
         public CompanyStatus Status;
 
+        /// <summary>
+        /// The headquarters was already a Historical building before the company listed (the
+        /// player's own choice). A buy-out puts the building back as it was: the tick the mod
+        /// set comes off, one the player set stays.
+        /// </summary>
+        public bool WasHistorical;
+
         // The city's holding and the price history, copied from the game's stock when the city
         // saves and put back when it loads: the game drops a stock type it does not know, and
         // a company's type is only registered once the mod has read this.

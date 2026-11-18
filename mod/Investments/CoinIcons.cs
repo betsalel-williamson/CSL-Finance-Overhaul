@@ -17,6 +17,7 @@ namespace FinanceOverhaul
         public const string AtlasName = "FinanceOverhaulCoins";
         public const string SpriteName = "FinanceOverhaulCoin";
         public const string SymbolName = "FinanceOverhaulCoinSymbol";
+        public const string GlyphName = "FinanceOverhaulCoinGlyph";
         private const string GameFallback = "MoneyThumb"; // not shown: a game sprite name
         private const int TextureSize = 128;
 
@@ -47,6 +48,84 @@ namespace FinanceOverhaul
             {
                 symbol.isVisible = false;
             }
+
+            UIComponent glyph = sprite.Find(GlyphName);
+            if (glyph != null)
+            {
+                glyph.isVisible = false;
+            }
+        }
+
+        /// <summary>
+        /// The game's own icon for a kind of business, drawn in the middle of a local company's
+        /// coin: the zone icon its building panel shows, or the icon of its specialisation. The
+        /// first name the game has is used; with none, the coin carries the ticker symbol.
+        /// </summary>
+        private static string[] GlyphsFor(BusinessKind kind)
+        {
+            switch (kind)
+            {
+                case BusinessKind.Commercial:
+                    return new[] { "ZoningCommercialHigh", "ZoningCommercialLow" }; // not shown: game sprite names
+                case BusinessKind.Office:
+                    return new[] { "ZoningOffice" }; // not shown: a game sprite name
+                case BusinessKind.ItCluster:
+                    return new[] { "IconPolicyHightech", "ZoningOffice" }; // not shown: game sprite names
+                case BusinessKind.Leisure:
+                    return new[] { "IconPolicyLeisure", "ZoningCommercialHigh" }; // not shown: game sprite names
+                case BusinessKind.Tourism:
+                    return new[] { "IconPolicyTourist", "ZoningCommercialHigh" }; // not shown: game sprite names
+                case BusinessKind.Organic:
+                    return new[] { "IconPolicyOrganic", "ZoningCommercialHigh" }; // not shown: game sprite names
+                case BusinessKind.Farming:
+                    return new[] { "IconPolicyFarming", "ZoningIndustrial" }; // not shown: game sprite names
+                case BusinessKind.Forestry:
+                    return new[] { "IconPolicyForest", "ZoningIndustrial" }; // not shown: game sprite names
+                case BusinessKind.Oil:
+                    return new[] { "IconPolicyOil", "ZoningIndustrial" }; // not shown: game sprite names
+                case BusinessKind.Ore:
+                    return new[] { "IconPolicyOre", "ZoningIndustrial" }; // not shown: game sprite names
+                default:
+                    return new[] { "ZoningIndustrial" }; // not shown: a game sprite name
+            }
+        }
+
+        /// <summary>Draws the kind's icon on the coin; false when the game has none of them.</summary>
+        private static bool ShowGlyph(UISprite coin, BusinessKind kind)
+        {
+            UITextureAtlas game = UIView.GetAView().defaultAtlas;
+            foreach (string name in GlyphsFor(kind))
+            {
+                UITextureAtlas.SpriteInfo info = game[name];
+                if (info == null)
+                {
+                    continue;
+                }
+
+                UISprite glyph = coin.Find<UISprite>(GlyphName);
+                if (glyph == null)
+                {
+                    glyph = coin.AddUIComponent<UISprite>();
+                    glyph.name = GlyphName;
+                    glyph.isInteractive = false;
+                }
+
+                glyph.atlas = game;
+                glyph.spriteName = name;
+                glyph.isVisible = true;
+                // Inside the coin's ring, keeping the icon's own proportions.
+                float room = coin.width * 0.56f;
+                Vector2 natural = info.pixelSize;
+                float scale = room / Mathf.Max(1f, Mathf.Max(natural.x, natural.y));
+                glyph.size = new Vector2(natural.x * scale, natural.y * scale);
+                glyph.relativePosition = new Vector3(
+                    (coin.width - glyph.width) / 2f,
+                    (coin.height - glyph.height) / 2f - coin.height * 0.03f
+                );
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>Postfix: a stock the game drew its fallback for gets the coin and its symbol.</summary>
@@ -64,6 +143,15 @@ namespace FinanceOverhaul
 
             sprite.atlas = Atlas();
             sprite.spriteName = SpriteName;
+            int companyId;
+            LocalCompany company = CompanyListing.IsCompany(ai, out companyId)
+                ? CompanyDesk.CompanyOf(companyId)
+                : null;
+            if (company != null && ShowGlyph(sprite, company.Kind))
+            {
+                return;
+            }
+
             string text = StockSymbols.For(ai.m_info);
             UILabel symbol = sprite.Find<UILabel>(SymbolName);
             if (symbol == null)
@@ -134,10 +222,13 @@ namespace FinanceOverhaul
                     {
                         Before(sprite);
                         sprite.spriteName = GameFallback;
-                        UIComponent symbol = sprite.Find(SymbolName);
-                        if (symbol != null)
+                        foreach (string child in new[] { SymbolName, GlyphName })
                         {
-                            UnityEngine.Object.Destroy(symbol.gameObject);
+                            UIComponent c = sprite.Find(child);
+                            if (c != null)
+                            {
+                                UnityEngine.Object.Destroy(c.gameObject);
+                            }
                         }
                     }
                 }

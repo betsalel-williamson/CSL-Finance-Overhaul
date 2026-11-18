@@ -192,6 +192,8 @@ namespace FinanceOverhaul
             switch (e.Kind)
             {
                 case IpoEventKind.Announced:
+                    // Remembered, so a buy-out can put the building back as it was.
+                    c.WasHistorical = IsHistorical(c.Home);
                     MarkHistorical(c.Home);
                     ModLog.Info(
                         "ipo: "
@@ -256,6 +258,12 @@ namespace FinanceOverhaul
                             + sold
                             + " share(s)"
                     );
+                    // Listed no more: the building goes back to how it was.
+                    if (!c.WasHistorical)
+                    {
+                        ClearHistorical(c.Home);
+                    }
+
                     break;
             }
         }
@@ -280,6 +288,46 @@ namespace FinanceOverhaul
             )
             {
                 buffer[home.Id].m_flags |= Building.Flags.Historical;
+            }
+        }
+
+        private static bool SameBuilding(BuildingKey home)
+        {
+            Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
+            return home.Id < buffer.Length
+                && (buffer[home.Id].m_flags & Building.Flags.Created) != 0
+                && buffer[home.Id].m_buildIndex == home.BuildIndex;
+        }
+
+        private static bool IsHistorical(BuildingKey home)
+        {
+            return SameBuilding(home)
+                && (
+                    BuildingManager.instance.m_buildings.m_buffer[home.Id].m_flags
+                    & Building.Flags.Historical
+                ) != 0;
+        }
+
+        private static void ClearHistorical(BuildingKey home)
+        {
+            if (SameBuilding(home))
+            {
+                BuildingManager.instance.m_buildings.m_buffer[home.Id].m_flags &= ~Building
+                    .Flags
+                    .Historical;
+            }
+        }
+
+        /// <summary>
+        /// Any thread: a listed company's headquarters stays a Historical building, whatever
+        /// was unticked before the tick was locked.
+        /// </summary>
+        public static void KeepHistorical(LocalCompany company)
+        {
+            if (company != null && !IsHistorical(company.Home))
+            {
+                BuildingKey home = company.Home;
+                SimulationManager.instance.AddAction(() => MarkHistorical(home));
             }
         }
 

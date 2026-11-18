@@ -23,8 +23,9 @@ capture ipo-headquarters
 show-economy
 wait 1.5
 expect-company-first
-# its icon is a coin with its ticker symbol, like the game's stocks (not the stack of money)
-expect-visible FinanceOverhaulCoinSymbol
+# its icon is a coin with the icon of its kind of business, like the game's stocks (not the
+# stack of money)
+expect-visible FinanceOverhaulCoinGlyph
 capture ipo-company-first
 cleanup:
 close-economy

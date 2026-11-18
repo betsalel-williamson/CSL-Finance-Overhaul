@@ -34,6 +34,8 @@ ipo-buyout
 expect-log The city received
 expect-log for its 10 shares
 expect-company gone unlisted
+# bought out: the building is as it was before the company listed (no Historical tick left behind)
+expect-headquarters as-before
 cleanup:
 ipo-dialog close
 ipo-remove-test

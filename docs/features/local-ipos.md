@@ -641,7 +641,8 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
 - **First trading day:** the registry price moves to the first-day price.
 - **Bought out:** the city's shares are sold at the buyer's price through the game's own sale (so
   the money and the profit are booked as for any stock), the slot is freed and the stock type
-  removed. The building stays Historical.
+  removed. The building goes back to how it was: the Historical tick the mod set comes off (one the
+  player had set before the listing stays; `historical|<id>` in the save remembers which).
 - **Loading a city:** the game drops a stock type it does not know, and a company's type can only be
   registered once the mod has read its save data. So every company is listed again after loading
   (`CompanyDesk.EnsureListed`) and its holding and price history are put back from the copy the
@@ -655,8 +656,9 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
   or twice its height, between 180 and 520, far enough for the fireworks to stay in view) and opens
   the building's own info panel, as a click on it would.
 - **Its icon (built, `CoinIcons`):** the game draws a stack of money for a stock it has no art for.
-  A local company, like the Index, gets a coin in the shape of the game's own stock coins with its
-  ticker symbol on it (`CoinIcon` draws the shape), wherever the game shows a stock's icon.
+  A local company, like the Index, gets a coin in the shape of the game's own stock coins
+  (`CoinIcon` draws the shape), wherever the game shows a stock's icon. A company's coin carries the
+  game's icon for its kind of business; the Index's carries its ticker symbol.
 - **The headquarters' building panel (built, `CompanyBuildingPanel`; Figma UI Map band 19, designs B
   and C):** for as long as the company is listed, the game's building info panel for its
   headquarters has a gold title bar with the company's coin in place of the zone icon, and a listing
@@ -668,9 +670,12 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
   "Show in Investments" opens Economy → Investments in both. Buy and Sell open the game's own
   dialog. The mod only adds: the panel grows by the section's height, the game's rows keep their
   place (the game ties the workers block to the panel's bottom edge, so the mod puts it back), and
-  for any other building, or once the company is gone, the panel is the game's own again. The
-  wording and the two states are `CompanyPanelText`; scenario 71 checks both states and the way
-  back.
+  for any other building, or once the company is gone, the panel is the game's own again. While the
+  company is listed the Historical Building tick is shown ticked and cannot be changed (a tooltip
+  says why); a headquarters that was unticked before gets its flag back. The coins show the game's
+  own icon for the kind of business (the zone icon, or the specialisation's), not the ticker symbol;
+  the Index, which has no building, keeps its symbol. The wording and the two states are
+  `CompanyPanelText`; scenario 71 checks both states and the way back.
 - **Fireworks (built, `IpoFireworks`):** the game's own event fireworks ("Event Firework Particles
   1" to "3", else "FireworksComplexIngame") go off from the headquarters' roof when the company is
   announced, on its first trading day, and when the player views the headquarters: eight bursts, 0.8

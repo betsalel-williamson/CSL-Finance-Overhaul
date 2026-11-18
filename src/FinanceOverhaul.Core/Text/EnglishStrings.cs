@@ -314,6 +314,10 @@ namespace FinanceOverhaul.Core
             { "company.panel.holds.one", "City holds {0} of {1} shares · avg {2}" },
             { "company.panel.holds.other", "City holds {0} of {1} shares · avg {2}" },
             { "company.panel.show", "Show in Investments" },
+            {
+                "company.panel.historical.tip",
+                "A company listed on the Stock Exchange keeps its headquarters as a Historical building. It goes back to how it was if the company is bought out."
+            },
             { "ipo.card.section", "Local companies" },
             { "ipo.card.title.Commercial", "Commercial companies" },
             { "ipo.card.title.Office", "Office companies" },

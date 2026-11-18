@@ -183,6 +183,14 @@ namespace FinanceOverhaul
                 );
             }
 
+            UICheckBox tick =
+                historical == null ? null : historical.Find<UICheckBox>("CheckboxHistorical");
+            if (tick != null)
+            {
+                tick.readOnly = false;
+                tick.tooltip = string.Empty;
+            }
+
             panel.height = panelHeight;
             // After the height: both follow the bottom edge, so they are set last.
             UIComponent zoneInfo = panel.Find("ZoneTypeInfo");
@@ -259,6 +267,15 @@ namespace FinanceOverhaul
                 historical.relativePosition.x,
                 historicalY + CompanyPanelText.SectionSpace
             );
+            // A listed company's headquarters stays Historical: the tick is shown, not offered.
+            UICheckBox tick = historical.Find<UICheckBox>("CheckboxHistorical");
+            if (tick != null)
+            {
+                tick.readOnly = true;
+                tick.tooltip = CompanyPanelText.HistoricalLocked;
+            }
+
+            CompanyDesk.KeepHistorical(company);
             Fill(company);
         }
 

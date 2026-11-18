@@ -387,6 +387,40 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "expect-headquarters":
+                {
+                    // expect-headquarters historical|as-before|locked — the newest test
+                    // company's building is a Historical building; or is as it was before the
+                    // company listed (after a buy-out); or its panel's Historical tick cannot be
+                    // changed.
+                    if (ctx.TestCompanies.Count == 0)
+                    {
+                        r.Error = "ipo-list-now first";
+                        break;
+                    }
+
+                    TestCompany one = ctx.TestCompanies[ctx.TestCompanies.Count - 1];
+                    bool historical =
+                        (
+                            BuildingManager.instance.m_buildings.m_buffer[one.Home.Id].m_flags
+                            & Building.Flags.Historical
+                        ) != 0;
+                    if (a == "locked")
+                    {
+                        UICheckBox tick = FindControl("CheckboxHistorical") as UICheckBox;
+                        if (tick == null || !tick.readOnly || !tick.isChecked)
+                        {
+                            r.Error = "the Historical Building tick is not ticked and locked";
+                        }
+                    }
+                    else if (historical != (a == "historical" || one.WasHistorical))
+                    {
+                        r.Error =
+                            "the headquarters is " + (historical ? "" : "not ") + "Historical";
+                    }
+
+                    break;
+                }
                 case "ipo-view":
                     // ipo-view — presses the dialog's View headquarters button.
                     if (IpoDialog.Current == null || !IpoDialog.Current.View())

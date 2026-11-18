@@ -142,6 +142,12 @@ namespace FinanceOverhaul.Core
             get { return Strings.Get("investments.sell"); }
         }
 
+        /// <summary>Why the Historical Building tick cannot be changed while the company is listed.</summary>
+        public static string HistoricalLocked
+        {
+            get { return Strings.Get("company.panel.historical.tip"); }
+        }
+
         public static string ShowInInvestments
         {
             get { return Strings.Get("company.panel.show"); }

@@ -136,6 +136,7 @@ namespace FinanceOverhaul.Core
         private const string IpoTag = "ipo";
         private const string BuyoutTag = "buyout";
         private const string HoldingTag = "holding";
+        private const string HistoricalTag = "historical";
 
         public static string Format(CandidateBook book, IpoDice dice, CompanyRegistry registry)
         {
@@ -224,6 +225,11 @@ namespace FinanceOverhaul.Core
                     .Append('|')
                     .Append(Clean(c.Name))
                     .Append('\n');
+                if (c.WasHistorical)
+                {
+                    sb.Append(HistoricalTag).Append('|').Append(Int(c.Id)).Append('\n');
+                }
+
                 if (
                     c.HeldShares > 0
                     || c.HeldSpent != 0
@@ -335,6 +341,15 @@ namespace FinanceOverhaul.Core
                 registry.BuyoutScheduled = true;
                 registry.BuyoutCompanyId = number;
                 registry.BuyoutDay = day;
+            }
+            else if (f[0] == HistoricalTag && f.Length == 2 && TryInt(f[1], out number))
+            {
+                // Follows its company's line.
+                LocalCompany marked = registry.Find(number);
+                if (marked != null)
+                {
+                    marked.WasHistorical = true;
+                }
             }
             else if (f[0] == HoldingTag && f.Length == 5 && TryInt(f[1], out number))
             {
