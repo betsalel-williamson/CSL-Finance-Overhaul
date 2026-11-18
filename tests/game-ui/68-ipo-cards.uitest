@@ -1,4 +1,4 @@
-# Local IPOs: Economy → Investments shows the local company cards above the game's stocks: a
+# Local IPOs: Economy → Investments shows the local company cards below the game's stocks: a
 # section label, one card per kind of business the city has (its line and its bar), and a line
 # summing up the board. With the flag off they are gone. Reads only; the flag is put back.
 name local ipos: the Investments tab shows a card per kind of business, and none with the flag off
@@ -11,7 +11,10 @@ expect-text FinanceOverhaulCompanyCardSectionText Local companies
 expect-company-cards
 expect-visible FinanceOverhaulCompanyCardFooter
 expect-text FinanceOverhaulCompanyCardFooterText Local listings
-expect-in-view FinanceOverhaulCompanyCardSection InvestmentsScrollablePanel
+# they sit after the game's stocks: scroll to the end to see them
+scroll-bottom InvestmentsScrollablePanel
+wait 0.5
+expect-in-view FinanceOverhaulCompanyCardFooter InvestmentsScrollablePanel
 capture ipo-cards
 local-ipos off
 wait 1.5

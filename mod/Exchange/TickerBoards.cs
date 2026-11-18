@@ -34,6 +34,7 @@ namespace FinanceOverhaul
                 root.AddComponent<PortfolioOrders>();
                 root.AddComponent<CityBondsSection>();
                 root.AddComponent<CompanyCards>();
+                root.AddComponent<InvestmentsWheel>();
                 root.AddComponent<WelcomeBackDialog>();
                 root.AddComponent<IpoDialog>();
                 root.AddComponent<ChirpNoticePoster>();

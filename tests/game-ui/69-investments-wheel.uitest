@@ -1,0 +1,9 @@
+# Economy → Investments: the mouse wheel moves both lists by half a stock card a notch (the
+# game's own step is 52 pixels, under a third of a card). Reads only.
+name investments: the mouse wheel scrolls both lists half a card a notch
+show-economy
+wait 2
+expect-wheel-step InvestmentsScrollablePanel 80
+expect-wheel-step OwnedInvestmentsScrollablePanel 80
+cleanup:
+close-economy

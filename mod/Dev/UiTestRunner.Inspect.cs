@@ -369,6 +369,23 @@ namespace FinanceOverhaul
                     c.opacity = opacity;
                     break;
                 }
+                case "expect-wheel-step":
+                {
+                    // expect-wheel-step LIST MIN — the pixels the mouse wheel moves a scrolling
+                    // list a notch must be at least MIN.
+                    UIScrollablePanel list = FindControl(a) as UIScrollablePanel;
+                    if (list == null)
+                    {
+                        r.Error = "no visible scrolling list " + a;
+                    }
+                    else if (list.scrollWheelAmount < (int)ParseFloat(b, 1f))
+                    {
+                        r.Error =
+                            a + " moves " + list.scrollWheelAmount + " a notch, expected " + b;
+                    }
+
+                    break;
+                }
                 case "log-prices":
                 {
                     // log-prices — every listed stock's daily prices as the game keeps them

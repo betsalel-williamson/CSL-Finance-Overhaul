@@ -9,7 +9,7 @@ namespace FinanceOverhaul
 {
     /// <summary>
     /// The local company cards in Economy → Investments → Purchasable Investments (Figma UI Map
-    /// band 16): above the game's stocks, a section label, one card per kind of business the
+    /// band 16): below the game's stocks, a section label, one card per kind of business the
     /// city has (where it stands, and a bar towards the unlock or the next listing slot), and a
     /// line summing up the board. In the look of the game's own locked stocks. Shown while
     /// Options → Local IPOs is on. Lives on the overlay root (hot reload removes it); stale
@@ -120,7 +120,8 @@ namespace FinanceOverhaul
         }
 
         /// <summary>
-        /// Keeps the section, the cards and the footer above the game's stocks, in that order.
+        /// Keeps the section, the cards and the footer below the game's stocks, in that order
+        /// (above them, five cards pushed every stock out of sight).
         /// The game renumbers its own items when it sorts them; called after that too (postfix
         /// on EconomyPanel.UpdateInvestments).
         /// </summary>
@@ -148,7 +149,7 @@ namespace FinanceOverhaul
 
             ours.Sort((a, b) => Rank(a).CompareTo(Rank(b)));
             int z = 0;
-            foreach (UIComponent c in ours)
+            foreach (UIComponent c in theirs)
             {
                 if (c.zOrder != z)
                 {
@@ -158,7 +159,7 @@ namespace FinanceOverhaul
                 z++;
             }
 
-            foreach (UIComponent c in theirs)
+            foreach (UIComponent c in ours)
             {
                 if (c.zOrder != z)
                 {
