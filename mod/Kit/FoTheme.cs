@@ -32,6 +32,9 @@ namespace FinanceOverhaul
         /// <summary>A heading or row label on the Loans tab: the game uses its gain colour.</summary>
         public static readonly Color32 GameHeading = GamePositive;
 
+        /// <summary>The tint of a loan the game offers (Economy → Loans): its money green.</summary>
+        public static readonly Color32 GameLoanOffer = new Color32(79, 219, 0, 255);
+
         /// <summary>The panel sprite of the game's loan cards (Economy → Loans).</summary>
         public const string GameLoanCardSprite = "UnlockingPanel2";
 

@@ -12,7 +12,8 @@ namespace FinanceOverhaul
     /// pauses the game while open and puts the pause back as it was. It states only what is
     /// fixed that day. Buy opens the game's own Buy dialog for the new stock; View moves the
     /// camera to the headquarters; the checkbox is the Options preference read the other way.
-    /// It waits while the Welcome back dialog is up. No bell yet.
+    /// It waits while the Welcome back dialog is up. It looks and behaves like the game's own
+    /// celebration dialogs: their frame, a banner with a large headline, a fade-in and a sound.
     /// </summary>
     public class IpoDialog : MonoBehaviour
     {
@@ -42,7 +43,11 @@ namespace FinanceOverhaul
         /// <summary>Game UI tests: no dialog unless a scenario asks for it.</summary>
         public static bool Silenced;
 
+        private const float BannerHeight = 96f;
+        private const float FadeSeconds = 0.15f; // the game's own show time for these dialogs
+
         private UIPanel panel;
+        private float shownAt;
         private int shownCompany;
         private bool pausedBefore;
         private float nextCheck;
@@ -84,6 +89,11 @@ namespace FinanceOverhaul
 
         private void Update()
         {
+            if (panel != null && panel.opacity < 1f)
+            {
+                panel.opacity = Mathf.Clamp01((Time.unscaledTime - shownAt) / FadeSeconds);
+            }
+
             if (panel != null || Time.unscaledTime < nextCheck)
             {
                 return;
@@ -169,6 +179,28 @@ namespace FinanceOverhaul
             }
         }
 
+        /// <summary>
+        /// One sound as the dialog opens: the game's own sound for a sale at a gain (the game
+        /// ships no Stock Exchange bell). Played as a UI sound, so it follows the player's
+        /// volume sliders and is heard while the game is paused.
+        /// </summary>
+        private static void PlayFanfare()
+        {
+            try
+            {
+                BuySellInvestmentPanel invest = BuySellInvestmentPanel.instance;
+                AudioClip clip = invest == null ? null : invest.m_sellingSoundGood;
+                if (clip != null)
+                {
+                    AudioManager.instance.PlaySound(clip);
+                }
+            }
+            catch (Exception ex)
+            {
+                ModLog.Info("ipo dialog: no sound (" + ex.Message + ")");
+            }
+        }
+
         private void OnBuy()
         {
             int company = shownCompany;
@@ -214,33 +246,75 @@ namespace FinanceOverhaul
             pausedBefore = SimulationManager.instance.SimulationPaused;
             SimulationManager.instance.SimulationPaused = true;
 
+            // The frame of the game's own celebration dialogs (a park levelling up, the end of
+            // an academic year): its panel sprite, a banner across the top with a large
+            // headline, and a dark body below.
             panel = (UIPanel)view.AddUIComponent(typeof(UIPanel));
             panel.name = PanelName;
-            panel.backgroundSprite = "GenericPanelWhite";
-            panel.color = Frame;
+            panel.backgroundSprite = FoTheme.GameLoanCardSprite;
             panel.width = Width;
 
-            UIPanel header = panel.AddUIComponent<UIPanel>();
-            header.backgroundSprite = "GenericPanelWhite";
-            header.color = Header;
-            header.size = new Vector2(Width, 36f);
-            header.relativePosition = Vector3.zero;
-            UILabel title = Label(header, IpoDialogText.Title(company), 1.1f, White, Width - 60f);
-            title.name = PanelName + "Title";
-            title.relativePosition = new Vector3(12f, 8f);
+            // The game has banner art for parks, industry, airports and campuses but none for
+            // the Stock Exchange, so the banner is the green of the game's loan offers with its
+            // stack of money on either side.
+            UIPanel banner = panel.AddUIComponent<UIPanel>();
+            banner.name = PanelName + "Banner";
+            banner.backgroundSprite = FoTheme.GameLoanCardSprite;
+            banner.color = FoTheme.GameLoanOffer;
+            banner.size = new Vector2(Width - 6f, BannerHeight);
+            banner.relativePosition = new Vector3(3f, 3f);
+            banner.clipChildren = true;
+            foreach (float x in new[] { 22f, Width - 6f - 22f - 64f })
+            {
+                UISprite money = banner.AddUIComponent<UISprite>();
+                money.spriteName = "MoneyThumb";
+                money.size = new Vector2(64f, 64f);
+                money.relativePosition = new Vector3(x, (BannerHeight - 64f) / 2f);
+            }
 
-            UIButton close = header.AddUIComponent<UIButton>();
+            // The headline and the name sit between the two stacks; a long name wraps and the
+            // banner grows with it.
+            float textLeft = 22f + 64f + 10f;
+            float textWidth = Width - 6f - 2f * textLeft;
+            UILabel congrats = Label(banner, IpoDialogText.Congratulations, 2f, White, textWidth);
+            congrats.name = PanelName + "Congrats";
+            congrats.textAlignment = UIHorizontalAlignment.Center;
+            congrats.relativePosition = new Vector3(textLeft, 12f);
+            // The company's name, once: here.
+            UILabel title = Label(banner, IpoDialogText.Title(company), 1.125f, White, textWidth);
+            title.name = PanelName + "Title";
+            title.textAlignment = UIHorizontalAlignment.Center;
+            title.relativePosition = new Vector3(textLeft, 12f + congrats.height + 2f);
+            float bannerHeight = Mathf.Max(
+                BannerHeight,
+                title.relativePosition.y + title.height + 12f
+            );
+            banner.height = bannerHeight;
+            foreach (UISprite money in banner.GetComponentsInChildren<UISprite>())
+            {
+                money.relativePosition = new Vector3(
+                    money.relativePosition.x,
+                    (bannerHeight - money.height) / 2f
+                );
+            }
+
+            UISlicedSprite body = panel.AddUIComponent<UISlicedSprite>();
+            body.spriteName = "UnlockingPanel";
+            body.color = new Color32(160, 160, 160, 255); // the game's own tint for this sprite
+            body.relativePosition = new Vector3(3f, 3f + bannerHeight);
+
+            UIButton close = panel.AddUIComponent<UIButton>();
             close.name = PanelName + "Close";
-            close.size = new Vector2(30f, 30f);
+            close.size = new Vector2(32f, 32f);
             close.normalBgSprite = "buttonclose";
             close.hoveredBgSprite = "buttonclosehover";
             close.pressedBgSprite = "buttonclosepressed";
-            close.relativePosition = new Vector3(Width - 34f, 3f);
+            close.relativePosition = new Vector3(Width - 34f, 2f);
             close.tooltip = IpoDialogText.CloseTip;
             close.eventClick += (c, p) => Close();
 
             float inner = Width - 2 * Pad;
-            float y = 48f;
+            float y = 3f + bannerHeight + 16f;
 
             // Where it is from. The name is said once, in the title above.
             UIPanel card = panel.AddUIComponent<UIPanel>();
@@ -292,27 +366,33 @@ namespace FinanceOverhaul
             y += 4f;
             y = Place(Label(panel, IpoDialogText.SmallPrint, 0.6875f, Muted, inner), y, 12f);
 
-            // Two buttons of one size: the same height and text, and the width of the wider.
+            // Two buttons of one size, centred like the game's OK: the same height and text, and
+            // the width of the wider.
+            y += 4f;
             UIButton buy = Button(IpoDialogText.Buy, PanelName + "Buy");
             UIButton look = Button(IpoDialogText.View, PanelName + "View");
-            float buttonWidth = Mathf.Max(buy.width, look.width);
+            float buttonWidth = Mathf.Max(201f, Mathf.Max(buy.width, look.width));
             buy.width = buttonWidth;
             look.width = buttonWidth;
-            buy.relativePosition = new Vector3(Pad, y);
+            float buttonsLeft = (Width - (2f * buttonWidth + 12f)) / 2f;
+            buy.relativePosition = new Vector3(buttonsLeft, y);
             buy.eventClick += (c, p) => OnBuy();
-            look.relativePosition = new Vector3(Pad + buttonWidth + 10f, y);
+            look.relativePosition = new Vector3(buttonsLeft + buttonWidth + 12f, y);
             look.eventClick += (c, p) => OnView();
             y += buy.height + 12f;
 
             // The checkbox is the Options preference, read the other way.
             UIPanel dont = panel.AddUIComponent<UIPanel>();
             dont.name = PanelName + "DontShow";
-            dont.size = new Vector2(inner, 20f);
-            dont.relativePosition = new Vector3(Pad, y);
             Action<bool> tick = FoCheckbox.AddBox(dont, 0f, 2f);
             tick(false);
-            UILabel dontLabel = Label(dont, IpoDialogText.DontShow, 0.8125f, Body, inner - 24f);
+            UILabel dontLabel = dont.AddUIComponent<UILabel>();
+            dontLabel.textScale = 0.875f;
+            dontLabel.textColor = Value; // the game's colour for this line in its own dialogs
+            dontLabel.text = IpoDialogText.DontShow;
             dontLabel.relativePosition = new Vector3(FoCheckbox.Size + 8f, 2f);
+            dont.size = new Vector2(FoCheckbox.Size + 8f + dontLabel.width, 20f);
+            dont.relativePosition = new Vector3((Width - dont.width) / 2f, y);
             dont.eventClick += (c, p) =>
             {
                 ModSettings settings = Mod.EnsureSettings();
@@ -324,8 +404,12 @@ namespace FinanceOverhaul
             y += dont.height + 14f;
 
             panel.height = y;
+            body.size = new Vector2(Width - 6f, panel.height - bannerHeight - 6f);
             FoWindow.CenterOnScreen(panel);
             panel.BringToFront();
+            panel.opacity = 0f; // fades in, as the game's dialogs do
+            shownAt = Time.unscaledTime;
+            PlayFanfare();
             ModLog.Info("ipo dialog: shown for " + company.Name);
         }
 
@@ -406,9 +490,9 @@ namespace FinanceOverhaul
             b.pressedBgSprite = "ButtonMenuPressed";
             b.textColor = FoTheme.GameText;
             b.autoSize = true;
-            b.textPadding = new RectOffset(14, 14, 10, 8);
+            b.textPadding = new RectOffset(14, 14, 14, 12);
             b.autoSize = false;
-            b.height = 36f;
+            b.height = 47f; // the game's OK button on its own dialogs
             return b;
         }
 

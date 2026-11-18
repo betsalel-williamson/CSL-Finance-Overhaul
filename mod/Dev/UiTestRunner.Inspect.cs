@@ -321,6 +321,54 @@ namespace FinanceOverhaul
                     );
                     break;
                 }
+                case "dump-library":
+                case "peek-library":
+                {
+                    // dump-library NAME — logs the tree of one of the game's own dialogs
+                    // (fetched from its panel library, where they wait unseen). peek-library
+                    // NAME — shows it as it stands for two seconds, for a capture of its look
+                    // (its contents are whatever it last showed), then hides it again.
+                    UIComponent c = null;
+                    try
+                    {
+                        c = UIView.library.Get<UIComponent>(a);
+                    }
+                    catch (Exception ex)
+                    {
+                        r.Error = "the library has no " + a + ": " + ex.Message;
+                        break;
+                    }
+
+                    if (c == null)
+                    {
+                        r.Error = "the library has no " + a;
+                        break;
+                    }
+
+                    if (cmd == "dump-library")
+                    {
+                        DevCapture.DumpTree(c, 0);
+                        break;
+                    }
+
+                    bool was = c.isVisible;
+                    float opacity = c.opacity;
+                    c.isVisible = true;
+                    c.opacity = 1f;
+                    c.BringToFront();
+                    c.CenterToParent();
+                    yield return new WaitForSeconds(0.6f);
+                    Application.CaptureScreenshot(
+                        Path.Combine(
+                            DevCapture.Folder,
+                            "FinanceOverhaul-uitest-library-" + a + ".png"
+                        )
+                    );
+                    yield return new WaitForSeconds(1.2f);
+                    c.isVisible = was;
+                    c.opacity = opacity;
+                    break;
+                }
                 case "log-prices":
                 {
                     // log-prices — every listed stock's daily prices as the game keeps them

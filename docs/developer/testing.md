@@ -72,7 +72,9 @@ kind of business in Economy → Investments), `ipo-dialog on|off|close` and `ipo
 if none had listed, mod data rewritten), `historical-off NAME` (takes the Historical flag off
 businesses of that name), `ipo-income` (per zone: the income the game reports and the offering
 prices its businesses would list at — scenario 65), `log-loan-expenses` and
-`expect-loan-expenses ₡MIN` (what Economy shows as loan expenses — scenario 63), `log-prices` (logs
+`expect-loan-expenses ₡MIN` (what Economy shows as loan expenses — scenario 63), `dump-library NAME`
+and `peek-library NAME` (log the tree of one of the game's own dialogs, such as
+`ParkAreaUnlockingPanel`, or show it for two seconds for a capture of its look), `log-prices` (logs
 every listed stock's kept daily prices, up to 30 and newest first, with its price rule, for
 measuring how the game's stocks move), `share-charts on|off` (the share chart flag, for before/after
 captures) — and checks `expect-visible`, `expect-text`, `expect-slider CONTROL [max]` (the slider's

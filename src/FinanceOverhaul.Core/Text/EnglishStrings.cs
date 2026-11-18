@@ -322,6 +322,7 @@ namespace FinanceOverhaul.Core
                 "ipo.card.footer",
                 "Local listings {0} of {1} · {2} per map tile ({3} owned) · at most {4} IPOs a year"
             },
+            { "ipo.dialog.congrats", "Congratulations!" },
             { "ipo.dialog.title", "{0} is going public" },
             { "ipo.dialog.where.crossDistrict", "{0} · on {1} at {2}, {3}" },
             { "ipo.dialog.where.cross", "{0} · on {1} at {2}" },

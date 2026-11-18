@@ -14,6 +14,8 @@ expect-log notices: chirped [City Brokerage]
 expect-log is going public at
 wait 1
 expect-visible FinanceOverhaulIpoDialog
+# the look of the game's celebration dialogs: a banner with a large headline
+expect-text FinanceOverhaulIpoDialogCongrats Congratulations!
 expect-text FinanceOverhaulIpoDialogTitle is going public
 # where it stands: its kind, then the street, cross street and district it has
 expect-visible FinanceOverhaulIpoDialogWhere
@@ -21,6 +23,7 @@ expect-text FinanceOverhaulIpoDialogPrice a share
 expect-text FinanceOverhaulIpoDialogCanBuy up to 1,000 shares (a 10% stake,
 expect-text FinanceOverhaulIpoDialogWindow 7 days · until
 expect-no-overflow FinanceOverhaulIpoDialog
+expect-no-overflow FinanceOverhaulIpoDialogBanner
 capture ipo-dialog
 click FinanceOverhaulIpoDialogClose
 expect-hidden FinanceOverhaulIpoDialog

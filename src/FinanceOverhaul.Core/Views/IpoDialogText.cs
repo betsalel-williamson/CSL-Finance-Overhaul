@@ -9,6 +9,12 @@ namespace FinanceOverhaul.Core
     /// </summary>
     public static class IpoDialogText
     {
+        /// <summary>The headline, as on the game's own celebration dialogs.</summary>
+        public static string Congratulations
+        {
+            get { return Strings.Get("ipo.dialog.congrats"); }
+        }
+
         public static string Title(LocalCompany company)
         {
             return Strings.Format("ipo.dialog.title", company.Name);
