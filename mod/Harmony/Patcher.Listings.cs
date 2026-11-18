@@ -48,7 +48,40 @@ namespace FinanceOverhaul
                 nameof(IndexLocalizedDescriptionPrefix),
                 null
             );
+            applied += TryPatch(
+                harmony,
+                AccessTools.Method(typeof(InvestmentAI), "SetSpriteName"),
+                nameof(CoinIconPrefix),
+                nameof(CoinIconPostfix)
+            );
             return applied;
+        }
+
+        private static void CoinIconPrefix(ColossalFramework.UI.UISprite sprite)
+        {
+            try
+            {
+                CoinIcons.Before(sprite);
+            }
+            catch
+            {
+                // fail soft
+            }
+        }
+
+        private static void CoinIconPostfix(
+            InvestmentAI __instance,
+            ColossalFramework.UI.UISprite sprite
+        )
+        {
+            try
+            {
+                CoinIcons.After(__instance, sprite);
+            }
+            catch
+            {
+                // fail soft
+            }
         }
 
         private static void IndexCollectionAwakePostfix(InvestmentCollection __instance)

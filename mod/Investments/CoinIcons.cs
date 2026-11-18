@@ -1,0 +1,197 @@
+using System;
+using ColossalFramework.UI;
+using FinanceOverhaul.Core;
+using UnityEngine;
+
+namespace FinanceOverhaul
+{
+    /// <summary>
+    /// The icon of a stock the game has no art for (the Index, a local company, the dev test
+    /// stock): a coin like the game's own stock coins with the ticker symbol on it, in place
+    /// of the stack of money the game falls back to. The game sets every stock icon through
+    /// InvestmentAI.SetSpriteName; this runs around it. The game reuses its cards, so an icon
+    /// that goes back to one of the game's stocks gets its own atlas back first.
+    /// </summary>
+    public static class CoinIcons
+    {
+        public const string AtlasName = "FinanceOverhaulCoins";
+        public const string SpriteName = "FinanceOverhaulCoin";
+        public const string SymbolName = "FinanceOverhaulCoinSymbol";
+        private const string GameFallback = "MoneyThumb"; // not shown: a game sprite name
+        private const int TextureSize = 128;
+
+        // The game's stock coins: gold face, darker rim and side, a lighter ring.
+        private static readonly Color32 FaceColour = new Color32(246, 184, 60, 255);
+        private static readonly Color32 RimColour = new Color32(232, 152, 28, 255);
+        private static readonly Color32 EdgeColour = new Color32(186, 112, 16, 255);
+        private static readonly Color32 RingColour = new Color32(255, 214, 110, 255);
+        private static readonly Color32 SymbolColour = new Color32(122, 72, 6, 255);
+
+        private static UITextureAtlas atlas;
+
+        /// <summary>Prefix of InvestmentAI.SetSpriteName: back to the game's atlas, no symbol.</summary>
+        public static void Before(UISprite sprite)
+        {
+            if (sprite == null)
+            {
+                return;
+            }
+
+            if (sprite.atlas != null && sprite.atlas.name == AtlasName)
+            {
+                sprite.atlas = UIView.GetAView().defaultAtlas;
+            }
+
+            UIComponent symbol = sprite.Find(SymbolName);
+            if (symbol != null)
+            {
+                symbol.isVisible = false;
+            }
+        }
+
+        /// <summary>Postfix: a stock the game drew its fallback for gets the coin and its symbol.</summary>
+        public static void After(InvestmentAI ai, UISprite sprite)
+        {
+            if (
+                sprite == null
+                || ai == null
+                || ai.m_info == null
+                || sprite.spriteName != GameFallback
+            )
+            {
+                return;
+            }
+
+            sprite.atlas = Atlas();
+            sprite.spriteName = SpriteName;
+            string text = StockSymbols.For(ai.m_info);
+            UILabel symbol = sprite.Find<UILabel>(SymbolName);
+            if (symbol == null)
+            {
+                symbol = sprite.AddUIComponent<UILabel>();
+                symbol.name = SymbolName;
+                symbol.isInteractive = false;
+                symbol.textColor = SymbolColour;
+                symbol.textAlignment = UIHorizontalAlignment.Center;
+                symbol.verticalAlignment = UIVerticalAlignment.Middle;
+                symbol.autoSize = false;
+            }
+
+            symbol.isVisible = true;
+            symbol.text = text;
+            symbol.textScale = CoinIcon.SymbolScale(text, sprite.width);
+            symbol.size = sprite.size;
+            // The face sits a little above the middle: the coin's side shows below it.
+            symbol.relativePosition = new Vector3(0f, -sprite.height * 0.03f);
+        }
+
+        /// <summary>
+        /// Main thread, once the hook is in (a hot reload, a city loaded): the game set its
+        /// cards' icons when it built them, so set them again for the cards that exist.
+        /// </summary>
+        public static void RefreshAll()
+        {
+            try
+            {
+                EconomyPanel economy = UnityEngine.Object.FindObjectOfType<EconomyPanel>();
+                if (economy == null)
+                {
+                    return;
+                }
+
+                Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
+                foreach (
+                    UISprite sprite in economy.component.GetComponentsInChildren<UISprite>(true)
+                )
+                {
+                    UIComponent card = sprite.name == "InvestmentIcon" ? sprite.parent : null;
+                    if (card == null || !(card.objectUserData is byte))
+                    {
+                        continue;
+                    }
+
+                    InvestmentInfo info = buffer[(byte)card.objectUserData].Info;
+                    if (info != null && info.m_investmentAI != null)
+                    {
+                        info.m_investmentAI.SetSpriteName(sprite);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("coin icons: refresh failed: " + ex.Message);
+            }
+        }
+
+        /// <summary>Hot reload: every coin goes back to the game's fallback icon.</summary>
+        public static void RemoveAll()
+        {
+            try
+            {
+                foreach (UISprite sprite in UnityEngine.Object.FindObjectsOfType<UISprite>())
+                {
+                    if (sprite.atlas != null && sprite.atlas.name == AtlasName)
+                    {
+                        Before(sprite);
+                        sprite.spriteName = GameFallback;
+                        UIComponent symbol = sprite.Find(SymbolName);
+                        if (symbol != null)
+                        {
+                            UnityEngine.Object.Destroy(symbol.gameObject);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("coin icons: remove failed: " + ex.Message);
+            }
+        }
+
+        private static UITextureAtlas Atlas()
+        {
+            if (atlas != null)
+            {
+                return atlas;
+            }
+
+            byte[] mask = CoinIcon.Render(TextureSize);
+            var pixels = new Color32[mask.Length];
+            for (int y = 0; y < TextureSize; y++)
+            {
+                for (int x = 0; x < TextureSize; x++)
+                {
+                    byte m = mask[y * TextureSize + x];
+                    pixels[(TextureSize - 1 - y) * TextureSize + x] =
+                        m == CoinIcon.Face ? FaceColour
+                        : m == CoinIcon.Rim ? RimColour
+                        : m == CoinIcon.Ring ? RingColour
+                        : m == CoinIcon.Edge ? EdgeColour
+                        : FoTheme.Clear;
+                }
+            }
+
+            var texture = new Texture2D(TextureSize, TextureSize, TextureFormat.ARGB32, false);
+            texture.name = SpriteName;
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Clamp;
+            texture.SetPixels32(pixels);
+            texture.Apply();
+
+            UITextureAtlas game = UIView.GetAView().defaultAtlas;
+            atlas = ScriptableObject.CreateInstance<UITextureAtlas>();
+            atlas.name = AtlasName;
+            atlas.material = UnityEngine.Object.Instantiate(game.material);
+            atlas.material.mainTexture = texture;
+            atlas.AddSprite(
+                new UITextureAtlas.SpriteInfo
+                {
+                    name = SpriteName,
+                    texture = texture,
+                    region = new Rect(0f, 0f, 1f, 1f),
+                }
+            );
+            return atlas;
+        }
+    }
+}

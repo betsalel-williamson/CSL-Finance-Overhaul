@@ -46,6 +46,7 @@ namespace FinanceOverhaul
                 IndexListing.EnsureInLoadedCity();
                 TestStockListing.EnsureInLoadedCity();
                 CompanyDesk.EnsureListed();
+                CoinIcons.RefreshAll();
                 // Hot reload: re-attach the live ticker overlay in a loaded city.
                 TickerBoards.Ensure();
             }
@@ -66,6 +67,7 @@ namespace FinanceOverhaul
             {
                 TickerBoards.DestroyAll();
                 ShareChartOverlay.RemoveAll();
+                CoinIcons.RemoveAll();
             }
             catch
             {

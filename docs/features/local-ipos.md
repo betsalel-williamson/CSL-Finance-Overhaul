@@ -654,6 +654,9 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
   building at a distance that shows it whole (`BuildingFraming`: three times the lot's larger side
   or twice its height, between 180 and 520, far enough for the fireworks to stay in view) and opens
   the building's own info panel, as a click on it would.
+- **Its icon (built, `CoinIcons`):** the game draws a stack of money for a stock it has no art for.
+  A local company, like the Index, gets a coin in the shape of the game's own stock coins with its
+  ticker symbol on it (`CoinIcon` draws the shape), wherever the game shows a stock's icon.
 - **Fireworks (built, `IpoFireworks`):** the game's own event fireworks ("Event Firework Particles
   1" to "3", else "FireworksComplexIngame") go off from the headquarters' roof when the company is
   announced, on its first trading day, and when the player views the headquarters: eight bursts, 0.8
