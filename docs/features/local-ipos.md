@@ -413,6 +413,17 @@ healthy days  = previous + 1 if healthy today, else 0 (also 0 if the building is
 candidate     = healthy days ≥ 365
 ```
 
+**The look behind (once per city).** The mod can only count healthy days while Local IPOs runs. On
+its first scan of a city it therefore gives every business that is healthy that day the full 365
+days, as if it had been watched for the past year (`CandidateBook.LookedBehind`, kept in the save as
+`lookbehind=done`). A city that already has businesses gets its first IPO from the next monthly draw
+instead of a year later; a new city has nothing to credit, so its businesses wait the year; and
+whatever turns healthy or is built after the first scan earns its days one at a time. The mod cannot
+see how long a business was really healthy before it started counting: being a top-level building,
+which takes time to reach, is the only evidence of age it has. First scan of the test city,
+2026-11-18: 62 of 1,834 businesses credited (35 offices, 18 farming, 9 oil), which with about twelve
+open slots makes an IPO in a given month roughly an even chance, still capped at two a year.
+
 ### What may list (the board)
 
 ```text

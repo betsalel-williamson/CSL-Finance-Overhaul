@@ -605,7 +605,17 @@ namespace FinanceOverhaul
                     b.Observe(one.Key, facts, rules);
                 }
 
+                bool lookingBehind = !b.LookedBehind;
                 b.EndDay();
+                if (lookingBehind)
+                {
+                    ModLog.Info(
+                        "ipo: first scan of this city: "
+                            + b.Candidates(rules).Count
+                            + " business(es) healthy today count as healthy for the past year"
+                    );
+                }
+
                 var list = new List<KindFacts>();
                 foreach (BusinessKind kind in Enum.GetValues(typeof(BusinessKind)))
                 {
@@ -837,7 +847,8 @@ namespace FinanceOverhaul
         {
             lock (Sync)
             {
-                book = new CandidateBook();
+                // As a city already being watched: the tests count days one at a time.
+                book = new CandidateBook { LookedBehind = true };
             }
         }
 

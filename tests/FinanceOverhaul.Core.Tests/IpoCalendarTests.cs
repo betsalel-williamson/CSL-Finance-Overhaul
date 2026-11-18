@@ -62,7 +62,7 @@ namespace FinanceOverhaul.Core.Tests
         public void ABusinessBecomesACandidateAfterEnoughHealthyDaysInARow()
         {
             var rules = new IpoRules { HealthyDays = 3 };
-            var book = new CandidateBook();
+            var book = new CandidateBook { LookedBehind = true }; // a city already being watched
             for (int day = 1; day <= 2; day++)
             {
                 book.Observe(B(1), Good, rules);
@@ -74,6 +74,66 @@ namespace FinanceOverhaul.Core.Tests
             book.EndDay();
             Assert.Equal(new List<BuildingKey> { B(1) }, book.Candidates(rules));
             Assert.Equal(3, book.HealthyDaysOf(B(1)));
+        }
+
+        [Fact]
+        public void TheFirstScanOfACityLooksBehindAndCreditsWhatIsHealthyThatDay()
+        {
+            var rules = new IpoRules { HealthyDays = 365 };
+            var book = new CandidateBook();
+            Assert.False(book.LookedBehind);
+            BusinessFacts poor = Good;
+            poor.FullyStaffed = false;
+            book.Observe(B(1), Good, rules); // standing and healthy: a year's credit
+            book.Observe(B(2), poor, rules); // not healthy today: nothing
+            book.EndDay();
+            Assert.True(book.LookedBehind);
+            Assert.Equal(new List<BuildingKey> { B(1) }, book.Candidates(rules));
+            Assert.Equal(365, book.HealthyDaysOf(B(1)));
+
+            // Only once: what turns healthy or is built later earns its days one at a time.
+            book.Observe(B(1), Good, rules);
+            book.Observe(B(2), Good, rules);
+            book.Observe(B(3), Good, rules);
+            book.EndDay();
+            Assert.Equal(new List<BuildingKey> { B(1) }, book.Candidates(rules));
+            Assert.Equal(366, book.HealthyDaysOf(B(1)));
+            Assert.Equal(1, book.HealthyDaysOf(B(2)));
+            Assert.Equal(1, book.HealthyDaysOf(B(3)));
+        }
+
+        [Fact]
+        public void ANewCityHasNothingToCreditSoItsBusinessesWaitTheYear()
+        {
+            var rules = new IpoRules { HealthyDays = 365 };
+            var book = new CandidateBook();
+            book.EndDay(); // first scan: no business yet
+            book.Observe(B(1), Good, rules);
+            book.EndDay();
+            Assert.Empty(book.Candidates(rules));
+            Assert.Equal(1, book.HealthyDaysOf(B(1)));
+        }
+
+        [Fact]
+        public void TheLookBehindIsKeptInTheSaveSoItHappensOncePerCity()
+        {
+            var book = new CandidateBook();
+            var dice = new IpoDice(5UL);
+            // A save from before the look behind existed has no mark: the city gets it once.
+            CandidateBook old = CompaniesCodec.Parse(
+                CompaniesCodec.Format(book, dice, new CompanyRegistry()),
+                new IpoDice(1UL),
+                new CompanyRegistry()
+            );
+            Assert.False(old.LookedBehind);
+
+            book.EndDay();
+            CandidateBook back = CompaniesCodec.Parse(
+                CompaniesCodec.Format(book, dice, new CompanyRegistry()),
+                new IpoDice(1UL),
+                new CompanyRegistry()
+            );
+            Assert.True(back.LookedBehind);
         }
 
         [Fact]

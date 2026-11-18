@@ -183,6 +183,17 @@ namespace FinanceOverhaul.Core
                 );
         }
 
+        /// <summary>
+        /// The one-time look behind has been done for this city (kept in the save). The mod
+        /// can only count healthy days while it runs, so on its first scan of a city it gives
+        /// every business that is healthy that day the benefit of the doubt: it is counted as
+        /// healthy for the whole period the rules ask for, as if the mod had watched it for
+        /// the past year. A city that already has businesses gets its first IPOs without a
+        /// year's wait; a new city has no business to credit, and everything built later
+        /// earns its days one at a time.
+        /// </summary>
+        public bool LookedBehind;
+
         /// <summary>One business as the game shows it today. Call once per business, then <see cref="EndDay"/>.</summary>
         public void Observe(BuildingKey building, BusinessFacts facts, IpoRules rules)
         {
@@ -197,6 +208,11 @@ namespace FinanceOverhaul.Core
 
             int days;
             healthyDays.TryGetValue(building, out days);
+            if (!LookedBehind && days < rules.HealthyDays)
+            {
+                days = rules.HealthyDays - 1; // today makes it the full period
+            }
+
             healthyDays[building] = days == int.MaxValue ? days : days + 1;
             seenToday.Add(building);
         }
@@ -220,6 +236,7 @@ namespace FinanceOverhaul.Core
             }
 
             seenToday.Clear();
+            LookedBehind = true; // only the first day of scanning looks behind
         }
 
         /// <summary>Healthy days in a row so far (0 if unknown).</summary>

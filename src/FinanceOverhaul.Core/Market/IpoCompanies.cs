@@ -137,6 +137,7 @@ namespace FinanceOverhaul.Core
         private const string BuyoutTag = "buyout";
         private const string HoldingTag = "holding";
         private const string HistoricalTag = "historical";
+        private const string LookBehindLine = "lookbehind=done";
 
         public static string Format(CandidateBook book, IpoDice dice, CompanyRegistry registry)
         {
@@ -145,6 +146,11 @@ namespace FinanceOverhaul.Core
             sb.Append("dice=")
                 .Append(dice.State.ToString(CultureInfo.InvariantCulture))
                 .Append('\n');
+            if (book.LookedBehind)
+            {
+                sb.Append(LookBehindLine).Append('\n');
+            }
+
             var counted = new List<KeyValuePair<BuildingKey, int>>(book.Counted);
             counted.Sort(
                 (a, b) =>
@@ -480,6 +486,12 @@ namespace FinanceOverhaul.Core
                         dice.State = state;
                     }
 
+                    continue;
+                }
+
+                if (line == LookBehindLine)
+                {
+                    book.LookedBehind = true;
                     continue;
                 }
 
