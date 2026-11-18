@@ -467,7 +467,10 @@ can be filled. If the chosen business is no longer a candidate on its day, that 
 2. A scheduled IPO whose day has come:
      still a candidate of that kind → the company is listed at its offering price, the offering
        window opens for 7 days, and the day counts towards pacing
-     otherwise → cancelled (it does not count towards pacing)
+     otherwise → the next candidate of its kind in the queue lists in its place (the queue is the
+       candidates in their fixed order, by building; the one after the picked business, wrapping
+       round; no dice are used)
+     no other candidate of that kind → cancelled (it does not count towards pacing)
 3. A company whose window has closed: first-day price = offering price × (1 + pop); it trades.
 4. A scheduled buy-out whose day has come, if the company still trades: the premium is drawn, the
    company is delisted and its slot is free.

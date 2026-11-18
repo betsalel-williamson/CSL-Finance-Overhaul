@@ -86,7 +86,7 @@ namespace FinanceOverhaul.Core
         /// <summary>A company was announced: list it, mark its building, tell the player.</summary>
         Announced,
 
-        /// <summary>The IPO planned for today fell through (the business no longer qualifies).</summary>
+        /// <summary>The IPO planned for today fell through: the business no longer qualifies and its kind has no other candidate.</summary>
         Cancelled,
 
         /// <summary>The offering window closed: the price moved to its first-day price.</summary>
@@ -100,6 +100,12 @@ namespace FinanceOverhaul.Core
     {
         public IpoEventKind Kind;
         public LocalCompany Company;
+
+        /// <summary>
+        /// Announced only: the business picked at the draw no longer qualified on its day, and
+        /// this company is the next candidate of its kind, listed in its place.
+        /// </summary>
+        public bool StoodIn;
 
         /// <summary>FirstTradingDay: the pop. BoughtOut: the premium.</summary>
         public double Fraction;
@@ -378,12 +384,60 @@ namespace FinanceOverhaul.Core
                 candidates.HealthyDaysOf(business) >= rules.HealthyDays
                 && candidates.KindOf(business) == registry.IpoKind
                 && !registry.IsHome(business);
-            if (!stillQualifies)
+            if (stillQualifies)
+            {
+                return List(registry, business, registry.IpoKind, today, rules, source);
+            }
+
+            // The business picked at the draw lost its place before its day: the next
+            // candidate of its kind in the queue takes it, so a month's IPO is not lost to one
+            // business having a bad day. No dice: the same day gives the same stand-in.
+            BuildingKey standIn;
+            if (!NextInQueue(registry, candidates, business, rules, out standIn))
             {
                 return new IpoEvent { Kind = IpoEventKind.Cancelled };
             }
 
-            return List(registry, business, registry.IpoKind, today, rules, source);
+            IpoEvent listed = List(registry, standIn, registry.IpoKind, today, rules, source);
+            listed.StoodIn = true;
+            return listed;
+        }
+
+        /// <summary>
+        /// The candidate that follows <paramref name="after"/> in its kind's queue (the fixed
+        /// order of <see cref="CandidateBook.Candidates(IpoRules, BusinessKind)"/>, wrapping
+        /// round to the start); false when the kind has no other candidate.
+        /// </summary>
+        private static bool NextInQueue(
+            CompanyRegistry registry,
+            CandidateBook candidates,
+            BuildingKey after,
+            IpoRules rules,
+            out BuildingKey next
+        )
+        {
+            List<BuildingKey> queue = candidates.Candidates(rules, registry.IpoKind);
+            queue.RemoveAll(registry.IsHome);
+            queue.RemoveAll(b => b.Equals(after));
+            next = default(BuildingKey);
+            if (queue.Count == 0)
+            {
+                return false;
+            }
+
+            next = queue[0];
+            foreach (BuildingKey b in queue)
+            {
+                bool later =
+                    b.Id > after.Id || (b.Id == after.Id && b.BuildIndex > after.BuildIndex);
+                if (later)
+                {
+                    next = b;
+                    break;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>

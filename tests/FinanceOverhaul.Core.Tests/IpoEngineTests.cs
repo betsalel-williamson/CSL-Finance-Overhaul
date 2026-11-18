@@ -122,7 +122,48 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
-        public void ABusinessThatStopsQualifyingBeforeItsDayIsNotListed()
+        public void WhenThePickedBusinessStopsQualifyingTheNextCandidateTakesItsPlace()
+        {
+            IpoRules rules = Certain();
+            var registry = new CompanyRegistry();
+            CandidateBook book = Offices(3, rules);
+            var dice = new IpoDice(3UL);
+            var city = new City();
+            Assert.Empty(IpoEngine.Step(registry, book, OfficeKind(3), 6, 0, rules, dice, city));
+            // With these dice the draw schedules the IPO for a later day of the period.
+            Assert.True(registry.IpoScheduled);
+            Assert.True(registry.IpoDay > 0);
+
+            BuildingKey picked = registry.IpoBusiness;
+            List<BuildingKey> queue = book.Candidates(rules, BusinessKind.Office);
+            BuildingKey expected = queue[(queue.IndexOf(picked) + 1) % queue.Count];
+
+            // The picked business gets a problem icon and loses its streak; the others stay healthy.
+            BusinessFacts sick = Healthy;
+            sick.HasProblems = true;
+            foreach (BuildingKey b in queue)
+            {
+                book.Observe(b, b.Equals(picked) ? sick : Healthy, rules);
+            }
+
+            book.EndDay();
+            var events = new List<IpoEvent>();
+            for (int day = 1; day <= registry.IpoDay; day++)
+            {
+                events.AddRange(
+                    IpoEngine.Step(registry, book, OfficeKind(3), 6, day, rules, dice, city)
+                );
+            }
+
+            IpoEvent announced = Assert.Single(events);
+            Assert.Equal(IpoEventKind.Announced, announced.Kind);
+            Assert.True(announced.StoodIn);
+            Assert.Equal(expected, announced.Company.Home); // the next in the queue, not a new roll
+            Assert.Single(registry.IpoDays); // it counts towards the year's two like any IPO
+        }
+
+        [Fact]
+        public void WithNoOtherCandidateOfItsKindTheIpoFallsThrough()
         {
             IpoRules rules = Certain();
             var registry = new CompanyRegistry();

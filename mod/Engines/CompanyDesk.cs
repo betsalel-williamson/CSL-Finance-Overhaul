@@ -194,6 +194,15 @@ namespace FinanceOverhaul
                 case IpoEventKind.Announced:
                     // Remembered, so a buy-out can put the building back as it was.
                     c.WasHistorical = IsHistorical(c.Home);
+                    if (e.StoodIn)
+                    {
+                        ModLog.Info(
+                            "ipo: the business picked at the draw no longer qualified; "
+                                + c.Name
+                                + " takes its place"
+                        );
+                    }
+
                     MarkHistorical(c.Home);
                     ModLog.Info(
                         "ipo: "
@@ -218,7 +227,7 @@ namespace FinanceOverhaul
                     break;
                 case IpoEventKind.Cancelled:
                     ModLog.Info(
-                        "ipo: the IPO planned for today fell through (no longer qualifies)"
+                        "ipo: the IPO planned for today fell through (no longer qualifies, and no other candidate of its kind)"
                     );
                     break;
                 case IpoEventKind.FirstTradingDay:
