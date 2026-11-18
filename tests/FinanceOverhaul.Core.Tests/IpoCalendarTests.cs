@@ -11,6 +11,7 @@ namespace FinanceOverhaul.Core.Tests
             TopLevel = true,
             FullyStaffed = true,
             Jobs = 40,
+            JobsFloor = 30,
             LandValue = 80,
         };
 
@@ -90,7 +91,7 @@ namespace FinanceOverhaul.Core.Tests
             f.FullyStaffed = false;
             bad.Add(f);
             f = Good;
-            f.Jobs = rules.MinJobs - 1;
+            f.Jobs = f.JobsFloor - 1; // not among the larger employers of its kind
             bad.Add(f);
             f = Good;
             f.LandValue = rules.LandValueFloor - 1;
@@ -115,9 +116,17 @@ namespace FinanceOverhaul.Core.Tests
 
             // Exactly at the floors counts as healthy.
             f = Good;
-            f.Jobs = rules.MinJobs;
+            f.Jobs = f.JobsFloor;
             f.LandValue = rules.LandValueFloor;
             Assert.True(CandidateBook.Healthy(f, rules));
+
+            // Land value is asked of shops and offices, not of industry.
+            f = Good;
+            f.Kind = BusinessKind.Oil;
+            f.LandValue = 0;
+            Assert.True(CandidateBook.Healthy(f, rules));
+            f.Kind = BusinessKind.Office;
+            Assert.False(CandidateBook.Healthy(f, rules));
         }
 
         [Fact]

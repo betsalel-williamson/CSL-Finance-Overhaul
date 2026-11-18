@@ -68,10 +68,14 @@ City bonds were about the same size. The IPO dialog, its preference and the bell
   specialisations that only have one level (leisure, tourism, organic, IT cluster, financial,
   farming, forestry, oil, ore). The game levels offices by the district's workers' education and
   local service coverage, shops mainly by land value.
-- **Healthy for a long time:** no problem icons (`Building.m_problems` is none), fully staffed, and
-  above a land-value floor, every day for the required number of days. The game does not count
+- **Healthy for a long time:** no problem icons (`Building.m_problems` is none), staffed (at most
+  10% of its jobs unfilled), every day for the required number of days. The game does not count
   healthy days, so the mod does (candidate list).
-- **Big enough:** at least a minimum number of jobs, so corner shops never list.
+- **Among the larger employers of its kind:** in the top third by jobs of its kind in this city.
+  Relative on purpose: an absolute "at least 20 jobs" shut out farming and oil entirely in the first
+  city scanned, and no fixed number can be right for every city.
+- **On land that supports it (shops and offices only):** land value at least 41, the game's own
+  threshold for a level-3 building. Not asked of industry, which lowers land value by nature.
 
 A building that meets all of this becomes a **candidate** (name and building id recorded). Losing
 any condition resets its healthy-day count; it stays a candidate only while healthy.
@@ -94,8 +98,10 @@ the game-side engine and the cards are not built).
    leisure, tourism, organic, farming, forestry, oil, ore) can list only once the city has 200
    squares of its buildings, the size the game asks for its Forestry, Oil and Ore stocks. Passing
    the gate gives the kind its first listing slot.
-2. **Slots:** each further 25 top-level offices, 40 shops, 30 industrial buildings or 15 buildings
-   of a specialisation add a slot. A listing uses a slot; a buy-out or a delisting gives it back.
+2. **Slots:** each doubling of a kind's top-level buildings adds a slot: the second at 20, then 40,
+   80, 160 and so on (1,280 buildings earn 8). Slots grow slowly in a city of any size, so "build
+   more to get more" still means something in a metropolis and a small town still earns a second
+   slot. A listing uses a slot; a buy-out or a delisting gives it back.
 3. **Chance:** once a month, every open slot of a kind that has a candidate has the same chance of
    being filled, set so a slot waits about a year and a half. The slot picked decides the kind (more
    open slots, likelier); each of that kind's candidates is equally likely.
@@ -137,27 +143,31 @@ gives the same numbers at the cost of one pass over the buildings a day.
 
 ### First scan of a real city (2026-11-17)
 
-Game UI scenario 64 scans the test city (143,000 people, 9 tiles): 2,042 zoned businesses read in 7
-to 10 ms, once a game day. With the rules as first set:
+Game UI scenario 64 scans the test city (143,000 people, 9 tiles): about 2,040 zoned businesses read
+in 7 to 10 ms, once a game day. **One city is a sample of one:** the numbers below show how the
+rules behave there, not what other cities look like.
 
-| Kind       | Squares | Top-level buildings | Slots earned | Healthy today | Fails most on                             |
-| ---------- | ------- | ------------------- | ------------ | ------------- | ----------------------------------------- |
-| Commercial | 10,153  | 1,056               | 27           | 87            | Too few jobs (806), understaffed (636)    |
-| Office     | 1,841   | 98                  | 4            | 83            | Not level 3 (84)                          |
-| Industry   | 1,049   | 119                 | 4            | 3             | Too few jobs (109), understaffed (59)     |
-| Farming    | 1,060   | 125                 | 9            | 0             | Too few jobs (all 125)                    |
-| Oil        | 3,247   | 416                 | 28           | 0             | Too few jobs and low land value (all 417) |
+The first rules were absolute (a slot per so many buildings, at least 20 jobs, land value 50) and
+failed in this very city: commercial and oil earned 27 and 28 slots against a board of 12, and
+farming and oil could never list (every building under 20 jobs; oil land under 50). They were
+replaced by the relative rules above. With those:
 
-Two things to retune before anything lists:
+| Kind       | Squares | Top-level buildings | Slots | Healthy today | Jobs floor (top third) |
+| ---------- | ------- | ------------------- | ----- | ------------- | ---------------------- |
+| Commercial | 10,153  | 1,056               | 7     | 101           | 19                     |
+| Office     | 1,857   | 98                  | 4     | 37            | 148                    |
+| Industry   | 1,049   | 120                 | 4     | 24            | 10                     |
+| Farming    | 1,028   | 122                 | 4     | 90            | 1                      |
+| Oil        | 3,173   | 411                 | 6     | 3             | 6                      |
 
-1. **Slots are far too easy.** Commercial and oil earn 27 and 28 slots against a board of 12, so
-   "build more to get more" means nothing in a grown city. The sizes per slot need to be several
-   times larger (for this city, about 400 shops, 50 offices, 60 industrial buildings and 150 of a
-   specialisation would give 3, 2, 2 and 1 to 3 slots).
-2. **Farming and oil can never list.** Every one of their buildings has fewer than 20 jobs, and oil
-   sits on land worth less than 50. The jobs floor and the land-value floor need to depend on the
-   kind (or be relative: the largest employers of a kind), and the land-value floor should not apply
-   to industry, which lowers land value by nature.
+Every kind the city has can now list. Things this one scan shows and does not settle:
+
+- **Farming:** every farm has one job by the game's formula, so "the top third" is all of them (ties
+  count). The largest farm in town is still only a farm.
+- **Staffing is the big filter** for shops (685 of 1,191) and oil (299 of 411). Whether 10% is right
+  in other cities is unknown.
+- **Checked and dropped:** a floor "bigger than the smallest lot". The game's workplace formula
+  returns the same jobs whatever lot size is passed in, so it cannot say what a 1×1 lot would have.
 
 ## The IPO
 
@@ -369,8 +379,11 @@ Most results fall near the mean, a few far above it, none below zero.
 ### Becoming a candidate
 
 ```text
-healthy today = top level AND no problem icons AND fully staffed
-                AND jobs ≥ 20 AND land value ≥ 50
+healthy today = top level AND no problem icons AND at most 10% of jobs unfilled
+                AND jobs ≥ the jobs floor of its kind
+                AND (industry kinds, or land value ≥ 41)
+jobs floor (a kind) = the jobs of the business that closes the top third of that kind in the
+                city, by jobs (ties with it count too)
 healthy days  = previous + 1 if healthy today, else 0 (also 0 if the building is gone or replaced)
 candidate     = healthy days ≥ 365
 ```
@@ -379,8 +392,8 @@ candidate     = healthy days ≥ 365
 
 ```text
 gate open (a kind)  = its squares ≥ 200
-slots (a kind)      = 0 before the gate, else 1 + floor(top-level buildings ÷ N)
-                      N = 25 offices, 40 commercial, 30 industry, 15 for a specialisation
+slots (a kind)      = 0 before the gate; 1 at the gate; one more each time its top-level
+                      buildings reach 20, 40, 80, 160… (the base, 10, doubled once per slot)
 open slots (a kind) = max(0, slots − its listed companies)
 board cap           = min(12, 2 × map tiles owned)
 pacing allows       = IPOs in the last 365 days < 2
@@ -533,28 +546,29 @@ survival after 1 and 3 years; delisting by industry.
 All under an experimental "Local IPOs" group, off by default; every value is saved with the player's
 settings.
 
-| Option                             | Default     | What it changes                                           |
-| ---------------------------------- | ----------- | --------------------------------------------------------- |
-| Local IPOs                         | Off         | The whole feature                                         |
-| Squares to unlock a kind           | 200         | The gate: how much of a kind the city needs first         |
-| Top-level buildings per slot       | 25/40/30/15 | Offices / commercial / industry / a specialisation        |
-| Days an open slot waits (average)  | 548         | How soon an open slot is filled                           |
-| Most IPOs a year                   | 2           | Pacing                                                    |
-| Listings per map tile              | 2           | The whole board, up to the listing cap                    |
-| Healthy days to become a candidate | 365         | How long a business must stay healthy                     |
-| Minimum jobs                       | 20          | Keeps small shops out                                     |
-| Land value floor                   | 50          | Minimum land value at the building                        |
-| Offering window (days)             | 7           | Days to buy at the offering price                         |
-| First-day pop: average / spread    | 15% / 25%   | The first-day jump and how varied it is                   |
-| Price-to-earnings multiple         | 20          | Offering price from measured earnings                     |
-| City's largest stake               | 10%         | What the full 1,000-share holding is of the company       |
-| New-listing volatility             | 2×          | Extra swing in the first year (settles to normal)         |
-| Local listing cap                  | 12          | Most local companies listed at once                       |
-| Roll every (days)                  | 30          | How often it is decided whether an IPO or buy-out happens |
-| Buy-out chance a year              | 4%          | A listed company's chance of being bought in a year       |
-| Buy-out premium: average / spread  | 40% / 15%   | What the buyer pays above the price                       |
-| No buy-out before (days listed)    | 365         | A new listing is not bought in its first year             |
-| Grace period after losing a home   | 90 days     | Before an un-homed company delists                        |
+| Option                                  | Default   | What it changes                                           |
+| --------------------------------------- | --------- | --------------------------------------------------------- |
+| Local IPOs                              | Off       | The whole feature                                         |
+| Squares to unlock a kind                | 200       | The gate: how much of a kind the city needs first         |
+| Top-level buildings for the second slot | 20        | Each doubling after that adds a slot                      |
+| Days an open slot waits (average)       | 548       | How soon an open slot is filled                           |
+| Most IPOs a year                        | 2         | Pacing                                                    |
+| Listings per map tile                   | 2         | The whole board, up to the listing cap                    |
+| Healthy days to become a candidate      | 365       | How long a business must stay healthy                     |
+| Larger employers of a kind              | Top 33%   | A business must be in this share of its kind, by jobs     |
+| Most jobs unfilled                      | 10%       | Still counts as staffed                                   |
+| Land value floor (shops, offices)       | 41        | The game's threshold for a level-3 building               |
+| Offering window (days)                  | 7         | Days to buy at the offering price                         |
+| First-day pop: average / spread         | 15% / 25% | The first-day jump and how varied it is                   |
+| Price-to-earnings multiple              | 20        | Offering price from measured earnings                     |
+| City's largest stake                    | 10%       | What the full 1,000-share holding is of the company       |
+| New-listing volatility                  | 2×        | Extra swing in the first year (settles to normal)         |
+| Local listing cap                       | 12        | Most local companies listed at once                       |
+| Roll every (days)                       | 30        | How often it is decided whether an IPO or buy-out happens |
+| Buy-out chance a year                   | 4%        | A listed company's chance of being bought in a year       |
+| Buy-out premium: average / spread       | 40% / 15% | What the buyer pays above the price                       |
+| No buy-out before (days listed)         | 365       | A new listing is not bought in its first year             |
+| Grace period after losing a home        | 90 days   | Before an un-homed company delists                        |
 
 ## Save data
 

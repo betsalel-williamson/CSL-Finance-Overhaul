@@ -77,8 +77,9 @@ namespace FinanceOverhaul.Core
     /// flooded.
     /// 1. Gate: a kind of business can list once the city has enough squares of it; passing the
     ///    gate gives the kind its first listing slot.
-    /// 2. Slots: every so many top-level buildings of the kind add a slot. A listing uses one; a
-    ///    buy-out or a delisting gives it back.
+    /// 2. Slots: each doubling of the kind's top-level buildings adds a slot, so slots grow
+    ///    slowly in a city of any size. A listing uses one; a buy-out or a delisting gives it
+    ///    back.
     /// 3. Board: the whole city holds so many local listings per map tile it owns, up to a cap.
     /// 4. Pacing: at most so many IPOs in any 365 days, and one at a time.
     /// 5. Chance: once a period, every open slot that has a candidate has the same chance of
@@ -87,20 +88,19 @@ namespace FinanceOverhaul.Core
     /// </summary>
     public static class IpoBoard
     {
-        /// <summary>Top-level buildings for each slot after the first.</summary>
-        public static int SlotEvery(BusinessKind kind, IpoRules rules)
+        /// <summary>
+        /// Top-level buildings a kind needs for one more slot than it has: the base for the
+        /// second, double that for the third, and so on.
+        /// </summary>
+        public static int NextSlotAt(int slots, IpoRules rules)
         {
-            switch (kind)
+            long need = Math.Max(1, rules.SlotDoublingBase);
+            for (int s = 1; s < Math.Max(1, slots) && need < int.MaxValue; s++)
             {
-                case BusinessKind.Commercial:
-                    return Math.Max(1, rules.SlotEveryCommercial);
-                case BusinessKind.Office:
-                    return Math.Max(1, rules.SlotEveryOffice);
-                case BusinessKind.Industry:
-                    return Math.Max(1, rules.SlotEveryIndustry);
-                default:
-                    return Math.Max(1, rules.SlotEverySpecialised);
+                need *= 2;
             }
+
+            return (int)Math.Min(int.MaxValue, need * 2);
         }
 
         public static bool GateOpen(KindFacts facts, IpoRules rules)
@@ -108,12 +108,25 @@ namespace FinanceOverhaul.Core
             return facts.Squares >= rules.GateSquares;
         }
 
-        /// <summary>Listing slots the kind has earned: none before the gate, then 1 + one per so many top-level buildings.</summary>
+        /// <summary>
+        /// Listing slots the kind has earned: none before the gate; the gate gives one; then one
+        /// more each time its top-level buildings double (20, 40, 80… with the default base).
+        /// Slow growth at any size: 1,280 buildings earn 8.
+        /// </summary>
         public static int Slots(KindFacts facts, IpoRules rules)
         {
-            return GateOpen(facts, rules)
-                ? 1 + Math.Max(0, facts.TopLevelBuildings) / SlotEvery(facts.Kind, rules)
-                : 0;
+            if (!GateOpen(facts, rules))
+            {
+                return 0;
+            }
+
+            int slots = 1;
+            while (slots < 31 && facts.TopLevelBuildings >= NextSlotAt(slots, rules))
+            {
+                slots++;
+            }
+
+            return slots;
         }
 
         /// <summary>Slots not used by a listing.</summary>
@@ -191,7 +204,6 @@ namespace FinanceOverhaul.Core
         /// <param name="boardHasRoom">The board is below its cap and pacing allows an IPO.</param>
         public static KindStatus Status(KindFacts facts, bool boardHasRoom, IpoRules rules)
         {
-            int every = SlotEvery(facts.Kind, rules);
             var status = new KindStatus
             {
                 Kind = facts.Kind,
@@ -208,8 +220,8 @@ namespace FinanceOverhaul.Core
                 return status;
             }
 
-            status.BarHave = Math.Max(0, facts.TopLevelBuildings) % every;
-            status.BarNeed = every;
+            status.BarHave = Math.Max(0, facts.TopLevelBuildings);
+            status.BarNeed = NextSlotAt(status.Slots, rules);
             status.State =
                 status.OpenSlots == 0 ? KindState.Full
                 : status.Candidates == 0 ? KindState.Waiting

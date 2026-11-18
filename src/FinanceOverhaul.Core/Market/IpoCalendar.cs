@@ -15,17 +15,11 @@ namespace FinanceOverhaul.Core
         /// <summary>Squares of a kind of business the city needs before that kind can list (its first slot).</summary>
         public int GateSquares = 200;
 
-        /// <summary>Top-level shops for each further commercial listing slot.</summary>
-        public int SlotEveryCommercial = 40;
-
-        /// <summary>Top-level offices for each further office listing slot.</summary>
-        public int SlotEveryOffice = 25;
-
-        /// <summary>Top-level industrial buildings for each further industry listing slot.</summary>
-        public int SlotEveryIndustry = 30;
-
-        /// <summary>Buildings of a specialisation for each further listing slot of it.</summary>
-        public int SlotEverySpecialised = 15;
+        /// <summary>
+        /// Top-level buildings of a kind at which its second slot comes; every doubling after
+        /// that adds another (10 → 20, 40, 80…), so slots grow slowly in a city of any size.
+        /// </summary>
+        public int SlotDoublingBase = 10;
 
         /// <summary>Days an open slot waits for its IPO on average (548 = a year and a half).</summary>
         public int SlotFillDays = 548;
@@ -39,11 +33,18 @@ namespace FinanceOverhaul.Core
         /// <summary>Days in a row a business must stay healthy to become a candidate.</summary>
         public int HealthyDays = 365;
 
-        /// <summary>Fewer jobs than this never lists (keeps corner shops out).</summary>
-        public int MinJobs = 20;
+        /// <summary>
+        /// A business must be among the larger employers of its kind in this city: in the top
+        /// this-many percent by jobs (33 = the top third). Relative, so it holds in any city and
+        /// for kinds whose buildings are all small (farming, oil).
+        /// </summary>
+        public int TopEmployersPercent = 33;
 
-        /// <summary>Land value at the building must be at least this.</summary>
-        public int LandValueFloor = 50;
+        /// <summary>
+        /// Land value at a commercial or office building must be at least this: 41, the game's
+        /// own threshold for a level-3 building. Not asked of industry, which lowers land value.
+        /// </summary>
+        public int LandValueFloor = 41;
 
         /// <summary>A business counts as fully staffed with at most this percent of its jobs unfilled.</summary>
         public int MaxVacancyPercent = 10;
@@ -116,6 +117,10 @@ namespace FinanceOverhaul.Core
         public bool FullyStaffed;
 
         public int Jobs;
+
+        /// <summary>The jobs a business of this kind needs today to count among its larger employers.</summary>
+        public int JobsFloor;
+
         public int LandValue;
     }
 
@@ -161,14 +166,21 @@ namespace FinanceOverhaul.Core
         private readonly Dictionary<BuildingKey, BusinessKind> kinds =
             new Dictionary<BuildingKey, BusinessKind>();
 
-        /// <summary>Healthy enough to count today: top level, staffed, no problems, big and valuable enough.</summary>
+        /// <summary>
+        /// Healthy enough to count today: top level, staffed, no problems, among the larger
+        /// employers of its kind, and (shops and offices) on
+        /// land that still supports its level.
+        /// </summary>
         public static bool Healthy(BusinessFacts facts, IpoRules rules)
         {
             return facts.TopLevel
                 && !facts.HasProblems
                 && facts.FullyStaffed
-                && facts.Jobs >= rules.MinJobs
-                && facts.LandValue >= rules.LandValueFloor;
+                && facts.Jobs >= facts.JobsFloor
+                && (
+                    !BusinessKinds.LandValueMatters(facts.Kind)
+                    || facts.LandValue >= rules.LandValueFloor
+                );
         }
 
         /// <summary>One business as the game shows it today. Call once per business, then <see cref="EndDay"/>.</summary>

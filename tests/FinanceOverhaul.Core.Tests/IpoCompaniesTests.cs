@@ -53,6 +53,42 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
+        public void TheJobsFloorIsTheTopThirdOfTheKindInAnyCity()
+        {
+            // Nine oil buildings, all small: the three largest (and any tied with them) count.
+            var oil = new List<int> { 3, 4, 4, 5, 6, 7, 8, 9, 9 };
+            Assert.Equal(8, BusinessKinds.JobsFloor(oil, 33));
+            // The same rule in a city of big offices.
+            var offices = new List<int> { 40, 80, 120, 200, 260, 300 };
+            Assert.Equal(260, BusinessKinds.JobsFloor(offices, 33));
+            // Ties with the last one in count too; one business is its own top; none gives 0.
+            Assert.Equal(5, BusinessKinds.JobsFloor(new List<int> { 5, 5, 5, 5 }, 33));
+            Assert.Equal(12, BusinessKinds.JobsFloor(new List<int> { 12 }, 33));
+            Assert.Equal(0, BusinessKinds.JobsFloor(new List<int>(), 33));
+            Assert.Equal(3, BusinessKinds.JobsFloor(oil, 100)); // everyone
+            // A larger share never raises the floor.
+            int last = int.MaxValue;
+            for (int percent = 1; percent <= 100; percent++)
+            {
+                int floor = BusinessKinds.JobsFloor(oil, percent);
+                Assert.True(floor <= last);
+                last = floor;
+            }
+        }
+
+        [Fact]
+        public void LandValueIsAskedOfShopsAndOfficesOnly()
+        {
+            Assert.True(BusinessKinds.LandValueMatters(BusinessKind.Commercial));
+            Assert.True(BusinessKinds.LandValueMatters(BusinessKind.Office));
+            Assert.True(BusinessKinds.LandValueMatters(BusinessKind.ItCluster));
+            Assert.True(BusinessKinds.LandValueMatters(BusinessKind.Tourism));
+            Assert.False(BusinessKinds.LandValueMatters(BusinessKind.Industry));
+            Assert.False(BusinessKinds.LandValueMatters(BusinessKind.Oil));
+            Assert.False(BusinessKinds.LandValueMatters(BusinessKind.Farming));
+        }
+
+        [Fact]
         public void HealthyDaysAndTheDiceSurviveTheSave()
         {
             var book = new CandidateBook();

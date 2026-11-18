@@ -33,8 +33,9 @@ namespace FinanceOverhaul
 
         /// <summary>
         /// Per kind, how many businesses failed each health condition in the last scan (a
-        /// business can fail several): not top level, a problem icon, understaffed, too few
-        /// jobs, land value too low; then how many passed all five. For tuning the rules.
+        /// business can fail several): not top level, a problem icon, understaffed, not among
+        /// the larger employers of its kind (with that kind's jobs floor), land value too low;
+        /// then how many passed all five. For tuning the rules.
         /// </summary>
         public static string LastHealthBreakdown { get; private set; }
 
@@ -99,9 +100,22 @@ namespace FinanceOverhaul
                     failed[kind] = new int[6];
                 }
 
+                // First pass: read every business. The jobs floor of a kind (its larger
+                // employers) is only known once all of that kind are read.
                 Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
                 ImmaterialResourceManager land = ImmaterialResourceManager.instance;
-                int businesses = 0;
+                var seen = new List<KeyValuePair<BuildingKey, BusinessFacts>>();
+                var jobsOfKind = new Dictionary<BusinessKind, List<int>>();
+                foreach (BusinessKind kind in Enum.GetValues(typeof(BusinessKind)))
+                {
+                    jobsOfKind[kind] = new List<int>();
+                }
+
+                const Building.Flags Gone =
+                    Building.Flags.Abandoned
+                    | Building.Flags.Collapsed
+                    | Building.Flags.BurnedDown
+                    | Building.Flags.Deleted;
                 for (int i = 1; i < buffer.Length; i++)
                 {
                     if ((buffer[i].m_flags & Building.Flags.Created) == 0)
@@ -126,7 +140,6 @@ namespace FinanceOverhaul
                         continue;
                     }
 
-                    businesses++;
                     int width = buffer[i].Width,
                         length = buffer[i].Length;
                     int level = buffer[i].m_level;
@@ -139,52 +152,62 @@ namespace FinanceOverhaul
                     }
 
                     totals[kind] = total;
-
-                    int level0,
-                        level1,
-                        level2,
-                        level3;
-                    ai.CalculateWorkplaceCount(
-                        (ItemClass.Level)level,
-                        new Randomizer(i),
-                        width,
-                        length,
-                        out level0,
-                        out level1,
-                        out level2,
-                        out level3
-                    );
+                    int jobs = Workplaces(ai, level, i, width, length);
+                    jobsOfKind[kind].Add(jobs);
                     int landValue;
                     land.CheckLocalResource(
                         ImmaterialResourceManager.Resource.LandValue,
                         buffer[i].m_position,
                         out landValue
                     );
-                    const Building.Flags Gone =
-                        Building.Flags.Abandoned
-                        | Building.Flags.Collapsed
-                        | Building.Flags.BurnedDown
-                        | Building.Flags.Deleted;
-                    var facts = new BusinessFacts
-                    {
-                        Kind = kind,
-                        TopLevel = top,
-                        HasProblems =
-                            (buffer[i].m_flags & Gone) != 0
-                            || buffer[i].m_problems.m_Problems1 != Notification.Problem1.None
-                            || buffer[i].m_problems.m_Problems2 != Notification.Problem2.None,
-                        FullyStaffed = buffer[i].m_allUnemployed <= rules.MaxVacancyPercent,
-                        Jobs = level0 + level1 + level2 + level3,
-                        LandValue = landValue,
-                    };
-                    int[] why = failed[kind];
+                    seen.Add(
+                        new KeyValuePair<BuildingKey, BusinessFacts>(
+                            new BuildingKey((ushort)i, buffer[i].m_buildIndex),
+                            new BusinessFacts
+                            {
+                                Kind = kind,
+                                TopLevel = top,
+                                HasProblems =
+                                    (buffer[i].m_flags & Gone) != 0
+                                    || buffer[i].m_problems.m_Problems1
+                                        != Notification.Problem1.None
+                                    || buffer[i].m_problems.m_Problems2
+                                        != Notification.Problem2.None,
+                                FullyStaffed = buffer[i].m_allUnemployed <= rules.MaxVacancyPercent,
+                                Jobs = jobs,
+                                LandValue = landValue,
+                            }
+                        )
+                    );
+                }
+
+                // Second pass: judge each business against its kind's floor.
+                var floors = new Dictionary<BusinessKind, int>();
+                foreach (BusinessKind kind in Enum.GetValues(typeof(BusinessKind)))
+                {
+                    floors[kind] = BusinessKinds.JobsFloor(
+                        jobsOfKind[kind],
+                        rules.TopEmployersPercent
+                    );
+                }
+
+                int businesses = seen.Count;
+                foreach (KeyValuePair<BuildingKey, BusinessFacts> one in seen)
+                {
+                    BusinessFacts facts = one.Value;
+                    facts.JobsFloor = floors[facts.Kind];
+                    int[] why = failed[facts.Kind];
                     why[0] += facts.TopLevel ? 0 : 1;
                     why[1] += facts.HasProblems ? 1 : 0;
                     why[2] += facts.FullyStaffed ? 0 : 1;
-                    why[3] += facts.Jobs >= rules.MinJobs ? 0 : 1;
-                    why[4] += facts.LandValue >= rules.LandValueFloor ? 0 : 1;
+                    why[3] += facts.Jobs >= facts.JobsFloor ? 0 : 1;
+                    why[4] +=
+                        !BusinessKinds.LandValueMatters(facts.Kind)
+                        || facts.LandValue >= rules.LandValueFloor
+                            ? 0
+                            : 1;
                     why[5] += CandidateBook.Healthy(facts, rules) ? 1 : 0;
-                    b.Observe(new BuildingKey((ushort)i, buffer[i].m_buildIndex), facts, rules);
+                    b.Observe(one.Key, facts, rules);
                 }
 
                 b.EndDay();
@@ -211,8 +234,11 @@ namespace FinanceOverhaul
                             .Append(why[1])
                             .Append(" understaffed=")
                             .Append(why[2])
-                            .Append(" fewJobs=")
+                            .Append(" smallEmployer=")
                             .Append(why[3])
+                            .Append(" (floor ")
+                            .Append(floors[kind])
+                            .Append(" jobs)")
                             .Append(" lowLand=")
                             .Append(why[4])
                             .Append(" healthy=")
@@ -226,6 +252,35 @@ namespace FinanceOverhaul
                 LastBusinesses = businesses;
                 LastScanMilliseconds = watch.Elapsed.TotalMilliseconds;
             }
+        }
+
+        /// <summary>
+        /// The building's jobs by the game's formula. The game works them out from the building
+        /// itself: the width and length passed in do not change the answer (checked in game).
+        /// </summary>
+        private static int Workplaces(
+            PrivateBuildingAI ai,
+            int level,
+            int seed,
+            int width,
+            int length
+        )
+        {
+            int level0,
+                level1,
+                level2,
+                level3;
+            ai.CalculateWorkplaceCount(
+                (ItemClass.Level)level,
+                new Randomizer(seed),
+                width,
+                length,
+                out level0,
+                out level1,
+                out level2,
+                out level3
+            );
+            return level0 + level1 + level2 + level3;
         }
 
         /// <summary>City save: writes the counts (a city never scanned writes nothing).</summary>

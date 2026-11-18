@@ -35,18 +35,48 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Theory]
-        [InlineData(BusinessKind.Office, 24, 1)]
-        [InlineData(BusinessKind.Office, 25, 2)]
-        [InlineData(BusinessKind.Office, 74, 3)]
-        [InlineData(BusinessKind.Commercial, 39, 1)]
-        [InlineData(BusinessKind.Commercial, 80, 3)]
-        [InlineData(BusinessKind.Industry, 30, 2)]
-        [InlineData(BusinessKind.ItCluster, 15, 2)]
-        [InlineData(BusinessKind.Oil, 44, 3)]
-        public void MoreTopLevelBuildingsEarnMoreSlots(BusinessKind kind, int topLevel, int slots)
+        [InlineData(0, 1)] // the gate alone
+        [InlineData(19, 1)]
+        [InlineData(20, 2)]
+        [InlineData(39, 2)]
+        [InlineData(40, 3)]
+        [InlineData(80, 4)]
+        [InlineData(160, 5)]
+        [InlineData(1279, 7)]
+        [InlineData(1280, 8)]
+        [InlineData(1_000_000, 17)] // a city of any size stays in hand
+        public void EachDoublingOfTopLevelBuildingsEarnsASlot(int topLevel, int slots)
         {
             var rules = new IpoRules();
-            Assert.Equal(slots, IpoBoard.Slots(Kind(kind, 500, topLevel, 3), rules));
+            foreach (
+                BusinessKind kind in new[]
+                {
+                    BusinessKind.Office,
+                    BusinessKind.Commercial,
+                    BusinessKind.Oil,
+                }
+            )
+            {
+                Assert.Equal(slots, IpoBoard.Slots(Kind(kind, 500, topLevel, 3), rules));
+            }
+        }
+
+        [Fact]
+        public void TheNextSlotIsAlwaysTwiceAsFarAsTheLast()
+        {
+            var rules = new IpoRules();
+            Assert.Equal(20, IpoBoard.NextSlotAt(1, rules));
+            Assert.Equal(40, IpoBoard.NextSlotAt(2, rules));
+            Assert.Equal(80, IpoBoard.NextSlotAt(3, rules));
+            Assert.Equal(60, IpoBoard.NextSlotAt(2, new IpoRules { SlotDoublingBase = 15 }));
+            // More buildings never lose a slot.
+            int last = 0;
+            for (int top = 0; top < 5000; top++)
+            {
+                int slots = IpoBoard.Slots(Kind(BusinessKind.Commercial, 500, top, 1), rules);
+                Assert.True(slots >= last);
+                last = slots;
+            }
         }
 
         [Fact]
@@ -112,7 +142,7 @@ namespace FinanceOverhaul.Core.Tests
             Assert.Equal(1, open.OpenSlots);
             Assert.Equal(14, open.Candidates);
             Assert.Equal(6, open.BarHave); // towards the next slot
-            Assert.Equal(15, open.BarNeed);
+            Assert.Equal(20, open.BarNeed);
 
             KindStatus waiting = IpoBoard.Status(
                 Kind(BusinessKind.Leisure, 400, 6, 0),
@@ -122,14 +152,14 @@ namespace FinanceOverhaul.Core.Tests
             Assert.Equal(KindState.Waiting, waiting.State);
 
             KindStatus full = IpoBoard.Status(
-                Kind(BusinessKind.Commercial, 900, 46, 8, 2),
+                Kind(BusinessKind.Commercial, 900, 46, 8, 3),
                 true,
                 rules
             );
             Assert.Equal(KindState.Full, full.State);
-            Assert.Equal(2, full.Slots);
-            Assert.Equal(6, full.BarHave);
-            Assert.Equal(40, full.BarNeed);
+            Assert.Equal(3, full.Slots);
+            Assert.Equal(46, full.BarHave);
+            Assert.Equal(80, full.BarNeed);
 
             KindStatus paused = IpoBoard.Status(
                 Kind(BusinessKind.Industry, 900, 9, 6),
@@ -260,8 +290,8 @@ namespace FinanceOverhaul.Core.Tests
         public void TheBoardsRoomLimitsHowManySlotsCanFill()
         {
             var rules = new IpoRules();
-            var kinds = new List<KindFacts> { Kind(BusinessKind.Office, 500, 250, 40) }; // 11 slots
-            Assert.Equal(11, IpoBoard.FillableSlots(kinds, 0, 6, rules));
+            var kinds = new List<KindFacts> { Kind(BusinessKind.Office, 500, 250, 40) }; // 5 slots
+            Assert.Equal(5, IpoBoard.FillableSlots(kinds, 0, 6, rules));
             Assert.Equal(2, IpoBoard.FillableSlots(kinds, 0, 1, rules)); // one tile: two listings
             Assert.Equal(1, IpoBoard.FillableSlots(kinds, 5, 3, rules)); // 6 allowed, 5 used
         }
@@ -276,7 +306,13 @@ namespace FinanceOverhaul.Core.Tests
             int listed = 0;
             for (int today = 0; today < 365 * 12 && listed < 12; today += 30)
             {
-                var kinds = new List<KindFacts> { Kind(BusinessKind.Office, 900, 300, 60, listed) };
+                // Three large kinds with five slots each: more open slots than the board holds.
+                var kinds = new List<KindFacts>
+                {
+                    Kind(BusinessKind.Office, 900, 300, 60, 0),
+                    Kind(BusinessKind.Commercial, 900, 300, 60, 0),
+                    Kind(BusinessKind.Oil, 900, 300, 60, 0),
+                };
                 IpoPick pick = IpoBoard.DrawPeriod(
                     kinds,
                     listed,

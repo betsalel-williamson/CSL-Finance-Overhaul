@@ -70,6 +70,47 @@ namespace FinanceOverhaul.Core
                 || kind == BusinessKind.Industry;
         }
 
+        /// <summary>
+        /// Land value says something about shops and offices (the game levels them by it); an
+        /// industrial area lowers land value by nature, so it is not asked of industry.
+        /// </summary>
+        public static bool LandValueMatters(BusinessKind kind)
+        {
+            switch (kind)
+            {
+                case BusinessKind.Commercial:
+                case BusinessKind.Leisure:
+                case BusinessKind.Tourism:
+                case BusinessKind.Organic:
+                case BusinessKind.Office:
+                case BusinessKind.ItCluster:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// The jobs a business needs to be among the larger employers of its kind: the job
+        /// count of the business that closes the top <paramref name="topPercent"/> percent
+        /// (ties with it count too). 0 for an empty list.
+        /// </summary>
+        /// <param name="jobsOfKind">The jobs of every business of the kind in the city.</param>
+        public static int JobsFloor(IList<int> jobsOfKind, int topPercent)
+        {
+            if (jobsOfKind == null || jobsOfKind.Count == 0)
+            {
+                return 0;
+            }
+
+            var sorted = new List<int>(jobsOfKind);
+            sorted.Sort();
+            sorted.Reverse();
+            int percent = Math.Max(1, Math.Min(100, topPercent));
+            int keep = (sorted.Count * percent + 99) / 100; // rounded up: at least one
+            return sorted[Math.Max(1, keep) - 1];
+        }
+
         /// <summary>At the top level of its kind.</summary>
         /// <param name="levelIndex">The building's level, 0-based as the game stores it.</param>
         public static bool IsTopLevel(BusinessKind kind, int levelIndex)
