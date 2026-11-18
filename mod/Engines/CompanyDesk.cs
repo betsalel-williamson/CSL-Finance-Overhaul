@@ -319,8 +319,33 @@ namespace FinanceOverhaul
             return income;
         }
 
-        /// <summary>The formula's income of every zoned business of a service, summed.</summary>
-        public static long ZoneFormulaIncome(ItemClass.Service service)
+        /// <summary>
+        /// A business's weight when its zone's income is shared out: the game formula's income
+        /// times its jobs, so a larger business takes a larger share (the formula alone hardly
+        /// differs between businesses of one zone).
+        /// </summary>
+        public static long EarningsWeight(ushort building)
+        {
+            Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
+            BuildingInfo info = buffer[building].Info;
+            PrivateBuildingAI ai = info == null ? null : info.m_buildingAI as PrivateBuildingAI;
+            if (ai == null)
+            {
+                return 0;
+            }
+
+            int jobs = Workplaces(
+                ai,
+                buffer[building].m_level,
+                building,
+                buffer[building].Width,
+                buffer[building].Length
+            );
+            return (long)IncomePerStep(building) * Math.Max(1, jobs);
+        }
+
+        /// <summary>The weights of every zoned business of a service, summed.</summary>
+        public static long ZoneEarningsWeight(ItemClass.Service service)
         {
             Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
             long total = 0;
@@ -335,7 +360,7 @@ namespace FinanceOverhaul
                     && info.m_buildingAI is PrivateBuildingAI
                 )
                 {
-                    total += IncomePerStep((ushort)i);
+                    total += EarningsWeight((ushort)i);
                 }
             }
 
@@ -343,8 +368,8 @@ namespace FinanceOverhaul
         }
 
         /// <summary>
-        /// What a business earns in a game year, in cents: its share (by the game's formula) of
-        /// the weekly income the game reports for its zone, as the income that tax was levied
+        /// What a business earns in a game year, in cents: its share (by the game's formula and
+        /// its jobs) of the weekly income the game reports for its zone, as the income that tax was levied
         /// on. 0 when the zone brings in nothing (untaxed, or no income yet).
         /// </summary>
         public static long AnnualEarningsCents(ushort building)
@@ -366,8 +391,8 @@ namespace FinanceOverhaul
                 out weeklyExpenses
             );
             return IpoEarnings.AnnualCents(
-                IncomePerStep(building),
-                ZoneFormulaIncome(info.m_class.m_service),
+                EarningsWeight(building),
+                ZoneEarningsWeight(info.m_class.m_service),
                 weeklyIncome,
                 em.GetTaxRate(info.m_class)
             );

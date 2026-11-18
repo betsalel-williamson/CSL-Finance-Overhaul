@@ -196,16 +196,18 @@ after measuring it):
   5 to 16 times what the game reports (commercial 11.7×, office 5.1×, industry 16.4× in the test
   city), because the amount really booked depends on each building's activity, and the formula's
   output is already multiplied by the production rate.
-- **So the formula only shares out what the game reports:** a business is credited with its share,
-  by the formula, of its zone's real weekly income (`EconomyManager.GetIncomeAndExpenses` for
-  commercial, office or industrial), and its earnings are the income that tax was levied on: weekly
-  zone income × share × 52 × 100 ÷ its tax rate (`IpoEarnings.AnnualCents`). The shares add back up
-  to the game's figure (checked in game, scenario 65).
-- **Seen in the test city (one city):** offering prices of ₡40 to ₡52 for shops, ₡141 to ₡168 for
-  offices and ₡8 to ₡16 for industry; none at the ₡1 floor or the ₡100,000 ceiling. The range inside
-  a zone is narrow: the formula's income hardly differs between businesses of one zone, so a
-  company's price says more about its zone than about the business. Open: weight the share by jobs
-  as well, so a larger business lists higher.
+- **So the formula only shares out what the game reports:** a business is credited with its share of
+  its zone's real weekly income (`EconomyManager.GetIncomeAndExpenses` for commercial, office or
+  industrial), and its earnings are the income that tax was levied on: weekly zone income × share ×
+  52 × 100 ÷ its tax rate (`IpoEarnings.AnnualCents`). The shares add back up to the game's figure
+  (checked in game, scenario 65).
+- **The share is by weight: formula income × jobs** (decided 2026-11-18). By the formula alone,
+  prices inside a zone were nearly the same (shops ₡40 to ₡52, offices ₡141 to ₡168, industry ₡8 to
+  ₡16 in the test city), so a company's price said more about its zone than about the business.
+  Weighted by jobs, a larger business lists higher: shops ₡1 to ₡435 (middle ₡23), offices ₡4 to
+  ₡779 (middle ₡118), industry ₡1 to ₡199 (middle ₡7) in the same city. The smallest businesses sit
+  at the ₡1 floor (92 shops, 116 industrial buildings), but those are not candidates: a candidate is
+  among the larger employers of its kind. One city; a sample of one.
 - **Untaxed zone:** with a tax rate of 0 the zone reports no income, the earnings are 0 and the
   company lists at the ₡1 floor.
 
@@ -463,7 +465,8 @@ Prices after the first trading day do not move yet (drift and swing are not buil
 ### Earnings
 
 ```text
-share           = the game formula's income for the business ÷ the same summed over its zone
+weight          = the game formula's income for the business × its jobs
+share           = its weight ÷ the weights of every business of its zone, summed
                   (zone = all commercial, all office or all industrial businesses)
 tax a year      = the zone's weekly income as the game reports it × share × 52
 annual earnings = tax a year × 100 ÷ the business's tax rate (9 = 9%)
@@ -639,8 +642,8 @@ settings.
 
 1. Decided: buy-outs are a regular rare event for any company listed a year or more, not a rule that
    only applies at the cap.
-2. Decided: earnings are a share, by the game's formula, of the zone's reported income. Open:
-   whether to weight that share by jobs as well.
+2. Decided: earnings are a share of the zone's reported income, by the game's formula weighted by
+   jobs.
 3. Whether the city may sell IPO shares during the offering window.
 4. The bell: confirm by ear that `stock_exchange_levelup` suits; if not, pick another shipped clip
    or bundle a bell with the mod (needs a licensed recording). Confirm in game how the mod reaches

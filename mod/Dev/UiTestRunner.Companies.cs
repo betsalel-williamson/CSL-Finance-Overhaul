@@ -155,7 +155,7 @@ namespace FinanceOverhaul
                             out weeklyIncome,
                             out weeklyExpenses
                         );
-                        long zone = CompanyDesk.ZoneFormulaIncome(service);
+                        long zone = CompanyDesk.ZoneEarningsWeight(service);
                         var prices = new System.Collections.Generic.List<long>();
                         long taxBack = 0;
                         for (int i = 1; i < buffer.Length; i++)
@@ -174,7 +174,7 @@ namespace FinanceOverhaul
 
                             int rate = em.GetTaxRate(info.m_class);
                             long earnings = IpoEarnings.AnnualCents(
-                                CompanyDesk.IncomePerStep((ushort)i),
+                                CompanyDesk.EarningsWeight((ushort)i),
                                 zone,
                                 weeklyIncome,
                                 rate
