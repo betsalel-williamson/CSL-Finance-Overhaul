@@ -212,6 +212,18 @@ namespace FinanceOverhaul
             }
         }
 
+        /// <summary>As the View headquarters button; false when no company is shown.</summary>
+        public bool View()
+        {
+            if (panel == null || CompanyDesk.CompanyOf(shownCompany) == null)
+            {
+                return false;
+            }
+
+            OnView();
+            return true;
+        }
+
         private void OnView()
         {
             LocalCompany company = CompanyDesk.CompanyOf(shownCompany);
@@ -225,11 +237,20 @@ namespace FinanceOverhaul
             Building home = BuildingManager.instance.m_buildings.m_buffer[company.Home.Id];
             if (home.m_buildIndex == company.Home.BuildIndex)
             {
-                camera.SetTarget(
-                    new InstanceID { Building = company.Home.Id },
-                    home.m_position,
-                    true
+                var id = new InstanceID { Building = company.Home.Id };
+                camera.SetTarget(id, home.m_position, true);
+                // Near enough to see the building whole, whatever its size.
+                Vector3 size = home.Info == null ? Vector3.zero : home.Info.m_size;
+                camera.m_targetSize = BuildingFraming.Distance(
+                    home.Width * 8f,
+                    home.Length * 8f,
+                    size.y
                 );
+                camera.m_targetAngle.y = BuildingFraming.Pitch(size.y);
+                IpoFireworks.Over(company.Home.Id, company.Home.BuildIndex);
+                // And the building's own info panel, as a click on it would open.
+                DefaultTool.OpenWorldInfoPanel(id, home.m_position);
+                ModLog.Info("ipo dialog: showing headquarters building " + company.Home.Id);
             }
         }
 

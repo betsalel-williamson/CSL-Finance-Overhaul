@@ -142,11 +142,25 @@ namespace FinanceOverhaul
                 }
             }
 
-            if (ours.Count == 0)
+            // The city's own companies lead the list, the newest first: a company that has just
+            // gone public is the first card, not one to hunt for among the game's stocks.
+            var companies = new List<UIComponent>();
+            for (int i = theirs.Count - 1; i >= 0; i--)
+            {
+                if (CompanyOf(theirs[i]) >= 0)
+                {
+                    companies.Add(theirs[i]);
+                    theirs.RemoveAt(i);
+                }
+            }
+
+            if (ours.Count == 0 && companies.Count == 0)
             {
                 return;
             }
 
+            companies.Sort((a, b) => CompanyOf(b).CompareTo(CompanyOf(a)));
+            theirs.InsertRange(0, companies);
             ours.Sort((a, b) => Rank(a).CompareTo(Rank(b)));
             int z = 0;
             foreach (UIComponent c in theirs)
@@ -174,6 +188,22 @@ namespace FinanceOverhaul
         public static void Arrange(EconomyPanel panel)
         {
             Arrange(panel == null ? null : panel.component.Find("InvestmentsScrollablePanel"));
+        }
+
+        /// <summary>The company a game stock card is for, or -1 (one of the game's stocks).</summary>
+        private static int CompanyOf(UIComponent card)
+        {
+            if (!(card.objectUserData is byte))
+            {
+                return -1;
+            }
+
+            Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
+            InvestmentInfo info = buffer[(byte)card.objectUserData].Info;
+            int company;
+            return info != null && CompanyListing.IsCompany(info.m_investmentAI, out company)
+                ? company
+                : -1;
         }
 
         private static bool IsOurs(UIComponent c)

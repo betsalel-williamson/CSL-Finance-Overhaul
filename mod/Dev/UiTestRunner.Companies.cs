@@ -35,6 +35,16 @@ namespace FinanceOverhaul
                         ctx.LocalIposBefore = Mod.Settings.LocalIposEnabled;
                     }
 
+                    if (a == "keep")
+                    {
+                        // local-ipos keep — on, saved, and left on when the scenario ends (for
+                        // switching the feature on in a running test city).
+                        Mod.Settings.LocalIposEnabled = true;
+                        ctx.LocalIposBefore = true;
+                        Mod.SaveSettings();
+                        break;
+                    }
+
                     Mod.Settings.LocalIposEnabled =
                         a == "restore" ? ctx.LocalIposBefore.Value : a == "on";
                     break;
@@ -248,6 +258,11 @@ namespace FinanceOverhaul
                         {
                             r.Error = "no candidate to list (ipo-healthy-days and ipo-scan first)";
                         }
+                        else if (a == "keep")
+                        {
+                            // ipo-list-now keep — the company stays listed after the scenario.
+                            ModLog.Info("uitest: kept company " + listed.Id + " " + listed.Name);
+                        }
                         else
                         {
                             ctx.TestCompanies.Add(
@@ -333,6 +348,97 @@ namespace FinanceOverhaul
                         r.Error = "the game still has a stock for the company";
                     }
 
+                    break;
+                }
+                case "expect-company-first":
+                {
+                    // expect-company-first — the first card of Purchasable Investments is the
+                    // scenario's newest company.
+                    UIComponent list = FindControl("InvestmentsScrollablePanel");
+                    UIComponent first = null;
+                    foreach (
+                        UIComponent c in list == null
+                            ? new List<UIComponent>()
+                            : new List<UIComponent>(list.components)
+                    )
+                    {
+                        if (c != null && c.isVisible && (first == null || c.zOrder < first.zOrder))
+                        {
+                            first = c;
+                        }
+                    }
+
+                    UILabel title = first == null ? null : first.Find<UILabel>("InvestmentName");
+                    LocalCompany newest =
+                        ctx.TestCompanies.Count == 0
+                            ? null
+                            : CompanyDesk.CompanyOf(
+                                ctx.TestCompanies[ctx.TestCompanies.Count - 1].Id
+                            );
+                    ModLog.Info("uitest: first card " + (title == null ? "(none)" : title.text));
+                    if (newest == null)
+                    {
+                        r.Error = "ipo-list-now first";
+                    }
+                    else if (title == null || title.text != newest.Name)
+                    {
+                        r.Error = "the first card is not " + newest.Name;
+                    }
+
+                    break;
+                }
+                case "ipo-view":
+                    // ipo-view — presses the dialog's View headquarters button.
+                    if (IpoDialog.Current == null || !IpoDialog.Current.View())
+                    {
+                        r.Error = "no IPO dialog is open";
+                    }
+
+                    break;
+                case "expect-building-panel":
+                {
+                    // expect-building-panel — a building's info panel is open and the camera
+                    // stands between the nearest and farthest framing distances.
+                    UIComponent info = UIView
+                        .GetAView()
+                        .FindUIComponent("(Library) ZonedBuildingWorldInfoPanel");
+                    CameraController cam = ToolsModifierControl.cameraController;
+                    ModLog.Info(
+                        "uitest: building panel "
+                            + (info != null && info.isVisible)
+                            + " camera size "
+                            + cam.m_targetSize.ToString("0")
+                            + " pitch "
+                            + cam.m_targetAngle.y.ToString("0")
+                    );
+                    if (info == null || !info.isVisible)
+                    {
+                        r.Error = "no building info panel is open";
+                    }
+                    else if (
+                        cam.m_targetSize < BuildingFraming.Nearest
+                        || cam.m_targetSize > BuildingFraming.Farthest
+                    )
+                    {
+                        r.Error =
+                            "camera size " + cam.m_targetSize + " is outside the framing range";
+                    }
+
+                    break;
+                }
+                case "expect-fireworks":
+                {
+                    // expect-fireworks — firework bursts were launched since the last check.
+                    int now = IpoFireworks.Launched;
+                    ModLog.Info(
+                        "uitest: fireworks launched " + now + " (was " + ctx.Fireworks + ")"
+                    );
+                    if (now <= ctx.Fireworks)
+                    {
+                        r.Error = "no fireworks were launched";
+                    }
+
+                    ctx.Fireworks = now;
                     break;
                 }
                 case "ipo-dialog":

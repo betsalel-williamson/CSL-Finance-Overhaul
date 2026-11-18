@@ -300,7 +300,7 @@ the offering window opens and the player can still act on it.
 | Offering window    | "The city can buy at the offering price for 7 days", with the last day                                                                                          | Offering window option                       |
 | What the city gets | Up to 1,000 shares at the offering price (a 10% stake, with what that costs); the price moves freely from the first trading day; the building is now Historical | Steps 2 to 4 of [The IPO](#the-ipo)          |
 | Buy                | "Buy at the offering price": closes the dialog and opens the game's buy dialog for the new listing                                                              | The listing is a game investment slot        |
-| View headquarters  | Closes the dialog and moves the camera to the building                                                                                                          | Same idea as the report's view-campus button |
+| View headquarters  | Closes the dialog, moves the camera to the building, opens its info panel and sets off fireworks over it                                                        | Same idea as the report's view-campus button |
 | Don't show again   | Checkbox: "Don't show this for future IPOs"                                                                                                                     | [Hiding the dialog](#hiding-the-dialog)      |
 | Close              | × in the header; Esc and Return also close                                                                                                                      | Same keys as the report                      |
 
@@ -648,6 +648,19 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
   registry keeps (`holding|…` lines, refreshed whenever the city saves). A company stock the save
   does not know is cleared. A listed company keeps its stock when the flag is switched off: the flag
   gates the daily scan and new IPOs.
+- **Finding the company (built):** in Purchasable Investments the city's own companies are the first
+  cards, the newest first (`CompanyCards.Arrange`): a company that has just gone public is not one
+  to hunt for among the game's stocks. The dialog's View headquarters moves the camera to the
+  building at a distance that shows it whole (`BuildingFraming`: three times the lot's larger side
+  or twice its height, between 180 and 520, far enough for the fireworks to stay in view) and opens
+  the building's own info panel, as a click on it would.
+- **Fireworks (built, `IpoFireworks`):** the game's own event fireworks ("Event Firework Particles
+  1" to "3", else "FireworksComplexIngame") go off from the headquarters' roof when the company is
+  announced, on its first trading day, and when the player views the headquarters: eight bursts, 0.8
+  seconds apart. They wait while the game is paused (the dialog pauses it). The effects are
+  dispatched without a building instance, because the game only draws them for a building holding an
+  event. A city without these effects loaded shows none. Scenario 70 checks the first card, the
+  building panel, the camera distance and that bursts were launched.
 - **Game UI scenario 66** lists the first candidate, checks the game has a stock for it at the
   offering price, closes the offering window, has it bought out and checks the stock is gone, then
   removes everything and puts the building's Historical flag back.

@@ -1,0 +1,31 @@
+# Local IPOs: finding a company that has just gone public. Its stock is the first card of
+# Purchasable Investments; the dialog's View headquarters opens the building's own info panel
+# with the camera near enough to see it whole; and fireworks go off over the building once the
+# game runs again. Everything listed is removed in cleanup.
+name local ipos: a new company leads the list; View opens its building with fireworks
+local-ipos on
+ipo-healthy-days 1
+ipo-scan
+ipo-dialog on
+ipo-list-now
+wait 1
+expect-visible FinanceOverhaulIpoDialog
+ipo-view
+wait 1
+expect-hidden FinanceOverhaulIpoDialog
+expect-building-panel
+expect-log ipo dialog: showing headquarters building
+pause off
+wait 3
+expect-fireworks
+expect-log ipo fireworks: over building
+capture ipo-headquarters
+show-economy
+wait 1.5
+expect-company-first
+capture ipo-company-first
+cleanup:
+close-economy
+ipo-dialog close
+ipo-remove-test
+local-ipos restore

@@ -212,6 +212,7 @@ namespace FinanceOverhaul
                         )
                     );
                     IpoDialog.Announce(c.Id);
+                    IpoFireworks.Over(c.Home.Id, c.Home.BuildIndex);
                     break;
                 case IpoEventKind.Cancelled:
                     ModLog.Info(
@@ -229,6 +230,7 @@ namespace FinanceOverhaul
                             + "% on the offering price)"
                     );
                     Chirp(NoticeText.IpoFirstDay(c.Name, c.OfferPriceCents, c.PriceCents));
+                    IpoFireworks.Over(c.Home.Id, c.Home.BuildIndex);
                     break;
                 case IpoEventKind.BoughtOut:
                     uint sold;

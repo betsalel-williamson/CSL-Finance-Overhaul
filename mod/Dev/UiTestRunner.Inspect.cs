@@ -369,6 +369,29 @@ namespace FinanceOverhaul
                     c.opacity = opacity;
                     break;
                 }
+                case "log-effects":
+                {
+                    // log-effects PATTERN — every effect the game has loaded whose name
+                    // contains PATTERN (any case), with its type.
+                    int found = 0;
+                    foreach (EffectInfo e in Resources.FindObjectsOfTypeAll<EffectInfo>())
+                    {
+                        if (
+                            e != null
+                            && (
+                                a == null
+                                || e.name.ToLowerInvariant().Contains(a.ToLowerInvariant())
+                            )
+                        )
+                        {
+                            found++;
+                            ModLog.Info("uitest: effect " + e.name + " <" + e.GetType().Name + ">");
+                        }
+                    }
+
+                    ModLog.Info("uitest: " + found + " effect(s) match " + a);
+                    break;
+                }
                 case "expect-wheel-step":
                 {
                     // expect-wheel-step LIST MIN — the pixels the mouse wheel moves a scrolling

@@ -101,6 +101,7 @@ namespace FinanceOverhaul
 
             /// <summary>The player's Local IPOs flag, kept while a scenario switches it.</summary>
             public bool? LocalIposBefore;
+            public int Fireworks = IpoFireworks.Launched;
 
             /// <summary>Cents a scenario took out of the city's cash with cash-set, to put back.</summary>
             public long CashTaken;
