@@ -68,7 +68,9 @@ namespace FinanceOverhaul
                     bool paused = sim.SimulationPaused;
                     sim.SimulationPaused = true;
                     yield return new WaitForSeconds(0.5f); // let a running step finish
+                    CompanyDesk.MeasureJobSizes = true;
                     CompanyDesk.Scan();
+                    CompanyDesk.MeasureJobSizes = false;
                     sim.SimulationPaused = paused;
                     IpoRules rules = CompanyDesk.Rules ?? new IpoRules();
                     int candidates = 0;
@@ -118,6 +120,7 @@ namespace FinanceOverhaul
                         .Append(city.m_industrialData.m_finalLevel3);
                     ModLog.Info("uitest: ipo game tallies (count/area):" + game);
                     ModLog.Info("uitest: ipo health:" + CompanyDesk.LastHealthBreakdown);
+                    ModLog.Info("uitest: ipo jobs:" + CompanyDesk.LastJobSizes);
                     ModLog.Info(
                         "uitest: ipo scanned "
                             + CompanyDesk.LastBusinesses
@@ -384,6 +387,21 @@ namespace FinanceOverhaul
                     else if (title == null || title.text != newest.Name)
                     {
                         r.Error = "the first card is not " + newest.Name;
+                    }
+                    else
+                    {
+                        // Its icon is a coin with the icon of its kind of business (or its
+                        // symbol where the game has no such icon), not the stack of money.
+                        UISprite icon = first.Find<UISprite>("InvestmentIcon");
+                        UIComponent glyph = icon == null ? null : icon.Find(CoinIcons.GlyphName);
+                        UIComponent letters = icon == null ? null : icon.Find(CoinIcons.SymbolName);
+                        bool drawn =
+                            (glyph != null && glyph.isVisible)
+                            || (letters != null && letters.isVisible);
+                        if (icon == null || icon.spriteName != CoinIcons.SpriteName || !drawn)
+                        {
+                            r.Error = "the first card's icon is not the company's coin";
+                        }
                     }
 
                     break;

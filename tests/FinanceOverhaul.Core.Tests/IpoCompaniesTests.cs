@@ -53,6 +53,32 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
+        public void AZonedFarmForestOilOrOrePlotNeedsManyWorkersToList()
+        {
+            var rules = new IpoRules();
+            var sheds = new List<int> { 1, 1, 2, 3, 5, 8 };
+            // A shed with a handful of workers is not a company, even when it is the largest.
+            Assert.Equal(30, BusinessKinds.JobsFloor(BusinessKind.Farming, sheds, rules));
+            Assert.Equal(30, BusinessKinds.JobsFloor(BusinessKind.Oil, sheds, rules));
+            // Large operations: the larger employers among them, as for any kind.
+            var large = new List<int> { 40, 60, 120 };
+            Assert.Equal(120, BusinessKinds.JobsFloor(BusinessKind.Forestry, large, rules));
+            // Shops, offices and generic industry: the larger employers, but never a handful
+            // of workers (ten at least), so a one-worker business is never queued.
+            Assert.Equal(10, BusinessKinds.JobsFloor(BusinessKind.Commercial, sheds, rules));
+            Assert.Equal(10, BusinessKinds.JobsFloor(BusinessKind.Industry, sheds, rules));
+            Assert.Equal(
+                10,
+                BusinessKinds.JobsFloor(BusinessKind.Commercial, new List<int> { 1, 1, 1 }, rules)
+            );
+            Assert.Equal(
+                164,
+                BusinessKinds.JobsFloor(BusinessKind.Office, new List<int> { 6, 130, 164 }, rules)
+            );
+            Assert.False(BusinessKinds.IsSpecialisedIndustry(BusinessKind.Office));
+        }
+
+        [Fact]
         public void TheJobsFloorIsTheTopThirdOfTheKindInAnyCity()
         {
             // Nine oil buildings, all small: the three largest (and any tied with them) count.

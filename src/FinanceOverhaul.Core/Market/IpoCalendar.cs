@@ -34,6 +34,22 @@ namespace FinanceOverhaul.Core
         public int HealthyDays = 365;
 
         /// <summary>
+        /// Jobs a zoned farming, forestry, oil or ore business needs before it can go public,
+        /// whatever its neighbours have. A zoned plot of specialised industry is a shed with
+        /// a handful of workers; a company on the Stock Exchange is a large operation. (The
+        /// industry areas' main buildings and unique factories are the natural companies of
+        /// these kinds, and are not read yet.)
+        /// </summary>
+        public int SpecialisedMinJobs = 30;
+
+        /// <summary>
+        /// Jobs any business needs before it can go public, whatever its kind and whatever its
+        /// neighbours have: a one-worker shop or workshop is never a listed company, even in a
+        /// city where it is among the larger of its kind.
+        /// </summary>
+        public int MinJobs = 10;
+
+        /// <summary>
         /// Healthy days a business loses for a day it is not healthy (staffing swings from day
         /// to day; a single bad day must not cost a whole year). At 4, a business that is
         /// healthy four days out of five holds its count; one that is healthy less often

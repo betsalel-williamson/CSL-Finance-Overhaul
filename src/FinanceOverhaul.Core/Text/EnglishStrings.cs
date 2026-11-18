@@ -342,6 +342,10 @@ namespace FinanceOverhaul.Core
             { "ipo.card.candidates.other", "{0} candidates" },
             { "ipo.card.note.open", "A listing is likely within one to two years." },
             { "ipo.card.note.waiting", "No business has been healthy long enough yet." },
+            {
+                "ipo.card.note.large",
+                "Only a large operation lists: a business with at least {0} jobs, steady for a year."
+            },
             { "ipo.card.note.pacing", "Next listing possible from {0}." },
             { "ipo.card.note.boardFull", "The local board is full ({0} of {1})." },
             { "ipo.card.bar.unlock", "To unlock" },

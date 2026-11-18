@@ -111,6 +111,32 @@ namespace FinanceOverhaul.Core
             return sorted[Math.Max(1, keep) - 1];
         }
 
+        /// <summary>Zoned specialised industry: farming, forestry, oil and ore plots.</summary>
+        public static bool IsSpecialisedIndustry(BusinessKind kind)
+        {
+            switch (kind)
+            {
+                case BusinessKind.Farming:
+                case BusinessKind.Forestry:
+                case BusinessKind.Oil:
+                case BusinessKind.Ore:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// The jobs floor of a kind in this city: the larger employers of the kind, never fewer
+        /// than <see cref="IpoRules.MinJobs"/>, and for specialised industry never fewer than
+        /// <see cref="IpoRules.SpecialisedMinJobs"/>.
+        /// </summary>
+        public static int JobsFloor(BusinessKind kind, IList<int> jobsOfKind, IpoRules rules)
+        {
+            int floor = Math.Max(JobsFloor(jobsOfKind, rules.TopEmployersPercent), rules.MinJobs);
+            return IsSpecialisedIndustry(kind) ? Math.Max(floor, rules.SpecialisedMinJobs) : floor;
+        }
+
         /// <summary>At the top level of its kind.</summary>
         /// <param name="levelIndex">The building's level, 0-based as the game stores it.</param>
         public static bool IsTopLevel(BusinessKind kind, int levelIndex)

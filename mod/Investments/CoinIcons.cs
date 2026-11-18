@@ -94,7 +94,17 @@ namespace FinanceOverhaul
         private static bool ShowGlyph(UISprite coin, BusinessKind kind)
         {
             UITextureAtlas game = UIView.GetAView().defaultAtlas;
-            foreach (string name in GlyphsFor(kind))
+            var names = new System.Collections.Generic.List<string>();
+            foreach (string plain in GlyphsFor(kind))
+            {
+                // The game keeps its zone icons in button states: the building panel's own
+                // title icon is the "Hovered" one.
+                names.Add(plain);
+                names.Add(plain + "Hovered"); // not shown: a game sprite name
+                names.Add(plain + "Focused"); // not shown: a game sprite name
+            }
+
+            foreach (string name in names)
             {
                 UITextureAtlas.SpriteInfo info = game[name];
                 if (info == null)
@@ -125,6 +135,9 @@ namespace FinanceOverhaul
                 return true;
             }
 
+            ModLog.Info(
+                "coin icons: the game has no icon for " + kind + "; its coin shows the symbol"
+            );
             return false;
         }
 

@@ -113,14 +113,26 @@ namespace FinanceOverhaul.Core
         /// The second line: what happens next. Empty while locked or full (the bar says it).
         /// </summary>
         /// <param name="nextAllowedDate">The day pacing allows another IPO, formatted by the host.</param>
-        public static string Note(KindStatus status, BoardView board, string nextAllowedDate)
+        /// <param name="rules">For the jobs a specialised-industry business needs (null: the defaults).</param>
+        public static string Note(
+            KindStatus status,
+            BoardView board,
+            string nextAllowedDate,
+            IpoRules rules = null
+        )
         {
             switch (status.State)
             {
                 case KindState.Open:
                     return Strings.Get("ipo.card.note.open");
                 case KindState.Waiting:
-                    return Strings.Get("ipo.card.note.waiting");
+                    // Farm, forest, oil and ore plots are small: say what would list.
+                    return BusinessKinds.IsSpecialisedIndustry(status.Kind)
+                        ? Strings.Format(
+                            "ipo.card.note.large",
+                            Number((rules ?? new IpoRules()).SpecialisedMinJobs)
+                        )
+                        : Strings.Get("ipo.card.note.waiting");
                 case KindState.Paused:
                     return board.Listed >= board.Cap
                         ? Strings.Format(

@@ -22,10 +22,9 @@ expect-log ipo fireworks: over building
 capture ipo-headquarters
 show-economy
 wait 1.5
+# ... and its icon is a coin with the icon of its kind of business, like the game's stocks (not
+# the stack of money)
 expect-company-first
-# its icon is a coin with the icon of its kind of business, like the game's stocks (not the
-# stack of money)
-expect-visible FinanceOverhaulCoinGlyph
 capture ipo-company-first
 cleanup:
 close-economy

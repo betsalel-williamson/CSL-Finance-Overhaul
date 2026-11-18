@@ -42,6 +42,12 @@ namespace FinanceOverhaul
         /// </summary>
         public static string LastHealthBreakdown { get; private set; }
 
+        /// <summary>Per kind, how many jobs its businesses have (dev readout of the last scan).</summary>
+        public static string LastJobSizes { get; private set; }
+
+        /// <summary>Dev: the next scans also fill <see cref="LastJobSizes"/>.</summary>
+        public static bool MeasureJobSizes;
+
         public static bool Enabled
         {
             get { return Mod.Settings != null && Mod.Settings.LocalIposEnabled; }
@@ -620,11 +626,48 @@ namespace FinanceOverhaul
                 var floors = new Dictionary<BusinessKind, int>();
                 foreach (BusinessKind kind in Enum.GetValues(typeof(BusinessKind)))
                 {
-                    floors[kind] = BusinessKinds.JobsFloor(
-                        jobsOfKind[kind],
-                        rules.TopEmployersPercent
-                    );
+                    floors[kind] = BusinessKinds.JobsFloor(kind, jobsOfKind[kind], rules);
                 }
+
+                // How large the businesses of each kind are (for choosing the jobs rules).
+                // Only when a dev readout asked for it: it sorts every kind's list.
+                var sizes = new StringBuilder();
+                foreach (BusinessKind kind in Enum.GetValues(typeof(BusinessKind)))
+                {
+                    var jobs = new List<int>(jobsOfKind[kind]);
+                    if (!MeasureJobSizes || jobs.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    jobs.Sort();
+                    int single = 0;
+                    foreach (int j in jobs)
+                    {
+                        single += j <= 1 ? 1 : 0;
+                    }
+
+                    sizes
+                        .Append(' ')
+                        .Append(kind)
+                        .Append(" n=")
+                        .Append(jobs.Count)
+                        .Append(" oneJob=")
+                        .Append(single)
+                        .Append(" min=")
+                        .Append(jobs[0])
+                        .Append(" median=")
+                        .Append(jobs[jobs.Count / 2])
+                        .Append(" p90=")
+                        .Append(jobs[jobs.Count * 9 / 10])
+                        .Append(" max=")
+                        .Append(jobs[jobs.Count - 1])
+                        .Append(" floor=")
+                        .Append(floors[kind])
+                        .Append(';');
+                }
+
+                LastJobSizes = sizes.ToString();
 
                 int businesses = seen.Count;
                 foreach (KeyValuePair<BuildingKey, BusinessFacts> one in seen)

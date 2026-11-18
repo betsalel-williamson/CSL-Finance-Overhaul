@@ -408,12 +408,27 @@ healthy today = top level AND no problem icons AND at most 10% of jobs unfilled
                 AND jobs ≥ the jobs floor of its kind
                 AND (industry kinds, or land value ≥ 41)
 jobs floor (a kind) = the jobs of the business that closes the top third of that kind in the
-                city, by jobs (ties with it count too)
+                city, by jobs (ties with it count too);
+                never under 10 (any kind), never under 30 (zoned farming, forestry, oil, ore)
 healthy days  = min(previous + 1, 365) if healthy today
                 previous − 4 (not below 0) if not healthy today
                 0 if the building is gone or replaced
 candidate     = healthy days ≥ 329 (90% of 365)
 ```
+
+**No one-worker companies (2026-11-18).** The relative floor alone queued sheds: in the test city
+(with the Realistic Population mod) 109 of 110 zoned farming plots and 115 of 144 oil plots have one
+job (the largest have 4 and 5), so "the larger employers of the kind" meant a floor of 1 and a
+one-worker farm went public at ₡1 a share. Measured jobs per business that day: commercial median
+13, 90th percentile 49, largest 254 (130 of 1,006 with one job); office median 130, largest 1,161,
+smallest 6; generic industry median 9, 90th percentile 20, largest 88 (44 of 127 with one job). Two
+absolute floors now sit under the relative one: `MinJobs` 10 for every kind, and
+`SpecialisedMinJobs` 30 for zoned farming, forestry, oil and ore, whose plots are small by nature.
+In this city that leaves no zoned farm or oil plot able to list, which is intended: the natural
+companies of those kinds are the industry areas' main buildings and unique factories, which Local
+IPOs does not read yet (see Limits and room for later). The card of such a kind says "Only a large
+operation lists: a business with at least 30 jobs, steady for a year." Both numbers are first
+guesses; a city without Realistic Population has different job counts.
 
 **Steady, not perfect (2026-11-18).** The first rule set the count back to 0 on any unhealthy day.
 In the test city staffing swings daily (offices short of workers went from 48 to 131 between two
@@ -622,6 +637,12 @@ survival after 1 and 3 years; delisting by industry.
 - **The UI is the real limit today:** the vanilla Investments panel is one long list. Going from a
   dozen to 50 listings needs the many-company interface (search, sector groups, watchlist; roadmap
   idea 14) as a slice of this epic before the cap is raised.
+
+- **Industry areas are not read yet:** the Industries DLC's main buildings and unique factories (and
+  large farms built that way) are the natural farming, forestry, oil and ore companies. They are not
+  zoned businesses: they have no tax income of their own and are already kept from levelling, so
+  they need their own way of being found, judged healthy and priced. Until that is built, those four
+  kinds only list a zoned plot with at least 30 jobs, which most cities do not have.
 
 ## Options (Level 1, while tuning the feel)
 
