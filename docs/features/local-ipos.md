@@ -318,10 +318,12 @@ pop, a forecast or a recommendation: the pop is drawn on the first trading day.
 
 Behaviour:
 
-- **Pause:** the simulation pauses while the dialog is open, as it does for the academic year
-  report, so the offering window does not run while the player reads. Closing restores the speed and
-  pause state the player had before (the game's report always un-pauses; the mod does not copy
-  that). Open decision 5.
+- **Pause (built 2026-11-18):** the simulation pauses the moment the company is announced, before
+  the dialog is up, and stays paused when the dialog closes, whichever button closed it: the player
+  resumes the game when ready. The offering window is seven days, under a minute at full speed; when
+  closing put the game back to running, the window was gone before the player had looked at the
+  building. (The game's academic year report always un-pauses on closing; the mod does not copy
+  that.) Scenario 67.
 - **Closing is safe:** closing without buying changes nothing. The listing stays in Economy →
   Investments and the offering price holds for the rest of the window.
 - **Not during a load:** the dialog never opens while a city is loading, and a listing announced
@@ -749,10 +751,11 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
 - **Fireworks (built, `IpoFireworks`):** the game's own event fireworks ("Event Firework Particles
   1" to "3", else "FireworksComplexIngame") go off from the headquarters' roof when the company is
   announced, on its first trading day, and when the player views the headquarters: eight bursts, 0.8
-  seconds apart. They wait while the game is paused (the dialog pauses it). The effects are
-  dispatched without a building instance, because the game only draws them for a building holding an
-  event. A city without these effects loaded shows none. Scenario 70 checks the first card, the
-  building panel, the camera distance and that bursts were launched.
+  seconds apart. They wait while the game is paused (the announcement pauses it), so they go off
+  when the player resumes. The effects are dispatched without a building instance, because the game
+  only draws them for a building holding an event. A city without these effects loaded shows none.
+  Scenario 70 checks the first card, the building panel, the camera distance and that bursts were
+  launched.
 - **Game UI scenario 66** lists the first candidate, checks the game has a stock for it at the
   offering price, closes the offering window, has it bought out and checks the stock is gone, then
   removes everything and puts the building's Historical flag back.
@@ -762,25 +765,26 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
   below the offering price it opened) and a buy-out (the buyer's price, the premium, and what the
   city received for its shares, or that it held none). They follow the "Order and bond notices in
   Chirper" preference like every other notice (open decision 9, decided).
-- **The IPO dialog (built, `IpoDialog`):** opens on the announcement, centred, pauses the game and
-  puts the pause back as it was on closing. It is styled after the game's own celebration dialogs (a
-  park, industry area or airport levelling up; the academic year report), read from the running
-  game: their frame (`UnlockingPanel2` with the dark `UnlockingPanel` body), a banner across the top
-  with a large "Congratulations!" headline, a 0.15 s fade-in, large centred buttons and the "don't
-  show" checkbox in the game's pale blue. The game has banner art for parks, industry, airports and
-  campuses but none for the Stock Exchange, so the banner is the green of the game's loan offers
-  with its stack of money (`MoneyThumb`) on either side. One sound plays as it opens: the game's own
-  sound for a sale at a gain, as a UI sound (it follows the volume sliders and is heard while
-  paused); the game ships no Stock Exchange bell. Its title names the company, once; below, a line
-  says where it stands (its kind, the street it is on, the cross street and the district, each only
-  if it has one: "Commercial · on Blackwell Street at Magnolia Street"), then the offering price,
-  the window with its last day, what the city can buy (1,000 shares, a 10% stake, with the cost) and
-  the first trading day. "Buy at the offering price" opens the game's Buy dialog for the new stock;
-  "View headquarters" moves the camera there; ×, Esc and the buttons close it. The checkbox "Don't
-  show this for future IPOs" and the Options preference "Show a dialog when a local company goes
-  public" (shown while Local IPOs is on) are one saved value. It waits while the Welcome back dialog
-  is up. In game UI tests it stays closed unless the scenario asks (`ipo-dialog on`). Its two
-  buttons are one size. Not checked by ear: how the opening sound sits with the dialog.
+- **The IPO dialog (built, `IpoDialog`):** opens on the announcement, centred; the game is paused
+  from the announcement until the player resumes it. It is styled after the game's own celebration
+  dialogs (a park, industry area or airport levelling up; the academic year report), read from the
+  running game: their frame (`UnlockingPanel2` with the dark `UnlockingPanel` body), a banner across
+  the top with a large "Congratulations!" headline, a 0.15 s fade-in, large centred buttons and the
+  "don't show" checkbox in the game's pale blue. The game has banner art for parks, industry,
+  airports and campuses but none for the Stock Exchange, so the banner is the green of the game's
+  loan offers with its stack of money (`MoneyThumb`) on either side. One sound plays as it opens:
+  the game's own sound for a sale at a gain, as a UI sound (it follows the volume sliders and is
+  heard while paused); the game ships no Stock Exchange bell. Its title names the company, once;
+  below, a line says where it stands (its kind, the street it is on, the cross street and the
+  district, each only if it has one: "Commercial · on Blackwell Street at Magnolia Street"), then
+  the offering price, the window with its last day, what the city can buy (1,000 shares, a 10%
+  stake, with the cost) and the first trading day. "Buy at the offering price" opens the game's Buy
+  dialog for the new stock; "View headquarters" moves the camera there; ×, Esc and the buttons close
+  it. The checkbox "Don't show this for future IPOs" and the Options preference "Show a dialog when
+  a local company goes public" (shown while Local IPOs is on) are one saved value. It waits while
+  the Welcome back dialog is up. In game UI tests it stays closed unless the scenario asks
+  (`ipo-dialog on`). Its two buttons are one size. Not checked by ear: how the opening sound sits
+  with the dialog.
 - **Game UI scenario 67** opens the dialog, checks its lines and that nothing overflows, closes it,
   buys 10 shares, and checks the three chirps and that the buy-out paid for the 10 shares.
 

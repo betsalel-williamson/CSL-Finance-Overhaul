@@ -301,6 +301,17 @@ namespace FinanceOverhaul
                     yield return new WaitForSeconds(0.5f);
                     break;
                 }
+                case "expect-paused":
+                {
+                    // expect-paused on|off — the simulation is paused (or runs).
+                    bool paused = SimulationManager.instance.SimulationPaused;
+                    if (paused != (a == "on"))
+                    {
+                        r.Error = "the game is " + (paused ? "paused" : "running");
+                    }
+
+                    break;
+                }
                 case "set-flag":
                 {
                     // set-flag <OrderKind | all> on|off — flips the Options feature flag.

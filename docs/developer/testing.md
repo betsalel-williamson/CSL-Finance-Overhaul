@@ -80,7 +80,7 @@ of its look), `expect-wheel-step LIST MIN` (pixels the mouse wheel moves a list 
 69), `log-prices` (logs every listed stock's kept daily prices, up to 30 and newest first, with its
 price rule, for measuring how the game's stocks move), `local-ipos keep` and `ipo-list-now keep`
 (switch the flag on for good and leave the company listed: for trying the feature in a test city,
-not for scenarios), `ipo-view`, `expect-building-panel`, `expect-fireworks`,
+not for scenarios), `ipo-view`, `expect-building-panel`, `expect-fireworks`, `expect-paused on|off`,
 `expect-company-moving DAYS` (the company's stock closed at a different price on each of its last
 DAYS days) and `expect-company-first` (scenario 70: View headquarters opens the building's info
 panel with the camera framed on it, fireworks go off, and the new company is the first card),

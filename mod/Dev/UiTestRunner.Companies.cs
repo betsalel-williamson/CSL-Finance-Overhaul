@@ -294,7 +294,12 @@ namespace FinanceOverhaul
                         CompanyDesk.TestBuyOut(ctx.TestCompanies[ctx.TestCompanies.Count - 1].Id);
                     }
 
-                    sim.SimulationPaused = paused;
+                    // An announcement with its dialog pauses the game itself: that stays.
+                    if (cmd != "ipo-list-now" || IpoDialog.Silenced)
+                    {
+                        sim.SimulationPaused = paused;
+                    }
+
                     yield return new WaitForSeconds(1.5f); // the stock type and slot follow
                     break;
                 }

@@ -8,8 +8,9 @@ namespace FinanceOverhaul
 {
     /// <summary>
     /// The IPO dialog (Figma UI Map band 16; docs/features/local-ipos.md, "The IPO moment"):
-    /// shown on the day a local company is announced, while the offering window is open. It
-    /// pauses the game while open and puts the pause back as it was. It states only what is
+    /// shown on the day a local company is announced, while the offering window is open. The
+    /// game pauses the moment the company is announced and stays paused when the dialog closes:
+    /// the offering window is only seven days, so the player resumes when ready. It states only what is
     /// fixed that day. Buy opens the game's own Buy dialog for the new stock; View moves the
     /// camera to the headquarters; the checkbox is the Options preference read the other way.
     /// It waits while the Welcome back dialog is up. It looks and behaves like the game's own
@@ -49,7 +50,6 @@ namespace FinanceOverhaul
         private UIPanel panel;
         private float shownAt;
         private int shownCompany;
-        private bool pausedBefore;
         private float nextCheck;
 
         public static IpoDialog Current { get; private set; }
@@ -71,6 +71,10 @@ namespace FinanceOverhaul
             {
                 Waiting.Enqueue(companyId);
             }
+
+            // At once, on whichever thread announced it: the dialog only opens on the next
+            // check, and at full speed a day would pass before it does.
+            SimulationManager.instance.SimulationPaused = true;
         }
 
         /// <summary>Level unload: nothing waits for the next city.</summary>
@@ -148,7 +152,7 @@ namespace FinanceOverhaul
             return true;
         }
 
-        /// <summary>Closes the dialog and puts the pause back as the player had it.</summary>
+        /// <summary>Closes the dialog. The game stays paused: the player resumes it.</summary>
         public void Close()
         {
             if (panel == null)
@@ -158,7 +162,6 @@ namespace FinanceOverhaul
 
             Destroy(panel.gameObject);
             panel = null;
-            SimulationManager.instance.SimulationPaused = pausedBefore;
             nextCheck = Time.unscaledTime + 0.5f;
         }
 
@@ -264,7 +267,6 @@ namespace FinanceOverhaul
             }
 
             shownCompany = company.Id;
-            pausedBefore = SimulationManager.instance.SimulationPaused;
             SimulationManager.instance.SimulationPaused = true;
 
             // The frame of the game's own celebration dialogs (a park levelling up, the end of

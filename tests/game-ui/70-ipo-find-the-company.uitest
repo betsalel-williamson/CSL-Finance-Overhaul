@@ -14,6 +14,8 @@ ipo-view
 wait 1
 expect-hidden FinanceOverhaulIpoDialog
 expect-building-panel
+# the game is still paused while the player looks; the fireworks start when it runs again
+expect-paused on
 expect-log ipo dialog: showing headquarters building
 pause off
 wait 3
