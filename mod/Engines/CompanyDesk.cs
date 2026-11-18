@@ -368,7 +368,9 @@ namespace FinanceOverhaul
 
             public long AnnualEarningsCents(BuildingKey building)
             {
-                return CompanyDesk.AnnualEarningsCents(building.Id);
+                // A building that is gone (or whose id another building has now) earns
+                // nothing the engine can go by: unknown, not zero.
+                return SameBuilding(building) ? CompanyDesk.AnnualEarningsCents(building.Id) : 0;
             }
         }
 
@@ -854,6 +856,35 @@ namespace FinanceOverhaul
             return total;
         }
 
+        private static readonly Dictionary<ItemClass.Service, long> ZoneWeights =
+            new Dictionary<ItemClass.Service, long>();
+        private static int zoneWeightsDay = int.MinValue;
+
+        /// <summary>
+        /// <see cref="ZoneEarningsWeight"/>, worked out once a day for each zone: every listed
+        /// company asks for its zone's every day, and each answer reads the whole city.
+        /// </summary>
+        private static long ZoneWeightToday(ItemClass.Service service)
+        {
+            lock (ZoneWeights)
+            {
+                if (zoneWeightsDay != OrderDesk.Today)
+                {
+                    ZoneWeights.Clear();
+                    zoneWeightsDay = OrderDesk.Today;
+                }
+
+                long weight;
+                if (!ZoneWeights.TryGetValue(service, out weight))
+                {
+                    weight = ZoneEarningsWeight(service);
+                    ZoneWeights[service] = weight;
+                }
+
+                return weight;
+            }
+        }
+
         /// <summary>
         /// What a business earns in a game year, in cents: its share (by the game's formula and
         /// its jobs) of the weekly income the game reports for its zone, as the income that tax was levied
@@ -879,7 +910,7 @@ namespace FinanceOverhaul
             );
             return IpoEarnings.AnnualCents(
                 EarningsWeight(building),
-                ZoneEarningsWeight(info.m_class.m_service),
+                ZoneWeightToday(info.m_class.m_service),
                 weeklyIncome,
                 em.GetTaxRate(info.m_class)
             );

@@ -82,6 +82,38 @@ namespace FinanceOverhaul.Core
             return Math.Max(MinPop, Math.Min(MaxPop, jump - 1d));
         }
 
+        /// <summary>
+        /// A trading company's price tomorrow: today's price, pulled a little towards what the
+        /// business is worth now and moved by the day's swing, never more than
+        /// <see cref="IpoRules.MaxDailyMovePercent"/> in a day and never outside the range of
+        /// the game's stocks. Kept to the cent, so a ₡2 share moves too. Takes two numbers
+        /// from the dice.
+        /// </summary>
+        /// <param name="fairPriceCents">
+        /// What the business would list at today (<see cref="OfferingPriceCents"/> of its
+        /// earnings now); 0 or less when that is unknown, and then nothing pulls.
+        /// </param>
+        public static long NextDayPriceCents(
+            long priceCents,
+            long fairPriceCents,
+            IpoRules rules,
+            IpoDice dice
+        )
+        {
+            double swing = Math.Max(0, rules.DailySwingPercent) / 100d * dice.Normal();
+            double pull =
+                fairPriceCents <= 0 || priceCents <= 0
+                    ? 0d
+                    : Math.Max(0, Math.Min(100, rules.FairPullPercent))
+                        / 100d
+                        * (fairPriceCents - priceCents)
+                        / priceCents;
+            double most = Math.Max(0, rules.MaxDailyMovePercent) / 100d;
+            double move = Math.Max(-most, Math.Min(most, swing + pull));
+            long next = (long)Math.Round(priceCents * (1d + move), MidpointRounding.AwayFromZero);
+            return Math.Max(MinPriceCents, Math.Min(MaxPriceCents, next));
+        }
+
         /// <summary>The opening price on the first trading day: whole ₡, inside the same range.</summary>
         public static long FirstDayPriceCents(long offeringPriceCents, double pop)
         {

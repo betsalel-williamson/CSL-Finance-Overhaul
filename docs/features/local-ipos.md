@@ -17,7 +17,7 @@ the Local IPOs flag.
 | Offering price and first-day pop                          | `Market/IpoPricing.cs`, `IpoPricingTests`                                    | **Built 2026-11-17** |
 | Gates, slots, board cap, pacing and the draw              | `Market/IpoBoard.cs`, `IpoBoardTests`                                        | **Built 2026-11-17** |
 | Buy-outs: chance, premium, payout                         | `Market/IpoBuyout.cs`, `IpoBuyoutTests`                                      | **Built 2026-11-17** |
-| Drift and volatility after listing                        | Library                                                                      | Next                 |
+| Daily price movement after the first day                  | `Market/IpoPricing.cs` (`NextDayPriceCents`), `IpoEngine`, scenario 72       | **Built 2026-11-18** |
 | Company registry, moving and delisting, save data         | Library                                                                      | Not started          |
 | Daily scan of businesses, the flag, save of the counts    | `mod/Engines/CompanyDesk.cs`, scenario 64                                    | **Built 2026-11-17** |
 | Company registry, daily steps, save of companies          | `Market/IpoEngine.cs`, `IpoEngineTests`                                      | **Built 2026-11-17** |
@@ -233,6 +233,15 @@ up (`IpoPricing.FirstDayPop`, `IpoPricingTests`).
 
 ### After the IPO
 
+**Built (2026-11-18): the price moves every day.** From the day after its first trading day a
+company closes at a new price each game day: it moves by the day's swing (2% on average, never more
+than 15% in a day) and closes 1% of the gap to what the business is worth now (its earnings today,
+priced as on the day it listed). So a company whose business earns more rises over the months, one
+whose business earns less falls, and in between the price wanders within about 15% of that worth:
+the size of the random variance the game gives its own stocks. If the building is gone its worth is
+unknown and only the swing moves the price. The two points below are the first design; of them, the
+extra swing of the first year and a different swing for each kind of business are not built.
+
 - **Drift** follows the building's health: staffed, problem-free and earning → gentle rise; problems
   → decline. Not tied to the game's sector stocks (they already follow city industry).
 - **Volatility** starts high and settles over the first year, like real new listings.
@@ -384,8 +393,8 @@ checkbox and the bell call are checked by a game UI scenario.
 
 Every formula the built slices use, in one place. Code: `src/FinanceOverhaul.Core/Market/`
 (`IpoCalendar.cs`, `IpoPricing.cs`, `IpoBuyout.cs`); each has unit tests of the same name in
-`tests/FinanceOverhaul.Core.Tests/`. The defaults are options. Not yet built, so not here: drift and
-daily swing after listing, and the building-loss delisting.
+`tests/FinanceOverhaul.Core.Tests/`. The defaults are options. Not yet built, so not here: the
+building-loss delisting.
 
 ### The dice
 
@@ -498,11 +507,26 @@ can be filled. If the chosen business is no longer a candidate on its day, that 
        round; no dice are used)
      no other candidate of that kind → cancelled (it does not count towards pacing)
 3. A company whose window has closed: first-day price = offering price × (1 + pop); it trades.
-4. A scheduled buy-out whose day has come, if the company still trades: the premium is drawn, the
-   company is delisted and its slot is free.
+4. Every company that trades (not on its first trading day): its price moves, once a day.
+5. A scheduled buy-out whose day has come, if the company still trades: the premium is drawn on
+   today's price, the company is delisted and its slot is free.
 ```
 
-Prices after the first trading day do not move yet (drift and swing are not built).
+### Daily price (after the first trading day)
+
+```text
+worth = offering price of the business's earnings today (0 if its building is gone: no pull)
+swing = Normal(0, 1) × 2%
+pull  = 1% × (worth − price) ÷ price
+move  = swing + pull, kept between −15% and +15%
+price tomorrow = price × (1 + move), to the cent, between ₡1 and ₡100,000
+```
+
+The three numbers are options (`DailySwingPercent`, `FairPullPercent`, `MaxDailyMovePercent`). With
+the defaults a price left alone for ten simulated years stays between half and double its worth, and
+a business whose earnings double takes the price nearly all the way there within a year
+(`IpoPricingTests`). The game shows the new price on the next daily close, as it does for its own
+stocks. A share at the ₡1 floor moves by a cent or two at most.
 
 ### Earnings
 

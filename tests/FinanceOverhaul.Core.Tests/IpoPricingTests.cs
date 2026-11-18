@@ -133,5 +133,89 @@ namespace FinanceOverhaul.Core.Tests
         {
             Assert.Equal(opens, IpoPricing.FirstDayPriceCents(offer, pop));
         }
+
+        [Fact]
+        public void APriceMovesEveryDayAndStaysNearWhatTheBusinessIsWorth()
+        {
+            var rules = new IpoRules();
+            var dice = new IpoDice(7);
+            long price = 5_200,
+                low = price,
+                high = price;
+            int moved = 0;
+            for (int day = 0; day < 3650; day++)
+            {
+                long next = IpoPricing.NextDayPriceCents(price, 5_200, rules, dice);
+                Assert.InRange(next, price * 0.85 - 1, price * 1.15 + 1); // never past the cap
+                moved += next != price ? 1 : 0;
+                price = next;
+                low = Math.Min(low, price);
+                high = Math.Max(high, price);
+            }
+
+            Assert.True(moved > 3500, "moved on " + moved + " of 3650 days");
+            // Ten years of swings never take it far from its worth (the pull holds it).
+            Assert.InRange(low, 2_600, 5_200);
+            Assert.InRange(high, 5_200, 10_400);
+        }
+
+        [Fact]
+        public void APriceFollowsTheBusinessWhenItsEarningsChange()
+        {
+            var rules = new IpoRules { DailySwingPercent = 0 }; // the pull alone
+            var dice = new IpoDice(1);
+            long price = 5_000;
+            for (int day = 0; day < 365; day++)
+            {
+                price = IpoPricing.NextDayPriceCents(price, 10_000, rules, dice);
+            }
+
+            Assert.InRange(price, 9_500, 10_000); // a year closes nearly all of the gap
+            for (int day = 0; day < 365; day++)
+            {
+                price = IpoPricing.NextDayPriceCents(price, 2_000, rules, dice);
+            }
+
+            Assert.InRange(price, 2_000, 2_300);
+        }
+
+        [Fact]
+        public void UnknownEarningsPullNowhereAndACheapShareStillMoves()
+        {
+            var still = new IpoRules { DailySwingPercent = 0 };
+            Assert.Equal(5_000, IpoPricing.NextDayPriceCents(5_000, 0, still, new IpoDice(3)));
+
+            var rules = new IpoRules();
+            var dice = new IpoDice(3);
+            long price = 200; // ₡2
+            int moved = 0;
+            for (int day = 0; day < 100; day++)
+            {
+                long next = IpoPricing.NextDayPriceCents(price, 200, rules, dice);
+                Assert.True(next >= IpoPricing.MinPriceCents);
+                moved += next != price ? 1 : 0;
+                price = next;
+            }
+
+            Assert.True(moved > 50, "a ₡2 share moved on " + moved + " of 100 days");
+        }
+
+        [Fact]
+        public void TheSameDiceGiveTheSamePrices()
+        {
+            var rules = new IpoRules();
+            IpoDice a = new IpoDice(42),
+                b = new IpoDice(42);
+            long pa = 8_100,
+                pb = 8_100;
+            for (int day = 0; day < 50; day++)
+            {
+                pa = IpoPricing.NextDayPriceCents(pa, 8_100, rules, a);
+                pb = IpoPricing.NextDayPriceCents(pb, 8_100, rules, b);
+            }
+
+            Assert.Equal(pa, pb);
+            Assert.Equal(a.State, b.State);
+        }
     }
 }

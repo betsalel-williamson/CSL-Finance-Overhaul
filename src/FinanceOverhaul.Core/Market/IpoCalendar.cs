@@ -104,6 +104,24 @@ namespace FinanceOverhaul.Core
         /// <summary>How varied the first-day jump is (its standard deviation), in percent.</summary>
         public int PopSpreadPercent = 25;
 
+        /// <summary>
+        /// How much a listed company's price swings from one day to the next (the standard
+        /// deviation of its daily move), in percent. With the pull below, a price stays within
+        /// about 15% of what the business is worth most of the time: the size of the random
+        /// variance the game gives its own stocks.
+        /// </summary>
+        public int DailySwingPercent = 2;
+
+        /// <summary>
+        /// How much of the gap to what the business is worth today (its earnings, priced as on
+        /// the day it listed) a price closes each day, in percent. The game's own stocks
+        /// follow a city figure; a local company follows its business.
+        /// </summary>
+        public int FairPullPercent = 1;
+
+        /// <summary>The most a price moves in one day, up or down, in percent.</summary>
+        public int MaxDailyMovePercent = 15;
+
         /// <summary>A listed company's chance of being bought out in a year, in percent.</summary>
         public int BuyoutPercentPerYear = 4;
 
@@ -389,6 +407,17 @@ namespace FinanceOverhaul.Core
             double mu = Math.Log(mean) - sigma2 / 2d;
             double normal = Math.Sqrt(-2d * Math.Log(u1)) * Math.Cos(2d * Math.PI * u2);
             return Math.Exp(mu + Math.Sqrt(sigma2) * normal);
+        }
+
+        /// <summary>
+        /// A number from the bell curve around 0 with standard deviation 1. Takes two numbers
+        /// from the dice.
+        /// </summary>
+        public double Normal()
+        {
+            double u1 = 1d - Next(); // (0, 1]: the logarithm below is finite
+            double u2 = Next();
+            return Math.Sqrt(-2d * Math.Log(u1)) * Math.Cos(2d * Math.PI * u2);
         }
 
         /// <summary>The next number in [0, 1).</summary>

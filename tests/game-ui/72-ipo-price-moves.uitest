@@ -1,0 +1,22 @@
+# Local IPOs: a company's price moves once it trades. During the offering it stands at the
+# offering price; from the day after its first trading day it closes at a different price every
+# day, like the game's own stocks. Everything listed is removed in cleanup.
+name local ipos: a trading company's price moves every day
+local-ipos on
+# only businesses healthy today are candidates (the city's own counts come back at the end)
+ipo-forget
+ipo-healthy-days 1
+ipo-scan
+ipo-list-now
+expect-company offering listed
+ipo-first-day
+expect-company trading listed
+run-days 5
+expect-company-moving 4
+show-economy
+wait 1.5
+capture ipo-price-moves
+cleanup:
+close-economy
+ipo-remove-test
+local-ipos restore

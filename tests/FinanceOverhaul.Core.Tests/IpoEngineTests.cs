@@ -330,5 +330,52 @@ namespace FinanceOverhaul.Core.Tests
             Assert.Equal(logs[0], logs[1]);
             Assert.Contains("Announced", logs[0]);
         }
+
+        [Fact]
+        public void ATradingCompanyMovesOnceADayFromTheDayAfterItOpens()
+        {
+            var rules = new IpoRules { MaxIposPerYear = 0, BuyoutPercentPerYear = 0 };
+            var registry = new CompanyRegistry { NextDrawDay = int.MaxValue };
+            var city = new City();
+            var dice = new IpoDice(11);
+            var book = new CandidateBook();
+            IpoEvent listed = IpoEngine.List(
+                registry,
+                new BuildingKey(1, 1),
+                BusinessKind.Office,
+                100,
+                rules,
+                city
+            );
+            LocalCompany c = listed.Company;
+
+            // The offering window: the price is the offering price every day.
+            for (int day = 101; day < c.FirstTradingDay; day++)
+            {
+                IpoEngine.Step(registry, book, OfficeKind(0), 9, day, rules, dice, city);
+                Assert.Equal(c.OfferPriceCents, c.PriceCents);
+            }
+
+            // The first trading day is the pop alone.
+            IpoEngine.Step(registry, book, OfficeKind(0), 9, c.FirstTradingDay, rules, dice, city);
+            long opened = c.PriceCents;
+            IpoEngine.Step(registry, book, OfficeKind(0), 9, c.FirstTradingDay, rules, dice, city);
+            Assert.Equal(opened, c.PriceCents);
+
+            // Then it moves, once a day however often the day is stepped.
+            int moved = 0;
+            long last = opened;
+            for (int day = c.FirstTradingDay + 1; day <= c.FirstTradingDay + 30; day++)
+            {
+                IpoEngine.Step(registry, book, OfficeKind(0), 9, day, rules, dice, city);
+                long once = c.PriceCents;
+                IpoEngine.Step(registry, book, OfficeKind(0), 9, day, rules, dice, city);
+                Assert.Equal(once, c.PriceCents);
+                moved += once != last ? 1 : 0;
+                last = once;
+            }
+
+            Assert.True(moved >= 25, "moved on " + moved + " of 30 days");
+        }
     }
 }

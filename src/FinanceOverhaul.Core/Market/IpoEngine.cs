@@ -40,6 +40,9 @@ namespace FinanceOverhaul.Core
         /// </summary>
         public bool WasHistorical;
 
+        /// <summary>The last day its price was set (not saved: at most one extra move after a load).</summary>
+        public int MovedDay = int.MinValue;
+
         // The city's holding and the price history, copied from the game's stock when the city
         // saves and put back when it loads: the game drops a stock type it does not know, and
         // a company's type is only registered once the mod has read this.
@@ -215,7 +218,9 @@ namespace FinanceOverhaul.Core
     ///    the company is listed at its offering price and the offering window opens. Otherwise
     ///    it is cancelled.
     /// 3. A company whose offering window has closed opens at its first-day price (the pop).
-    /// 4. A scheduled buy-out whose day has come pays the premium and delists the company.
+    /// 4. Every trading company's price moves: towards what its business earns now, and by
+    ///    the day's swing.
+    /// 5. A scheduled buy-out whose day has come pays the premium and delists the company.
     /// Pure: the game side lists, pays and announces from the returned events.
     /// </summary>
     public static class IpoEngine
@@ -255,6 +260,7 @@ namespace FinanceOverhaul.Core
                     double pop = IpoPricing.FirstDayPop(rules, dice);
                     c.PriceCents = IpoPricing.FirstDayPriceCents(c.OfferPriceCents, pop);
                     c.Status = CompanyStatus.Trading;
+                    c.MovedDay = today;
                     events.Add(
                         new IpoEvent
                         {
@@ -262,6 +268,22 @@ namespace FinanceOverhaul.Core
                             Company = c,
                             Fraction = pop,
                         }
+                    );
+                }
+            }
+
+            // A trading company's price moves every day after its first (before a buy-out, so
+            // the buyer pays a premium on today's price).
+            foreach (LocalCompany c in registry.Companies)
+            {
+                if (c.Status == CompanyStatus.Trading && c.MovedDay != today)
+                {
+                    c.MovedDay = today;
+                    c.PriceCents = IpoPricing.NextDayPriceCents(
+                        c.PriceCents,
+                        IpoPricing.OfferingPriceCents(source.AnnualEarningsCents(c.Home), rules),
+                        rules,
+                        dice
                     );
                 }
             }

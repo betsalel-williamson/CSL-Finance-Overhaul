@@ -440,6 +440,48 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "expect-company-moving":
+                {
+                    // expect-company-moving DAYS — the game's stock of this scenario's newest
+                    // company closed at a different price on each of its last DAYS days.
+                    if (ctx.TestCompanies.Count == 0)
+                    {
+                        r.Error = "ipo-list-now first";
+                        break;
+                    }
+
+                    int days = Mathf.Max(2, (int)ParseFloat(a, 3f));
+                    int slot = CompanyListing.SlotOf(
+                        ctx.TestCompanies[ctx.TestCompanies.Count - 1].Id
+                    );
+                    Investment.Queue<float> values =
+                        slot <= 0
+                            ? null
+                            : EconomyManager.instance.m_investments.m_buffer[slot].allValues;
+                    if (values == null || values.Count < days)
+                    {
+                        r.Error = "the company's stock has fewer than " + days + " prices";
+                        break;
+                    }
+
+                    var prices = new StringBuilder();
+                    int still = 0;
+                    for (int k = 0; k < days; k++)
+                    {
+                        prices
+                            .Append(k == 0 ? "" : ", ")
+                            .Append(values.GetFromTop(k).ToString("0.00")); // not shown: a log line
+                        still += k > 0 && values.GetFromTop(k) == values.GetFromTop(k - 1) ? 1 : 0;
+                    }
+
+                    ModLog.Info("uitest: company prices, newest first: " + prices);
+                    if (still > 0)
+                    {
+                        r.Error = "the price stood still on " + still + " day(s): " + prices;
+                    }
+
+                    break;
+                }
                 case "ipo-look-behind":
                     // ipo-look-behind — dev: the next scan credits healthy businesses with the
                     // full period again, as the first scan of a city does.
