@@ -679,17 +679,18 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
 - **Game UI scenario 67** opens the dialog, checks its lines and that nothing overflows, closes it,
   buys 10 shares, and checks the three chirps and that the buy-out paid for the 10 shares.
 
-- **The Investments tab cards (built, `CompanyCards`):** at the top of Purchasable Investments, a
-  "Local companies" label, one card per kind of business the city has, and a line summing up the
-  board ("Local listings 0 of 12 · 2 per map tile (9 owned) · at most 2 IPOs a year"). A card has
-  the kind's name, where it stands ("Unlock requirement: 200 squares…", "4 slots open · 37
-  candidates", "2 of 2 listed"), what comes next ("A listing is likely within one to two years.",
-  "No business has been healthy long enough yet.", "Next listing possible from 01/2112.", "The local
-  board is full (2 of 2)."), and a bar with "N / target" towards the unlock or the next slot. They
-  use the game's stock card sprite and refresh when the daily scan changes something; with the flag
-  off they are gone. Open: five cards fill the visible part of the list, so the game's own stocks
-  start below the fold (alternatives: put the cards after the game's stocks, or make the section
-  collapsible). Game UI scenario 68.
+- **The Investments tab cards (built, `CompanyCards`):** at the end of Purchasable Investments,
+  below the game's stocks (above them, five cards pushed every stock out of sight), a "Local
+  companies" label, one card per kind of business the city has, and a line summing up the board
+  ("Local listings 0 of 12 · 2 per map tile (9 owned) · at most 2 IPOs a year"). A card has the
+  kind's name, where it stands ("Unlock requirement: 200 squares…", "4 slots open · 37 candidates",
+  "2 of 2 listed"), what comes next ("A listing is likely within one to two years.", "No business
+  has been healthy long enough yet.", "Next listing possible from 01/2112.", "The local board is
+  full (2 of 2)."), and a bar with "N / target" towards the unlock or the next slot. They use the
+  game's stock card sprite and refresh when the daily scan changes something; with the flag off they
+  are gone. Open: five cards fill the visible part of the list, so the game's own stocks start below
+  the fold (alternatives: put the cards after the game's stocks, or make the section collapsible).
+  Game UI scenario 68.
 
 Not built: price drift and swing (a trading company's price does not move), delisting when the
 building is lost, and a save-and-reload check of the holding copy (it needs a game restart; planned
