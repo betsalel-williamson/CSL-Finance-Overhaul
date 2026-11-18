@@ -124,6 +124,103 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "ipo-income":
+                {
+                    // ipo-income — for shops, offices and industry: the weekly income the game
+                    // reports, and the yearly earnings and offering price the mod would give
+                    // each business of that zone (lowest, middle, highest; how many sit at the
+                    // ₡1 floor or the ₡100,000 ceiling).
+                    SimulationManager sim = SimulationManager.instance;
+                    bool paused = sim.SimulationPaused;
+                    sim.SimulationPaused = true;
+                    yield return new WaitForSeconds(0.5f);
+                    EconomyManager em = EconomyManager.instance;
+                    IpoRules rules = CompanyDesk.Rules ?? new IpoRules();
+                    Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
+                    foreach (
+                        ItemClass.Service service in new[]
+                        {
+                            ItemClass.Service.Commercial,
+                            ItemClass.Service.Office,
+                            ItemClass.Service.Industrial,
+                        }
+                    )
+                    {
+                        long weeklyIncome,
+                            weeklyExpenses;
+                        em.GetIncomeAndExpenses(
+                            service,
+                            ItemClass.SubService.None,
+                            ItemClass.Level.None,
+                            out weeklyIncome,
+                            out weeklyExpenses
+                        );
+                        long zone = CompanyDesk.ZoneFormulaIncome(service);
+                        var prices = new System.Collections.Generic.List<long>();
+                        long taxBack = 0;
+                        for (int i = 1; i < buffer.Length; i++)
+                        {
+                            BuildingInfo info = buffer[i].Info;
+                            if (
+                                (buffer[i].m_flags & Building.Flags.Created) == 0
+                                || info == null
+                                || info.m_class == null
+                                || info.m_class.m_service != service
+                                || !(info.m_buildingAI is PrivateBuildingAI)
+                            )
+                            {
+                                continue;
+                            }
+
+                            int rate = em.GetTaxRate(info.m_class);
+                            long earnings = IpoEarnings.AnnualCents(
+                                CompanyDesk.IncomePerStep((ushort)i),
+                                zone,
+                                weeklyIncome,
+                                rate
+                            );
+                            taxBack += earnings * rate / 100 / IpoEarnings.WeeksPerYear;
+                            prices.Add(IpoPricing.OfferingPriceCents(earnings, rules));
+                        }
+
+                        prices.Sort();
+                        int floor = 0,
+                            ceiling = 0;
+                        foreach (long price in prices)
+                        {
+                            floor += price <= IpoPricing.MinPriceCents ? 1 : 0;
+                            ceiling += price >= IpoPricing.MaxPriceCents ? 1 : 0;
+                        }
+
+                        ModLog.Info(
+                            "uitest: ipo income "
+                                + service
+                                + " businesses="
+                                + prices.Count
+                                + " gameWeeklyIncome="
+                                + weeklyIncome
+                                + " sharedBackOut="
+                                + taxBack
+                                + " offerPrice low/mid/high="
+                                + (
+                                    prices.Count == 0
+                                        ? "n/a"
+                                        : prices[0] / 100
+                                            + "/"
+                                            + prices[prices.Count / 2] / 100
+                                            + "/"
+                                            + prices[prices.Count - 1] / 100
+                                )
+                                + " atFloor="
+                                + floor
+                                + " atCeiling="
+                                + ceiling
+                        );
+                    }
+
+                    sim.SimulationPaused = paused;
+                    break;
+                }
                 case "expect-ipo-candidates":
                 {
                     // expect-ipo-candidates none|some — candidates after the last scan.

@@ -1,0 +1,8 @@
+# Local IPOs: a business's yearly earnings are its share of the income the game reports for its
+# zone. Logs, for shops, offices and industry, that income, what the shares add back up to, and the
+# range of offering prices the city's businesses would list at. Reads only; changes nothing.
+name local ipos: earnings share out the zone's real income and give an offering price
+ipo-income
+expect-log ipo income Commercial
+expect-log ipo income Office
+expect-log ipo income Industrial

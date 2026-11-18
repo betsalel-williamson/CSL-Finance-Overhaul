@@ -120,6 +120,12 @@ namespace FinanceOverhaul
                 typeof(EconomyManager),
                 "m_cashAmount"
             );
+
+            /// <summary>The factor the game applies to a business's income when it books the city's tax.</summary>
+            public static readonly FieldInfo TaxMultiplier = AccessTools.Field(
+                typeof(EconomyManager),
+                "m_taxMultiplier"
+            );
             public static readonly MethodInfo InvestmentsUpdated = AccessTools.Method(
                 typeof(EconomyManager),
                 "InvestmentsUpdated"

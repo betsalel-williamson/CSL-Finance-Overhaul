@@ -64,19 +64,21 @@ installed), `game-escape` (runs the game's own Esc handling, as the key would �
 run the daily bond step now — scenario 61), `local-ipos on|off|restore`, `ipo-healthy-days N`,
 `ipo-forget`, `ipo-scan` (reads every zoned business now and logs each kind's squares, top-level
 buildings, candidates, slots and why businesses fail the health check) and
-`expect-ipo-candidates none|some` (scenario 64), `log-loan-expenses` and `expect-loan-expenses ₡MIN`
-(what Economy shows as loan expenses — scenario 63), `log-prices` (logs every listed stock's kept
-daily prices, up to 30 and newest first, with its price rule, for measuring how the game's stocks
-move), `share-charts on|off` (the share chart flag, for before/after captures) — and checks
-`expect-visible`, `expect-text`, `expect-slider CONTROL [max]` (the slider's thumb is drawn where
-its value is; with `max`, the value is the maximum), `expect-no-overflow` (every visible part inside
-the dialog or the named control, and none of our fixed-width labels cutting its text off; inside a
-clipping, scrolling list only the width is checked, against the list), `expect-at-bottom LIST` (a
-scrolling list that is long enough to scroll sits at its end — scenario 52), `expect-owned-delta`,
-`expect-orders-delta` (orders this scenario created) and `expect-log`. `$owned:SYMBOL` in any step
-becomes the shares owned now. Lines after `cleanup:` always run (cancel orders, sell back, close the
-dialog). Results: `uitest: PASS|FAIL` in the mod log, captures as `FinanceOverhaul-uitest-*.png`.
-Scenarios trade small amounts in the loaded city and undo them in cleanup; use a test save.
+`expect-ipo-candidates none|some` (scenario 64), `ipo-income` (per zone: the income the game reports
+and the offering prices its businesses would list at — scenario 65), `log-loan-expenses` and
+`expect-loan-expenses ₡MIN` (what Economy shows as loan expenses — scenario 63), `log-prices` (logs
+every listed stock's kept daily prices, up to 30 and newest first, with its price rule, for
+measuring how the game's stocks move), `share-charts on|off` (the share chart flag, for before/after
+captures) — and checks `expect-visible`, `expect-text`, `expect-slider CONTROL [max]` (the slider's
+thumb is drawn where its value is; with `max`, the value is the maximum), `expect-no-overflow`
+(every visible part inside the dialog or the named control, and none of our fixed-width labels
+cutting its text off; inside a clipping, scrolling list only the width is checked, against the
+list), `expect-at-bottom LIST` (a scrolling list that is long enough to scroll sits at its end —
+scenario 52), `expect-owned-delta`, `expect-orders-delta` (orders this scenario created) and
+`expect-log`. `$owned:SYMBOL` in any step becomes the shares owned now. Lines after `cleanup:`
+always run (cancel orders, sell back, close the dialog). Results: `uitest: PASS|FAIL` in the mod
+log, captures as `FinanceOverhaul-uitest-*.png`. Scenarios trade small amounts in the loaded city
+and undo them in cleanup; use a test save.
 
 **Your orders are safe:** when a scenario starts, every order already open (the player's) is frozen
 — no fill, no expiry, no trailing peak — until the scenario ends, even when it runs days

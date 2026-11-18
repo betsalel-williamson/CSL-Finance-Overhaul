@@ -11,18 +11,19 @@ patterns as the source of the rules.
 Built one slice at a time (maths with proofs → engine → Figma → UI → game UI test → docs), behind
 the Local IPOs flag.
 
-| Slice                                                     | Where                                       | Status               |
-| --------------------------------------------------------- | ------------------------------------------- | -------------------- |
-| Candidate rule and healthy-day count; the rare daily draw | `Market/IpoCalendar.cs`, `IpoCalendarTests` | **Built 2026-11-17** |
-| Offering price and first-day pop                          | `Market/IpoPricing.cs`, `IpoPricingTests`   | **Built 2026-11-17** |
-| Gates, slots, board cap, pacing and the draw              | `Market/IpoBoard.cs`, `IpoBoardTests`       | **Built 2026-11-17** |
-| Buy-outs: chance, premium, payout                         | `Market/IpoBuyout.cs`, `IpoBuyoutTests`     | **Built 2026-11-17** |
-| Drift and volatility after listing                        | Library                                     | Next                 |
-| Company registry, moving and delisting, save data         | Library                                     | Not started          |
-| Daily scan of businesses, the flag, save of the counts    | `mod/Engines/CompanyDesk.cs`, scenario 64   | **Built 2026-11-17** |
-| Company registry, daily steps, save of companies          | `Market/IpoEngine.cs`, `IpoEngineTests`     | **Built 2026-11-17** |
-| Listing a company as a game stock; earnings; names        | Mod engine                                  | Next                 |
-| IPO dialog, bell, chirps, Figma                           | Mod windows                                 | Not started          |
+| Slice                                                     | Where                                               | Status               |
+| --------------------------------------------------------- | --------------------------------------------------- | -------------------- |
+| Candidate rule and healthy-day count; the rare daily draw | `Market/IpoCalendar.cs`, `IpoCalendarTests`         | **Built 2026-11-17** |
+| Offering price and first-day pop                          | `Market/IpoPricing.cs`, `IpoPricingTests`           | **Built 2026-11-17** |
+| Gates, slots, board cap, pacing and the draw              | `Market/IpoBoard.cs`, `IpoBoardTests`               | **Built 2026-11-17** |
+| Buy-outs: chance, premium, payout                         | `Market/IpoBuyout.cs`, `IpoBuyoutTests`             | **Built 2026-11-17** |
+| Drift and volatility after listing                        | Library                                             | Next                 |
+| Company registry, moving and delisting, save data         | Library                                             | Not started          |
+| Daily scan of businesses, the flag, save of the counts    | `mod/Engines/CompanyDesk.cs`, scenario 64           | **Built 2026-11-17** |
+| Company registry, daily steps, save of companies          | `Market/IpoEngine.cs`, `IpoEngineTests`             | **Built 2026-11-17** |
+| Yearly earnings of a business                             | `Market/IpoEarnings.cs`, `CompanyDesk`, scenario 65 | **Built 2026-11-18** |
+| Listing a company as a game stock; names                  | Mod engine                                          | Next                 |
+| IPO dialog, bell, chirps, Figma                           | Mod windows                                         | Not started          |
 
 The library slices: `CandidateBook` counts healthy days per building (id plus build index, so a
 building that reuses an id starts from nothing) and lists the candidates of each kind in a fixed
@@ -186,11 +187,30 @@ Every kind the city has can now list. Things this one scan shows and does not se
 
 ### IPO price
 
-From what the business earns: the game books income to the city by category only, so the mod
-measures the building's own income (the game's income formula for its type and level × its activity,
-or the city's income just before and after the building's step). Offering price = annual earnings ×
-a price-to-earnings multiple × the city's stake (10%) ÷ 1,000, in whole ₡, kept inside ₡1 to
-₡100,000 (the range of the game's own stocks).
+From what the business earns. The game books income to the city by zone only, never per building, so
+the mod has to estimate it (decided 2026-11-17: use the game's income formula; refined 2026-11-18
+after measuring it):
+
+- **Measured:** the game's formula (`PrivateBuildingAI.GetConsumptionRates`, its
+  `incomeAccumulation`) cannot be scaled into real income. Summed over a zone and taxed, it predicts
+  5 to 16 times what the game reports (commercial 11.7×, office 5.1×, industry 16.4× in the test
+  city), because the amount really booked depends on each building's activity, and the formula's
+  output is already multiplied by the production rate.
+- **So the formula only shares out what the game reports:** a business is credited with its share,
+  by the formula, of its zone's real weekly income (`EconomyManager.GetIncomeAndExpenses` for
+  commercial, office or industrial), and its earnings are the income that tax was levied on: weekly
+  zone income × share × 52 × 100 ÷ its tax rate (`IpoEarnings.AnnualCents`). The shares add back up
+  to the game's figure (checked in game, scenario 65).
+- **Seen in the test city (one city):** offering prices of ₡40 to ₡52 for shops, ₡141 to ₡168 for
+  offices and ₡8 to ₡16 for industry; none at the ₡1 floor or the ₡100,000 ceiling. The range inside
+  a zone is narrow: the formula's income hardly differs between businesses of one zone, so a
+  company's price says more about its zone than about the business. Open: weight the share by jobs
+  as well, so a larger business lists higher.
+- **Untaxed zone:** with a tax rate of 0 the zone reports no income, the earnings are 0 and the
+  company lists at the ₡1 floor.
+
+Offering price = annual earnings × a price-to-earnings multiple × the city's stake (10%) ÷ 1,000, in
+whole ₡, kept inside ₡1 to ₡100,000 (the range of the game's own stocks).
 
 **Why a 10% stake over 1,000 shares (decided 2026-11-17):** the game has no share count and no
 volume. A stock is its last 30 daily prices plus the city's own holding (shares owned, money spent),
@@ -440,6 +460,17 @@ can be filled. If the chosen business is no longer a candidate on its day, that 
 
 Prices after the first trading day do not move yet (drift and swing are not built).
 
+### Earnings
+
+```text
+share           = the game formula's income for the business ÷ the same summed over its zone
+                  (zone = all commercial, all office or all industrial businesses)
+tax a year      = the zone's weekly income as the game reports it × share × 52
+annual earnings = tax a year × 100 ÷ the business's tax rate (9 = 9%)
+```
+
+0 when the zone reports no income or is untaxed.
+
 ### Offering price
 
 ```text
@@ -608,7 +639,8 @@ settings.
 
 1. Decided: buy-outs are a regular rare event for any company listed a year or more, not a rule that
    only applies at the cap.
-2. Measure income by the game's formula or by the before-and-after reading.
+2. Decided: earnings are a share, by the game's formula, of the zone's reported income. Open:
+   whether to weight that share by jobs as well.
 3. Whether the city may sell IPO shares during the offering window.
 4. The bell: confirm by ear that `stock_exchange_levelup` suits; if not, pick another shipped clip
    or bundle a bell with the mod (needs a licensed recording). Confirm in game how the mod reaches

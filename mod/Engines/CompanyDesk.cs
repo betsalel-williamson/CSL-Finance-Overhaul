@@ -284,6 +284,95 @@ namespace FinanceOverhaul
             return level0 + level1 + level2 + level3;
         }
 
+        /// <summary>
+        /// What the game's own formula gives a business as income for one of its simulation
+        /// steps at full production (the figure the game taxes): 0 for anything that is not a
+        /// zoned business. An estimate: it does not see how busy the building is today.
+        /// </summary>
+        public static int IncomePerStep(ushort building)
+        {
+            Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
+            BuildingInfo info = buffer[building].Info;
+            PrivateBuildingAI ai = info == null ? null : info.m_buildingAI as PrivateBuildingAI;
+            if (ai == null)
+            {
+                return 0;
+            }
+
+            int electricity,
+                water,
+                sewage,
+                garbage,
+                income,
+                mail;
+            ai.GetConsumptionRates(
+                (ItemClass.Level)buffer[building].m_level,
+                new Randomizer(building),
+                100,
+                out electricity,
+                out water,
+                out sewage,
+                out garbage,
+                out income,
+                out mail
+            );
+            return income;
+        }
+
+        /// <summary>The formula's income of every zoned business of a service, summed.</summary>
+        public static long ZoneFormulaIncome(ItemClass.Service service)
+        {
+            Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
+            long total = 0;
+            for (int i = 1; i < buffer.Length; i++)
+            {
+                BuildingInfo info = buffer[i].Info;
+                if (
+                    (buffer[i].m_flags & Building.Flags.Created) != 0
+                    && info != null
+                    && info.m_class != null
+                    && info.m_class.m_service == service
+                    && info.m_buildingAI is PrivateBuildingAI
+                )
+                {
+                    total += IncomePerStep((ushort)i);
+                }
+            }
+
+            return total;
+        }
+
+        /// <summary>
+        /// What a business earns in a game year, in cents: its share (by the game's formula) of
+        /// the weekly income the game reports for its zone, as the income that tax was levied
+        /// on. 0 when the zone brings in nothing (untaxed, or no income yet).
+        /// </summary>
+        public static long AnnualEarningsCents(ushort building)
+        {
+            BuildingInfo info = BuildingManager.instance.m_buildings.m_buffer[building].Info;
+            if (info == null || info.m_class == null)
+            {
+                return 0;
+            }
+
+            EconomyManager em = EconomyManager.instance;
+            long weeklyIncome,
+                weeklyExpenses;
+            em.GetIncomeAndExpenses(
+                info.m_class.m_service,
+                ItemClass.SubService.None,
+                ItemClass.Level.None,
+                out weeklyIncome,
+                out weeklyExpenses
+            );
+            return IpoEarnings.AnnualCents(
+                IncomePerStep(building),
+                ZoneFormulaIncome(info.m_class.m_service),
+                weeklyIncome,
+                em.GetTaxRate(info.m_class)
+            );
+        }
+
         /// <summary>City save: writes the counts (a city never scanned writes nothing).</summary>
         public static void Save()
         {
