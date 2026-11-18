@@ -11,19 +11,20 @@ patterns as the source of the rules.
 Built one slice at a time (maths with proofs → engine → Figma → UI → game UI test → docs), behind
 the Local IPOs flag.
 
-| Slice                                                     | Where                                               | Status               |
-| --------------------------------------------------------- | --------------------------------------------------- | -------------------- |
-| Candidate rule and healthy-day count; the rare daily draw | `Market/IpoCalendar.cs`, `IpoCalendarTests`         | **Built 2026-11-17** |
-| Offering price and first-day pop                          | `Market/IpoPricing.cs`, `IpoPricingTests`           | **Built 2026-11-17** |
-| Gates, slots, board cap, pacing and the draw              | `Market/IpoBoard.cs`, `IpoBoardTests`               | **Built 2026-11-17** |
-| Buy-outs: chance, premium, payout                         | `Market/IpoBuyout.cs`, `IpoBuyoutTests`             | **Built 2026-11-17** |
-| Drift and volatility after listing                        | Library                                             | Next                 |
-| Company registry, moving and delisting, save data         | Library                                             | Not started          |
-| Daily scan of businesses, the flag, save of the counts    | `mod/Engines/CompanyDesk.cs`, scenario 64           | **Built 2026-11-17** |
-| Company registry, daily steps, save of companies          | `Market/IpoEngine.cs`, `IpoEngineTests`             | **Built 2026-11-17** |
-| Yearly earnings of a business                             | `Market/IpoEarnings.cs`, `CompanyDesk`, scenario 65 | **Built 2026-11-18** |
-| Listing a company as a game stock; names                  | Mod engine                                          | Next                 |
-| IPO dialog, bell, chirps, Figma                           | Mod windows                                         | Not started          |
+| Slice                                                     | Where                                                       | Status               |
+| --------------------------------------------------------- | ----------------------------------------------------------- | -------------------- |
+| Candidate rule and healthy-day count; the rare daily draw | `Market/IpoCalendar.cs`, `IpoCalendarTests`                 | **Built 2026-11-17** |
+| Offering price and first-day pop                          | `Market/IpoPricing.cs`, `IpoPricingTests`                   | **Built 2026-11-17** |
+| Gates, slots, board cap, pacing and the draw              | `Market/IpoBoard.cs`, `IpoBoardTests`                       | **Built 2026-11-17** |
+| Buy-outs: chance, premium, payout                         | `Market/IpoBuyout.cs`, `IpoBuyoutTests`                     | **Built 2026-11-17** |
+| Drift and volatility after listing                        | Library                                                     | Next                 |
+| Company registry, moving and delisting, save data         | Library                                                     | Not started          |
+| Daily scan of businesses, the flag, save of the counts    | `mod/Engines/CompanyDesk.cs`, scenario 64                   | **Built 2026-11-17** |
+| Company registry, daily steps, save of companies          | `Market/IpoEngine.cs`, `IpoEngineTests`                     | **Built 2026-11-17** |
+| Yearly earnings of a business                             | `Market/IpoEarnings.cs`, `CompanyDesk`, scenario 65         | **Built 2026-11-18** |
+| A company as a game stock; the engine runs daily          | `mod/Engines/CompanyListing.cs`, `CompanyDesk`, scenario 66 | **Built 2026-11-18** |
+| Chirps, the IPO dialog, the Investments tab cards         | Mod windows                                                 | Not started          |
+| IPO dialog, bell, chirps, Figma                           | Mod windows                                                 | Not started          |
 
 The library slices: `CandidateBook` counts healthy days per building (id plus build index, so a
 building that reuses an id starts from nothing) and lists the candidates of each kind in a fixed
@@ -624,6 +625,42 @@ settings.
 | Buy-out premium: average / spread       | 40% / 15% | What the buyer pays above the price                       |
 | No buy-out before (days listed)         | 365       | A new listing is not bought in its first year             |
 | Grace period after losing a home        | 90 days   | Before an un-homed company delists                        |
+
+## In the game (built 2026-11-18)
+
+With the dev-only Local IPOs flag on, `CompanyDesk` runs once a game day after the game's own
+investment update: it scans the businesses, runs `IpoEngine.Step`, and carries out its events.
+
+- **Announced:** the headquarters is marked Historical, and the company is listed as a stock: a copy
+  of a share stock type named `FinanceOverhaul.Company.<id>` with its own investment slot
+  (`CompanyListing`, the mechanism of the Index and the test stock). Its name in the game is the
+  building's name; its price is the registry's (a postfix on `SafeCalculateValue`), so the game's
+  figure follows at the next daily update. The game's Buy and Sell work on it as on any stock, up to
+  1,000 shares.
+- **First trading day:** the registry price moves to the first-day price.
+- **Bought out:** the city's shares are sold at the buyer's price through the game's own sale (so
+  the money and the profit are booked as for any stock), the slot is freed and the stock type
+  removed. The building stays Historical.
+- **Loading a city:** the game drops a stock type it does not know, and a company's type can only be
+  registered once the mod has read its save data. So every company is listed again after loading
+  (`CompanyDesk.EnsureListed`) and its holding and price history are put back from the copy the
+  registry keeps (`holding|…` lines, refreshed whenever the city saves). A company stock the save
+  does not know is cleared. A listed company keeps its stock when the flag is switched off: the flag
+  gates the daily scan and new IPOs.
+- **Game UI scenario 66** lists the first candidate, checks the game has a stock for it at the
+  offering price, closes the offering window, has it bought out and checks the stock is gone, then
+  removes everything and puts the building's Historical flag back.
+
+Not built: chirps and the IPO dialog (the events are only logged), the Investments tab cards, price
+drift and swing (a trading company's price does not move), delisting when the building is lost, and
+a save-and-reload check of the holding copy (it needs a game restart; planned for the save
+compatibility matrix).
+
+**A test accident worth recording (2026-11-18):** the first run of scenario 66 threw mid-step, the
+runner stopped without its cleanup, and with the flag and the test rules left on the engine listed
+two real companies in the loaded city; an autosave then wrote them into the mod data. They were
+removed with the dev command `ipo-remove-all`. Since then a step that throws fails the scenario and
+the cleanup still runs.
 
 ## Save data
 

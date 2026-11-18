@@ -4,7 +4,7 @@ using HarmonyLib;
 
 namespace FinanceOverhaul
 {
-    /// <summary>Hooks for the stocks the mod lists: the Index, the dev test stock and stress stocks.</summary>
+    /// <summary>Hooks for the stocks the mod lists: the Index, local companies, the dev test stock and stress stocks.</summary>
     public static partial class Patcher
     {
         private static int ApplyIndexPatches(Harmony harmony)
@@ -106,6 +106,7 @@ namespace FinanceOverhaul
             {
                 IndexListing.ApplyMark(__instance, ref data, ref __result);
                 TestStockListing.ApplyMark(__instance, ref data, ref __result);
+                CompanyListing.ApplyMark(__instance, ref __result);
             }
             catch
             {
@@ -143,6 +144,17 @@ namespace FinanceOverhaul
                 return false;
             }
 
+            int companyId;
+            if (CompanyListing.IsCompany(__instance, out companyId))
+            {
+                LocalCompany company = CompanyDesk.CompanyOf(companyId);
+                if (company != null)
+                {
+                    __result = company.Name;
+                    return false;
+                }
+            }
+
             if (TestStockListing.IsTest(__instance))
             {
                 __result = TestStock.DisplayName;
@@ -163,6 +175,21 @@ namespace FinanceOverhaul
             ref string __result
         )
         {
+            int companyId;
+            if (CompanyListing.IsCompany(__instance, out companyId))
+            {
+                LocalCompany company = CompanyDesk.CompanyOf(companyId);
+                if (company != null)
+                {
+                    __result = Strings.Format(
+                        "company.description",
+                        company.Name,
+                        (CompanyDesk.Rules ?? new IpoRules()).CityStakePercent.ToString()
+                    );
+                    return false;
+                }
+            }
+
             if (TestStockListing.IsTest(__instance))
             {
                 __result =

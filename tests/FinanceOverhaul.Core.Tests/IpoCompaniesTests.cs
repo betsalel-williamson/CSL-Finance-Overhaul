@@ -128,6 +128,9 @@ namespace FinanceOverhaul.Core.Tests
                     OfferPriceCents = 5_200,
                     PriceCents = 6_100,
                     Status = CompanyStatus.Trading,
+                    HeldShares = 250,
+                    HeldSpent = 1_300_000,
+                    History = new[] { 61f, 59.5f, 52f },
                 }
             );
             registry.Companies.Add(
@@ -173,6 +176,11 @@ namespace FinanceOverhaul.Core.Tests
             Assert.Equal(5_200, wso.OfferPriceCents);
             Assert.Equal(6_100, wso.PriceCents);
             Assert.Equal(CompanyStatus.Trading, wso.Status);
+            Assert.Equal(250u, wso.HeldShares); // the city's holding comes back with the company
+            Assert.Equal(1_300_000, wso.HeldSpent);
+            Assert.Equal(new[] { 61f, 59.5f, 52f }, wso.History);
+            Assert.Equal(0u, back.Find(7).HeldShares);
+            Assert.Empty(back.Find(7).History);
             Assert.Equal(CompanyStatus.Offering, back.Find(7).Status);
             Assert.True(back.BuyoutScheduled);
             Assert.Equal(3, back.BuyoutCompanyId);
@@ -182,6 +190,19 @@ namespace FinanceOverhaul.Core.Tests
             Assert.Equal(BusinessKind.Oil, back.IpoKind);
             Assert.Equal(4340, back.IpoDay);
             Assert.Equal(saved, CompaniesCodec.Format(new CandidateBook(), dice, back));
+        }
+
+        [Fact]
+        public void ACompanysStockTypeIsNamedByItsId()
+        {
+            Assert.Equal("FinanceOverhaul.Company.7", LocalCompanyNames.PrefabName(7));
+            int id;
+            Assert.True(LocalCompanyNames.TryId("FinanceOverhaul.Company.7", out id));
+            Assert.Equal(7, id);
+            Assert.False(LocalCompanyNames.TryId("Oil Industry Investment", out id));
+            Assert.False(LocalCompanyNames.TryId("FinanceOverhaul.Company.x", out id));
+            Assert.False(LocalCompanyNames.TryId("FinanceOverhaul.Company.0", out id));
+            Assert.False(LocalCompanyNames.TryId(null, out id));
         }
 
         [Fact]

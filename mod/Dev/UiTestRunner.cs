@@ -62,6 +62,14 @@ namespace FinanceOverhaul
             }
         }
 
+        /// <summary>A company a scenario listed: its headquarters and whether that was Historical before.</summary>
+        private sealed class TestCompany
+        {
+            public int Id;
+            public BuildingKey Home;
+            public bool WasHistorical;
+        }
+
         private sealed class Context
         {
             public string Name = "scenario";
@@ -87,6 +95,9 @@ namespace FinanceOverhaul
             public ushort TurnedExchange;
             public Vector3 ExchangePositionBefore;
             public float ExchangeAngleBefore;
+
+            /// <summary>Companies a scenario listed, with what to put back.</summary>
+            public readonly List<TestCompany> TestCompanies = new List<TestCompany>();
 
             /// <summary>The player's Local IPOs flag, kept while a scenario switches it.</summary>
             public bool? LocalIposBefore;
@@ -199,6 +210,7 @@ namespace FinanceOverhaul
                 Mod.Settings.LocalIposEnabled = ctx.LocalIposBefore.Value;
             }
 
+            RemoveTestCompanies(ctx);
             CompanyDesk.Rules = null; // back to the real rules
             if (ctx.BrightnessBefore.HasValue && Mod.Settings != null)
             {
@@ -275,8 +287,29 @@ namespace FinanceOverhaul
             {
                 r.Unknown = false;
                 IEnumerator steps = group(line, cmd, a, b, ctx, r);
-                while (steps.MoveNext())
+                while (true)
                 {
+                    // A command that throws fails its step instead of killing the scenario:
+                    // the cleanup lines must still run (a scenario once died mid-run and left
+                    // its changes in the city).
+                    bool more;
+                    try
+                    {
+                        more = steps.MoveNext();
+                    }
+                    catch (Exception ex)
+                    {
+                        r.Unknown = false;
+                        r.Error = "the step threw " + ex.GetType().Name + ": " + ex.Message;
+                        ModLog.Warn("uitest: '" + line + "' threw: " + ex);
+                        yield break;
+                    }
+
+                    if (!more)
+                    {
+                        break;
+                    }
+
                     yield return steps.Current;
                 }
 

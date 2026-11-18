@@ -32,6 +32,45 @@ namespace FinanceOverhaul.Core
         public long PriceCents;
 
         public CompanyStatus Status;
+
+        // The city's holding and the price history, copied from the game's stock when the city
+        // saves and put back when it loads: the game drops a stock type it does not know, and
+        // a company's type is only registered once the mod has read this.
+
+        /// <summary>Shares the city holds.</summary>
+        public uint HeldShares;
+
+        /// <summary>What the city spent on them, as the game stores it.</summary>
+        public int HeldSpent;
+
+        /// <summary>Daily prices as the game keeps them, newest first (at most 30).</summary>
+        public float[] History = new float[0];
+    }
+
+    /// <summary>The name of a local company's stock type in the game.</summary>
+    public static class LocalCompanyNames
+    {
+        public const string Prefix = "FinanceOverhaul.Company.";
+
+        public static string PrefabName(int companyId)
+        {
+            return Prefix + companyId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>The company id in a stock type's name; false for any other stock.</summary>
+        public static bool TryId(string prefabName, out int companyId)
+        {
+            companyId = 0;
+            return prefabName != null
+                && prefabName.StartsWith(Prefix, StringComparison.Ordinal)
+                && int.TryParse(
+                    prefabName.Substring(Prefix.Length),
+                    System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out companyId
+                )
+                && companyId > 0;
+        }
     }
 
     /// <summary>What happened to local companies on a day, for the game side to act on.</summary>
@@ -337,6 +376,23 @@ namespace FinanceOverhaul.Core
                 return new IpoEvent { Kind = IpoEventKind.Cancelled };
             }
 
+            return List(registry, business, registry.IpoKind, today, rules, source);
+        }
+
+        /// <summary>
+        /// Lists a business as a company today: at its offering price, with the offering window
+        /// open, counted towards pacing. The scheduled path calls this once the business is
+        /// known to qualify; game UI tests call it directly.
+        /// </summary>
+        public static IpoEvent List(
+            CompanyRegistry registry,
+            BuildingKey business,
+            BusinessKind kind,
+            int today,
+            IpoRules rules,
+            IBusinessSource source
+        )
+        {
             string name = source.NameOf(business) ?? string.Empty;
             long offer = IpoPricing.OfferingPriceCents(source.AnnualEarningsCents(business), rules);
             var company = new LocalCompany
@@ -344,7 +400,7 @@ namespace FinanceOverhaul.Core
                 Id = registry.NextId++,
                 Name = name,
                 Symbol = source.SymbolFor(name),
-                Kind = registry.IpoKind,
+                Kind = kind,
                 Home = business,
                 AnnouncedDay = today,
                 FirstTradingDay = today + OfferDays,

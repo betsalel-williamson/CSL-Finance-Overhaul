@@ -244,6 +244,11 @@ namespace FinanceOverhaul.Core
             { "bond.card.weeklyCost", "Weekly Cost" },
             { "bond.card.timeLeft", "Time Left" },
             { "bond.card.repaidOn", "Repaid On" },
+            // Local IPOs
+            {
+                "company.description",
+                "{0} is a company from your own city. It went public on the Stock Exchange, and the city can hold up to {1}% of it."
+            },
             { "bond.owed", "Owed: loans {0} + bonds {1} = {2} · {3} annual income (cap {4}×)" },
             // Chirper notices
             { "notice.sender.brokerage", "City Brokerage" },

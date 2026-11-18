@@ -135,6 +135,7 @@ namespace FinanceOverhaul.Core
         private const string IpoDayTag = "ipoday";
         private const string IpoTag = "ipo";
         private const string BuyoutTag = "buyout";
+        private const string HoldingTag = "holding";
 
         public static string Format(CandidateBook book, IpoDice dice, CompanyRegistry registry)
         {
@@ -223,6 +224,28 @@ namespace FinanceOverhaul.Core
                     .Append('|')
                     .Append(Clean(c.Name))
                     .Append('\n');
+                if (
+                    c.HeldShares > 0
+                    || c.HeldSpent != 0
+                    || (c.History != null && c.History.Length > 0)
+                )
+                {
+                    sb.Append(HoldingTag)
+                        .Append('|')
+                        .Append(Int(c.Id))
+                        .Append('|')
+                        .Append(c.HeldShares.ToString(CultureInfo.InvariantCulture))
+                        .Append('|')
+                        .Append(Int(c.HeldSpent))
+                        .Append('|');
+                    for (int h = 0; c.History != null && h < c.History.Length; h++)
+                    {
+                        sb.Append(h == 0 ? string.Empty : ",")
+                            .Append(c.History[h].ToString("R", CultureInfo.InvariantCulture));
+                    }
+
+                    sb.Append('\n');
+                }
             }
 
             return sb.ToString();
@@ -312,6 +335,48 @@ namespace FinanceOverhaul.Core
                 registry.BuyoutScheduled = true;
                 registry.BuyoutCompanyId = number;
                 registry.BuyoutDay = day;
+            }
+            else if (f[0] == HoldingTag && f.Length == 5 && TryInt(f[1], out number))
+            {
+                // Follows its company's line.
+                LocalCompany held = registry.Find(number);
+                uint shares;
+                int spent;
+                if (
+                    held == null
+                    || !uint.TryParse(
+                        f[2],
+                        NumberStyles.None,
+                        CultureInfo.InvariantCulture,
+                        out shares
+                    )
+                    || !TryInt(f[3], out spent)
+                )
+                {
+                    return;
+                }
+
+                var history = new List<float>();
+                foreach (string one in f[4].Split(','))
+                {
+                    float price;
+                    if (
+                        one.Length > 0
+                        && float.TryParse(
+                            one,
+                            NumberStyles.Float,
+                            CultureInfo.InvariantCulture,
+                            out price
+                        )
+                    )
+                    {
+                        history.Add(price);
+                    }
+                }
+
+                held.HeldShares = shares;
+                held.HeldSpent = spent;
+                held.History = history.ToArray();
             }
             else if (f[0] == CompanyTag && f.Length == 12)
             {

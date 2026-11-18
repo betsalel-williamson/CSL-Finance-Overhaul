@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using FinanceOverhaul.Core;
 using UnityEngine;
@@ -221,6 +222,173 @@ namespace FinanceOverhaul
                     sim.SimulationPaused = paused;
                     break;
                 }
+                case "ipo-list-now":
+                case "ipo-first-day":
+                case "ipo-buyout":
+                case "ipo-remove-test":
+                {
+                    // ipo-list-now — lists the first candidate as a company (after ipo-scan).
+                    // ipo-first-day — closes its offering window today. ipo-buyout — it is
+                    // bought out today. ipo-remove-test — removes what this scenario listed, as
+                    // if it never had (also done when the scenario ends).
+                    SimulationManager sim = SimulationManager.instance;
+                    bool paused = sim.SimulationPaused;
+                    sim.SimulationPaused = true;
+                    yield return new WaitForSeconds(0.5f); // let a running step finish
+                    if (cmd == "ipo-remove-test")
+                    {
+                        RemoveTestCompanies(ctx);
+                    }
+                    else if (cmd == "ipo-list-now")
+                    {
+                        bool wasHistorical;
+                        LocalCompany listed = CompanyDesk.TestListFirstCandidate(out wasHistorical);
+                        if (listed == null)
+                        {
+                            r.Error = "no candidate to list (ipo-healthy-days and ipo-scan first)";
+                        }
+                        else
+                        {
+                            ctx.TestCompanies.Add(
+                                new TestCompany
+                                {
+                                    Id = listed.Id,
+                                    Home = listed.Home,
+                                    WasHistorical = wasHistorical,
+                                }
+                            );
+                        }
+                    }
+                    else if (ctx.TestCompanies.Count == 0)
+                    {
+                        r.Error = "ipo-list-now first";
+                    }
+                    else if (cmd == "ipo-first-day")
+                    {
+                        CompanyDesk.TestOpenFirstDay(
+                            ctx.TestCompanies[ctx.TestCompanies.Count - 1].Id
+                        );
+                    }
+                    else
+                    {
+                        CompanyDesk.TestBuyOut(ctx.TestCompanies[ctx.TestCompanies.Count - 1].Id);
+                    }
+
+                    sim.SimulationPaused = paused;
+                    yield return new WaitForSeconds(1.5f); // the stock type and slot follow
+                    break;
+                }
+                case "expect-company":
+                {
+                    // expect-company offering|trading|gone [listed|unlisted] — this scenario's
+                    // newest company, and whether the game has a stock for it.
+                    if (ctx.TestCompanies.Count == 0)
+                    {
+                        r.Error = "ipo-list-now first";
+                        break;
+                    }
+
+                    int id = ctx.TestCompanies[ctx.TestCompanies.Count - 1].Id;
+                    LocalCompany c = CompanyDesk.CompanyOf(id);
+                    string state =
+                        c == null ? "gone"
+                        : c.Status == CompanyStatus.Offering ? "offering"
+                        : "trading";
+                    int slot = CompanyListing.SlotOf(id);
+                    ModLog.Info(
+                        "uitest: company "
+                            + id
+                            + " "
+                            + state
+                            + (
+                                c == null
+                                    ? ""
+                                    : " '"
+                                        + c.Name
+                                        + "' price "
+                                        + c.PriceCents
+                                        + " offer "
+                                        + c.OfferPriceCents
+                            )
+                            + " slot "
+                            + slot
+                            + (
+                                slot > 0
+                                    ? " game price "
+                                        + EconomyManager.instance.m_investments.m_buffer[slot].value
+                                    : ""
+                            )
+                    );
+                    if (state != a)
+                    {
+                        r.Error = "the company is " + state + ", expected " + a;
+                    }
+                    else if (b == "listed" && slot <= 0)
+                    {
+                        r.Error = "the game has no stock for the company";
+                    }
+                    else if (b == "unlisted" && slot > 0)
+                    {
+                        r.Error = "the game still has a stock for the company";
+                    }
+
+                    break;
+                }
+                case "ipo-remove-all":
+                {
+                    // ipo-remove-all — dev clean-up: every local company is removed as if none
+                    // had ever listed (no payout) and the city's mod data is rewritten.
+                    SimulationManager sim = SimulationManager.instance;
+                    bool paused = sim.SimulationPaused;
+                    sim.SimulationPaused = true;
+                    yield return new WaitForSeconds(0.5f);
+                    int removed = CompanyDesk.TestRemoveAll();
+                    sim.SimulationPaused = paused;
+                    yield return new WaitForSeconds(1f);
+                    ModLog.Info(
+                        "uitest: ipo-remove-all removed "
+                            + removed
+                            + "; company stocks left "
+                            + CompanyListing.Listed
+                    );
+                    break;
+                }
+                case "historical-off":
+                {
+                    // historical-off NAME… — takes the Historical flag off every zoned business
+                    // with exactly this name (undoing a listing whose record was lost).
+                    string wanted = (a + " " + (b ?? string.Empty)).Trim();
+                    Building[] buildings = BuildingManager.instance.m_buildings.m_buffer;
+                    int cleared = 0;
+                    for (int i = 1; i < buildings.Length; i++)
+                    {
+                        if (
+                            (buildings[i].m_flags & Building.Flags.Created) == 0
+                            || (buildings[i].m_flags & Building.Flags.Historical) == 0
+                            || buildings[i].Info == null
+                            || !(buildings[i].Info.m_buildingAI is PrivateBuildingAI)
+                        )
+                        {
+                            continue;
+                        }
+
+                        string name = BuildingManager.instance.GetBuildingName(
+                            (ushort)i,
+                            new InstanceID { Building = (ushort)i }
+                        );
+                        if (name == wanted)
+                        {
+                            buildings[i].m_flags &= ~Building.Flags.Historical;
+                            cleared++;
+                            ModLog.Info(
+                                "uitest: historical off for building " + i + " '" + name + "'"
+                            );
+                        }
+                    }
+
+                    ModLog.Info("uitest: historical-off '" + wanted + "' cleared " + cleared);
+                    break;
+                }
                 case "expect-ipo-candidates":
                 {
                     // expect-ipo-candidates none|some — candidates after the last scan.
@@ -241,6 +409,27 @@ namespace FinanceOverhaul
                     r.Unknown = true; // not one of this group's commands
                     yield break;
             }
+        }
+
+        /// <summary>Removes every company a scenario listed, as if it never had.</summary>
+        private static void RemoveTestCompanies(Context ctx)
+        {
+            Building[] buildings = BuildingManager.instance.m_buildings.m_buffer;
+            foreach (TestCompany one in ctx.TestCompanies)
+            {
+                CompanyDesk.TestRemove(one.Id, one.WasHistorical);
+                // A company the scenario had bought out is already gone from the records, but
+                // its building keeps the Historical flag: put that back too.
+                if (
+                    !one.WasHistorical
+                    && buildings[one.Home.Id].m_buildIndex == one.Home.BuildIndex
+                )
+                {
+                    buildings[one.Home.Id].m_flags &= ~Building.Flags.Historical;
+                }
+            }
+
+            ctx.TestCompanies.Clear();
         }
     }
 }

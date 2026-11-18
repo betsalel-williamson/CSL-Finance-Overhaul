@@ -3,17 +3,19 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using ColossalFramework.Math;
+using ColossalFramework.Threading;
 using FinanceOverhaul.Core;
 
 namespace FinanceOverhaul
 {
     /// <summary>
-    /// Local IPOs in the running game (docs/features/local-ipos.md), first part: once per in-game
-    /// day, right after the vanilla investment update, every zoned business is read from the game
-    /// and handed to the library, which counts how long each has stayed healthy and what the
-    /// city has of each kind (the gates and slots). Nothing lists yet. The counts live in the
-    /// mod's own save data (<see cref="CompaniesCodec.DataId"/>), written when the city saves.
-    /// Only runs while Options → Local IPOs is on.
+    /// Local IPOs in the running game (docs/features/local-ipos.md): once per in-game day, right
+    /// after the vanilla investment update, every zoned business is read from the game and
+    /// handed to the library, which counts how long each has stayed healthy and what the city
+    /// has of each kind (the gates and slots); then the library's daily step runs and this class
+    /// carries out what it decided (list a company, open its first trading day, pay a buy-out).
+    /// Everything lives in the mod's own save data (<see cref="CompaniesCodec.DataId"/>),
+    /// written when the city saves. Only runs while Options → Local IPOs is on.
     /// </summary>
     public static class CompanyDesk
     {
@@ -79,6 +81,299 @@ namespace FinanceOverhaul
 
             lastScanDay = today;
             Scan();
+            Step(today);
+        }
+
+        /// <summary>The company's price now, in cents (0 if unknown).</summary>
+        public static long PriceCentsOf(int companyId)
+        {
+            lock (Sync)
+            {
+                LocalCompany c = registry == null ? null : registry.Find(companyId);
+                return c == null ? 0 : c.PriceCents;
+            }
+        }
+
+        /// <summary>The company with this id, or null.</summary>
+        public static LocalCompany CompanyOf(int companyId)
+        {
+            lock (Sync)
+            {
+                return registry == null ? null : registry.Find(companyId);
+            }
+        }
+
+        /// <summary>The companies listed now.</summary>
+        public static List<LocalCompany> Companies()
+        {
+            lock (Sync)
+            {
+                Book();
+                return new List<LocalCompany>(registry.Companies);
+            }
+        }
+
+        /// <summary>
+        /// Main thread (level loaded, hot reload): lists every company the save holds again.
+        /// The game dropped their stock types on load; the holdings come back from the registry.
+        /// </summary>
+        public static void EnsureListed()
+        {
+            try
+            {
+                // Whatever the flag says: a company already listed keeps its stock (the flag
+                // gates new IPOs), and a company stock the save does not know is cleared.
+                if (!LoadingManager.exists || !LoadingManager.instance.m_loadingComplete)
+                {
+                    return;
+                }
+
+                List<LocalCompany> companies = Companies();
+                var known = new List<int>();
+                foreach (LocalCompany c in companies)
+                {
+                    known.Add(c.Id);
+                    CompanyListing.List(c);
+                }
+
+                SimulationManager.instance.AddAction(() => CompanyListing.SweepOrphans(known));
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("ipo: listing the city's companies failed: " + ex.Message);
+            }
+        }
+
+        /// <summary>Simulation thread: one day of the library's engine, then its events.</summary>
+        private static void Step(int today)
+        {
+            List<IpoEvent> events;
+            lock (Sync)
+            {
+                Book();
+                events = IpoEngine.Step(
+                    registry,
+                    book,
+                    kinds,
+                    GameAreaManager.instance.m_areaCount,
+                    today,
+                    Rules ?? DefaultRules,
+                    dice,
+                    Source
+                );
+            }
+
+            foreach (IpoEvent e in events)
+            {
+                Carry(e);
+            }
+        }
+
+        /// <summary>Simulation thread: does in the game what the engine decided.</summary>
+        private static void Carry(IpoEvent e)
+        {
+            LocalCompany c = e.Company;
+            switch (e.Kind)
+            {
+                case IpoEventKind.Announced:
+                    MarkHistorical(c.Home);
+                    ModLog.Info(
+                        "ipo: "
+                            + c.Name
+                            + " is going public at "
+                            + BondText.WholeMoney(c.OfferPriceCents)
+                            + " a share; first trading day "
+                            + c.FirstTradingDay
+                            + "; headquarters building "
+                            + c.Home.Id
+                    );
+                    CompanyListing.OnMainThread(() => CompanyListing.List(c));
+                    break;
+                case IpoEventKind.Cancelled:
+                    ModLog.Info(
+                        "ipo: the IPO planned for today fell through (no longer qualifies)"
+                    );
+                    break;
+                case IpoEventKind.FirstTradingDay:
+                    ModLog.Info(
+                        "ipo: "
+                            + c.Name
+                            + " opened at "
+                            + BondText.WholeMoney(c.PriceCents)
+                            + " ("
+                            + (e.Fraction * 100).ToString("+0.0;-0.0")
+                            + "% on the offering price)"
+                    );
+                    break;
+                case IpoEventKind.BoughtOut:
+                    long paid = CompanyListing.Delist(c.Id, e.PricePerShareCents);
+                    ModLog.Info(
+                        "ipo: "
+                            + c.Name
+                            + " was bought out at "
+                            + BondText.WholeMoney(e.PricePerShareCents)
+                            + " a share; the city received "
+                            + paid
+                    );
+                    break;
+            }
+        }
+
+        /// <summary>A company's headquarters becomes a Historical building (if it is still that building).</summary>
+        private static void MarkHistorical(BuildingKey home)
+        {
+            Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
+            if (
+                home.Id < buffer.Length
+                && (buffer[home.Id].m_flags & Building.Flags.Created) != 0
+                && buffer[home.Id].m_buildIndex == home.BuildIndex
+            )
+            {
+                buffer[home.Id].m_flags |= Building.Flags.Historical;
+            }
+        }
+
+        private static readonly IBusinessSource Source = new GameBusinesses();
+
+        /// <summary>What the engine asks the game about a business that is about to list.</summary>
+        private sealed class GameBusinesses : IBusinessSource
+        {
+            public string NameOf(BuildingKey building)
+            {
+                return BuildingManager.instance.GetBuildingName(
+                    building.Id,
+                    new InstanceID { Building = building.Id }
+                );
+            }
+
+            public string SymbolFor(string name)
+            {
+                // Symbols come from the one map built over every stock type; it is read once
+                // the company's own type exists.
+                return string.Empty;
+            }
+
+            public long AnnualEarningsCents(BuildingKey building)
+            {
+                return CompanyDesk.AnnualEarningsCents(building.Id);
+            }
+        }
+
+        /// <summary>
+        /// Game UI tests (simulation paused): lists the first candidate now, as the scheduled
+        /// path would. Null if the city has no candidate.
+        /// </summary>
+        public static LocalCompany TestListFirstCandidate(out bool wasHistorical)
+        {
+            wasHistorical = false;
+            IpoEvent e;
+            lock (Sync)
+            {
+                CandidateBook b = Book();
+                IpoRules rules = Rules ?? DefaultRules;
+                List<BuildingKey> pool = b.Candidates(rules);
+                pool.RemoveAll(registry.IsHome);
+                if (pool.Count == 0)
+                {
+                    return null;
+                }
+
+                wasHistorical =
+                    (
+                        BuildingManager.instance.m_buildings.m_buffer[pool[0].Id].m_flags
+                        & Building.Flags.Historical
+                    ) != 0;
+                e = IpoEngine.List(
+                    registry,
+                    pool[0],
+                    b.KindOf(pool[0]),
+                    OrderDesk.Today,
+                    rules,
+                    Source
+                );
+            }
+
+            Carry(e);
+            return e.Company;
+        }
+
+        /// <summary>
+        /// Dev: removes every local company as if none had ever listed (no payout), clears what
+        /// the dice had scheduled, and rewrites the city's mod data so the next save does not
+        /// carry them. Returns how many were removed.
+        /// </summary>
+        public static int TestRemoveAll()
+        {
+            List<LocalCompany> all = Companies();
+            foreach (LocalCompany c in all)
+            {
+                TestRemove(c.Id, false);
+            }
+
+            lock (Sync)
+            {
+                registry.IpoScheduled = false;
+                registry.BuyoutScheduled = false;
+                registry.IpoDays.Clear();
+            }
+
+            Save();
+            return all.Count;
+        }
+
+        /// <summary>Game UI tests: the company's offering window closes today.</summary>
+        public static void TestOpenFirstDay(int companyId)
+        {
+            lock (Sync)
+            {
+                LocalCompany c = registry.Find(companyId);
+                if (c != null)
+                {
+                    c.FirstTradingDay = OrderDesk.Today;
+                }
+            }
+
+            Step(OrderDesk.Today);
+        }
+
+        /// <summary>Game UI tests: the company is bought out today.</summary>
+        public static void TestBuyOut(int companyId)
+        {
+            lock (Sync)
+            {
+                registry.BuyoutScheduled = true;
+                registry.BuyoutCompanyId = companyId;
+                registry.BuyoutDay = OrderDesk.Today;
+            }
+
+            Step(OrderDesk.Today);
+        }
+
+        /// <summary>
+        /// Game UI tests: removes a company as if it had never listed (no payout), frees its
+        /// pacing day and takes the Historical flag off its building again.
+        /// </summary>
+        public static void TestRemove(int companyId, bool wasHistorical)
+        {
+            LocalCompany c;
+            lock (Sync)
+            {
+                c = registry.Find(companyId);
+                if (c == null)
+                {
+                    return;
+                }
+
+                registry.Companies.Remove(c);
+                registry.IpoDays.Remove(c.AnnouncedDay);
+            }
+
+            CompanyListing.Delist(companyId, 0);
+            Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
+            if (!wasHistorical && buffer[c.Home.Id].m_buildIndex == c.Home.BuildIndex)
+            {
+                buffer[c.Home.Id].m_flags &= ~Building.Flags.Historical;
+            }
         }
 
         /// <summary>Reads every zoned business now (simulation thread, or with it paused).</summary>
@@ -410,6 +705,7 @@ namespace FinanceOverhaul
 
                 try
                 {
+                    CompanyListing.CopyHoldings(registry.Companies);
                     SimulationManager.instance.m_SerializableDataWrapper.SaveData(
                         CompaniesCodec.DataId,
                         Encoding.UTF8.GetBytes(CompaniesCodec.Format(book, dice, registry))

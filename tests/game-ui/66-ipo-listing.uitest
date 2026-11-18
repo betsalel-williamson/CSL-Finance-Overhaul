@@ -1,0 +1,27 @@
+# Local IPOs: a business of the city lists as a stock in the game. Lists the first candidate
+# (rule lowered to one healthy day), checks the game has a stock for it at the offering price,
+# closes the offering window and checks it trades, then has it bought out and checks the stock is
+# gone. The city holds no shares, so no money moves; whatever is left is removed in cleanup and
+# the building's Historical flag is put back as it was.
+name local ipos: a company lists as a stock, opens its first day and is bought out
+local-ipos on
+ipo-healthy-days 1
+ipo-scan
+expect-ipo-candidates some
+ipo-list-now
+expect-log ipo: listed
+expect-company offering listed
+ipo-first-day
+expect-log opened at
+expect-company trading listed
+show-economy
+wait 1
+capture ipo-listed
+close-economy
+ipo-buyout
+expect-log was bought out at
+expect-company gone unlisted
+cleanup:
+close-economy
+ipo-remove-test
+local-ipos restore

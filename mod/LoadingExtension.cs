@@ -30,6 +30,7 @@ namespace FinanceOverhaul
             try
             {
                 TickerBoards.DestroyAll();
+                CompanyListing.RemoveAll();
                 OrderDesk.Reset();
                 BondDesk.Reset();
                 CompanyDesk.Reset();
@@ -59,6 +60,7 @@ namespace FinanceOverhaul
                 IndexListing.EnsureInLoadedCity();
                 IndexListing.LogStatus();
                 TestStockListing.EnsureInLoadedCity();
+                CompanyDesk.EnsureListed();
                 TickerBoards.Ensure();
             }
             catch
