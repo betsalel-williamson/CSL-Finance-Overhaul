@@ -657,6 +657,20 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
 - **Its icon (built, `CoinIcons`):** the game draws a stack of money for a stock it has no art for.
   A local company, like the Index, gets a coin in the shape of the game's own stock coins with its
   ticker symbol on it (`CoinIcon` draws the shape), wherever the game shows a stock's icon.
+- **The headquarters' building panel (built, `CompanyBuildingPanel`; Figma UI Map band 19, designs B
+  and C):** for as long as the company is listed, the game's building info panel for its
+  headquarters has a gold title bar with the company's coin in place of the zone icon, and a listing
+  section above the Historical Building line. In the offering week the section shows the symbol with
+  an OFFERING badge, the first trading day, the offering price with the days left, what the city can
+  buy, and one gold "Buy at the offering price". From the first trading day it shows a TRADING
+  badge, the listing date, the price with its change and 30-day line, "City holds 250 of 1,000
+  shares · avg ₡432.00" with the gain and a bar towards the cap, and Buy and Sell at the same size.
+  "Show in Investments" opens Economy → Investments in both. Buy and Sell open the game's own
+  dialog. The mod only adds: the panel grows by the section's height, the game's rows keep their
+  place (the game ties the workers block to the panel's bottom edge, so the mod puts it back), and
+  for any other building, or once the company is gone, the panel is the game's own again. The
+  wording and the two states are `CompanyPanelText`; scenario 71 checks both states and the way
+  back.
 - **Fireworks (built, `IpoFireworks`):** the game's own event fireworks ("Event Firework Particles
   1" to "3", else "FireworksComplexIngame") go off from the headquarters' roof when the company is
   announced, on its first trading day, and when the player views the headquarters: eight bursts, 0.8

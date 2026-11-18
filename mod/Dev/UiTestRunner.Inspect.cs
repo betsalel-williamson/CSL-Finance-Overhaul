@@ -13,6 +13,8 @@ namespace FinanceOverhaul
     /// <summary>Game UI test commands: Looking at any control: finding, measuring, and the generic expect checks.</summary>
     public partial class UiTestRunner
     {
+        private const string BuildingPanelName = "(Library) ZonedBuildingWorldInfoPanel"; // not shown: a game control name
+
         private IEnumerator InspectSteps(
             string line,
             string cmd,
@@ -26,7 +28,12 @@ namespace FinanceOverhaul
             {
                 case "dump":
                 {
-                    UIComponent c = FindControl(a, includeHidden: true);
+                    // "dump building-panel": the game's zoned building info panel (its control
+                    // name has a space in it).
+                    UIComponent c =
+                        a == "building-panel"
+                            ? UIView.GetAView().FindUIComponent(BuildingPanelName)
+                            : FindControl(a, includeHidden: true);
                     if (c == null)
                     {
                         r.Error = "no control " + a;

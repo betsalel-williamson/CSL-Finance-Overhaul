@@ -1,0 +1,48 @@
+# Local IPOs: the game's building panel for a listed company's headquarters. Gold title bar with
+# the company's coin, and a listing section above the Historical Building line: the offering in
+# its first week (one Buy at the offering price), then the listing and the city's stake (Buy and
+# Sell). The game's rows stay; with the company gone the panel is the game's own again.
+# Everything listed is removed in cleanup; the 250 shares cost the test company's offering price.
+name local ipos: the headquarters' building panel shows the listing, offering then trading
+local-ipos on
+ipo-healthy-days 1
+ipo-scan
+ipo-dialog on
+ipo-list-now
+wait 1
+ipo-view
+wait 1.5
+expect-building-panel
+expect-visible FinanceOverhaulBuildingGold
+expect-visible FinanceOverhaulBuildingCoin
+expect-visible FinanceOverhaulBuildingListing
+expect-text FinanceOverhaulBuildingBadge OFFERING
+expect-text FinanceOverhaulBuildingLine First trading day
+expect-text FinanceOverhaulBuildingNote Offering price ·
+expect-text FinanceOverhaulBuildingStake The city can buy up to 1,000 shares (a 10% stake,
+expect-text FinanceOverhaulBuildingBuy Buy at the offering price
+expect-hidden FinanceOverhaulBuildingSell
+expect-no-overflow FinanceOverhaulBuildingListing
+# the game's workers block keeps its place above the section
+expect-no-overlap ZoneTypeInfo FinanceOverhaulBuildingListing
+expect-no-overlap FinanceOverhaulBuildingListing MakeHistoricalPanel
+capture building-panel-offering
+ipo-buy 250
+ipo-first-day
+wait 1.5
+expect-text FinanceOverhaulBuildingBadge TRADING
+expect-text FinanceOverhaulBuildingLine Listed
+expect-text FinanceOverhaulBuildingStake City holds 250 of 1,000 shares · avg
+expect-visible FinanceOverhaulBuildingSell
+expect-visible FinanceOverhaulBuildingGain
+expect-no-overflow FinanceOverhaulBuildingListing
+capture building-panel-trading
+ipo-remove-test
+wait 1.5
+expect-hidden FinanceOverhaulBuildingListing
+expect-hidden FinanceOverhaulBuildingGold
+expect-visible MakeHistoricalPanel
+cleanup:
+ipo-dialog close
+ipo-remove-test
+local-ipos restore
