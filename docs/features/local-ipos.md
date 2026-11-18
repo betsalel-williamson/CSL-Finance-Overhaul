@@ -24,7 +24,7 @@ the Local IPOs flag.
 | Yearly earnings of a business                             | `Market/IpoEarnings.cs`, `CompanyDesk`, scenario 65                          | **Built 2026-11-18** |
 | A company as a game stock; the engine runs daily          | `mod/Engines/CompanyListing.cs`, `CompanyDesk`, scenario 66                  | **Built 2026-11-18** |
 | Chirps and the IPO dialog                                 | `Notices`, `Views/IpoDialogText.cs`, `mod/Windows/IpoDialog.cs`, scenario 67 | **Built 2026-11-18** |
-| The Investments tab cards                                 | Mod investments                                                              | Not started          |
+| The Investments tab cards                                 | `Views/IpoCardText.cs`, `mod/Investments/CompanyCards.cs`, scenario 68       | **Built 2026-11-18** |
 | IPO dialog, bell, chirps, Figma                           | Mod windows                                                                  | Not started          |
 
 The library slices: `CandidateBook` counts healthy days per building (id plus build index, so a
@@ -658,22 +658,35 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
   city received for its shares, or that it held none). They follow the "Order and bond notices in
   Chirper" preference like every other notice (open decision 9, decided).
 - **The IPO dialog (built, `IpoDialog`):** opens on the announcement, centred, pauses the game and
-  puts the pause back as it was on closing. It shows the company, its kind and district, the
-  offering price, the window with its last day, what the city can buy (1,000 shares, a 10% stake,
-  with the cost) and the first trading day. "Buy at the offering price" opens the game's Buy dialog
-  for the new stock; "View headquarters" moves the camera there; ×, Esc and the buttons close it.
-  The checkbox "Don't show this for future IPOs" and the Options preference "Show a dialog when a
-  local company goes public" (shown while Local IPOs is on) are one saved value. It waits while the
-  Welcome back dialog is up. In game UI tests it stays closed unless the scenario asks
-  (`ipo-dialog on`). Differences from the design for now: no header art and no bell (both still open
-  decisions), and the header gives the district instead of the building, since the company carries
-  the building's name.
+  puts the pause back as it was on closing. Its title names the company, once; below, a line says
+  where it stands (its kind, the street it is on, the cross street and the district, each only if it
+  has one: "Commercial · on Blackwell Street at Magnolia Street"), then the offering price, the
+  window with its last day, what the city can buy (1,000 shares, a 10% stake, with the cost) and the
+  first trading day. "Buy at the offering price" opens the game's Buy dialog for the new stock;
+  "View headquarters" moves the camera there; ×, Esc and the buttons close it. The checkbox "Don't
+  show this for future IPOs" and the Options preference "Show a dialog when a local company goes
+  public" (shown while Local IPOs is on) are one saved value. It waits while the Welcome back dialog
+  is up. In game UI tests it stays closed unless the scenario asks (`ipo-dialog on`). Its two
+  buttons are one size. Differences from the design for now: no header art and no bell (both still
+  open decisions).
 - **Game UI scenario 67** opens the dialog, checks its lines and that nothing overflows, closes it,
   buys 10 shares, and checks the three chirps and that the buy-out paid for the 10 shares.
 
-Not built: the Investments tab cards, price drift and swing (a trading company's price does not
-move), delisting when the building is lost, and a save-and-reload check of the holding copy (it
-needs a game restart; planned for the save compatibility matrix).
+- **The Investments tab cards (built, `CompanyCards`):** at the top of Purchasable Investments, a
+  "Local companies" label, one card per kind of business the city has, and a line summing up the
+  board ("Local listings 0 of 12 · 2 per map tile (9 owned) · at most 2 IPOs a year"). A card has
+  the kind's name, where it stands ("Unlock requirement: 200 squares…", "4 slots open · 37
+  candidates", "2 of 2 listed"), what comes next ("A listing is likely within one to two years.",
+  "No business has been healthy long enough yet.", "Next listing possible from 01/2112.", "The local
+  board is full (2 of 2)."), and a bar with "N / target" towards the unlock or the next slot. They
+  use the game's stock card sprite and refresh when the daily scan changes something; with the flag
+  off they are gone. Open: five cards fill the visible part of the list, so the game's own stocks
+  start below the fold (alternatives: put the cards after the game's stocks, or make the section
+  collapsible). Game UI scenario 68.
+
+Not built: price drift and swing (a trading company's price does not move), delisting when the
+building is lost, and a save-and-reload check of the holding copy (it needs a game restart; planned
+for the save compatibility matrix).
 
 **A test accident worth recording (2026-11-18):** the first run of scenario 66 threw mid-step, the
 runner stopped without its cleanup, and with the flag and the test rules left on the engine listed

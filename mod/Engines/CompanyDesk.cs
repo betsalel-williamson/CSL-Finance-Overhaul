@@ -84,6 +84,22 @@ namespace FinanceOverhaul
             Step(today);
         }
 
+        /// <summary>The whole local board as of the last scan, for Economy → Investments.</summary>
+        public static BoardView Board()
+        {
+            lock (Sync)
+            {
+                Book();
+                return IpoCardText.View(
+                    kinds,
+                    registry,
+                    GameAreaManager.instance.m_areaCount,
+                    OrderDesk.Today,
+                    Rules ?? DefaultRules
+                );
+            }
+        }
+
         /// <summary>The company's price now, in cents (0 if unknown).</summary>
         public static long PriceCentsOf(int companyId)
         {

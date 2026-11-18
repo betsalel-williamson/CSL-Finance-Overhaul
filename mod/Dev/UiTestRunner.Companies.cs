@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using ColossalFramework.UI;
 using FinanceOverhaul.Core;
 using UnityEngine;
 
@@ -391,6 +392,36 @@ namespace FinanceOverhaul
                     }
 
                     sim.SimulationPaused = paused;
+                    break;
+                }
+                case "expect-company-cards":
+                {
+                    // expect-company-cards — Economy → Investments shows one card for every
+                    // kind of business the city has, each with its line and bar text.
+                    BoardView board = CompanyDesk.Board();
+                    int found = 0;
+                    foreach (KindStatus k in board.Kinds)
+                    {
+                        UIComponent card = FindControl(CompanyCards.CardPrefix + k.Kind);
+                        UILabel cardLine = FindControl(CompanyCards.LinePrefix + k.Kind) as UILabel;
+                        UILabel bar = FindControl(CompanyCards.BarTextPrefix + k.Kind) as UILabel;
+                        if (card == null || cardLine == null || bar == null)
+                        {
+                            r.Error = "no card for " + k.Kind;
+                            break;
+                        }
+
+                        found++;
+                        ModLog.Info(
+                            "uitest: card " + k.Kind + ": " + cardLine.text + " | " + bar.text
+                        );
+                    }
+
+                    if (r.Error == null && found == 0)
+                    {
+                        r.Error = "the city has no kind of business to show (ipo-scan first)";
+                    }
+
                     break;
                 }
                 case "ipo-remove-all":

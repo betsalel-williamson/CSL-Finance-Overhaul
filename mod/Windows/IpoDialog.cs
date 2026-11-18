@@ -25,6 +25,7 @@ namespace FinanceOverhaul
         private const string NameWindow = "Window"; // not shown: a control name
         private const string NameCanBuy = "CanBuy"; // not shown: a control name
         private const string NameFirstDay = "FirstDay"; // not shown: a control name
+        private const string NameWhere = "Where"; // not shown: a control name
 
         private static readonly Color32 Frame = FoTheme.Dialog;
         private static readonly Color32 Header = FoTheme.Header;
@@ -241,26 +242,25 @@ namespace FinanceOverhaul
             float inner = Width - 2 * Pad;
             float y = 48f;
 
-            // The company: its name and where it is from.
+            // Where it is from. The name is said once, in the title above.
             UIPanel card = panel.AddUIComponent<UIPanel>();
             card.backgroundSprite = "GenericPanelWhite";
             card.color = Card;
             card.width = inner;
             card.relativePosition = new Vector3(Pad, y);
-            UILabel name = Label(card, company.Name, 1.0f, White, inner - 24f);
-            name.relativePosition = new Vector3(12f, 10f);
-            // The company carries its building's name, so "where" is the district it stands in.
-            Vector3 at = BuildingManager.instance.m_buildings.m_buffer[company.Home.Id].m_position;
-            byte district = DistrictManager.instance.GetDistrict(at);
-            string home = district == 0 ? null : DistrictManager.instance.GetDistrictName(district);
+            string street,
+                cross,
+                district;
+            Address(company.Home, out street, out cross, out district);
             UILabel where = Label(
                 card,
-                IpoDialogText.Header(company, home),
-                0.8125f,
+                IpoDialogText.Where(company, street, cross, district),
+                0.875f,
                 Value,
                 inner - 24f
             );
-            where.relativePosition = new Vector3(12f, 12f + name.height + 4f);
+            where.name = PanelName + NameWhere;
+            where.relativePosition = new Vector3(12f, 10f);
             card.height = where.relativePosition.y + where.height + 10f;
             y += card.height + 12f;
 
@@ -292,14 +292,15 @@ namespace FinanceOverhaul
             y += 4f;
             y = Place(Label(panel, IpoDialogText.SmallPrint, 0.6875f, Muted, inner), y, 12f);
 
-            UIButton buy = Button(IpoDialogText.Buy, PanelName + "Buy", true);
+            // Two buttons of one size: the same height and text, and the width of the wider.
+            UIButton buy = Button(IpoDialogText.Buy, PanelName + "Buy");
+            UIButton look = Button(IpoDialogText.View, PanelName + "View");
+            float buttonWidth = Mathf.Max(buy.width, look.width);
+            buy.width = buttonWidth;
+            look.width = buttonWidth;
             buy.relativePosition = new Vector3(Pad, y);
             buy.eventClick += (c, p) => OnBuy();
-            UIButton look = Button(IpoDialogText.View, PanelName + "View", false);
-            look.relativePosition = new Vector3(
-                Pad + buy.width + 10f,
-                y + (buy.height - look.height) / 2f
-            );
+            look.relativePosition = new Vector3(Pad + buttonWidth + 10f, y);
             look.eventClick += (c, p) => OnView();
             y += buy.height + 12f;
 
@@ -328,6 +329,62 @@ namespace FinanceOverhaul
             ModLog.Info("ipo dialog: shown for " + company.Name);
         }
 
+        /// <summary>
+        /// The street the building is reached from, the nearest cross street if there is one,
+        /// and its district if it stands in one. Each is null when there is none.
+        /// </summary>
+        private static void Address(
+            BuildingKey home,
+            out string street,
+            out string cross,
+            out string district
+        )
+        {
+            street = null;
+            cross = null;
+            district = null;
+            Building building = BuildingManager.instance.m_buildings.m_buffer[home.Id];
+            if (building.m_buildIndex != home.BuildIndex)
+            {
+                return;
+            }
+
+            byte id = DistrictManager.instance.GetDistrict(building.m_position);
+            district = id == 0 ? null : DistrictManager.instance.GetDistrictName(id);
+
+            NetManager net = NetManager.instance;
+            ushort segment = building.m_accessSegment;
+            if (segment == 0)
+            {
+                return;
+            }
+
+            street = net.GetSegmentName(segment);
+            NetSegment road = net.m_segments.m_buffer[segment];
+            ushort start = road.m_startNode,
+                end = road.m_endNode;
+            ushort near =
+                (net.m_nodes.m_buffer[start].m_position - building.m_position).sqrMagnitude
+                <= (net.m_nodes.m_buffer[end].m_position - building.m_position).sqrMagnitude
+                    ? start
+                    : end;
+            for (int i = 0; i < 8; i++)
+            {
+                ushort other = net.m_nodes.m_buffer[near].GetSegment(i);
+                if (other == 0 || other == segment)
+                {
+                    continue;
+                }
+
+                string name = net.GetSegmentName(other);
+                if (!string.IsNullOrEmpty(name) && name != street)
+                {
+                    cross = name;
+                    return;
+                }
+            }
+        }
+
         private float Row(float y, string label, string value, Color32 colour, string name)
         {
             UILabel l = Label(panel, label, 0.8125f, Body, 150f);
@@ -338,20 +395,20 @@ namespace FinanceOverhaul
             return y + Mathf.Max(l.height, v.height) + 6f;
         }
 
-        private UIButton Button(string text, string name, bool main)
+        private UIButton Button(string text, string name)
         {
             UIButton b = panel.AddUIComponent<UIButton>();
             b.name = name;
             b.text = text;
-            b.textScale = main ? 0.875f : 0.8125f;
+            b.textScale = 0.875f;
             b.normalBgSprite = "ButtonMenu";
             b.hoveredBgSprite = "ButtonMenuHovered";
             b.pressedBgSprite = "ButtonMenuPressed";
             b.textColor = FoTheme.GameText;
             b.autoSize = true;
-            b.textPadding = new RectOffset(14, 14, main ? 10 : 6, main ? 8 : 5);
+            b.textPadding = new RectOffset(14, 14, 10, 8);
             b.autoSize = false;
-            b.height = main ? 36f : 28f;
+            b.height = 36f;
             return b;
         }
 

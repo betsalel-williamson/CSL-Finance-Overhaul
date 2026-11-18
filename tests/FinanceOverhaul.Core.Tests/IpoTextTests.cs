@@ -78,10 +78,32 @@ namespace FinanceOverhaul.Core.Tests
             var rules = new IpoRules();
             Assert.Equal("Westdale Software is going public", IpoDialogText.Title(c));
             Assert.Equal(
-                "IT cluster · headquarters in Tech Park",
-                IpoDialogText.Header(c, "Tech Park")
+                "IT cluster · on Green Avenue at Pearl Street, Tech Park",
+                IpoDialogText.Where(c, "Green Avenue", "Pearl Street", "Tech Park")
             );
-            Assert.Equal("IT cluster", IpoDialogText.Header(c, null)); // outside any district
+            Assert.Equal(
+                "IT cluster · on Green Avenue at Pearl Street",
+                IpoDialogText.Where(c, "Green Avenue", "Pearl Street", null)
+            );
+            Assert.Equal(
+                "IT cluster · on Green Avenue, Tech Park",
+                IpoDialogText.Where(c, "Green Avenue", null, "Tech Park")
+            );
+            // A "cross street" with the street's own name is no cross street.
+            Assert.Equal(
+                "IT cluster · on Green Avenue",
+                IpoDialogText.Where(c, "Green Avenue", "Green Avenue", "")
+            );
+            Assert.Equal(
+                "IT cluster · in Tech Park",
+                IpoDialogText.Where(c, null, "x", "Tech Park")
+            );
+            Assert.Equal("IT cluster", IpoDialogText.Where(c, null, null, null));
+            // The company's name appears once in the dialog: in the title only.
+            Assert.DoesNotContain(
+                c.Name,
+                IpoDialogText.Where(c, "Green Avenue", "Pearl Street", "Tech Park")
+            );
             Assert.Equal("₡52 a share", IpoDialogText.Price(c));
             Assert.Equal("7 days · until 16/06/2111", IpoDialogText.Window(c, "16/06/2111"));
             Assert.Equal(

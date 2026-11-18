@@ -149,6 +149,7 @@ namespace FinanceOverhaul
             try
             {
                 PortfolioOrders.Arrange(__instance);
+                CompanyCards.Arrange(__instance);
                 PortfolioAvgCost.Apply(__instance);
             }
             catch

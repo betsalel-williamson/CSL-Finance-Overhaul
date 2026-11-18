@@ -20,12 +20,44 @@ namespace FinanceOverhaul.Core
             return Strings.Get("company.kind." + kind);
         }
 
-        /// <summary>Under the name: "Office · headquarters in Tech Park", or the kind alone outside any district.</summary>
-        public static string Header(LocalCompany company, string district)
+        /// <summary>
+        /// Where the headquarters stands, with its kind: "IT cluster · on Green Avenue at Pearl
+        /// Street, Tech Park". The street, the cross street and the district are each left out
+        /// when the building has none. The company's name is not repeated here: the dialog says
+        /// it once, in its title.
+        /// </summary>
+        public static string Where(
+            LocalCompany company,
+            string street,
+            string cross,
+            string district
+        )
         {
-            return string.IsNullOrEmpty(district)
-                ? KindName(company.Kind)
-                : Strings.Format("ipo.dialog.header", KindName(company.Kind), district);
+            string kind = KindName(company.Kind);
+            bool hasStreet = !string.IsNullOrEmpty(street);
+            bool hasCross = hasStreet && !string.IsNullOrEmpty(cross) && cross != street;
+            bool hasDistrict = !string.IsNullOrEmpty(district);
+            if (hasCross)
+            {
+                return hasDistrict
+                    ? Strings.Format(
+                        "ipo.dialog.where.crossDistrict",
+                        kind,
+                        street,
+                        cross,
+                        district
+                    )
+                    : Strings.Format("ipo.dialog.where.cross", kind, street, cross);
+            }
+
+            if (hasStreet)
+            {
+                return hasDistrict
+                    ? Strings.Format("ipo.dialog.where.streetDistrict", kind, street, district)
+                    : Strings.Format("ipo.dialog.where.street", kind, street);
+            }
+
+            return hasDistrict ? Strings.Format("ipo.dialog.where.district", kind, district) : kind;
         }
 
         public static string Lead
