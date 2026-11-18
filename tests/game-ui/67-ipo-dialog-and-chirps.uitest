@@ -1,0 +1,36 @@
+# Local IPOs: the IPO dialog and the chirps. Lists a candidate with the dialog and notices let
+# through: the dialog opens, pauses the game and states the offering; closing it puts the pause
+# back. The city buys 10 shares, the first trading day and a buy-out are chirped, and the buy-out
+# pays the city for its shares. Costs the city nothing (the buy-out pays more than was spent);
+# everything listed is removed in cleanup.
+name local ipos: the IPO dialog opens and pauses; IPO, first day and buy-out are chirped
+local-ipos on
+ipo-healthy-days 1
+ipo-scan
+notices on
+ipo-dialog on
+ipo-list-now
+expect-log notices: chirped [City Brokerage]
+expect-log is going public at
+wait 1
+expect-visible FinanceOverhaulIpoDialog
+expect-text FinanceOverhaulIpoDialogTitle is going public
+expect-text FinanceOverhaulIpoDialogPrice a share
+expect-text FinanceOverhaulIpoDialogCanBuy up to 1,000 shares (a 10% stake,
+expect-text FinanceOverhaulIpoDialogWindow 7 days · until
+expect-no-overflow FinanceOverhaulIpoDialog
+capture ipo-dialog
+click FinanceOverhaulIpoDialogClose
+expect-hidden FinanceOverhaulIpoDialog
+ipo-buy 10
+ipo-first-day
+expect-log on its first trading day
+ipo-buyout
+expect-log The city received
+expect-log for its 10 shares
+expect-company gone unlisted
+cleanup:
+ipo-dialog close
+ipo-remove-test
+notices off
+local-ipos restore

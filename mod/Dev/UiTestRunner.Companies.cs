@@ -334,6 +334,65 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "ipo-dialog":
+                    // ipo-dialog on|off|close — lets this scenario's listing open the IPO dialog
+                    // (off by default in tests), or closes it like the × button.
+                    if (a == "close")
+                    {
+                        if (IpoDialog.Current != null)
+                        {
+                            IpoDialog.Current.Close();
+                        }
+                    }
+                    else
+                    {
+                        IpoDialog.Silenced = a != "on";
+                    }
+
+                    break;
+                case "ipo-buy":
+                {
+                    // ipo-buy SHARES — the city buys shares of this scenario's company through
+                    // the game's own purchase (simulation paused).
+                    if (ctx.TestCompanies.Count == 0)
+                    {
+                        r.Error = "ipo-list-now first";
+                        break;
+                    }
+
+                    SimulationManager sim = SimulationManager.instance;
+                    bool paused = sim.SimulationPaused;
+                    sim.SimulationPaused = true;
+                    yield return new WaitForSeconds(0.5f);
+                    int slot = CompanyListing.SlotOf(
+                        ctx.TestCompanies[ctx.TestCompanies.Count - 1].Id
+                    );
+                    if (slot <= 0)
+                    {
+                        r.Error = "the game has no stock for the company";
+                    }
+                    else
+                    {
+                        Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
+                        int cost = buffer[slot]
+                            .Info.m_investmentAI.BuyShares(
+                                (byte)slot,
+                                ref buffer[slot],
+                                (uint)ParseFloat(a, 1f)
+                            );
+                        ModLog.Info(
+                            "uitest: ipo-buy cost "
+                                + cost
+                                + ", holds "
+                                + buffer[slot].m_playerOwnedShareCount
+                                + " at game price "
+                                + buffer[slot].value
+                        );
+                    }
+
+                    sim.SimulationPaused = paused;
+                    break;
+                }
                 case "ipo-remove-all":
                 {
                     // ipo-remove-all — dev clean-up: every local company is removed as if none

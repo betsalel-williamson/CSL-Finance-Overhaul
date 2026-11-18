@@ -133,6 +133,7 @@ namespace FinanceOverhaul
             // scenario that advances days can never fill, expire or move it.
             OrderDesk.Freeze(ctx.OrdersBefore);
             ChirpNotices.Muted = true; // tests never chirp in the player's city
+            IpoDialog.Silenced = true; // nor open the IPO dialog, unless a scenario asks
             var steps = new List<string>();
             var cleanup = new List<string>();
             List<string> target = steps;
@@ -183,6 +184,7 @@ namespace FinanceOverhaul
             BondDesk.ClearTestFinances();
             CityBondsSection.ForceShow = false;
             ChirpNotices.Muted = false;
+            IpoDialog.Silenced = false;
             if (ctx.TickerBefore.HasValue && Mod.Settings != null)
             {
                 Mod.Settings.TickerShows = ctx.TickerBefore.Value; // the player's choice

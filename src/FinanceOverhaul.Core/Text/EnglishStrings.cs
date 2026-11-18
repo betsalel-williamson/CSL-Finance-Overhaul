@@ -245,6 +245,71 @@ namespace FinanceOverhaul.Core
             { "bond.card.timeLeft", "Time Left" },
             { "bond.card.repaidOn", "Repaid On" },
             // Local IPOs
+            { "notice.tag.ipo", "#ipo" },
+            {
+                "notice.ipo.announced.one",
+                "{0} is going public at {1} a share. The city can buy at the offering price for {2} day."
+            },
+            {
+                "notice.ipo.announced.other",
+                "{0} is going public at {1} a share. The city can buy at the offering price for {2} days."
+            },
+            {
+                "notice.ipo.firstDay.up",
+                "{0} opened at {1} on its first trading day, {2}% above the offering price."
+            },
+            {
+                "notice.ipo.firstDay.down",
+                "{0} opened at {1} on its first trading day, {2}% below the offering price."
+            },
+            {
+                "notice.ipo.firstDay.flat",
+                "{0} opened at {1} on its first trading day, level with the offering price."
+            },
+            {
+                "notice.ipo.boughtOut.one",
+                "{0} was bought out at {1} a share, {2}% above its price. The city received {3} for its {4} share."
+            },
+            {
+                "notice.ipo.boughtOut.other",
+                "{0} was bought out at {1} a share, {2}% above its price. The city received {3} for its {4} shares."
+            },
+            {
+                "notice.ipo.boughtOut.none",
+                "{0} was bought out at {1} a share, {2}% above its price. The city held no shares."
+            },
+            { "company.kind.Commercial", "Commercial" },
+            { "company.kind.Office", "Office" },
+            { "company.kind.Industry", "Industry" },
+            { "company.kind.ItCluster", "IT cluster" },
+            { "company.kind.Leisure", "Leisure" },
+            { "company.kind.Tourism", "Tourism" },
+            { "company.kind.Organic", "Organic and local produce" },
+            { "company.kind.Farming", "Farming" },
+            { "company.kind.Forestry", "Forestry" },
+            { "company.kind.Oil", "Oil" },
+            { "company.kind.Ore", "Ore" },
+            { "ipo.dialog.title", "{0} is going public" },
+            { "ipo.dialog.header", "{0} · headquarters in {1}" },
+            { "ipo.dialog.lead", "A business your city grew is listing on the Stock Exchange." },
+            { "ipo.dialog.price", "Offering price" },
+            { "ipo.dialog.price.value", "{0} a share" },
+            { "ipo.dialog.window", "Offering window" },
+            { "ipo.dialog.window.value.one", "{0} day · until {1}" },
+            { "ipo.dialog.window.value.other", "{0} days · until {1}" },
+            { "ipo.dialog.canBuy", "The city can buy" },
+            { "ipo.dialog.canBuy.value", "up to {0} shares (a {1}% stake, {2})" },
+            { "ipo.dialog.firstDay", "First trading day" },
+            { "ipo.dialog.firstDay.value", "{0} · the price then moves freely" },
+            {
+                "ipo.dialog.smallPrint",
+                "The headquarters is now a Historical building. Closing this changes nothing: the listing stays in Economy → Investments and the offering price holds for the window."
+            },
+            { "ipo.dialog.buy", "Buy at the offering price" },
+            { "ipo.dialog.view", "View headquarters" },
+            { "ipo.dialog.dontShow", "Don't show this for future IPOs" },
+            { "ipo.dialog.closeTip", "Close (the listing stays; nothing else changes)" },
+            { "options.ipo.dialog", "Show a dialog when a local company goes public" },
             {
                 "company.description",
                 "{0} is a company from your own city. It went public on the Stock Exchange, and the city can hold up to {1}% of it."

@@ -16,6 +16,15 @@ namespace FinanceOverhaul.Core
 
         /// <summary>Index shares lost while the mod was off, restored from the mod's copy.</summary>
         IndexRestored,
+
+        /// <summary>A local company was announced and its offering window is open.</summary>
+        IpoAnnounced,
+
+        /// <summary>A local company's first trading day: where it opened.</summary>
+        IpoFirstDay,
+
+        /// <summary>A local company was bought out and left the exchange.</summary>
+        IpoBoughtOut,
     }
 
     /// <summary>One chirp: who says it and what (the host posts it to Chirper, UI only).</summary>
@@ -193,6 +202,89 @@ namespace FinanceOverhaul.Core
         }
 
         /// <summary>A notice's sentence followed by its hashtag.</summary>
+        /// <summary>"Westdale Software is going public at ₡52 a share. The city can buy at the offering price for 7 days. #ipo"</summary>
+        public static Notice IpoAnnounced(string company, long offerPriceCents, int offerDays)
+        {
+            return Ipo(
+                NoticeKind.IpoAnnounced,
+                Strings.Plural(
+                    "notice.ipo.announced",
+                    offerDays,
+                    company,
+                    BondText.WholeMoney(offerPriceCents),
+                    offerDays.ToString(CultureInfo.InvariantCulture)
+                )
+            );
+        }
+
+        /// <summary>"Westdale Software opened at ₡60 on its first trading day, 15% above the offering price. #ipo"</summary>
+        public static Notice IpoFirstDay(string company, long offerPriceCents, long firstPriceCents)
+        {
+            string price = BondText.WholeMoney(firstPriceCents);
+            if (firstPriceCents == offerPriceCents || offerPriceCents <= 0)
+            {
+                return Ipo(
+                    NoticeKind.IpoFirstDay,
+                    Strings.Format("notice.ipo.firstDay.flat", company, price)
+                );
+            }
+
+            decimal change = Math.Abs(firstPriceCents - offerPriceCents) * 100m / offerPriceCents;
+            return Ipo(
+                NoticeKind.IpoFirstDay,
+                Strings.Format(
+                    firstPriceCents > offerPriceCents
+                        ? "notice.ipo.firstDay.up"
+                        : "notice.ipo.firstDay.down",
+                    company,
+                    price,
+                    Math.Round(change, MidpointRounding.AwayFromZero)
+                        .ToString("0", CultureInfo.InvariantCulture)
+                )
+            );
+        }
+
+        /// <summary>
+        /// "Westdale Software was bought out at ₡73 a share, 40% above its price. The city
+        /// received ₡73,000 for its 1,000 shares. #ipo" — or, with no shares, that it held none.
+        /// </summary>
+        public static Notice IpoBoughtOut(
+            string company,
+            long pricePerShareCents,
+            double premium,
+            uint shares,
+            long paidCents
+        )
+        {
+            string price = BondText.WholeMoney(pricePerShareCents);
+            string above = Math.Round(premium * 100d, MidpointRounding.AwayFromZero)
+                .ToString("0", CultureInfo.InvariantCulture);
+            return Ipo(
+                NoticeKind.IpoBoughtOut,
+                shares == 0
+                    ? Strings.Format("notice.ipo.boughtOut.none", company, price, above)
+                    : Strings.Plural(
+                        "notice.ipo.boughtOut",
+                        shares,
+                        company,
+                        price,
+                        above,
+                        BondText.WholeMoney(paidCents),
+                        Count(shares)
+                    )
+            );
+        }
+
+        private static Notice Ipo(NoticeKind kind, string text)
+        {
+            return new Notice
+            {
+                Kind = kind,
+                Sender = Brokerage,
+                Text = Tagged(text, "notice.tag.ipo"),
+            };
+        }
+
         internal static string Tagged(string text, string tagId)
         {
             return Strings.Format("notice.tagged", text, Strings.Get(tagId));

@@ -188,6 +188,14 @@ namespace FinanceOverhaul
                             + c.Home.Id
                     );
                     CompanyListing.OnMainThread(() => CompanyListing.List(c));
+                    Chirp(
+                        NoticeText.IpoAnnounced(
+                            c.Name,
+                            c.OfferPriceCents,
+                            c.FirstTradingDay - c.AnnouncedDay
+                        )
+                    );
+                    IpoDialog.Announce(c.Id);
                     break;
                 case IpoEventKind.Cancelled:
                     ModLog.Info(
@@ -204,19 +212,43 @@ namespace FinanceOverhaul
                             + (e.Fraction * 100).ToString("+0.0;-0.0")
                             + "% on the offering price)"
                     );
+                    Chirp(NoticeText.IpoFirstDay(c.Name, c.OfferPriceCents, c.PriceCents));
                     break;
                 case IpoEventKind.BoughtOut:
-                    long paid = CompanyListing.Delist(c.Id, e.PricePerShareCents);
+                    uint sold;
+                    // The game's sale answers in whole ₡ (measured: 10 shares at ₡81 cost 810).
+                    long paid = CompanyListing.Delist(c.Id, e.PricePerShareCents, out sold) * 100;
+                    Chirp(
+                        NoticeText.IpoBoughtOut(
+                            c.Name,
+                            e.PricePerShareCents,
+                            e.Fraction,
+                            sold,
+                            paid
+                        )
+                    );
                     ModLog.Info(
                         "ipo: "
                             + c.Name
                             + " was bought out at "
                             + BondText.WholeMoney(e.PricePerShareCents)
                             + " a share; the city received "
-                            + paid
+                            + BondText.WholeMoney(paid)
+                            + " for "
+                            + sold
+                            + " share(s)"
                     );
                     break;
             }
+        }
+
+        /// <summary>
+        /// One chirp from City Brokerage. Follows the "Order and bond notices in Chirper"
+        /// preference like every other notice of the mod.
+        /// </summary>
+        private static void Chirp(Notice notice)
+        {
+            ChirpNotices.PostDay(new List<Notice> { notice });
         }
 
         /// <summary>A company's headquarters becomes a Historical building (if it is still that building).</summary>
@@ -368,7 +400,8 @@ namespace FinanceOverhaul
                 registry.IpoDays.Remove(c.AnnouncedDay);
             }
 
-            CompanyListing.Delist(companyId, 0);
+            uint none;
+            CompanyListing.Delist(companyId, 0, out none);
             Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
             if (!wasHistorical && buffer[c.Home.Id].m_buildIndex == c.Home.BuildIndex)
             {
@@ -729,6 +762,7 @@ namespace FinanceOverhaul
                 kinds = new KindFacts[0];
                 lastScanDay = -1;
                 Rules = DefaultRules;
+                IpoDialog.Reset();
             }
         }
 

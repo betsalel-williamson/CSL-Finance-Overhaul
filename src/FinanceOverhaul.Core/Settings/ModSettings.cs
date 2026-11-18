@@ -68,6 +68,12 @@ namespace FinanceOverhaul.Core
         /// </summary>
         public bool LocalIposEnabled { get; set; }
 
+        /// <summary>
+        /// Preference: show the IPO dialog when a local company is announced. The dialog's
+        /// "Don't show this for future IPOs" checkbox is this same value, read the other way.
+        /// </summary>
+        public bool IpoDialogEnabled { get; set; } = true;
+
         /// <summary>How the Stock Exchange LED ticker shows the change (visual only).</summary>
         public TickerDisplay TickerShows { get; set; }
 

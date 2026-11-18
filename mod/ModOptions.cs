@@ -91,6 +91,19 @@ namespace FinanceOverhaul
                 );
             }
 
+            if (Settings.LocalIposEnabled)
+            {
+                group.AddCheckbox(
+                    Strings.Get("options.ipo.dialog"),
+                    Settings.IpoDialogEnabled,
+                    v =>
+                    {
+                        Settings.IpoDialogEnabled = v;
+                        Mod.SaveSettings();
+                    }
+                );
+            }
+
             // Feature flags: whether a feature exists at all. Dev builds only; release builds
             // use ModSettings.PinReleaseFlags.
             if (BuildInfo.ShowDevBuildIdentity)

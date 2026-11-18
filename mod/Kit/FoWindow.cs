@@ -100,5 +100,19 @@ namespace FinanceOverhaul
                 return null;
             }
         }
+
+        /// <summary>
+        /// Centres a dialog on the screen. The view's real size is its screen resolution: its
+        /// fixed width is 1920 whatever the window's shape, which put dialogs off centre on a
+        /// screen that is not 16:9.
+        /// </summary>
+        public static void CenterOnScreen(UIComponent dialog)
+        {
+            Vector2 screen = UIView.GetAView().GetScreenResolution();
+            dialog.relativePosition = new Vector3(
+                Mathf.Round((screen.x - dialog.width) / 2f),
+                Mathf.Round((screen.y - dialog.height) / 2f)
+            );
+        }
     }
 }

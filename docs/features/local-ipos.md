@@ -11,20 +11,21 @@ patterns as the source of the rules.
 Built one slice at a time (maths with proofs → engine → Figma → UI → game UI test → docs), behind
 the Local IPOs flag.
 
-| Slice                                                     | Where                                                       | Status               |
-| --------------------------------------------------------- | ----------------------------------------------------------- | -------------------- |
-| Candidate rule and healthy-day count; the rare daily draw | `Market/IpoCalendar.cs`, `IpoCalendarTests`                 | **Built 2026-11-17** |
-| Offering price and first-day pop                          | `Market/IpoPricing.cs`, `IpoPricingTests`                   | **Built 2026-11-17** |
-| Gates, slots, board cap, pacing and the draw              | `Market/IpoBoard.cs`, `IpoBoardTests`                       | **Built 2026-11-17** |
-| Buy-outs: chance, premium, payout                         | `Market/IpoBuyout.cs`, `IpoBuyoutTests`                     | **Built 2026-11-17** |
-| Drift and volatility after listing                        | Library                                                     | Next                 |
-| Company registry, moving and delisting, save data         | Library                                                     | Not started          |
-| Daily scan of businesses, the flag, save of the counts    | `mod/Engines/CompanyDesk.cs`, scenario 64                   | **Built 2026-11-17** |
-| Company registry, daily steps, save of companies          | `Market/IpoEngine.cs`, `IpoEngineTests`                     | **Built 2026-11-17** |
-| Yearly earnings of a business                             | `Market/IpoEarnings.cs`, `CompanyDesk`, scenario 65         | **Built 2026-11-18** |
-| A company as a game stock; the engine runs daily          | `mod/Engines/CompanyListing.cs`, `CompanyDesk`, scenario 66 | **Built 2026-11-18** |
-| Chirps, the IPO dialog, the Investments tab cards         | Mod windows                                                 | Not started          |
-| IPO dialog, bell, chirps, Figma                           | Mod windows                                                 | Not started          |
+| Slice                                                     | Where                                                                        | Status               |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------- |
+| Candidate rule and healthy-day count; the rare daily draw | `Market/IpoCalendar.cs`, `IpoCalendarTests`                                  | **Built 2026-11-17** |
+| Offering price and first-day pop                          | `Market/IpoPricing.cs`, `IpoPricingTests`                                    | **Built 2026-11-17** |
+| Gates, slots, board cap, pacing and the draw              | `Market/IpoBoard.cs`, `IpoBoardTests`                                        | **Built 2026-11-17** |
+| Buy-outs: chance, premium, payout                         | `Market/IpoBuyout.cs`, `IpoBuyoutTests`                                      | **Built 2026-11-17** |
+| Drift and volatility after listing                        | Library                                                                      | Next                 |
+| Company registry, moving and delisting, save data         | Library                                                                      | Not started          |
+| Daily scan of businesses, the flag, save of the counts    | `mod/Engines/CompanyDesk.cs`, scenario 64                                    | **Built 2026-11-17** |
+| Company registry, daily steps, save of companies          | `Market/IpoEngine.cs`, `IpoEngineTests`                                      | **Built 2026-11-17** |
+| Yearly earnings of a business                             | `Market/IpoEarnings.cs`, `CompanyDesk`, scenario 65                          | **Built 2026-11-18** |
+| A company as a game stock; the engine runs daily          | `mod/Engines/CompanyListing.cs`, `CompanyDesk`, scenario 66                  | **Built 2026-11-18** |
+| Chirps and the IPO dialog                                 | `Notices`, `Views/IpoDialogText.cs`, `mod/Windows/IpoDialog.cs`, scenario 67 | **Built 2026-11-18** |
+| The Investments tab cards                                 | Mod investments                                                              | Not started          |
+| IPO dialog, bell, chirps, Figma                           | Mod windows                                                                  | Not started          |
 
 The library slices: `CandidateBook` counts healthy days per building (id plus build index, so a
 building that reuses an id starts from nothing) and lists the candidates of each kind in a fixed
@@ -651,10 +652,28 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
   offering price, closes the offering window, has it bought out and checks the stock is gone, then
   removes everything and puts the building's Historical flag back.
 
-Not built: chirps and the IPO dialog (the events are only logged), the Investments tab cards, price
-drift and swing (a trading company's price does not move), delisting when the building is lost, and
-a save-and-reload check of the holding copy (it needs a game restart; planned for the save
-compatibility matrix).
+- **Chirps (built):** City Brokerage chirps the announcement ("… is going public at ₡81 a share. The
+  city can buy at the offering price for 7 days. #ipo"), the first trading day (how far above or
+  below the offering price it opened) and a buy-out (the buyer's price, the premium, and what the
+  city received for its shares, or that it held none). They follow the "Order and bond notices in
+  Chirper" preference like every other notice (open decision 9, decided).
+- **The IPO dialog (built, `IpoDialog`):** opens on the announcement, centred, pauses the game and
+  puts the pause back as it was on closing. It shows the company, its kind and district, the
+  offering price, the window with its last day, what the city can buy (1,000 shares, a 10% stake,
+  with the cost) and the first trading day. "Buy at the offering price" opens the game's Buy dialog
+  for the new stock; "View headquarters" moves the camera there; ×, Esc and the buttons close it.
+  The checkbox "Don't show this for future IPOs" and the Options preference "Show a dialog when a
+  local company goes public" (shown while Local IPOs is on) are one saved value. It waits while the
+  Welcome back dialog is up. In game UI tests it stays closed unless the scenario asks
+  (`ipo-dialog on`). Differences from the design for now: no header art and no bell (both still open
+  decisions), and the header gives the district instead of the building, since the company carries
+  the building's name.
+- **Game UI scenario 67** opens the dialog, checks its lines and that nothing overflows, closes it,
+  buys 10 shares, and checks the three chirps and that the buy-out paid for the 10 shares.
+
+Not built: the Investments tab cards, price drift and swing (a trading company's price does not
+move), delisting when the building is lost, and a save-and-reload check of the holding copy (it
+needs a game restart; planned for the save compatibility matrix).
 
 **A test accident worth recording (2026-11-18):** the first run of scenario 66 threw mid-step, the
 runner stopped without its cleanup, and with the flag and the test rules left on the engine listed
@@ -692,6 +711,5 @@ the cleanup still runs.
 8. Whether the first trading day gets its own moment (a chirp with the first-day pop). On a real
    exchange the bell belongs to that day; this design rings it at the announcement because that is
    when the dialog appears.
-9. Whether the IPO chirp follows the "Order and bond notices in Chirper" preference. If it does, a
-   player with notices off and the dialog hidden gets no announcement, and the label needs to cover
-   IPOs.
+9. Decided: the IPO chirps follow the "Order and bond notices in Chirper" preference. A player with
+   notices off and the dialog hidden gets no announcement; the label does not mention IPOs yet.

@@ -66,10 +66,11 @@ run the daily bond step now — scenario 61), `local-ipos on|off|restore`, `ipo-
 buildings, candidates, slots and why businesses fail the health check) and
 `expect-ipo-candidates none|some` (scenario 64), `ipo-list-now`, `ipo-first-day`, `ipo-buyout`,
 `expect-company offering|trading|gone [listed|unlisted]` and `ipo-remove-test` (scenario 66: a
-company lists as a stock, opens and is bought out), `ipo-remove-all` (dev clean-up: every local
-company removed as if none had listed, mod data rewritten), `historical-off NAME` (takes the
-Historical flag off businesses of that name), `ipo-income` (per zone: the income the game reports
-and the offering prices its businesses would list at — scenario 65), `log-loan-expenses` and
+company lists as a stock, opens and is bought out), `ipo-dialog on|off|close` and `ipo-buy SHARES`
+(scenario 67: the IPO dialog and the chirps), `ipo-remove-all` (dev clean-up: every local company
+removed as if none had listed, mod data rewritten), `historical-off NAME` (takes the Historical flag
+off businesses of that name), `ipo-income` (per zone: the income the game reports and the offering
+prices its businesses would list at — scenario 65), `log-loan-expenses` and
 `expect-loan-expenses ₡MIN` (what Economy shows as loan expenses — scenario 63), `log-prices` (logs
 every listed stock's kept daily prices, up to 30 and newest first, with its price rule, for
 measuring how the game's stocks move), `share-charts on|off` (the share chart flag, for before/after

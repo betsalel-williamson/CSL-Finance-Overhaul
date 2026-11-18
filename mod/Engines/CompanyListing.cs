@@ -271,9 +271,10 @@ namespace FinanceOverhaul
         /// so the money and the profit are booked as for any stock. Then the slot is freed and
         /// (main thread) the stock type removed.
         /// </summary>
-        public static long Delist(int companyId, long buyerPriceCents)
+        public static long Delist(int companyId, long buyerPriceCents, out uint sharesSold)
         {
             long paid = 0;
+            sharesSold = 0;
             int slot = SlotOf(companyId);
             if (slot > 0)
             {
@@ -289,6 +290,7 @@ namespace FinanceOverhaul
                 {
                     buffer[slot].AddValue(buyerPriceCents / 100f);
                     paid = info.m_investmentAI.SellShares((byte)slot, ref buffer[slot], shares);
+                    sharesSold = shares;
                 }
 
                 buffer[slot].m_flags = Investment.Flags.None;

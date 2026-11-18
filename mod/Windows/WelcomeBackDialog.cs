@@ -185,10 +185,7 @@ namespace FinanceOverhaul
 
             y = Place(Label(panel, WelcomeText.Footer, 0.6875f, Muted, inner), y, 0f);
             panel.height = y + 16f;
-            panel.relativePosition = new Vector3(
-                Mathf.Round((view.fixedWidth - Width) / 2f),
-                Mathf.Round((view.fixedHeight - panel.height) / 2f)
-            );
+            FoWindow.CenterOnScreen(panel);
             panel.BringToFront();
             ModLog.Info("welcome back: shown (" + m.DaysAway + " day(s) away)");
         }

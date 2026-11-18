@@ -15,11 +15,17 @@ namespace FinanceOverhaul
                 + TryPatch(harmony, GameInternals.Keys.SteamEscape, nameof(EscapePrefix), null);
         }
 
-        /// <summary>False skips the game's own handling: the press closed the Stock Monitor.</summary>
+        /// <summary>False skips the game's own handling: the press closed the IPO dialog or the Stock Monitor.</summary>
         private static bool EscapePrefix()
         {
             try
             {
+                // The dialog on top closes first.
+                if (IpoDialog.Current != null && IpoDialog.Current.HandleEscape())
+                {
+                    return false;
+                }
+
                 StockMonitorHost monitor = StockMonitorHost.Current;
                 return monitor == null || !monitor.HandleEscape();
             }
