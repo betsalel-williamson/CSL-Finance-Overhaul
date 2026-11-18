@@ -770,6 +770,13 @@ IPO ("Next listing possible from 28/06/2119" on the cards). Fixed: the runner ke
 company's announced day and always gives it back (`CompanyDesk.TestRemove`), and `ipo-forget-pacing`
 clears what was left. Only dev builds run scenarios, so no player was affected.
 
+The same day, scenario 64 turned out to wipe the test city's healthy-day counts: its `ipo-forget`
+replaced them for good, so every run after a look behind emptied the candidate list. `ipo-forget`
+now sets the city's counts aside and the runner puts them back when the scenario ends
+(`CompanyDesk.RestoreCounts`). The drop from 62 candidates to none that day, first read as proof
+that the daily reset was too harsh, was at least partly this; how well candidates hold under the
+steadiness rule still has to be measured in a city left alone.
+
 ## Save data
 
 - Mod data `FinanceOverhaul.Companies` (versioned text, like bonds; `CompaniesCodec`), written when

@@ -216,6 +216,7 @@ namespace FinanceOverhaul
 
             RemoveTestCompanies(ctx);
             CompanyDesk.Rules = null; // back to the real rules
+            CompanyDesk.RestoreCounts(); // and the city's own healthy-day counts
             if (ctx.BrightnessBefore.HasValue && Mod.Settings != null)
             {
                 Mod.Settings.TickerBrightness = ctx.BrightnessBefore.Value;

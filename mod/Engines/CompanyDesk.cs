@@ -873,6 +873,7 @@ namespace FinanceOverhaul
             lock (Sync)
             {
                 book = null;
+                shelved = null;
                 dice = null;
                 registry = null;
                 kinds = new KindFacts[0];
@@ -887,8 +888,30 @@ namespace FinanceOverhaul
         {
             lock (Sync)
             {
+                // The city's own counts are set aside, not lost: RestoreCounts puts them back
+                // when the scenario ends (scenario 64 used to wipe a test city's candidates).
+                if (shelved == null)
+                {
+                    shelved = Book();
+                }
+
                 // As a city already being watched: the tests count days one at a time.
                 book = new CandidateBook { LookedBehind = true };
+            }
+        }
+
+        private static CandidateBook shelved;
+
+        /// <summary>Game UI tests, at the end of a scenario: the city's own counts are back.</summary>
+        public static void RestoreCounts()
+        {
+            lock (Sync)
+            {
+                if (shelved != null)
+                {
+                    book = shelved;
+                    shelved = null;
+                }
             }
         }
 
