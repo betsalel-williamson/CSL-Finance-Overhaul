@@ -688,9 +688,8 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
   has been healthy long enough yet.", "Next listing possible from 01/2112.", "The local board is
   full (2 of 2)."), and a bar with "N / target" towards the unlock or the next slot. They use the
   game's stock card sprite and refresh when the daily scan changes something; with the flag off they
-  are gone. Open: five cards fill the visible part of the list, so the game's own stocks start below
-  the fold (alternatives: put the cards after the game's stocks, or make the section collapsible).
-  Game UI scenario 68.
+  are gone. Game UI scenario 68. The Investments tab itself is due an overhaul (denser cards, more
+  on screen, faster scrolling): it was made for about thirteen stocks.
 
 Not built: price drift and swing (a trading company's price does not move), delisting when the
 building is lost, and a save-and-reload check of the holding copy (it needs a game restart; planned
