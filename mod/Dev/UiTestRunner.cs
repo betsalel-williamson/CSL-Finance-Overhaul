@@ -68,6 +68,7 @@ namespace FinanceOverhaul
             public int Id;
             public BuildingKey Home;
             public bool WasHistorical;
+            public int AnnouncedDay;
         }
 
         private sealed class Context

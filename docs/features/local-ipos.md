@@ -750,6 +750,15 @@ two real companies in the loaded city; an autosave then wrote them into the mod 
 removed with the dev command `ipo-remove-all`. Since then a step that throws fails the scenario and
 the cleanup still runs.
 
+### Test accident: test listings held up the city's IPOs (2026-11-18)
+
+A scenario that had its test company bought out left that company's IPO day in the pacing record:
+the clean-up looked the company up to find its day, and a bought-out company is already gone. After
+a day of test runs the test city had seven such days, so "at most 2 IPOs a year" blocked every real
+IPO ("Next listing possible from 28/06/2119" on the cards). Fixed: the runner keeps each test
+company's announced day and always gives it back (`CompanyDesk.TestRemove`), and `ipo-forget-pacing`
+clears what was left. Only dev builds run scenarios, so no player was affected.
+
 ## Save data
 
 - Mod data `FinanceOverhaul.Companies` (versioned text, like bonds; `CompaniesCodec`), written when

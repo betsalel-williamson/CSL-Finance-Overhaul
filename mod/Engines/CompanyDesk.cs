@@ -414,7 +414,7 @@ namespace FinanceOverhaul
             List<LocalCompany> all = Companies();
             foreach (LocalCompany c in all)
             {
-                TestRemove(c.Id, false);
+                TestRemove(c.Id, false, c.AnnouncedDay);
             }
 
             lock (Sync)
@@ -460,11 +460,16 @@ namespace FinanceOverhaul
         /// Game UI tests: removes a company as if it had never listed (no payout), frees its
         /// pacing day and takes the Historical flag off its building again.
         /// </summary>
-        public static void TestRemove(int companyId, bool wasHistorical)
+        public static void TestRemove(int companyId, bool wasHistorical, int announcedDay)
         {
             LocalCompany c;
             lock (Sync)
             {
+                Book();
+                // Whatever became of the company: a test listing never uses up one of the
+                // year's IPOs (one a scenario had bought out is already gone from the records,
+                // and its day used to stay behind and hold up the city's real IPOs).
+                registry.IpoDays.Remove(announcedDay);
                 c = registry.Find(companyId);
                 if (c == null)
                 {
@@ -472,7 +477,6 @@ namespace FinanceOverhaul
                 }
 
                 registry.Companies.Remove(c);
-                registry.IpoDays.Remove(c.AnnouncedDay);
             }
 
             uint none;
@@ -481,6 +485,21 @@ namespace FinanceOverhaul
             if (!wasHistorical && buffer[c.Home.Id].m_buildIndex == c.Home.BuildIndex)
             {
                 buffer[c.Home.Id].m_flags &= ~Building.Flags.Historical;
+            }
+        }
+
+        /// <summary>
+        /// Dev clean-up: forgets the days counted towards "at most N IPOs a year", so the next
+        /// monthly draw is free to list. Returns how many were forgotten.
+        /// </summary>
+        public static int TestForgetPacing()
+        {
+            lock (Sync)
+            {
+                Book();
+                int n = registry.IpoDays.Count;
+                registry.IpoDays.Clear();
+                return n;
             }
         }
 

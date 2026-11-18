@@ -271,6 +271,7 @@ namespace FinanceOverhaul
                                     Id = listed.Id,
                                     Home = listed.Home,
                                     WasHistorical = wasHistorical,
+                                    AnnouncedDay = listed.AnnouncedDay,
                                 }
                             );
                         }
@@ -421,6 +422,13 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "ipo-forget-pacing":
+                    // ipo-forget-pacing — dev clean-up: forgets the IPO days counted towards
+                    // the year's limit (test listings used to leave theirs behind).
+                    ModLog.Info(
+                        "uitest: forgot " + CompanyDesk.TestForgetPacing() + " IPO day(s) of pacing"
+                    );
+                    break;
                 case "ipo-view":
                     // ipo-view — presses the dialog's View headquarters button.
                     if (IpoDialog.Current == null || !IpoDialog.Current.View())
@@ -647,7 +655,7 @@ namespace FinanceOverhaul
             Building[] buildings = BuildingManager.instance.m_buildings.m_buffer;
             foreach (TestCompany one in ctx.TestCompanies)
             {
-                CompanyDesk.TestRemove(one.Id, one.WasHistorical);
+                CompanyDesk.TestRemove(one.Id, one.WasHistorical, one.AnnouncedDay);
                 // A company the scenario had bought out is already gone from the records, but
                 // its building keeps the Historical flag: put that back too.
                 if (
