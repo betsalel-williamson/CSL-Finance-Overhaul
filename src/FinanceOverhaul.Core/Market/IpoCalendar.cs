@@ -45,6 +45,9 @@ namespace FinanceOverhaul.Core
         /// <summary>Land value at the building must be at least this.</summary>
         public int LandValueFloor = 50;
 
+        /// <summary>A business counts as fully staffed with at most this percent of its jobs unfilled.</summary>
+        public int MaxVacancyPercent = 10;
+
         /// <summary>Most local companies listed at once.</summary>
         public int ListingCap = 12;
 

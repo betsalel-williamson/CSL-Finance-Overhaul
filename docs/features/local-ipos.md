@@ -19,7 +19,8 @@ the Local IPOs flag.
 | Buy-outs: chance, premium, payout                         | `Market/IpoBuyout.cs`, `IpoBuyoutTests`     | **Built 2026-11-17** |
 | Drift and volatility after listing                        | Library                                     | Next                 |
 | Company registry, moving and delisting, save data         | Library                                     | Not started          |
-| Reading businesses from the game; the listing; the flag   | Mod engine                                  | Not started          |
+| Daily scan of businesses, the flag, save of the counts    | `mod/Engines/CompanyDesk.cs`, scenario 64   | **Built 2026-11-17** |
+| The listing itself: registry, offering, first day         | Mod engine                                  | Next                 |
 | IPO dialog, bell, chirps, Figma                           | Mod windows                                 | Not started          |
 
 The library slices: `CandidateBook` counts healthy days per building (id plus build index, so a
@@ -122,17 +123,41 @@ IPOs a year". Listed local companies appear in the list like any stock.
 
 ### What the game already keeps (checked in the code, 2026-11-17)
 
-| Needed                                 | Where                                                                                                                                                                                                                                                               | Status                                                                               |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Buildings and built area per kind      | City-wide `District` data: `m_commercialData`, `m_officeData`, `m_industrialData`, `m_leisureData`, `m_touristData`, `m_organicData`, `m_hightechData`, `m_farmingData`, `m_forestryData`, `m_oreData`, `m_oilData` (`m_finalBuildingCount`, `m_finalBuildingArea`) | Fields exist; the unit of the area (squares or m²) is **unverified**                 |
-| How many are at each level             | `m_finalLevel1` … `m_finalLevel5` on the commercial, office and industrial data                                                                                                                                                                                     | Fields exist; whether they count buildings or something else is **unverified**       |
-| Industry area by type                  | `District.GetOilIndustryArea()` and its siblings (what the game's own stocks use)                                                                                                                                                                                   | Confirmed in use by the game                                                         |
-| Map tiles owned                        | `GameAreaManager.m_areaCount`, `m_maxAreaCount`                                                                                                                                                                                                                     | Fields exist                                                                         |
-| A "N / target" bar for a locked stock  | `InvestmentMilestone` (`m_targetCount`, `GetProgress`, text "{0} / {1}")                                                                                                                                                                                            | Confirmed; how the locked card looks was not captured (none locked in the test city) |
-| Healthy days, jobs filled per business | Not kept by the game                                                                                                                                                                                                                                                | The mod counts them in its daily scan (`CandidateBook`)                              |
+| Needed                                 | Where                                                                                                                                                                                                                                                               | Status                                                                                                                |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Buildings and built area per kind      | City-wide `District` data: `m_commercialData`, `m_officeData`, `m_industrialData`, `m_leisureData`, `m_touristData`, `m_organicData`, `m_hightechData`, `m_farmingData`, `m_forestryData`, `m_oreData`, `m_oilData` (`m_finalBuildingCount`, `m_finalBuildingArea`) | **Verified in game:** the area is in squares (the game's commercial area equals the mod's width × length sum, 10,153) |
+| How many are at each level             | `m_finalLevel1` … `m_finalLevel5` on the commercial, office and industrial data                                                                                                                                                                                     | **Not building counts** (the game says 97 where the mod counts 1,056 level-3 shops): the mod counts its own           |
+| Industry area by type                  | `District.GetOilIndustryArea()` and its siblings (what the game's own stocks use)                                                                                                                                                                                   | Confirmed in use by the game                                                                                          |
+| Map tiles owned                        | `GameAreaManager.m_areaCount`, `m_maxAreaCount`                                                                                                                                                                                                                     | **Verified in game** (reads 9 in the test city)                                                                       |
+| A "N / target" bar for a locked stock  | `InvestmentMilestone` (`m_targetCount`, `GetProgress`, text "{0} / {1}")                                                                                                                                                                                            | Confirmed; how the locked card looks was not captured (none locked in the test city)                                  |
+| Healthy days, jobs filled per business | Not kept by the game                                                                                                                                                                                                                                                | The mod counts them in its daily scan (`CandidateBook`)                                                               |
 
 If a tally turns out not to mean what its name suggests, the mod's own daily scan of businesses
 gives the same numbers at the cost of one pass over the buildings a day.
+
+### First scan of a real city (2026-11-17)
+
+Game UI scenario 64 scans the test city (143,000 people, 9 tiles): 2,042 zoned businesses read in 7
+to 10 ms, once a game day. With the rules as first set:
+
+| Kind       | Squares | Top-level buildings | Slots earned | Healthy today | Fails most on                             |
+| ---------- | ------- | ------------------- | ------------ | ------------- | ----------------------------------------- |
+| Commercial | 10,153  | 1,056               | 27           | 87            | Too few jobs (806), understaffed (636)    |
+| Office     | 1,841   | 98                  | 4            | 83            | Not level 3 (84)                          |
+| Industry   | 1,049   | 119                 | 4            | 3             | Too few jobs (109), understaffed (59)     |
+| Farming    | 1,060   | 125                 | 9            | 0             | Too few jobs (all 125)                    |
+| Oil        | 3,247   | 416                 | 28           | 0             | Too few jobs and low land value (all 417) |
+
+Two things to retune before anything lists:
+
+1. **Slots are far too easy.** Commercial and oil earn 27 and 28 slots against a board of 12, so
+   "build more to get more" means nothing in a grown city. The sizes per slot need to be several
+   times larger (for this city, about 400 shops, 50 offices, 60 industrial buildings and 150 of a
+   specialisation would give 3, 2, 2 and 1 to 3 slots).
+2. **Farming and oil can never list.** Every one of their buildings has fewer than 20 jobs, and oil
+   sits on land worth less than 50. The jobs floor and the land-value floor need to depend on the
+   kind (or be relative: the largest employers of a kind), and the land-value floor should not apply
+   to industry, which lowers land value by nature.
 
 ## The IPO
 

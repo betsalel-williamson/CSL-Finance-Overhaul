@@ -1,0 +1,15 @@
+# Local IPOs, first part: the daily scan reads every zoned business and counts how long each has
+# stayed healthy. Forgets the counts in memory, scans twice with the rule lowered to two healthy
+# days, and expects no candidate after one scan and some after two. Nothing lists; the save is
+# only written when the city saves, and the player's flag is put back.
+name local ipos: the daily scan counts healthy days and finds candidates
+local-ipos on
+ipo-healthy-days 2
+ipo-forget
+ipo-scan
+expect-log ipo scanned
+expect-ipo-candidates none
+ipo-scan
+expect-ipo-candidates some
+cleanup:
+local-ipos restore

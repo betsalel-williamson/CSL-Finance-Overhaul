@@ -23,6 +23,9 @@ namespace FinanceOverhaul.Core
             IndexStockEnabled = true;
             CityBondsEnabled = true;
 
+            // Not ready for players: still being built.
+            LocalIposEnabled = false;
+
             // Dev only.
             DevTestStockEnabled = false;
         }
@@ -57,6 +60,13 @@ namespace FinanceOverhaul.Core
         /// it off never strands a debt.
         /// </summary>
         public bool CityBondsEnabled { get; set; }
+
+        /// <summary>
+        /// Feature flag, off by default and off in release builds while it is being built:
+        /// Local IPOs. For now it only counts how long each business has stayed healthy and adds
+        /// that count to the save's mod data.
+        /// </summary>
+        public bool LocalIposEnabled { get; set; }
 
         /// <summary>How the Stock Exchange LED ticker shows the change (visual only).</summary>
         public TickerDisplay TickerShows { get; set; }

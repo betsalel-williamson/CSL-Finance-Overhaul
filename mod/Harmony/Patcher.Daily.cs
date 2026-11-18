@@ -58,6 +58,15 @@ namespace FinanceOverhaul
             {
                 ModLog.Warn("bonds: daily payments failed: " + ex.Message);
             }
+
+            try
+            {
+                CompanyDesk.OnInvestmentsStepped();
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("ipo: daily scan failed: " + ex.Message);
+            }
         }
     }
 }

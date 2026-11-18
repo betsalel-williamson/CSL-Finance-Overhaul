@@ -18,6 +18,7 @@ namespace FinanceOverhaul.Core
         private const string DevTestStockKey = "devTestStockEnabled";
         private const string ShareChartsKey = "shareChartsEnabled";
         private const string CityBondsKey = "cityBondsEnabled";
+        private const string LocalIposKey = "localIposEnabled";
         private const string TickerShowsKey = "tickerShows";
         private const string TickerBrightnessKey = "tickerBrightness";
         private const string TickerInInfoViewsKey = "tickerInInfoViews";
@@ -165,6 +166,10 @@ namespace FinanceOverhaul.Core
                 {
                     settings.CityBondsEnabled = flag;
                 }
+                else if (string.Equals(key, LocalIposKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.LocalIposEnabled = flag;
+                }
                 else
                 {
                     foreach (OrderKind kind in ModSettings.OrderKinds)
@@ -236,6 +241,10 @@ namespace FinanceOverhaul.Core
             sb.Append(CityBondsKey)
                 .Append('=')
                 .Append(settings.CityBondsEnabled ? "true" : "false")
+                .Append('\n');
+            sb.Append(LocalIposKey)
+                .Append('=')
+                .Append(settings.LocalIposEnabled ? "true" : "false")
                 .Append('\n');
             foreach (OrderKind kind in ModSettings.OrderKinds)
             {

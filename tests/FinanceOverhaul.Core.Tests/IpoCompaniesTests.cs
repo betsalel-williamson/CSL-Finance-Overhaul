@@ -1,0 +1,92 @@
+using System.Collections.Generic;
+using FinanceOverhaul.Core;
+using Xunit;
+
+namespace FinanceOverhaul.Core.Tests
+{
+    public class IpoCompaniesTests
+    {
+        [Theory]
+        [InlineData("Commercial", "CommercialLow", BusinessKind.Commercial)]
+        [InlineData("Commercial", "CommercialHigh", BusinessKind.Commercial)]
+        [InlineData("Commercial", "CommercialWallToWall", BusinessKind.Commercial)]
+        [InlineData("Commercial", "CommercialLeisure", BusinessKind.Leisure)]
+        [InlineData("Commercial", "CommercialTourist", BusinessKind.Tourism)]
+        [InlineData("Commercial", "CommercialEco", BusinessKind.Organic)]
+        [InlineData("Office", "OfficeGeneric", BusinessKind.Office)]
+        [InlineData("Office", "OfficeFinancial", BusinessKind.Office)]
+        [InlineData("Office", "OfficeWallToWall", BusinessKind.Office)]
+        [InlineData("Office", "OfficeHightech", BusinessKind.ItCluster)]
+        [InlineData("Industrial", "IndustrialGeneric", BusinessKind.Industry)]
+        [InlineData("Industrial", "IndustrialFarming", BusinessKind.Farming)]
+        [InlineData("Industrial", "IndustrialForestry", BusinessKind.Forestry)]
+        [InlineData("Industrial", "IndustrialOil", BusinessKind.Oil)]
+        [InlineData("Industrial", "IndustrialOre", BusinessKind.Ore)]
+        public void TheGamesZonesMapToKinds(string service, string subService, BusinessKind kind)
+        {
+            BusinessKind got;
+            Assert.True(BusinessKinds.TryFromGame(service, subService, out got));
+            Assert.Equal(kind, got);
+        }
+
+        [Theory]
+        [InlineData("Residential", "ResidentialHigh")]
+        [InlineData("PlayerIndustry", "PlayerIndustryOil")]
+        [InlineData("Monument", "None")]
+        [InlineData(null, null)]
+        public void EverythingElseIsNotABusiness(string service, string subService)
+        {
+            BusinessKind got;
+            Assert.False(BusinessKinds.TryFromGame(service, subService, out got));
+        }
+
+        [Fact]
+        public void TheZonesTopOutAtLevelThreeASpecialisationHasOneLevel()
+        {
+            Assert.False(BusinessKinds.IsTopLevel(BusinessKind.Office, 1));
+            Assert.True(BusinessKinds.IsTopLevel(BusinessKind.Office, 2));
+            Assert.False(BusinessKinds.IsTopLevel(BusinessKind.Commercial, 0));
+            Assert.True(BusinessKinds.IsTopLevel(BusinessKind.Industry, 2));
+            Assert.True(BusinessKinds.IsTopLevel(BusinessKind.Oil, 0));
+            Assert.True(BusinessKinds.IsTopLevel(BusinessKind.ItCluster, 0));
+            Assert.True(BusinessKinds.IsTopLevel(BusinessKind.Leisure, 0));
+        }
+
+        [Fact]
+        public void HealthyDaysAndTheDiceSurviveTheSave()
+        {
+            var book = new CandidateBook();
+            book.Restore(new BuildingKey(700, 12345), 400, BusinessKind.Office);
+            book.Restore(new BuildingKey(12, 99), 3, BusinessKind.Oil);
+            var dice = new IpoDice(987654321012345678UL);
+            dice.Next();
+            string saved = CompaniesCodec.Format(book, dice);
+
+            var loadedDice = new IpoDice(1UL);
+            CandidateBook back = CompaniesCodec.Parse(saved, loadedDice);
+            Assert.Equal(dice.State, loadedDice.State);
+            Assert.Equal(400, back.HealthyDaysOf(new BuildingKey(700, 12345)));
+            Assert.Equal(BusinessKind.Office, back.KindOf(new BuildingKey(700, 12345)));
+            Assert.Equal(3, back.HealthyDaysOf(new BuildingKey(12, 99)));
+            Assert.Equal(BusinessKind.Oil, back.KindOf(new BuildingKey(12, 99)));
+            Assert.Equal(saved, CompaniesCodec.Format(back, loadedDice)); // stable, in id order
+            Assert.Equal(dice.Next(), loadedDice.Next()); // and the dice carry on the same
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData(null)]
+        [InlineData("v9\nhealthy|1|2|3|Office\n")] // a newer format
+        [InlineData("v1\nhealthy|1|2|0|Office\n")] // no days
+        [InlineData("v1\nhealthy|1|2|3|Casino\n")] // a kind this build does not know
+        [InlineData("v1\nhealthy|x|2|3|Office\nrubbish\nhealthy|1|2\n")]
+        public void UnknownOrDamagedSavesAreSkippedNotFatal(string text)
+        {
+            var dice = new IpoDice(5UL);
+            CandidateBook book = CompaniesCodec.Parse(text, dice);
+            var counted = new List<KeyValuePair<BuildingKey, int>>(book.Counted);
+            Assert.Empty(counted);
+            Assert.Equal(5UL, dice.State);
+        }
+    }
+}

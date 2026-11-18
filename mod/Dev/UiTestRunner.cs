@@ -88,6 +88,9 @@ namespace FinanceOverhaul
             public Vector3 ExchangePositionBefore;
             public float ExchangeAngleBefore;
 
+            /// <summary>The player's Local IPOs flag, kept while a scenario switches it.</summary>
+            public bool? LocalIposBefore;
+
             /// <summary>Cents a scenario took out of the city's cash with cash-set, to put back.</summary>
             public long CashTaken;
 
@@ -191,6 +194,12 @@ namespace FinanceOverhaul
 
             RestoreExchange(ctx);
             RestoreCash(ctx);
+            if (ctx.LocalIposBefore.HasValue && Mod.Settings != null)
+            {
+                Mod.Settings.LocalIposEnabled = ctx.LocalIposBefore.Value;
+            }
+
+            CompanyDesk.Rules = null; // back to the real rules
             if (ctx.BrightnessBefore.HasValue && Mod.Settings != null)
             {
                 Mod.Settings.TickerBrightness = ctx.BrightnessBefore.Value;
@@ -259,6 +268,7 @@ namespace FinanceOverhaul
                 MonitorSteps,
                 TickerSteps,
                 BondsSteps,
+                CompanySteps,
                 StressSteps,
             };
             foreach (StepGroup group in groups)

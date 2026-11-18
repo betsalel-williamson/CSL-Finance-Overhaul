@@ -3,8 +3,9 @@ using ICities;
 namespace FinanceOverhaul
 {
     /// <summary>
-    /// Save time: keeps the Index copy current (save compatibility). Bonds, orders and the "last
-    /// seen" bookmark are written as they change, so they need nothing here.
+    /// Save time: keeps the Index copy current (save compatibility) and writes the Local IPO
+    /// counts. Bonds, orders and the "last seen" bookmark are written as they change, so they
+    /// need nothing here.
     /// </summary>
     public class SaveDataExtension : SerializableDataExtensionBase
     {
@@ -13,6 +14,7 @@ namespace FinanceOverhaul
             try
             {
                 IndexListing.SaveCopy();
+                CompanyDesk.Save();
             }
             catch
             {
@@ -30,6 +32,7 @@ namespace FinanceOverhaul
                 TickerBoards.DestroyAll();
                 OrderDesk.Reset();
                 BondDesk.Reset();
+                CompanyDesk.Reset();
                 ChirpNotices.Reset();
                 StockSymbols.Reset();
                 IndexListing.ResetRebase();
@@ -49,6 +52,7 @@ namespace FinanceOverhaul
                 LogSaveData();
                 OrderDesk.Reset();
                 BondDesk.Reset();
+                CompanyDesk.Reset();
                 ChirpNotices.Reset();
                 IndexListing.PostRestoredNoticeIfDue();
                 IndexListing.ResetRebase();

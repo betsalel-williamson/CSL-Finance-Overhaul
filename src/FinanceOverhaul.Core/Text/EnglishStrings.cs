@@ -352,6 +352,10 @@ namespace FinanceOverhaul.Core
             { "options.flag.index", "Index stock (adds an investment to saves)" },
             { "options.flag.bonds", "City bonds (sell bonds to raise money; adds mod save data)" },
             {
+                "options.flag.localIpos",
+                "Local IPOs (being built: counts healthy businesses; adds mod save data)"
+            },
+            {
                 "options.flag.testStock",
                 "Dev: Test Stock (TST) for game UI tests (adds a listing; use a test save)"
             },

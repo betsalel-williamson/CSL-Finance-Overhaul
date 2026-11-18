@@ -61,7 +61,10 @@ dialog for every installed copy without changing anything, or closes it; needs a
 installed), `game-escape` (runs the game's own Esc handling, as the key would — scenario 60),
 `cash-set ₡`, `cash-restore`, `expect-cash ₡` and `bond-pay-due` (with the simulation paused by
 `pause on`: set the city's cash outright, put back what was taken, check the cash to the cent, and
-run the daily bond step now — scenario 61), `log-loan-expenses` and `expect-loan-expenses ₡MIN`
+run the daily bond step now — scenario 61), `local-ipos on|off|restore`, `ipo-healthy-days N`,
+`ipo-forget`, `ipo-scan` (reads every zoned business now and logs each kind's squares, top-level
+buildings, candidates, slots and why businesses fail the health check) and
+`expect-ipo-candidates none|some` (scenario 64), `log-loan-expenses` and `expect-loan-expenses ₡MIN`
 (what Economy shows as loan expenses — scenario 63), `log-prices` (logs every listed stock's kept
 daily prices, up to 30 and newest first, with its price rule, for measuring how the game's stocks
 move), `share-charts on|off` (the share chart flag, for before/after captures) — and checks

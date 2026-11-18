@@ -127,6 +127,11 @@ namespace FinanceOverhaul
                     OnCityBondsChanged
                 );
                 flags.AddCheckbox(
+                    Strings.Get("options.flag.localIpos"),
+                    Settings.LocalIposEnabled,
+                    OnLocalIposChanged
+                );
+                flags.AddCheckbox(
                     Strings.Get("options.flag.testStock"),
                     Settings.DevTestStockEnabled,
                     OnDevTestStockChanged
@@ -282,6 +287,14 @@ namespace FinanceOverhaul
             Settings.CityBondsEnabled = enabled;
             Mod.SaveSettings();
             ModLog.Info("city bonds enabled=" + enabled);
+        }
+
+        private static void OnLocalIposChanged(bool enabled)
+        {
+            ModSettings Settings = Mod.EnsureSettings();
+            Settings.LocalIposEnabled = enabled;
+            Mod.SaveSettings();
+            ModLog.Info("local ipos enabled=" + enabled);
         }
 
         private static void OnStockMonitorChanged(bool enabled)
