@@ -121,7 +121,8 @@ namespace FinanceOverhaul.Core
 
     /// <summary>
     /// What Local IPOs keeps in the save (mod data id <see cref="DataId"/>, versioned text like
-    /// the bond book): the dice, and how long each business has stayed healthy. Unknown versions
+    /// the bond book): the dice, how long each business has stayed healthy, the companies
+    /// listed, the days of past IPOs, and what the dice have scheduled. Unknown versions
     /// and bad lines are skipped, so a newer or damaged blob never breaks loading; vanilla
     /// ignores mod data.
     /// </summary>
@@ -130,8 +131,12 @@ namespace FinanceOverhaul.Core
         public const string DataId = "FinanceOverhaul.Companies";
         private const string Version = "v1";
         private const string CandidateTag = "healthy";
+        private const string CompanyTag = "company";
+        private const string IpoDayTag = "ipoday";
+        private const string IpoTag = "ipo";
+        private const string BuyoutTag = "buyout";
 
-        public static string Format(CandidateBook book, IpoDice dice)
+        public static string Format(CandidateBook book, IpoDice dice, CompanyRegistry registry)
         {
             var sb = new StringBuilder();
             sb.Append(Version).Append('\n');
@@ -159,11 +164,211 @@ namespace FinanceOverhaul.Core
                     .Append('\n');
             }
 
+            sb.Append("next=").Append(Int(registry.NextId)).Append('\n');
+            sb.Append("draw=").Append(Int(registry.NextDrawDay)).Append('\n');
+            foreach (int day in registry.IpoDays)
+            {
+                sb.Append(IpoDayTag).Append('|').Append(Int(day)).Append('\n');
+            }
+
+            if (registry.IpoScheduled)
+            {
+                sb.Append(IpoTag)
+                    .Append('|')
+                    .Append(Int(registry.IpoBusiness.Id))
+                    .Append('|')
+                    .Append(registry.IpoBusiness.BuildIndex.ToString(CultureInfo.InvariantCulture))
+                    .Append('|')
+                    .Append(registry.IpoKind.ToString())
+                    .Append('|')
+                    .Append(Int(registry.IpoDay))
+                    .Append('\n');
+            }
+
+            if (registry.BuyoutScheduled)
+            {
+                sb.Append(BuyoutTag)
+                    .Append('|')
+                    .Append(Int(registry.BuyoutCompanyId))
+                    .Append('|')
+                    .Append(Int(registry.BuyoutDay))
+                    .Append('\n');
+            }
+
+            foreach (LocalCompany c in registry.Companies)
+            {
+                // The name comes last: it is the player's text and may hold anything but a
+                // line break.
+                sb.Append(CompanyTag)
+                    .Append('|')
+                    .Append(Int(c.Id))
+                    .Append('|')
+                    .Append(c.Kind.ToString())
+                    .Append('|')
+                    .Append(Int(c.Home.Id))
+                    .Append('|')
+                    .Append(c.Home.BuildIndex.ToString(CultureInfo.InvariantCulture))
+                    .Append('|')
+                    .Append(Int(c.AnnouncedDay))
+                    .Append('|')
+                    .Append(Int(c.FirstTradingDay))
+                    .Append('|')
+                    .Append(c.OfferPriceCents.ToString(CultureInfo.InvariantCulture))
+                    .Append('|')
+                    .Append(c.PriceCents.ToString(CultureInfo.InvariantCulture))
+                    .Append('|')
+                    .Append(c.Status.ToString())
+                    .Append('|')
+                    .Append(Clean(c.Symbol).Replace("|", string.Empty))
+                    .Append('|')
+                    .Append(Clean(c.Name))
+                    .Append('\n');
+            }
+
             return sb.ToString();
         }
 
-        /// <summary>Reads the save. <paramref name="dice"/> keeps its state if the save has none.</summary>
-        public static CandidateBook Parse(string text, IpoDice dice)
+        private static string Int(int value)
+        {
+            return value.ToString(CultureInfo.InvariantCulture);
+        }
+
+        private static string Clean(string text)
+        {
+            return (text ?? string.Empty).Replace('\n', ' ').Replace('\r', ' ');
+        }
+
+        private static bool TryInt(string text, out int value)
+        {
+            return int.TryParse(
+                text,
+                NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out value
+            );
+        }
+
+        private static bool TryBuilding(string id, string buildIndex, out BuildingKey building)
+        {
+            ushort i;
+            uint b;
+            bool ok =
+                ushort.TryParse(id, NumberStyles.None, CultureInfo.InvariantCulture, out i)
+                & uint.TryParse(buildIndex, NumberStyles.None, CultureInfo.InvariantCulture, out b);
+            building = new BuildingKey(i, b);
+            return ok;
+        }
+
+        private static void ReadRegistryLine(string line, CompanyRegistry registry)
+        {
+            int number;
+            if (line.StartsWith("next=", StringComparison.Ordinal))
+            {
+                if (TryInt(line.Substring(5), out number) && number > 0)
+                {
+                    registry.NextId = Math.Max(registry.NextId, number);
+                }
+
+                return;
+            }
+
+            if (line.StartsWith("draw=", StringComparison.Ordinal))
+            {
+                if (TryInt(line.Substring(5), out number))
+                {
+                    registry.NextDrawDay = number;
+                }
+
+                return;
+            }
+
+            string[] f = line.Split(new[] { '|' }, 12);
+            BuildingKey building;
+            int day;
+            if (f[0] == IpoDayTag && f.Length == 2 && TryInt(f[1], out day))
+            {
+                registry.IpoDays.Add(day);
+            }
+            else if (
+                f[0] == IpoTag
+                && f.Length == 5
+                && TryBuilding(f[1], f[2], out building)
+                && Enum.IsDefined(typeof(BusinessKind), f[3])
+                && TryInt(f[4], out day)
+            )
+            {
+                registry.IpoScheduled = true;
+                registry.IpoBusiness = building;
+                registry.IpoKind = (BusinessKind)Enum.Parse(typeof(BusinessKind), f[3]);
+                registry.IpoDay = day;
+            }
+            else if (
+                f[0] == BuyoutTag
+                && f.Length == 3
+                && TryInt(f[1], out number)
+                && TryInt(f[2], out day)
+            )
+            {
+                registry.BuyoutScheduled = true;
+                registry.BuyoutCompanyId = number;
+                registry.BuyoutDay = day;
+            }
+            else if (f[0] == CompanyTag && f.Length == 12)
+            {
+                int announced,
+                    first;
+                long offer,
+                    price;
+                if (
+                    !TryInt(f[1], out number)
+                    || number <= 0
+                    || registry.Find(number) != null
+                    || !Enum.IsDefined(typeof(BusinessKind), f[2])
+                    || !TryBuilding(f[3], f[4], out building)
+                    || !TryInt(f[5], out announced)
+                    || !TryInt(f[6], out first)
+                    || !long.TryParse(
+                        f[7],
+                        NumberStyles.None,
+                        CultureInfo.InvariantCulture,
+                        out offer
+                    )
+                    || !long.TryParse(
+                        f[8],
+                        NumberStyles.None,
+                        CultureInfo.InvariantCulture,
+                        out price
+                    )
+                    || !Enum.IsDefined(typeof(CompanyStatus), f[9])
+                )
+                {
+                    return;
+                }
+
+                registry.Companies.Add(
+                    new LocalCompany
+                    {
+                        Id = number,
+                        Kind = (BusinessKind)Enum.Parse(typeof(BusinessKind), f[2]),
+                        Home = building,
+                        AnnouncedDay = announced,
+                        FirstTradingDay = first,
+                        OfferPriceCents = offer,
+                        PriceCents = price,
+                        Status = (CompanyStatus)Enum.Parse(typeof(CompanyStatus), f[9]),
+                        Symbol = f[10],
+                        Name = f[11],
+                    }
+                );
+                registry.NextId = Math.Max(registry.NextId, number + 1);
+            }
+        }
+
+        /// <summary>
+        /// Reads the save. <paramref name="dice"/> keeps its state if the save has none;
+        /// <paramref name="registry"/> is filled with the companies and what is scheduled.
+        /// </summary>
+        public static CandidateBook Parse(string text, IpoDice dice, CompanyRegistry registry)
         {
             var book = new CandidateBook();
             if (string.IsNullOrEmpty(text))
@@ -193,6 +398,16 @@ namespace FinanceOverhaul.Core
                     )
                     {
                         dice.State = state;
+                    }
+
+                    continue;
+                }
+
+                if (!line.StartsWith(CandidateTag + "|", StringComparison.Ordinal))
+                {
+                    if (line.Length > 0)
+                    {
+                        ReadRegistryLine(line, registry);
                     }
 
                     continue;

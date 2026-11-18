@@ -96,17 +96,110 @@ namespace FinanceOverhaul.Core.Tests
             book.Restore(new BuildingKey(12, 99), 3, BusinessKind.Oil);
             var dice = new IpoDice(987654321012345678UL);
             dice.Next();
-            string saved = CompaniesCodec.Format(book, dice);
+            var registry = new CompanyRegistry();
+            string saved = CompaniesCodec.Format(book, dice, registry);
 
             var loadedDice = new IpoDice(1UL);
-            CandidateBook back = CompaniesCodec.Parse(saved, loadedDice);
+            var loaded = new CompanyRegistry();
+            CandidateBook back = CompaniesCodec.Parse(saved, loadedDice, loaded);
             Assert.Equal(dice.State, loadedDice.State);
             Assert.Equal(400, back.HealthyDaysOf(new BuildingKey(700, 12345)));
             Assert.Equal(BusinessKind.Office, back.KindOf(new BuildingKey(700, 12345)));
             Assert.Equal(3, back.HealthyDaysOf(new BuildingKey(12, 99)));
             Assert.Equal(BusinessKind.Oil, back.KindOf(new BuildingKey(12, 99)));
-            Assert.Equal(saved, CompaniesCodec.Format(back, loadedDice)); // stable, in id order
+            Assert.Equal(saved, CompaniesCodec.Format(back, loadedDice, loaded)); // stable, in id order
             Assert.Equal(dice.Next(), loadedDice.Next()); // and the dice carry on the same
+        }
+
+        [Fact]
+        public void CompaniesAndWhatIsScheduledSurviveTheSave()
+        {
+            var registry = new CompanyRegistry { NextId = 8, NextDrawDay = 4321 };
+            registry.Companies.Add(
+                new LocalCompany
+                {
+                    Id = 3,
+                    Name = "Westdale Software | Tech Park",
+                    Symbol = "WSO",
+                    Kind = BusinessKind.ItCluster,
+                    Home = new BuildingKey(700, 12345),
+                    AnnouncedDay = 4000,
+                    FirstTradingDay = 4007,
+                    OfferPriceCents = 5_200,
+                    PriceCents = 6_100,
+                    Status = CompanyStatus.Trading,
+                }
+            );
+            registry.Companies.Add(
+                new LocalCompany
+                {
+                    Id = 7,
+                    Name = "Green Street Mall",
+                    Symbol = "GSM",
+                    Kind = BusinessKind.Commercial,
+                    Home = new BuildingKey(41, 9),
+                    AnnouncedDay = 4300,
+                    FirstTradingDay = 4307,
+                    OfferPriceCents = 900,
+                    PriceCents = 900,
+                    Status = CompanyStatus.Offering,
+                }
+            );
+            registry.IpoDays.Add(4000);
+            registry.IpoDays.Add(4300);
+            registry.BuyoutScheduled = true;
+            registry.BuyoutCompanyId = 3;
+            registry.BuyoutDay = 4330;
+            registry.IpoScheduled = true;
+            registry.IpoBusiness = new BuildingKey(15, 77);
+            registry.IpoKind = BusinessKind.Oil;
+            registry.IpoDay = 4340;
+
+            var dice = new IpoDice(5UL);
+            string saved = CompaniesCodec.Format(new CandidateBook(), dice, registry);
+            var back = new CompanyRegistry();
+            CompaniesCodec.Parse(saved, new IpoDice(1UL), back);
+
+            Assert.Equal(8, back.NextId);
+            Assert.Equal(4321, back.NextDrawDay);
+            Assert.Equal(new List<int> { 4000, 4300 }, back.IpoDays);
+            Assert.Equal(2, back.Companies.Count);
+            LocalCompany wso = back.Find(3);
+            Assert.Equal("Westdale Software | Tech Park", wso.Name); // a name may hold the separator
+            Assert.Equal("WSO", wso.Symbol);
+            Assert.Equal(BusinessKind.ItCluster, wso.Kind);
+            Assert.Equal(new BuildingKey(700, 12345), wso.Home);
+            Assert.Equal(4007, wso.FirstTradingDay);
+            Assert.Equal(5_200, wso.OfferPriceCents);
+            Assert.Equal(6_100, wso.PriceCents);
+            Assert.Equal(CompanyStatus.Trading, wso.Status);
+            Assert.Equal(CompanyStatus.Offering, back.Find(7).Status);
+            Assert.True(back.BuyoutScheduled);
+            Assert.Equal(3, back.BuyoutCompanyId);
+            Assert.Equal(4330, back.BuyoutDay);
+            Assert.True(back.IpoScheduled);
+            Assert.Equal(new BuildingKey(15, 77), back.IpoBusiness);
+            Assert.Equal(BusinessKind.Oil, back.IpoKind);
+            Assert.Equal(4340, back.IpoDay);
+            Assert.Equal(saved, CompaniesCodec.Format(new CandidateBook(), dice, back));
+        }
+
+        [Fact]
+        public void ASaveFromBeforeCompaniesStillReads()
+        {
+            // The first build wrote only the dice and the healthy days.
+            var registry = new CompanyRegistry();
+            var dice = new IpoDice(1UL);
+            CandidateBook book = CompaniesCodec.Parse(
+                "v1\ndice=42\nhealthy|9|100|12|Office\n",
+                dice,
+                registry
+            );
+            Assert.Equal(42UL, dice.State);
+            Assert.Equal(12, book.HealthyDaysOf(new BuildingKey(9, 100)));
+            Assert.Empty(registry.Companies);
+            Assert.Equal(1, registry.NextId);
+            Assert.False(registry.IpoScheduled);
         }
 
         [Theory]
@@ -119,7 +212,9 @@ namespace FinanceOverhaul.Core.Tests
         public void UnknownOrDamagedSavesAreSkippedNotFatal(string text)
         {
             var dice = new IpoDice(5UL);
-            CandidateBook book = CompaniesCodec.Parse(text, dice);
+            var registry = new CompanyRegistry();
+            CandidateBook book = CompaniesCodec.Parse(text, dice, registry);
+            Assert.Empty(registry.Companies);
             var counted = new List<KeyValuePair<BuildingKey, int>>(book.Counted);
             Assert.Empty(counted);
             Assert.Equal(5UL, dice.State);

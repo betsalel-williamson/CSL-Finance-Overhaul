@@ -20,7 +20,8 @@ the Local IPOs flag.
 | Drift and volatility after listing                        | Library                                     | Next                 |
 | Company registry, moving and delisting, save data         | Library                                     | Not started          |
 | Daily scan of businesses, the flag, save of the counts    | `mod/Engines/CompanyDesk.cs`, scenario 64   | **Built 2026-11-17** |
-| The listing itself: registry, offering, first day         | Mod engine                                  | Next                 |
+| Company registry, daily steps, save of companies          | `Market/IpoEngine.cs`, `IpoEngineTests`     | **Built 2026-11-17** |
+| Listing a company as a game stock; earnings; names        | Mod engine                                  | Next                 |
 | IPO dialog, bell, chirps, Figma                           | Mod windows                                 | Not started          |
 
 The library slices: `CandidateBook` counts healthy days per building (id plus build index, so a
@@ -419,6 +420,26 @@ No roll, and no dice taken, while an IPO is in progress, when pacing forbids one
 can be filled. If the chosen business is no longer a candidate on its day, that IPO does not happen
 (engine rule, not built).
 
+### A day of Local IPOs (the engine)
+
+`IpoEngine.Step` runs once a game day, in this order, and returns events for the game side
+(announced, cancelled, first trading day, bought out):
+
+```text
+1. On a draw day (every 30 days): roll for an IPO and, separately, for a buy-out in the coming
+   period. Each is only scheduled, with its day. No IPO roll while one is scheduled or an offering
+   window is open. A business that is already a company's headquarters is not a candidate.
+2. A scheduled IPO whose day has come:
+     still a candidate of that kind → the company is listed at its offering price, the offering
+       window opens for 7 days, and the day counts towards pacing
+     otherwise → cancelled (it does not count towards pacing)
+3. A company whose window has closed: first-day price = offering price × (1 + pop); it trades.
+4. A scheduled buy-out whose day has come, if the company still trades: the premium is drawn, the
+   company is delisted and its slot is free.
+```
+
+Prices after the first trading day do not move yet (drift and swing are not built).
+
 ### Offering price
 
 ```text
@@ -572,11 +593,14 @@ settings.
 
 ## Save data
 
-- Mod data `FinanceOverhaul.Companies` (versioned text, like bonds): companies (name, symbol,
-  sector, building id and build index, IPO date and price, status) and candidates (building id,
-  build index, healthy days).
-- Each company's game investment slot is protected like the Index: a copy of the holding in mod
-  data, restored if the slot is dropped, and the free-slot repair for the game's load bug.
+- Mod data `FinanceOverhaul.Companies` (versioned text, like bonds; `CompaniesCodec`), written when
+  the city saves: the dice, the healthy days of each business (`healthy|…`), the companies
+  (`company|…`: id, kind, headquarters as building id and build index, announcement and first
+  trading days, offering price, price, status, symbol, name), the days of past IPOs (`ipoday|…`),
+  the next draw day, and a scheduled IPO or buy-out (`ipo|…`, `buyout|…`). Unknown lines are
+  skipped, so an older build reads what it knows.
+- Not built: each company's game investment slot, protected like the Index (a copy of the holding in
+  mod data, restored if the slot is dropped, and the free-slot repair for the game's load bug).
 - Without the mod: the city loads; listed companies disappear from Investments (holdings lost,
   restored when the mod returns, like the Index); buildings simply stay Historical.
 

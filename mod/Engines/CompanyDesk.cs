@@ -21,6 +21,7 @@ namespace FinanceOverhaul
         private static readonly IpoRules DefaultRules = new IpoRules();
         private static CandidateBook book;
         private static IpoDice dice;
+        private static CompanyRegistry registry;
         private static KindFacts[] kinds = new KindFacts[0];
         private static int lastScanDay = -1;
 
@@ -297,7 +298,7 @@ namespace FinanceOverhaul
                 {
                     SimulationManager.instance.m_SerializableDataWrapper.SaveData(
                         CompaniesCodec.DataId,
-                        Encoding.UTF8.GetBytes(CompaniesCodec.Format(book, dice))
+                        Encoding.UTF8.GetBytes(CompaniesCodec.Format(book, dice, registry))
                     );
                 }
                 catch (Exception ex)
@@ -314,6 +315,7 @@ namespace FinanceOverhaul
             {
                 book = null;
                 dice = null;
+                registry = null;
                 kinds = new KindFacts[0];
                 lastScanDay = -1;
                 Rules = DefaultRules;
@@ -341,6 +343,7 @@ namespace FinanceOverhaul
                 0x9E3779B97F4A7C15UL ^ SimulationManager.instance.m_currentBuildIndex
             );
             book = new CandidateBook();
+            registry = new CompanyRegistry();
             try
             {
                 byte[] data = SimulationManager.instance.m_SerializableDataWrapper.LoadData(
@@ -348,7 +351,7 @@ namespace FinanceOverhaul
                 );
                 if (data != null && data.Length > 0)
                 {
-                    book = CompaniesCodec.Parse(Encoding.UTF8.GetString(data), dice);
+                    book = CompaniesCodec.Parse(Encoding.UTF8.GetString(data), dice, registry);
                     int counted = 0;
                     foreach (KeyValuePair<BuildingKey, int> kv in book.Counted)
                     {
