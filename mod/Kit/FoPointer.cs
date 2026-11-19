@@ -1,5 +1,5 @@
-using ColossalFramework.UI;
-using UnityEngine;
+using ColossalFramework.UI; // UIView
+using UnityEngine; // Input, Mathf, Screen, Vector2, Vector3
 
 namespace FinanceOverhaul
 {

@@ -1,6 +1,6 @@
-using System;
-using FinanceOverhaul.Core;
-using Xunit;
+using System; // Version
+using FinanceOverhaul.Core; // ShareAmountInput
+using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

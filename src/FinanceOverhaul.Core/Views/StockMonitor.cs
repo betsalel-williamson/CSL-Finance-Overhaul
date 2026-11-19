@@ -1,6 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
+using System; // Array, DateTime, Math
+using System.Collections.Generic; // ICollection, IEnumerable, List
+using System.Globalization; // CultureInfo
 
 namespace FinanceOverhaul.Core
 {

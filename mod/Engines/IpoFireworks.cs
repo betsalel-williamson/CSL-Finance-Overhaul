@@ -1,6 +1,9 @@
-using System;
-using System.Collections;
-using UnityEngine;
+using System; // Exception
+using System.Collections; // IEnumerator
+using UnityEngine; // Mathf, MonoBehaviour, Time, Vector3, WaitForSeconds
+
+// Game classes used without a using (global namespace, Assembly-CSharp): AudioManager, Building,
+//   BuildingManager, EffectCollection, EffectInfo, EffectManager, InstanceID, SimulationManager
 
 namespace FinanceOverhaul
 {

@@ -1,6 +1,8 @@
-using System.Collections.Generic;
+using System.Collections.Generic; // KeyValuePair, List
+// FinanceOverhaul.Core: BuildingKey, BusinessKind, BusinessKinds, CandidateBook, CompaniesCodec,
+//   CompanyRegistry, CompanyStatus, IpoDice, IpoRules, LocalCompany, LocalCompanyNames
 using FinanceOverhaul.Core;
-using Xunit;
+using Xunit; // Assert, FactAttribute, InlineDataAttribute, TheoryAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

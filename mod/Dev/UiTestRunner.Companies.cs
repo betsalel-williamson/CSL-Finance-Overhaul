@@ -1,9 +1,15 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using ColossalFramework.UI;
+using System.Collections; // IEnumerator
+using System.Collections.Generic; // List
+using System.Text; // StringBuilder
+using ColossalFramework.UI; // UICheckBox, UIComponent, UILabel, UISprite, UIView
+// FinanceOverhaul.Core: BoardView, BuildingFraming, CompanyStatus, IpoBoard, IpoEarnings,
+//   IpoPricing, IpoRules, KindFacts, KindStatus, LocalCompany
 using FinanceOverhaul.Core;
-using UnityEngine;
+using UnityEngine; // Mathf, WaitForSeconds
+
+// Game classes used without a using (global namespace, Assembly-CSharp): Building, BuildingInfo,
+//   BuildingManager, CameraController, District, DistrictManager, EconomyManager, GameAreaManager,
+//   InstanceID, Investment, ItemClass, PrivateBuildingAI, SimulationManager, ToolsModifierControl
 
 namespace FinanceOverhaul
 {

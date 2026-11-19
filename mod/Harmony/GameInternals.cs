@@ -1,6 +1,9 @@
-using System.Reflection;
-using ColossalFramework.UI;
-using HarmonyLib;
+using System.Reflection; // ConstructorInfo, FieldInfo, MethodInfo, ParameterInfo
+using ColossalFramework.UI; // UIComponent, UIKeyEventParameter, UISlider, UITextField
+using HarmonyLib; // AccessTools
+
+// Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
+//   EconomyManager, EconomyPanel, GameKeyShortcuts, InvestmentTooltip
 
 namespace FinanceOverhaul
 {

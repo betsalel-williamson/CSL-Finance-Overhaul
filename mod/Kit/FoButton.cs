@@ -1,5 +1,5 @@
-using ColossalFramework.UI;
-using UnityEngine;
+using ColossalFramework.UI; // UIButton, UIComponent
+using UnityEngine; // Color32, FilterMode, Texture2D, TextureFormat, Vector2
 
 namespace FinanceOverhaul
 {

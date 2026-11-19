@@ -1,5 +1,5 @@
-using ColossalFramework.UI;
-using UnityEngine;
+using ColossalFramework.UI; // UIComponent, UIHorizontalAlignment, UILabel, UIVerticalAlignment
+using UnityEngine; // Color32, RectOffset, Vector2
 
 namespace FinanceOverhaul
 {

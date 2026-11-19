@@ -1,6 +1,8 @@
-using System;
-using System.Reflection;
-using ColossalFramework.UI;
+using System; // Exception
+using System.Reflection; // FieldInfo, MethodInfo
+using ColossalFramework.UI; // UISlider
+
+// Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel
 
 namespace FinanceOverhaul
 {

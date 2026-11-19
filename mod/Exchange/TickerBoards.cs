@@ -1,7 +1,7 @@
-using System;
-using System.Collections.Generic;
-using FinanceOverhaul.Core;
-using UnityEngine;
+using System; // Exception
+using UnityEngine; // GameObject
+
+// Game classes used without a using (global namespace, Assembly-CSharp): LoadingManager
 
 namespace FinanceOverhaul
 {

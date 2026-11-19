@@ -1,8 +1,11 @@
-using System;
-using System.Collections.Generic;
-using ColossalFramework.Threading;
-using FinanceOverhaul.Core;
-using UnityEngine;
+using System; // Action, Exception
+using System.Collections.Generic; // Dictionary, ICollection, IEnumerable, KeyValuePair, List
+using ColossalFramework.Threading; // Dispatcher, ThreadHelper
+using FinanceOverhaul.Core; // LocalCompany, LocalCompanyNames
+using UnityEngine; // GameObject
+
+// Game classes used without a using (global namespace, Assembly-CSharp): EconomyManager,
+//   Investment, InvestmentAI, InvestmentInfo, PrefabCollection, SimulationManager
 
 namespace FinanceOverhaul
 {

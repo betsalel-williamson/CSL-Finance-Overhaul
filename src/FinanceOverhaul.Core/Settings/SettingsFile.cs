@@ -1,5 +1,5 @@
-using System;
-using System.Text;
+using System; // StringComparison
+using System.Text; // StringBuilder
 
 namespace FinanceOverhaul.Core
 {

@@ -1,6 +1,6 @@
-using System;
-using System.IO;
-using FinanceOverhaul.Core;
+using System; // Exception
+using System.IO; // File
+using FinanceOverhaul.Core; // ModSettings, SettingsFile
 
 namespace FinanceOverhaul
 {

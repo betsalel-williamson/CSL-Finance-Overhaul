@@ -1,6 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
+using System; // FormatException, Math, StringComparer, StringComparison
+using System.Collections.Generic; // Dictionary, ICollection, IDictionary, IList, KeyValuePair
+using System.Globalization; // CultureInfo
 
 namespace FinanceOverhaul.Core
 {

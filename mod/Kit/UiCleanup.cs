@@ -1,5 +1,5 @@
-using System.Collections.Generic;
-using ColossalFramework.UI;
+using System.Collections.Generic; // List
+using ColossalFramework.UI; // UIComponent
 
 namespace FinanceOverhaul
 {

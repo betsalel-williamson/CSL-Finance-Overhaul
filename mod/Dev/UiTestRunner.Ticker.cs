@@ -1,12 +1,10 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Reflection;
-using ColossalFramework.UI;
+using System.Collections; // IEnumerator
+// FinanceOverhaul.Core: LedBrightness, LedPalette, LedRgb, LedText, TickerDisplay, TickerSnapshot
 using FinanceOverhaul.Core;
-using UnityEngine;
+using UnityEngine; // Mathf, Time, Vector3, WaitForSeconds
+
+// Game classes used without a using (global namespace, Assembly-CSharp): Building, BuildingManager,
+//   InfoManager, SimulationManager, StockExchangeAI
 
 namespace FinanceOverhaul
 {

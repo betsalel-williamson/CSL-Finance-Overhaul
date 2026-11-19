@@ -1,5 +1,7 @@
+// FinanceOverhaul.Core: BusinessKind, IpoDialogText, IpoRules, LocalCompany, ModSettings, Notice,
+//   NoticeKind, NoticeText, SettingsFile
 using FinanceOverhaul.Core;
-using Xunit;
+using Xunit; // Assert, FactAttribute, InlineDataAttribute, TheoryAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

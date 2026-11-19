@@ -1,8 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
+using System; // IDisposable, StringComparison
+using System.Collections.Generic; // Dictionary, SortedDictionary
+using System.Text.RegularExpressions; // Match, Regex
+// FinanceOverhaul.Core: ModSettings, MonitorFilter, Notice, NoticeText, OrderKind, OrderText,
+//   StockMonitor, Strings, WelcomeText
 using FinanceOverhaul.Core;
-using Xunit;
+using Xunit; // Assert, CollectionAttribute, CollectionDefinitionAttribute, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

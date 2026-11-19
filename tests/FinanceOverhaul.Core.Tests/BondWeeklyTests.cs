@@ -1,6 +1,8 @@
-using System.Linq;
+using System.Linq; // Skip(), Sum(), Take(), Where()
+// FinanceOverhaul.Core: BondBook, BondCashKind, BondMath, BondMigration, BondPayment, BondTerms,
+//   IssuedBond
 using FinanceOverhaul.Core;
-using Xunit;
+using Xunit; // Assert, FactAttribute, InlineDataAttribute, TheoryAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

@@ -1,7 +1,10 @@
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Generic; // HashSet, List
+using System.Linq; // Count(), Distinct(), Select()
+// FinanceOverhaul.Core: BuildingKey, BusinessFacts, BusinessKind, CandidateBook, CompanyRegistry,
+//   CompanyStatus, IBusinessSource, IpoBuyout, IpoDice, IpoEngine, IpoEvent, IpoEventKind,
+//   IpoPricing, IpoRules, KindFacts, LocalCompany
 using FinanceOverhaul.Core;
-using Xunit;
+using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

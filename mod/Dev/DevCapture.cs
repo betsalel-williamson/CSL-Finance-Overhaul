@@ -1,8 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using FinanceOverhaul.Core;
-using UnityEngine;
+using System; // Exception, Math, StringComparison, StringSplitOptions
+using System.Collections.Generic; // List
+using System.IO; // File, Path
+using FinanceOverhaul.Core; // FacadeFraming, TradeOrder
+using UnityEngine; // Application, MonoBehaviour, Time, Vector2, Vector3
+
+// Game classes used without a using (global namespace, Assembly-CSharp): Building, BuildingInfo,
+//   BuildingManager, BuySellInvestmentPanel, CameraController, EconomyManager, Investment,
+//   InvestmentInfo, StockExchangeAI, ToolsModifierControl
 
 namespace FinanceOverhaul
 {

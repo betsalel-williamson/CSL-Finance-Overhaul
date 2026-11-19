@@ -1,6 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
+using System; // Math
+using System.Collections.Generic; // IList, List
 
 namespace FinanceOverhaul.Core
 {

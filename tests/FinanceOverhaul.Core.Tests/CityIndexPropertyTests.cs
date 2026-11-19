@@ -1,7 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Xunit;
+using System; // Action, Math, Random
+using System.Collections.Generic; // List
+using System.Linq; // Average(), Enumerable, Max(), Min(), Reverse(), Select(), ToArray(), ToList()
+using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

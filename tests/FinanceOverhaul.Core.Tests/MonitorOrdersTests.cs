@@ -1,6 +1,8 @@
-using System.Collections.Generic;
+using System.Collections.Generic; // HashSet, List
+// FinanceOverhaul.Core: ModSettings, MonitorOrderGroup, MonitorOrderLine, MonitorOrders,
+//   MonitorQuote, MonitorSort, OrderKind, OrdersSort, SettingsFile, TradeOrder
 using FinanceOverhaul.Core;
-using Xunit;
+using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

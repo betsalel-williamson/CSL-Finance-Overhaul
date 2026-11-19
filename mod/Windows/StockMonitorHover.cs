@@ -1,6 +1,6 @@
-using ColossalFramework.UI;
-using FinanceOverhaul.Core;
-using UnityEngine;
+using ColossalFramework.UI; // UIComponent, UILabel, UIPanel
+using FinanceOverhaul.Core; // Sparkline, StockDetail, StockMonitor
+using UnityEngine; // Color32, Mathf, RectOffset, Vector2, Vector3
 
 namespace FinanceOverhaul
 {

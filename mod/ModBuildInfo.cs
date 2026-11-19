@@ -1,6 +1,6 @@
-using System;
-using System.Globalization;
-using FinanceOverhaul.Core;
+using System; // DateTime, Version
+using System.Globalization; // CultureInfo, DateTimeStyles
+using FinanceOverhaul.Core; // BuildInfoText
 
 namespace FinanceOverhaul
 {

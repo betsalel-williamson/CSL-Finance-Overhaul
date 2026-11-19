@@ -1,4 +1,7 @@
-using HarmonyLib;
+using HarmonyLib; // AccessTools, Harmony
+
+// Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
+//   Investment, InvestmentTooltip
 
 namespace FinanceOverhaul
 {

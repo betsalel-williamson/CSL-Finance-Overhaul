@@ -1,7 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
+using System; // ArgumentNullException, ArgumentOutOfRangeException, Math, StringComparison
+using System.Collections.Generic; // Dictionary, KeyValuePair, List
+using System.Globalization; // CultureInfo, NumberStyles
+using System.Text; // StringBuilder
 
 namespace FinanceOverhaul.Core
 {

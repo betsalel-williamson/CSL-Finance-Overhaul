@@ -1,6 +1,10 @@
-using System.Collections.Generic;
+using System.Collections.Generic; // List
+// FinanceOverhaul.Core: BondBook, BondCash, BondCashKind, BondDay, BondLog, BondTerms,
+//   CityIndexBasket, IndexDay, IndexMark, IndexMarkMode, IndexSource, IssuedBond, ListingState,
+//   Notice, NoticeKind, OrderBook, OrderDay, OrderKind, OrderLog, OrderRules, OrderStep,
+//   OrderStepKind, StressStock, TestStock, TradeOrder
 using FinanceOverhaul.Core;
-using Xunit;
+using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

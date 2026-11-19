@@ -1,6 +1,6 @@
-using System;
-using ColossalFramework.UI;
-using UnityEngine;
+using System; // Action
+using ColossalFramework.UI; // UIComponent, UISprite
+using UnityEngine; // Vector2, Vector3
 
 namespace FinanceOverhaul
 {

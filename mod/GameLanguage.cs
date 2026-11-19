@@ -1,6 +1,6 @@
-using System;
-using ColossalFramework.Globalization;
-using FinanceOverhaul.Core;
+using System; // Exception
+using ColossalFramework.Globalization; // LocaleManager
+using FinanceOverhaul.Core; // Strings
 
 namespace FinanceOverhaul
 {

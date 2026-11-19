@@ -1,6 +1,8 @@
-using System;
-using ColossalFramework.UI;
-using UnityEngine;
+using System; // Exception
+using ColossalFramework.UI; // UIScrollablePanel
+using UnityEngine; // MonoBehaviour, Time
+
+// Game classes used without a using (global namespace, Assembly-CSharp): EconomyPanel
 
 namespace FinanceOverhaul
 {

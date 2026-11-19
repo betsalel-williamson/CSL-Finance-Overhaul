@@ -1,8 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using FinanceOverhaul.Core;
-using UnityEngine;
+using System; // Exception
+using System.Collections.Generic; // List
+using System.Diagnostics; // Stopwatch
+using FinanceOverhaul.Core; // StressStock
+using UnityEngine; // GameObject
+
+// Game classes used without a using (global namespace, Assembly-CSharp): Array8, EconomyManager,
+//   Investment, InvestmentAI, InvestmentInfo, PrefabCollection, SimulationManager
 
 namespace FinanceOverhaul
 {

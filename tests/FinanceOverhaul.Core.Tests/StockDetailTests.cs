@@ -1,6 +1,6 @@
-using System.Collections.Generic;
-using System.Linq;
-using Xunit;
+using System.Collections.Generic; // List
+using System.Linq; // Enumerable, Select(), ToArray()
+using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

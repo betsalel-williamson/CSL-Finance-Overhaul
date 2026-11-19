@@ -1,7 +1,9 @@
-using System;
-using System.Collections.Generic;
+using System; // StringComparer
+using System.Collections.Generic; // Dictionary, IEnumerable, KeyValuePair, List
+// System.Linq: Concat(), Count(), Distinct(), Enumerable, GroupBy(), Reverse(), Select(), ToList(),
+//   Where()
 using System.Linq;
-using Xunit;
+using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

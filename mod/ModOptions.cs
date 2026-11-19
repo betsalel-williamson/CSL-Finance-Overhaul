@@ -1,6 +1,10 @@
-using System;
+using System; // Array, Exception, Math
+// FinanceOverhaul.Core: LedBrightness, ModSettings, OrderKind, OrderText, SettingsFile, Strings,
+//   TickerDisplay, TradeOrder
 using FinanceOverhaul.Core;
-using ICities;
+using ICities; // UIHelperBase
+
+// Game classes used without a using (global namespace, Assembly-CSharp): UIHelper
 
 namespace FinanceOverhaul
 {

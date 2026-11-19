@@ -1,9 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using ColossalFramework;
+using System; // Exception
+using System.Collections.Generic; // HashSet, IEnumerable, IList, List
+using System.Text; // Encoding
+// FinanceOverhaul.Core: ListingState, Notice, OrderBook, OrderBookCodec, OrderDay, OrderKind,
+//   OrderLog, OrderStep, OrderStepKind, TradeOrder
 using FinanceOverhaul.Core;
-using UnityEngine;
+
+// Game classes used without a using (global namespace, Assembly-CSharp): EconomyManager,
+//   EconomyPanel, Investment, InvestmentAI, InvestmentInfo, SimulationManager
 
 namespace FinanceOverhaul
 {

@@ -1,10 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using ColossalFramework.Math;
-using ColossalFramework.Threading;
+using System; // Enum, Exception, Math
+using System.Collections.Generic; // Dictionary, KeyValuePair, List
+using System.Diagnostics; // Stopwatch
+using System.Text; // Encoding, StringBuilder
+using ColossalFramework.Math; // Randomizer
+// FinanceOverhaul.Core: BoardView, BondText, BuildingKey, BusinessFacts, BusinessKind,
+//   BusinessKinds, CandidateBook, CompaniesCodec, CompanyRegistry, IBusinessSource, IpoCardText,
+//   IpoDice, IpoEarnings, IpoEngine, IpoEvent, IpoEventKind, IpoRules, KindFacts, LocalCompany,
+//   Notice, NoticeText
 using FinanceOverhaul.Core;
+
+// Game classes used without a using (global namespace, Assembly-CSharp): Building, BuildingInfo,
+//   BuildingManager, EconomyManager, GameAreaManager, ImmaterialResourceManager, InstanceID,
+//   ItemClass, LoadingManager, Notification, PrivateBuildingAI, SimulationManager
 
 namespace FinanceOverhaul
 {

@@ -1,5 +1,8 @@
-using System;
-using System.Collections.Generic;
+using System; // StringComparison
+using System.Collections.Generic; // Dictionary, KeyValuePair
+
+// Game classes used without a using (global namespace, Assembly-CSharp): Building, BuildingInfo,
+//   BuildingInfoBase
 
 namespace FinanceOverhaul
 {

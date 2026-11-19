@@ -1,5 +1,5 @@
-using System;
-using System.Globalization;
+using System; // Math
+using System.Globalization; // CultureInfo, NumberStyles
 
 namespace FinanceOverhaul.Core
 {

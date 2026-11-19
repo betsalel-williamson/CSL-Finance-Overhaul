@@ -1,8 +1,10 @@
-using System;
-using System.Collections.Generic;
-using FinanceOverhaul.Core;
-using ICities;
-using UnityEngine;
+using System; // Exception
+using System.Collections.Generic; // List, Queue
+using FinanceOverhaul.Core; // Notice, NoticeBatch
+using ICities; // IChirperMessage
+using UnityEngine; // MonoBehaviour
+
+// Game classes used without a using (global namespace, Assembly-CSharp): ChirpPanel
 
 namespace FinanceOverhaul
 {

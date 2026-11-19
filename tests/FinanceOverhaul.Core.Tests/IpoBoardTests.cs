@@ -1,6 +1,8 @@
-using System.Collections.Generic;
+using System.Collections.Generic; // List
+// FinanceOverhaul.Core: BusinessKind, IpoBoard, IpoDice, IpoPick, IpoRules, KindFacts, KindState,
+//   KindStatus
 using FinanceOverhaul.Core;
-using Xunit;
+using Xunit; // Assert, FactAttribute, InlineDataAttribute, TheoryAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

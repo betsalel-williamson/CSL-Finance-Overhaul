@@ -1,6 +1,8 @@
-using System.Collections.Generic;
+using System.Collections.Generic; // List
+// FinanceOverhaul.Core: BoardView, BusinessKind, CompanyRegistry, IpoCardText, IpoRules, KindFacts,
+//   KindStatus, LocalCompany
 using FinanceOverhaul.Core;
-using Xunit;
+using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

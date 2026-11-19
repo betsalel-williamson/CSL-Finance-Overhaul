@@ -1,6 +1,7 @@
-using System;
+using System; // StringComparer, StringComparison
+// System.Collections.Generic: Dictionary, HashSet, IDictionary, IEnumerable, KeyValuePair, List
 using System.Collections.Generic;
-using System.Text;
+using System.Text; // StringBuilder
 
 namespace FinanceOverhaul.Core
 {

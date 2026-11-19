@@ -1,7 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using HarmonyLib;
+using System; // Exception
+using System.Collections.Generic; // KeyValuePair, List
+using System.Reflection; // BindingFlags, MethodBase, MethodInfo
+using HarmonyLib; // Harmony, HarmonyMethod
 
 namespace FinanceOverhaul
 {

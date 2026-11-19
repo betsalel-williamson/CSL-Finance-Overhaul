@@ -1,7 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Xunit;
+using System; // Random
+using System.Collections.Generic; // Dictionary, KeyValuePair, List
+using System.Linq; // All(), Select(), Sum()
+using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

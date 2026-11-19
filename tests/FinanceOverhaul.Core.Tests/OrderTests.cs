@@ -1,6 +1,7 @@
-using System.Collections.Generic;
+// FinanceOverhaul.Core: ModSettings, OrderAction, OrderBook, OrderBookCodec, OrderDecision,
+//   OrderKind, OrderRules, OrderText, SettingsFile, TradeOrder
 using FinanceOverhaul.Core;
-using Xunit;
+using Xunit; // Assert, FactAttribute, InlineDataAttribute, TheoryAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

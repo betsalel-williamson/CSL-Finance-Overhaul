@@ -1,6 +1,6 @@
-using CitiesHarmony.API;
-using FinanceOverhaul.Core;
-using ICities;
+using CitiesHarmony.API; // HarmonyHelper
+using FinanceOverhaul.Core; // ModSettings, OrderKind, Strings, TradeOrder
+using ICities; // IUserMod, UIHelperBase
 
 namespace FinanceOverhaul
 {

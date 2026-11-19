@@ -1,8 +1,14 @@
-using System;
-using System.Collections.Generic;
+using System; // Exception
+using System.Collections.Generic; // Dictionary, KeyValuePair, List
+// ColossalFramework.UI: LayoutDirection, UIButton, UIComponent, UIDragHandle,
+//   UIHorizontalAlignment, UILabel, UIOrientation, UIPanel, UIScrollablePanel, UITextureSprite,
+//   UIVerticalAlignment, UIView
 using ColossalFramework.UI;
+// FinanceOverhaul.Core: MonitorFilter, MonitorOrders, StockMonitor, StockMonitorSettings, Strings
 using FinanceOverhaul.Core;
-using UnityEngine;
+using UnityEngine; // Color32, GameObject, Mathf, MonoBehaviour, Texture2D, Time, Vector2, Vector3
+
+// Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel
 
 namespace FinanceOverhaul
 {

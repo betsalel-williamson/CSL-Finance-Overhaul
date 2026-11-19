@@ -1,5 +1,5 @@
-using System;
-using System.Collections.Generic;
+using System; // StringComparer
+using System.Collections.Generic; // Dictionary
 
 namespace FinanceOverhaul.Core
 {

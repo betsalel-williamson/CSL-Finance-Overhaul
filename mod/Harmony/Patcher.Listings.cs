@@ -1,6 +1,10 @@
-using System;
+using System; // Exception
+// FinanceOverhaul.Core: CityIndexBasket, IpoRules, LocalCompany, StressStock, Strings, TestStock
 using FinanceOverhaul.Core;
-using HarmonyLib;
+using HarmonyLib; // AccessTools, Harmony
+
+// Game classes used without a using (global namespace, Assembly-CSharp): Investment, InvestmentAI,
+//   InvestmentCollection
 
 namespace FinanceOverhaul
 {

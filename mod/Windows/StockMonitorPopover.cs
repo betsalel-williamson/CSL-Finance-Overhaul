@@ -1,8 +1,8 @@
-using System;
-using System.Collections.Generic;
-using ColossalFramework.UI;
-using FinanceOverhaul.Core;
-using UnityEngine;
+using System; // Action, Func
+using System.Collections.Generic; // List
+using ColossalFramework.UI; // UIComponent, UIHorizontalAlignment, UILabel, UIPanel, UIView
+using FinanceOverhaul.Core; // MonitorQuote, StockMonitor, StockMonitorSettings, Strings
+using UnityEngine; // Color32, Input, Mathf, Vector2, Vector3
 
 namespace FinanceOverhaul
 {

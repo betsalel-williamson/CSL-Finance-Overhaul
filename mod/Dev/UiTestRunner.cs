@@ -1,12 +1,17 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Globalization;
+using System; // Convert, Exception, Math, StringComparison, StringSplitOptions
+using System.Collections; // IEnumerator
+using System.Collections.Generic; // Dictionary, HashSet, List
+using System.Globalization; // CultureInfo, NumberStyles
+// System.IO: File, FileAccess, FileInfo, FileMode, FileShare, FileStream, Path, SeekOrigin,
+//   StreamReader
 using System.IO;
-using System.Reflection;
-using ColossalFramework.UI;
-using FinanceOverhaul.Core;
-using UnityEngine;
+using System.Reflection; // FieldInfo
+using ColossalFramework.UI; // UIButton, UIComponent, UILabel, UITextField
+using FinanceOverhaul.Core; // BuildingKey, IssuedBond, LedBrightness, TickerDisplay, TradeOrder
+using UnityEngine; // Color32, MonoBehaviour, Time, Vector2, Vector3
+
+// Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
+//   EconomyManager, InfoManager, Investment, InvestmentInfo
 
 namespace FinanceOverhaul
 {

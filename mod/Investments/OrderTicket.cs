@@ -1,8 +1,11 @@
-using System;
-using System.Reflection;
-using ColossalFramework.UI;
-using FinanceOverhaul.Core;
-using UnityEngine;
+using System; // Exception
+using System.Reflection; // FieldInfo, MethodInfo
+using ColossalFramework.UI; // UIButton, UIComponent, UILabel, UIPanel, UITextField
+using FinanceOverhaul.Core; // OrderKind, OrderText, ShareAmountInput, Strings, TradeOrder
+using UnityEngine; // Color32
+
+// Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
+//   EconomyManager
 
 namespace FinanceOverhaul
 {

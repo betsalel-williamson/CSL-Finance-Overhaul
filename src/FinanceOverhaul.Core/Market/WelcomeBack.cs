@@ -1,6 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
+using System; // Math, StringComparison
+using System.Collections.Generic; // List
+using System.Globalization; // CultureInfo, NumberStyles
 
 namespace FinanceOverhaul.Core
 {

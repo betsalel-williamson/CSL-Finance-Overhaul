@@ -1,6 +1,6 @@
-using System;
-using FinanceOverhaul.Core;
-using Xunit;
+using System; // Func, Math
+using FinanceOverhaul.Core; // LabelFit
+using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

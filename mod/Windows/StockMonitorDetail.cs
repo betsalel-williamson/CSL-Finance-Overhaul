@@ -1,8 +1,14 @@
-using System;
-using System.Collections.Generic;
-using ColossalFramework.UI;
+using System.Collections.Generic; // List
+using ColossalFramework.UI; // UIButton, UIHorizontalAlignment, UILabel, UIPanel, UITextureSprite
+// FinanceOverhaul.Core: CostBasis, OrderRules, Sparkline, StockDetail, StockMonitor, Strings,
+//   TradeOrder
 using FinanceOverhaul.Core;
+// UnityEngine: Color32, FilterMode, Mathf, Texture2D, TextureFormat, TextureWrapMode, Vector2,
+//   Vector3
 using UnityEngine;
+
+// Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
+//   EconomyManager, Investment, InvestmentAI, InvestmentInfo
 
 namespace FinanceOverhaul
 {

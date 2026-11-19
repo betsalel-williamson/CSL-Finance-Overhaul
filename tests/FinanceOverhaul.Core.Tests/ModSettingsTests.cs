@@ -1,5 +1,5 @@
-using FinanceOverhaul.Core;
-using Xunit;
+using FinanceOverhaul.Core; // ModSettings
+using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

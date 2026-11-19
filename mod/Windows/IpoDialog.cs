@@ -1,8 +1,16 @@
-using System;
-using System.Collections.Generic;
+using System; // Action, DateTime, Exception
+using System.Collections.Generic; // Queue
+// ColossalFramework.UI: UIButton, UIComponent, UIHorizontalAlignment, UILabel, UIPanel,
+//   UISlicedSprite, UISprite, UIView
 using ColossalFramework.UI;
+// FinanceOverhaul.Core: BuildingFraming, BuildingKey, CompanyStatus, IpoDialogText, IpoRules,
+//   LocalCompany, ModSettings
 using FinanceOverhaul.Core;
-using UnityEngine;
+using UnityEngine; // AudioClip, Color32, Mathf, MonoBehaviour, RectOffset, Time, Vector2, Vector3
+
+// Game classes used without a using (global namespace, Assembly-CSharp): AudioManager, Building,
+//   BuildingManager, BuySellInvestmentPanel, CameraController, DefaultTool, DistrictManager,
+//   InstanceID, LoadingManager, NetManager, NetSegment, SimulationManager, ToolsModifierControl
 
 namespace FinanceOverhaul
 {

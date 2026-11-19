@@ -1,7 +1,9 @@
-using System;
-using System.Collections.Generic;
+using System; // Exception
+// FinanceOverhaul.Core: CityIndexBasket, IndexDay, IndexMark, IndexMarkMode, IndexRebase, OrderDay
 using FinanceOverhaul.Core;
-using UnityEngine;
+
+// Game classes used without a using (global namespace, Assembly-CSharp): EconomyManager,
+//   Investment, InvestmentAI, InvestmentInfo, SimulationManager
 
 namespace FinanceOverhaul
 {

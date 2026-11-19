@@ -1,4 +1,6 @@
-using ICities;
+using ICities; // ISerializableData, LoadMode, LoadingExtensionBase, SerializableDataExtensionBase
+
+// Game classes used without a using (global namespace, Assembly-CSharp): SimulationManager
 
 namespace FinanceOverhaul
 {

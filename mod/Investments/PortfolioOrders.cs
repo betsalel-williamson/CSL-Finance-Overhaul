@@ -1,9 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System; // Exception, StringComparison
+using System.Collections.Generic; // HashSet, List
+using System.Text; // StringBuilder
+// ColossalFramework.UI: UIButton, UIComponent, UIHorizontalAlignment, UILabel, UIPanel,
+//   UIScrollablePanel
 using ColossalFramework.UI;
-using FinanceOverhaul.Core;
-using UnityEngine;
+using FinanceOverhaul.Core; // OrderText, Strings, TradeOrder
+using UnityEngine; // Color32, Mathf, MonoBehaviour, Time, Vector2, Vector3
+
+// Game classes used without a using (global namespace, Assembly-CSharp): EconomyManager,
+//   EconomyPanel, Investment, InvestmentInfo
 
 namespace FinanceOverhaul
 {

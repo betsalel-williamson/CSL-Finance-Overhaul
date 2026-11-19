@@ -1,7 +1,11 @@
-using System;
-using System.Collections.Generic;
+// FinanceOverhaul.Core: LedBrightness, LedFont, LedMarquee, LedPalette, LedRgb, LedStrip, Strings
 using FinanceOverhaul.Core;
+// UnityEngine: Collider, Color32, FilterMode, GameObject, Material, Mathf, MeshFilter,
+//   MeshRenderer, PrimitiveType, Quaternion, Renderer, Shader, Texture, Texture2D, TextureFormat,
+//   TextureWrapMode, Transform, Vector2, Vector3
 using UnityEngine;
+
+// Game classes used without a using (global namespace, Assembly-CSharp): Building, BuildingInfo
 
 namespace FinanceOverhaul
 {

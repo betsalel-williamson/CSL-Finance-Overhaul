@@ -1,7 +1,7 @@
-using System;
-using System.Collections.Generic;
-using ColossalFramework.UI;
-using FinanceOverhaul.Core;
+using ColossalFramework.UI; // UIButton, UIMouseButton, UITextureSprite, UIView
+using FinanceOverhaul.Core; // Sparkline, Strings
+// UnityEngine: Color32, FilterMode, Input, Mathf, Screen, Texture2D, TextureFormat, Vector2,
+//   Vector3
 using UnityEngine;
 
 namespace FinanceOverhaul

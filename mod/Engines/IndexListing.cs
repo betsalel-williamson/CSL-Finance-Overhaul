@@ -1,7 +1,10 @@
-using System;
-using System.Collections.Generic;
-using FinanceOverhaul.Core;
-using UnityEngine;
+using System; // Exception
+using System.Collections.Generic; // List
+using FinanceOverhaul.Core; // CityIndexBasket, IndexDay, IndexSource
+using UnityEngine; // GameObject, Transform
+
+// Game classes used without a using (global namespace, Assembly-CSharp): InvestmentAI,
+//   InvestmentCollection, InvestmentInfo, LoadingManager, PrefabCollection, SimulationManager
 
 namespace FinanceOverhaul
 {

@@ -1,5 +1,7 @@
+// FinanceOverhaul.Core: LedFont, LedGlyph, LedMarquee, LedStrip, LedText, TickerLine,
+//   TickerSnapshot
 using FinanceOverhaul.Core;
-using Xunit;
+using Xunit; // Assert, FactAttribute, InlineDataAttribute, TheoryAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

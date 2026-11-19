@@ -1,7 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
+using System; // Math, MidpointRounding, StringComparer, StringComparison, StringSplitOptions
+using System.Collections.Generic; // Dictionary, IList, List
+using System.Globalization; // CultureInfo
+using System.Text; // StringBuilder
 
 namespace FinanceOverhaul.Core
 {

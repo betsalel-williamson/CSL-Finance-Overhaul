@@ -1,8 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System; // StringComparison
+// ColossalFramework.UI: LayoutDirection, UIButton, UIComponent, UIFillDirection,
+//   UIHorizontalAlignment, UILabel, UIOrientation, UIPanel, UIPivotPoint, UIScrollablePanel,
+//   UIScrollbar, UISlicedSprite, UITextField, UITextureSprite
 using ColossalFramework.UI;
-using FinanceOverhaul.Core;
+using FinanceOverhaul.Core; // BondTerm, BondText, IssuedBond, ScrollFade, Strings
+// UnityEngine: Color, Color32, Mathf, RectOffset, Texture2D, TextureFormat, TextureWrapMode,
+//   Vector2, Vector3
 using UnityEngine;
 
 namespace FinanceOverhaul

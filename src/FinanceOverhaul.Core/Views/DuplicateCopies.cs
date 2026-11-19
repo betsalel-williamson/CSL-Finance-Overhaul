@@ -1,5 +1,5 @@
-using System;
-using System.Collections.Generic;
+using System; // StringComparison, Version
+using System.Collections.Generic; // ICollection, List
 
 namespace FinanceOverhaul.Core
 {

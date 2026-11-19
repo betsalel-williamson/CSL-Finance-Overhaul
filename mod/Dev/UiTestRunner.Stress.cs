@@ -1,12 +1,9 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Reflection;
-using ColossalFramework.UI;
-using FinanceOverhaul.Core;
-using UnityEngine;
+using System.Collections; // IEnumerator
+using ColossalFramework.UI; // UIComponent, UIScrollablePanel
+using UnityEngine; // Mathf, Time, WaitForSeconds
+
+// Game classes used without a using (global namespace, Assembly-CSharp): EconomyPanel,
+//   SimulationManager, ToolsModifierControl
 
 namespace FinanceOverhaul
 {

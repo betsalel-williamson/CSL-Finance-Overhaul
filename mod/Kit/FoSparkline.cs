@@ -1,5 +1,5 @@
-using FinanceOverhaul.Core;
-using UnityEngine;
+using FinanceOverhaul.Core; // Sparkline
+using UnityEngine; // Color32, Texture2D
 
 namespace FinanceOverhaul
 {

@@ -1,6 +1,10 @@
-using System;
-using FinanceOverhaul.Core;
-using UnityEngine;
+using System; // Exception
+using FinanceOverhaul.Core; // TestStock
+using UnityEngine; // GameObject, Transform
+
+// Game classes used without a using (global namespace, Assembly-CSharp): EconomyManager,
+//   Investment, InvestmentAI, InvestmentCollection, InvestmentInfo, LoadingManager,
+//   PrefabCollection, SimulationManager
 
 namespace FinanceOverhaul
 {

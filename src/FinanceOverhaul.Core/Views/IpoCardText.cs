@@ -1,5 +1,5 @@
-using System.Collections.Generic;
-using System.Globalization;
+using System.Collections.Generic; // IList, List
+using System.Globalization; // CultureInfo
 
 namespace FinanceOverhaul.Core
 {

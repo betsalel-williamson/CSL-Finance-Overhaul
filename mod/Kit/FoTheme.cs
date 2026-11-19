@@ -1,5 +1,5 @@
-using FinanceOverhaul.Core;
-using UnityEngine;
+using FinanceOverhaul.Core; // LedText
+using UnityEngine; // Color32
 
 namespace FinanceOverhaul
 {

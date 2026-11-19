@@ -1,7 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System; // Exception, Math
+using System.Collections.Generic; // IEnumerable, List
+using System.Text; // Encoding
+// FinanceOverhaul.Core: BondBook, BondBookCodec, BondCash, BondDay, BondLog, BondMigration,
+//   BondOffer, BondPricing, BondTerm, IssuedBond, MissedPayments, SeenCodec, WelcomeBack
 using FinanceOverhaul.Core;
+
+// Game classes used without a using (global namespace, Assembly-CSharp): EconomyManager, ItemClass,
+//   SimulationManager
 
 namespace FinanceOverhaul
 {

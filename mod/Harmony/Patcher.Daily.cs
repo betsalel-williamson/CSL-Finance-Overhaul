@@ -1,5 +1,7 @@
-using System;
-using HarmonyLib;
+using System; // Exception
+using HarmonyLib; // AccessTools, Harmony
+
+// Game classes used without a using (global namespace, Assembly-CSharp): EconomyManager
 
 namespace FinanceOverhaul
 {

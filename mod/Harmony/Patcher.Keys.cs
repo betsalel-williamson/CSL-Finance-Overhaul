@@ -1,5 +1,5 @@
-using System;
-using HarmonyLib;
+using System; // Exception
+using HarmonyLib; // Harmony
 
 namespace FinanceOverhaul
 {

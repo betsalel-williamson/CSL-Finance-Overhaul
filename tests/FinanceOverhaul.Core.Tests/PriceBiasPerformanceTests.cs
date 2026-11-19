@@ -1,7 +1,7 @@
-using System;
-using System.Diagnostics;
-using FinanceOverhaul.Core;
-using Xunit;
+using System; // Action, GC, Math
+using System.Diagnostics; // Stopwatch
+using FinanceOverhaul.Core; // PriceBias
+using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

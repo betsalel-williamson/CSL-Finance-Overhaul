@@ -1,9 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System; // Exception
+using System.Collections.Generic; // Dictionary, KeyValuePair, List
+// ColossalFramework.UI: UIButton, UIComponent, UIFont, UILabel, UIPanel, UIScrollablePanel,
+//   UITextField, UITextureSprite
 using ColossalFramework.UI;
+// FinanceOverhaul.Core: BondBook, BondBookCodec, BondMath, BondOffer, BondPricing, BondTerm,
+//   BondTerms, BondText, IssuedBond, Strings
 using FinanceOverhaul.Core;
-using UnityEngine;
+using UnityEngine; // Color32, MonoBehaviour, Texture2D, Time
+
+// Game classes used without a using (global namespace, Assembly-CSharp): EconomyPanel,
+//   SimulationManager
 
 namespace FinanceOverhaul
 {

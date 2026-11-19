@@ -1,6 +1,6 @@
-using System;
-using FinanceOverhaul.Core;
-using Xunit;
+using System; // Math
+using FinanceOverhaul.Core; // IpoBuyout, IpoDice, IpoRules, PeriodDraw
+using Xunit; // Assert, FactAttribute, InlineDataAttribute, TheoryAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

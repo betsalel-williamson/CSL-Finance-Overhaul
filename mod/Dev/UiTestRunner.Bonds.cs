@@ -1,12 +1,10 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Reflection;
-using ColossalFramework.UI;
-using FinanceOverhaul.Core;
-using UnityEngine;
+using System.Collections; // IEnumerator
+using System.Globalization; // CultureInfo, NumberStyles
+using FinanceOverhaul.Core; // BondOffer, BondPricing, BondTerm, IssuedBond
+using UnityEngine; // WaitForSeconds
+
+// Game classes used without a using (global namespace, Assembly-CSharp): EconomyManager, ItemClass,
+//   SimulationManager
 
 namespace FinanceOverhaul
 {

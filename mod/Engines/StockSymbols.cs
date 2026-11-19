@@ -1,6 +1,8 @@
-using System;
-using System.Collections.Generic;
-using FinanceOverhaul.Core;
+using System.Collections.Generic; // Dictionary, KeyValuePair, List
+using FinanceOverhaul.Core; // SymbolBook, TickerSymbols
+
+// Game classes used without a using (global namespace, Assembly-CSharp): InvestmentInfo,
+//   PrefabCollection
 
 namespace FinanceOverhaul
 {

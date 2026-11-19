@@ -1,7 +1,13 @@
-using System;
-using System.Collections.Generic;
+using System; // Exception, Math
+using System.Collections.Generic; // Dictionary, HashSet, KeyValuePair, List
+// FinanceOverhaul.Core: LedBrightness, LedFont, LedMarquee, LedText, TickerDisplay, TickerSnapshot
 using FinanceOverhaul.Core;
+// UnityEngine: Camera, Color32, GameObject, Material, Mathf, MonoBehaviour, Quaternion, Texture2D,
+//   Time, Vector2, Vector3
 using UnityEngine;
+
+// Game classes used without a using (global namespace, Assembly-CSharp): Building, BuildingInfo,
+//   BuildingManager, InfoManager, StockExchangeAI
 
 namespace FinanceOverhaul
 {

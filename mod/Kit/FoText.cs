@@ -1,6 +1,6 @@
-using ColossalFramework.UI;
-using FinanceOverhaul.Core;
-using UnityEngine;
+using ColossalFramework.UI; // UIComponent, UILabel, UIVerticalAlignment
+using FinanceOverhaul.Core; // LabelFit
+using UnityEngine; // Color32, Mathf, Vector2
 
 namespace FinanceOverhaul
 {

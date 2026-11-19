@@ -1,7 +1,7 @@
-using System;
-using System.Collections.Generic;
-using FinanceOverhaul.Core;
-using Xunit;
+using System; // Math, Version
+using System.Collections.Generic; // List
+using FinanceOverhaul.Core; // DuplicateCopies, ModCopy
+using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {

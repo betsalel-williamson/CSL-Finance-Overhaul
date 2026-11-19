@@ -1,12 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using ColossalFramework.PlatformServices;
-using ColossalFramework.Plugins;
-using ColossalFramework.UI;
-using FinanceOverhaul.Core;
-using ICities;
-using UnityEngine;
+using System; // Exception
+using System.Collections.Generic; // Dictionary
+using System.Reflection; // Assembly
+using ColossalFramework.PlatformServices; // PublishedFileId
+using ColossalFramework.Plugins; // PluginManager
+using ColossalFramework.UI; // UIView
+using FinanceOverhaul.Core; // DuplicateCopies, ModCopy
+using ICities; // IUserMod
+using UnityEngine; // GameObject, MonoBehaviour, Time
+
+// Game classes used without a using (global namespace, Assembly-CSharp): ConfirmPanel,
+//   LoadingManager
 
 namespace FinanceOverhaul
 {

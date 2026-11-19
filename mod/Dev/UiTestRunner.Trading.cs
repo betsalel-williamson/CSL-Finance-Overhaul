@@ -1,12 +1,13 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Reflection;
-using ColossalFramework.UI;
-using FinanceOverhaul.Core;
-using UnityEngine;
+using System; // StringComparison, StringSplitOptions
+using System.Collections; // IEnumerator
+using System.Collections.Generic; // List
+using ColossalFramework.UI; // UIButton, UIComponent, UIKeyEventParameter, UILabel, UITextField
+using FinanceOverhaul.Core; // ModSettings, OrderKind, TradeOrder
+using UnityEngine; // KeyCode, Mathf, Time, WaitForSeconds
+
+// Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
+//   EconomyManager, EconomyPanel, Investment, InvestmentAI, SimulationManager,
+//   ToolsModifierControl
 
 namespace FinanceOverhaul
 {

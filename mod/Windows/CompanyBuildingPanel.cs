@@ -1,7 +1,15 @@
-using System;
+using System; // DateTime, Exception
+// ColossalFramework.UI: UIButton, UICheckBox, UIComponent, UILabel, UIPanel, UISprite, UITextField,
+//   UITextureSprite, UIView
 using ColossalFramework.UI;
-using FinanceOverhaul.Core;
+using FinanceOverhaul.Core; // CompanyPanelText, LocalCompany, StockMonitor, Strings
+// UnityEngine: Color, Color32, FilterMode, Mathf, MonoBehaviour, Texture2D, TextureFormat,
+//   TextureWrapMode, Time, Vector2, Vector3
 using UnityEngine;
+
+// Game classes used without a using (global namespace, Assembly-CSharp): BuildingManager,
+//   BuySellInvestmentPanel, EconomyManager, Investment, InvestmentAI, InvestmentInfo,
+//   SimulationManager, ToolsModifierControl, WorldInfoPanel
 
 namespace FinanceOverhaul
 {

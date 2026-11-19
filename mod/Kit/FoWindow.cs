@@ -1,5 +1,9 @@
+// ColossalFramework.UI: UIButton, UIComponent, UIFont, UIHorizontalAlignment, UILabel,
+//   UIVerticalAlignment, UIView
 using ColossalFramework.UI;
-using UnityEngine;
+using UnityEngine; // Mathf, Object, Vector2, Vector3
+
+// Game classes used without a using (global namespace, Assembly-CSharp): ElectricityInfoViewPanel
 
 namespace FinanceOverhaul
 {

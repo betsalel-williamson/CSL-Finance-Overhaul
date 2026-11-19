@@ -1,12 +1,10 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Reflection;
-using ColossalFramework.UI;
-using FinanceOverhaul.Core;
-using UnityEngine;
+using System; // ArgumentException, Enum, StringComparison
+using System.Collections; // IEnumerator
+using System.Collections.Generic; // List
+using System.Globalization; // CultureInfo
+using ColossalFramework.UI; // UIComponent, UILabel
+using FinanceOverhaul.Core; // MonitorSort
+using UnityEngine; // WaitForSeconds
 
 namespace FinanceOverhaul
 {

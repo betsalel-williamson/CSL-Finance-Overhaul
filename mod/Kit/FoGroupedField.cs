@@ -1,6 +1,6 @@
-using System.Reflection;
-using ColossalFramework.UI;
-using FinanceOverhaul.Core;
+using System.Reflection; // FieldInfo
+using ColossalFramework.UI; // UITextField
+using FinanceOverhaul.Core; // GroupedEdit, GroupedNumberInput, Strings
 
 namespace FinanceOverhaul
 {

@@ -1,7 +1,7 @@
-using System;
-using ColossalFramework.UI;
-using FinanceOverhaul.Core;
-using UnityEngine;
+using System; // Exception
+using ColossalFramework.UI; // UIButton, UIComponent, UILabel, UIPanel, UIView
+using FinanceOverhaul.Core; // MissedPayments, WelcomeText
+using UnityEngine; // Color32, MonoBehaviour, RectOffset, Time, Vector2, Vector3
 
 namespace FinanceOverhaul
 {

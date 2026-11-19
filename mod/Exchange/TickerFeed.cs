@@ -1,6 +1,9 @@
-using System;
-using System.Collections.Generic;
-using FinanceOverhaul.Core;
+using System; // Exception
+using System.Collections.Generic; // Dictionary, List
+using FinanceOverhaul.Core; // TickerLine, TickerSnapshot
+
+// Game classes used without a using (global namespace, Assembly-CSharp): EconomyManager,
+//   Investment, InvestmentAI, InvestmentInfo, SimulationManager
 
 namespace FinanceOverhaul
 {

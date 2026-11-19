@@ -1,7 +1,14 @@
-using System;
+using System; // Exception
+// ColossalFramework.UI: UIComponent, UIHorizontalAlignment, UILabel, UISprite, UITextureAtlas,
+//   UIVerticalAlignment, UIView
 using ColossalFramework.UI;
-using FinanceOverhaul.Core;
+using FinanceOverhaul.Core; // BusinessKind, CoinIcon, LocalCompany
+// UnityEngine: Color32, FilterMode, Mathf, Rect, ScriptableObject, Texture2D, TextureFormat,
+//   TextureWrapMode, Vector2, Vector3
 using UnityEngine;
+
+// Game classes used without a using (global namespace, Assembly-CSharp): EconomyManager,
+//   EconomyPanel, Investment, InvestmentAI, InvestmentInfo
 
 namespace FinanceOverhaul
 {

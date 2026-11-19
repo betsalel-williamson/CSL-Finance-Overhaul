@@ -1,6 +1,6 @@
-using System;
-using System.Linq;
-using Xunit;
+using System; // Action, ArgumentOutOfRangeException, Math, Random
+using System.Linq; // Select(), Sum(), ToArray()
+using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {
