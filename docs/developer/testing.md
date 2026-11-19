@@ -86,6 +86,8 @@ DAYS days) and `expect-company-first` (scenario 70: View headquarters opens the 
 panel with the camera framed on it, fireworks go off, and the new company is the first card),
 `log-effects PATTERN` (the game's loaded effects by name), `dump building-panel` (the tree of the
 game's zoned building info panel; scenario 71 checks what the mod adds to it for a listed company),
+`dump-all NAME` (every control with that name, shown or not, with its parents: finds copies another
+loaded copy of the mod or an old build left; a text field's dump shows its text, focus and hover),
 `share-charts on|off` (the share chart flag, for before/after captures) — and checks
 `expect-visible`, `expect-text`, `expect-slider CONTROL [max]` (the slider's thumb is drawn where
 its value is; with `max`, the value is the maximum), `expect-no-overflow` (every visible part inside

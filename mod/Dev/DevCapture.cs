@@ -289,7 +289,15 @@ namespace FinanceOverhaul
             var tf = c as ColossalFramework.UI.UITextField;
             if (tf != null)
             {
-                s += " normalBg='" + tf.normalBgSprite + "'";
+                s +=
+                    " normalBg='"
+                    + tf.normalBgSprite
+                    + "' text='"
+                    + tf.text
+                    + "' focus="
+                    + tf.hasFocus
+                    + " hovered="
+                    + tf.containsMouse; // not shown: dev log
             }
 
             var text = c as ColossalFramework.UI.UITextComponent;

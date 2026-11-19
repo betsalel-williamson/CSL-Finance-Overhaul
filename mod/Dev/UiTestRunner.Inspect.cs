@@ -47,6 +47,45 @@ namespace FinanceOverhaul
                     DevCapture.DumpTree(c, 0);
                     break;
                 }
+                case "dump-all":
+                {
+                    // dump-all NAME — every control with that name, shown or not, with the
+                    // path of its parents: finds copies a hot reload or a second dialog left.
+                    int n = 0;
+                    foreach (
+                        UIComponent each in UnityEngine.Object.FindObjectsOfType<UIComponent>()
+                    )
+                    {
+                        if (each.name != a)
+                        {
+                            continue;
+                        }
+
+                        n++;
+                        string path = each.name;
+                        for (UIComponent p = each.parent; p != null; p = p.parent)
+                        {
+                            path = p.name + "/" + path; // not shown: dev log
+                        }
+
+                        ModLog.Info(
+                            "ui: copy " // not shown: dev log
+                                + n
+                                + " id="
+                                + each.GetInstanceID()
+                                + " visible="
+                                + each.isVisible
+                                + " h="
+                                + each.height
+                                + " "
+                                + path
+                        );
+                        DevCapture.DumpTree(each, 1);
+                    }
+
+                    ModLog.Info("ui: " + n + " control(s) named " + a); // not shown: dev log
+                    break;
+                }
                 case "share-charts":
                 {
                     // share-charts on|off — the Options flag, for before/after captures.
