@@ -40,6 +40,12 @@ namespace FinanceOverhaul.Core
         /// </summary>
         public bool WasHistorical;
 
+        /// <summary>
+        /// The day it lost its headquarters and found no building to move to; -1 while it has
+        /// one. It closes <see cref="IpoRules.HomeGraceDays"/> days later unless it moves first.
+        /// </summary>
+        public int HomeLostDay = -1;
+
         /// <summary>The last day its price was set (not saved: at most one extra move after a load).</summary>
         public int MovedDay = int.MinValue;
 
@@ -97,6 +103,18 @@ namespace FinanceOverhaul.Core
 
         /// <summary>A company was bought: pay the city for its shares and delist it.</summary>
         BoughtOut,
+
+        /// <summary>
+        /// Its headquarters was lost and it moved to another business of its kind: mark the new
+        /// building, put the old one back as it was, tell the player.
+        /// </summary>
+        Moved,
+
+        /// <summary>Its headquarters was lost and no business of its kind could take it: the grace period starts.</summary>
+        HomeLost,
+
+        /// <summary>The grace period ended with no new headquarters: pay the city for its shares at the price and delist it.</summary>
+        Defunct,
     }
 
     public struct IpoEvent
@@ -113,8 +131,11 @@ namespace FinanceOverhaul.Core
         /// <summary>FirstTradingDay: the pop. BoughtOut: the premium.</summary>
         public double Fraction;
 
-        /// <summary>BoughtOut: what the buyer pays a share.</summary>
+        /// <summary>BoughtOut: what the buyer pays a share. Defunct: the last price.</summary>
         public long PricePerShareCents;
+
+        /// <summary>Moved: the headquarters it left.</summary>
+        public BuildingKey From;
     }
 
     /// <summary>
@@ -208,6 +229,12 @@ namespace FinanceOverhaul.Core
 
         /// <summary>What the business earns in a game year, in cents.</summary>
         long AnnualEarningsCents(BuildingKey building);
+
+        /// <summary>
+        /// The building is still there and still in business: not demolished or replaced, not
+        /// abandoned, not collapsed or burned down.
+        /// </summary>
+        bool HomeStands(BuildingKey building);
     }
 
     /// <summary>
@@ -218,9 +245,12 @@ namespace FinanceOverhaul.Core
     ///    the company is listed at its offering price and the offering window opens. Otherwise
     ///    it is cancelled.
     /// 3. A company whose offering window has closed opens at its first-day price (the pop).
-    /// 4. Every trading company's price moves: towards what its business earns now, and by
-    ///    the day's swing.
-    /// 5. A scheduled buy-out whose day has come pays the premium and delists the company.
+    /// 4. A company whose headquarters is lost moves to the best candidate of its kind; with
+    ///    none, it starts (or stays in) its grace period.
+    /// 5. Every trading company's price moves: towards what its business earns now, and by
+    ///    the day's swing; in a grace period it falls instead.
+    /// 6. A company whose grace period is over closes: the city is paid the price.
+    /// 7. A scheduled buy-out whose day has come pays the premium and delists the company.
     /// Pure: the game side lists, pays and announces from the returned events.
     /// </summary>
     public static class IpoEngine
@@ -272,6 +302,8 @@ namespace FinanceOverhaul.Core
                 }
             }
 
+            Homes(registry, candidates, today, rules, source, events);
+
             // A trading company's price moves every day after its first (before a buy-out, so
             // the buyer pays a premium on today's price).
             foreach (LocalCompany c in registry.Companies)
@@ -279,11 +311,34 @@ namespace FinanceOverhaul.Core
                 if (c.Status == CompanyStatus.Trading && c.MovedDay != today)
                 {
                     c.MovedDay = today;
-                    c.PriceCents = IpoPricing.NextDayPriceCents(
-                        c.PriceCents,
-                        IpoPricing.OfferingPriceCents(source.AnnualEarningsCents(c.Home), rules),
-                        rules,
-                        dice
+                    c.PriceCents =
+                        c.HomeLostDay >= 0
+                            ? IpoPricing.HomelessDayPriceCents(c.PriceCents, rules)
+                            : IpoPricing.NextDayPriceCents(
+                                c.PriceCents,
+                                IpoPricing.OfferingPriceCents(
+                                    source.AnnualEarningsCents(c.Home),
+                                    rules
+                                ),
+                                rules,
+                                dice
+                            );
+                }
+            }
+
+            for (int i = registry.Companies.Count - 1; i >= 0; i--)
+            {
+                LocalCompany c = registry.Companies[i];
+                if (c.HomeLostDay >= 0 && today - c.HomeLostDay >= rules.HomeGraceDays)
+                {
+                    registry.Companies.RemoveAt(i);
+                    events.Add(
+                        new IpoEvent
+                        {
+                            Kind = IpoEventKind.Defunct,
+                            Company = c,
+                            PricePerShareCents = c.PriceCents,
+                        }
                     );
                 }
             }
@@ -312,6 +367,71 @@ namespace FinanceOverhaul.Core
             }
 
             return events;
+        }
+
+        /// <summary>
+        /// Each company whose headquarters no longer stands moves to the candidate of its kind
+        /// that earns the most (first in the queue on a tie), keeping its name, symbol and
+        /// shareholders. With no candidate free it starts its grace period, and keeps looking
+        /// every day of it.
+        /// </summary>
+        private static void Homes(
+            CompanyRegistry registry,
+            CandidateBook candidates,
+            int today,
+            IpoRules rules,
+            IBusinessSource source,
+            List<IpoEvent> events
+        )
+        {
+            foreach (LocalCompany c in registry.Companies)
+            {
+                if (source.HomeStands(c.Home))
+                {
+                    continue;
+                }
+
+                BuildingKey best = default(BuildingKey);
+                long bestEarnings = -1;
+                foreach (BuildingKey b in candidates.Candidates(rules, c.Kind))
+                {
+                    if (
+                        registry.IsHome(b)
+                        || (registry.IpoScheduled && registry.IpoBusiness.Equals(b))
+                        || !source.HomeStands(b)
+                    )
+                    {
+                        continue;
+                    }
+
+                    long earnings = source.AnnualEarningsCents(b);
+                    if (earnings > bestEarnings)
+                    {
+                        best = b;
+                        bestEarnings = earnings;
+                    }
+                }
+
+                if (bestEarnings >= 0)
+                {
+                    BuildingKey from = c.Home;
+                    c.Home = best;
+                    c.HomeLostDay = -1;
+                    events.Add(
+                        new IpoEvent
+                        {
+                            Kind = IpoEventKind.Moved,
+                            Company = c,
+                            From = from,
+                        }
+                    );
+                }
+                else if (c.HomeLostDay < 0)
+                {
+                    c.HomeLostDay = today;
+                    events.Add(new IpoEvent { Kind = IpoEventKind.HomeLost, Company = c });
+                }
+            }
         }
 
         private static void DrawIpo(
@@ -375,8 +495,10 @@ namespace FinanceOverhaul.Core
             var eligible = new List<LocalCompany>();
             foreach (LocalCompany c in registry.Companies)
             {
+                // A company with no headquarters is closing, not worth buying.
                 if (
                     c.Status == CompanyStatus.Trading
+                    && c.HomeLostDay < 0
                     && IpoBuyout.Eligible(today - c.FirstTradingDay, rules)
                 )
                 {

@@ -1,8 +1,8 @@
 # Local IPOs (design, Level 1)
 
 Priority 2 of the [Roadmap](./roadmap.md): a business that has done well in the city for a long time
-can go public and trade as a stock. Status: **designed; first library slice built** (see
-[Build progress](#build-progress)), nothing in the game yet. Grounded in the game code
+can go public and trade as a stock. Status: **built in the game behind the experimental Local IPOs
+flag** (see [Build progress](#build-progress)); still being tuned. Grounded in the game code
 ([Game code notes](../developer/game-code-notes.md)); design rule: fun first, with real-world
 patterns as the source of the rules.
 
@@ -18,14 +18,15 @@ the Local IPOs flag.
 | Gates, slots, board cap, pacing and the draw              | `Market/IpoBoard.cs`, `IpoBoardTests`                                        | **Built 2026-11-17** |
 | Buy-outs: chance, premium, payout                         | `Market/IpoBuyout.cs`, `IpoBuyoutTests`                                      | **Built 2026-11-17** |
 | Daily price movement after the first day                  | `Market/IpoPricing.cs` (`NextDayPriceCents`), `IpoEngine`, scenario 72       | **Built 2026-11-18** |
-| Company registry, moving and delisting, save data         | Library                                                                      | Not started          |
+| A company that loses its headquarters: moves, or closes   | `IpoEngine` (`Homes`), `IpoPricing.HomelessDayPriceCents`, scenario 74       | **Built 2026-11-19** |
 | Daily scan of businesses, the flag, save of the counts    | `mod/Engines/CompanyDesk.cs`, scenario 64                                    | **Built 2026-11-17** |
 | Company registry, daily steps, save of companies          | `Market/IpoEngine.cs`, `IpoEngineTests`                                      | **Built 2026-11-17** |
 | Yearly earnings of a business                             | `Market/IpoEarnings.cs`, `CompanyDesk`, scenario 65                          | **Built 2026-11-18** |
 | A company as a game stock; the engine runs daily          | `mod/Engines/CompanyListing.cs`, `CompanyDesk`, scenario 66                  | **Built 2026-11-18** |
 | Chirps and the IPO dialog                                 | `Notices`, `Views/IpoDialogText.cs`, `mod/Windows/IpoDialog.cs`, scenario 67 | **Built 2026-11-18** |
 | The Investments tab cards                                 | `Views/IpoCardText.cs`, `mod/Investments/CompanyCards.cs`, scenario 68       | **Built 2026-11-18** |
-| IPO dialog, bell, chirps, Figma                           | Mod windows                                                                  | Not started          |
+| IPO dialog and cards in Figma                             | Figma library                                                                | Not started          |
+| Industry areas as companies (main buildings, factories)   | Not designed                                                                 | Not started          |
 
 The library slices: `CandidateBook` counts healthy days per building (id plus build index, so a
 building that reuses an id starts from nothing) and lists the candidates of each kind in a fixed
@@ -245,12 +246,21 @@ extra swing of the first year and a different swing for each kind of business ar
 - **Drift** follows the building's health: staffed, problem-free and earning → gentle rise; problems
   → decline. Not tied to the game's sector stocks (they already follow city industry).
 - **Volatility** starts high and settles over the first year, like real new listings.
-- **Moving:** the company is stored separately from its building (building id plus the game's build
-  index, since ids are reused). If the building is abandoned, demolished or replaced, the company
-  moves its headquarters to the best healthy building of the same kind, keeps its name, symbol and
-  shareholders, and chirps "{Company} moved its headquarters". If none exists, it stays listed for a
-  grace period with a falling price, then delists and the city's shares are paid out at the last
-  price.
+- **Moving (built 2026-11-19):** the company is stored separately from its building (building id
+  plus the game's build index, since ids are reused). Its headquarters counts as lost when the
+  building is demolished or replaced, abandoned, collapsed or burned down (`HomeStands`). The next
+  daily step moves it to the candidate of its kind that earns the most (the first in the queue on a
+  tie; not a building that is itself lost, already a company's home or picked for the coming IPO).
+  It keeps its name, symbol and shareholders, the building it left gets its Historical flag back off
+  (an abandoned one can then be replaced by the game), the new one is marked, and City Brokerage
+  chirps "{Company} lost its headquarters and moved to {building}. Its shares trade as before."
+- **Closing (built 2026-11-19):** with no candidate free, a chirp says it closes in 90 days unless a
+  business can take it in, and the grace period starts (`HomeLostDay`, option "Grace period after
+  losing a home"). Each day of it the price falls 2% with no swing (about a sixth is left after 90
+  days), the company keeps looking for a new home every day, and it is never bought out. The city
+  can sell at any time; at the end the company delists, the city's shares are paid at the last
+  price, and a chirp says what the city received. Unit tests in `IpoEngineTests`; game UI scenario
+  74 (a 3-day grace period, buildings only treated as lost, nothing in the city touched).
 
 ### Buy-outs (decided 2026-11-17; maths built)
 
@@ -800,9 +810,9 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
   are gone. Game UI scenario 68. The Investments tab itself is due an overhaul (denser cards, more
   on screen, faster scrolling): it was made for about thirteen stocks.
 
-Not built: price drift and swing (a trading company's price does not move), delisting when the
-building is lost, and a save-and-reload check of the holding copy (it needs a game restart; planned
-for the save compatibility matrix).
+Not built: a save-and-reload check of the holding copy (it needs a game restart; planned for the
+save compatibility matrix). Price movement (2026-11-18) and losing a headquarters (2026-11-19) are
+built since this was written.
 
 **A test accident worth recording (2026-11-18):** the first run of scenario 66 threw mid-step, the
 runner stopped without its cleanup, and with the flag and the test rules left on the engine listed
@@ -832,8 +842,10 @@ steadiness rule still has to be measured in a city left alone.
   the city saves: the dice, the healthy days of each business (`healthy|…`), the companies
   (`company|…`: id, kind, headquarters as building id and build index, announcement and first
   trading days, offering price, price, status, symbol, name), the days of past IPOs (`ipoday|…`),
-  the next draw day, and a scheduled IPO or buy-out (`ipo|…`, `buyout|…`). Unknown lines are
-  skipped, so an older build reads what it knows.
+  the next draw day, a scheduled IPO or buy-out (`ipo|…`, `buyout|…`), and for a company in its
+  grace period the day it lost its headquarters (`homelost|id|day`). Unknown lines are skipped, so
+  an older build reads what it knows (a save from before 2026-11-19 has no `homelost` line: every
+  company had its headquarters).
 - Not built: each company's game investment slot, protected like the Index (a copy of the holding in
   mod data, restored if the slot is dropped, and the free-slot repair for the game's load bug).
 - Without the mod: the city loads; listed companies disappear from Investments (holdings lost,
@@ -849,7 +861,8 @@ steadiness rule still has to be measured in a city left alone.
 4. The bell: confirm by ear that `stock_exchange_levelup` suits; if not, pick another shipped clip
    or bundle a bell with the mod (needs a licensed recording). Confirm in game how the mod reaches
    the clip.
-5. Whether the IPO dialog pauses the simulation (the academic year report does).
+5. Decided: the IPO dialog pauses the simulation the moment a company is announced (built
+   2026-11-18).
 6. The dialog's header art: the headquarters' own thumbnail, a sector icon or drawn art (Figma).
 7. Whether the dialog can be reopened later, as the academic year report can from the campus panel,
    and from where (the listing in the Stock Monitor is the likely place).

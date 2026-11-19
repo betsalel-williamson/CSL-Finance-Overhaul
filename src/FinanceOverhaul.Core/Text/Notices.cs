@@ -25,6 +25,15 @@ namespace FinanceOverhaul.Core
 
         /// <summary>A local company was bought out and left the exchange.</summary>
         IpoBoughtOut,
+
+        /// <summary>A local company lost its headquarters and moved to another building.</summary>
+        IpoMoved,
+
+        /// <summary>A local company lost its headquarters with nowhere to move: it closes after a grace period.</summary>
+        IpoHomeLost,
+
+        /// <summary>A local company closed: the city was paid its last price.</summary>
+        IpoDefunct,
     }
 
     /// <summary>One chirp: who says it and what (the host posts it to Chirper, UI only).</summary>
@@ -269,6 +278,50 @@ namespace FinanceOverhaul.Core
                         company,
                         price,
                         above,
+                        BondText.WholeMoney(paidCents),
+                        Count(shares)
+                    )
+            );
+        }
+
+        /// <summary>A company lost its headquarters and moved to another building of its kind.</summary>
+        public static Notice IpoMoved(string company, string newHome)
+        {
+            return Ipo(NoticeKind.IpoMoved, Strings.Format("notice.ipo.moved", company, newHome));
+        }
+
+        /// <summary>A company lost its headquarters and found none to move to.</summary>
+        public static Notice IpoHomeLost(string company, int graceDays)
+        {
+            return Ipo(
+                NoticeKind.IpoHomeLost,
+                Strings.Plural(
+                    "notice.ipo.homeLost",
+                    (uint)Math.Max(0, graceDays),
+                    company,
+                    Count((uint)Math.Max(0, graceDays))
+                )
+            );
+        }
+
+        /// <summary>A company closed at the end of its grace period; the city was paid its last price.</summary>
+        public static Notice IpoDefunct(
+            string company,
+            long pricePerShareCents,
+            uint shares,
+            long paidCents
+        )
+        {
+            string price = BondText.WholeMoney(pricePerShareCents);
+            return Ipo(
+                NoticeKind.IpoDefunct,
+                shares == 0
+                    ? Strings.Format("notice.ipo.defunct.none", company, price)
+                    : Strings.Plural(
+                        "notice.ipo.defunct",
+                        shares,
+                        company,
+                        price,
                         BondText.WholeMoney(paidCents),
                         Count(shares)
                     )

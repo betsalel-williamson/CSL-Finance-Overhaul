@@ -74,6 +74,27 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
+        public void ACompanyThatLosesItsHeadquartersSaysWhereItWentOrWhenItCloses()
+        {
+            Assert.Equal(
+                "Westdale Software lost its headquarters and moved to Harbour Tower. Its shares trade as before. #ipo",
+                NoticeText.IpoMoved("Westdale Software", "Harbour Tower").Text
+            );
+            Assert.Equal(
+                "Westdale Software lost its headquarters and no business can take it in. Unless one can within 90 days, it closes, and its price falls until then. #ipo",
+                NoticeText.IpoHomeLost("Westdale Software", 90).Text
+            );
+            Assert.Equal(
+                "Westdale Software closed with no headquarters. The city received ₡1,600 for its 100 shares, at the last price of ₡16. #ipo",
+                NoticeText.IpoDefunct("Westdale Software", 1_600, 100, 160_000).Text
+            );
+            Assert.Equal(
+                "Westdale Software closed with no headquarters, at a last price of ₡16 a share. The city held no shares. #ipo",
+                NoticeText.IpoDefunct("Westdale Software", 1_600, 0, 0).Text
+            );
+        }
+
+        [Fact]
         public void TheDialogStatesOnlyWhatIsFixedThatDay()
         {
             LocalCompany c = Wso();

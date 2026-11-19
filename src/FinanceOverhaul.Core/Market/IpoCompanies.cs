@@ -163,6 +163,7 @@ namespace FinanceOverhaul.Core
         private const string BuyoutTag = "buyout";
         private const string HoldingTag = "holding";
         private const string HistoricalTag = "historical";
+        private const string HomeLostTag = "homelost";
         private const string LookBehindLine = "lookbehind=done";
 
         public static string Format(CandidateBook book, IpoDice dice, CompanyRegistry registry)
@@ -260,6 +261,16 @@ namespace FinanceOverhaul.Core
                 if (c.WasHistorical)
                 {
                     sb.Append(HistoricalTag).Append('|').Append(Int(c.Id)).Append('\n');
+                }
+
+                if (c.HomeLostDay >= 0)
+                {
+                    sb.Append(HomeLostTag)
+                        .Append('|')
+                        .Append(Int(c.Id))
+                        .Append('|')
+                        .Append(Int(c.HomeLostDay))
+                        .Append('\n');
                 }
 
                 if (
@@ -381,6 +392,20 @@ namespace FinanceOverhaul.Core
                 if (marked != null)
                 {
                     marked.WasHistorical = true;
+                }
+            }
+            else if (
+                f[0] == HomeLostTag
+                && f.Length == 3
+                && TryInt(f[1], out number)
+                && TryInt(f[2], out day)
+            )
+            {
+                // Follows its company's line. Older saves have none: every company had a home.
+                LocalCompany homeless = registry.Find(number);
+                if (homeless != null && day >= 0)
+                {
+                    homeless.HomeLostDay = day;
                 }
             }
             else if (f[0] == HoldingTag && f.Length == 5 && TryInt(f[1], out number))

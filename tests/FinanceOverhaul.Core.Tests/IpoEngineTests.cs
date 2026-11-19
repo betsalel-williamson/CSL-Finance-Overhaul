@@ -1,4 +1,4 @@
-using System.Collections.Generic; // HashSet, List
+using System.Collections.Generic; // Dictionary, HashSet, List
 using System.Linq; // Count(), Distinct(), Select()
 // FinanceOverhaul.Core: BuildingKey, BusinessFacts, BusinessKind, CandidateBook, CompanyRegistry,
 //   CompanyStatus, IBusinessSource, IpoBuyout, IpoDice, IpoEngine, IpoEvent, IpoEventKind,
@@ -27,9 +27,21 @@ namespace FinanceOverhaul.Core.Tests
                 return symbol;
             }
 
+            /// <summary>Earnings by building id, where a test sets them; else <see cref="Earnings"/>.</summary>
+            public readonly Dictionary<ushort, long> EarningsOf = new Dictionary<ushort, long>();
+
+            /// <summary>Buildings demolished, abandoned or collapsed.</summary>
+            public readonly HashSet<BuildingKey> Lost = new HashSet<BuildingKey>();
+
             public long AnnualEarningsCents(BuildingKey building)
             {
-                return Earnings;
+                long e;
+                return EarningsOf.TryGetValue(building.Id, out e) ? e : Earnings;
+            }
+
+            public bool HomeStands(BuildingKey building)
+            {
+                return !Lost.Contains(building);
             }
         }
 
@@ -379,6 +391,160 @@ namespace FinanceOverhaul.Core.Tests
             }
 
             Assert.True(moved >= 25, "moved on " + moved + " of 30 days");
+        }
+
+        /// <summary>A company on building 1 of an office city, past its first trading day, on day 200.</summary>
+        private static LocalCompany Trading(CompanyRegistry registry, IpoRules rules, City city)
+        {
+            LocalCompany c = IpoEngine
+                .List(registry, new BuildingKey(1, 1), BusinessKind.Office, 100, rules, city)
+                .Company;
+            c.Status = CompanyStatus.Trading;
+            c.FirstTradingDay = 107;
+            return c;
+        }
+
+        private static List<IpoEvent> Day(
+            CompanyRegistry registry,
+            CandidateBook book,
+            int day,
+            IpoRules rules,
+            IpoDice dice,
+            City city
+        )
+        {
+            // No new IPO can be drawn: the kind has no top-level buildings, so no slot.
+            return IpoEngine.Step(registry, book, OfficeKind(0), 9, day, rules, dice, city);
+        }
+
+        [Fact]
+        public void ACompanyThatLosesItsHeadquartersMovesToTheCandidateThatEarnsTheMost()
+        {
+            IpoRules rules = Certain();
+            var registry = new CompanyRegistry { NextDrawDay = int.MaxValue };
+            CandidateBook book = Offices(4, rules);
+            var dice = new IpoDice(5UL);
+            var city = new City();
+            LocalCompany c = Trading(registry, rules, city);
+            string symbol = c.Symbol;
+            city.EarningsOf[2] = 1_000_000;
+            city.EarningsOf[3] = 9_000_000;
+            city.EarningsOf[4] = 9_000_000; // a tie: the first in the queue wins
+
+            Assert.Empty(Day(registry, book, 200, rules, dice, city));
+            city.Lost.Add(new BuildingKey(1, 1));
+            IpoEvent moved = Assert.Single(Day(registry, book, 201, rules, dice, city));
+
+            Assert.Equal(IpoEventKind.Moved, moved.Kind);
+            Assert.Same(c, moved.Company);
+            Assert.Equal(new BuildingKey(1, 1), moved.From);
+            Assert.Equal(new BuildingKey(3, 3), c.Home);
+            Assert.Equal(-1, c.HomeLostDay);
+            Assert.Equal(symbol, c.Symbol);
+            Assert.Single(registry.Companies);
+            Assert.Empty(Day(registry, book, 202, rules, dice, city)); // settled in its new home
+        }
+
+        [Fact]
+        public void WithNowhereToMoveItsPriceFallsForNinetyDaysThenItClosesAtTheLastPrice()
+        {
+            IpoRules rules = Certain();
+            var registry = new CompanyRegistry { NextDrawDay = int.MaxValue };
+            CandidateBook book = Offices(1, rules); // its own building is the only office
+            var dice = new IpoDice(5UL);
+            var city = new City();
+            LocalCompany c = Trading(registry, rules, city);
+            c.PriceCents = 10_000;
+            city.Lost.Add(new BuildingKey(1, 1));
+
+            IpoEvent lost = Assert.Single(Day(registry, book, 300, rules, dice, city));
+            Assert.Equal(IpoEventKind.HomeLost, lost.Kind);
+            Assert.Equal(300, c.HomeLostDay);
+            Assert.Equal(9_800, c.PriceCents); // 2% lower, no swing
+
+            long expected = 9_800;
+            for (int day = 301; day < 390; day++)
+            {
+                Assert.Empty(Day(registry, book, day, rules, dice, city)); // one chirp, not one a day
+                expected = (long)
+                    System.Math.Round(expected * 0.98, System.MidpointRounding.AwayFromZero);
+                Assert.Equal(expected, c.PriceCents);
+            }
+
+            IpoEvent closed = Assert.Single(Day(registry, book, 390, rules, dice, city));
+            Assert.Equal(IpoEventKind.Defunct, closed.Kind);
+            Assert.Same(c, closed.Company);
+            Assert.Equal(c.PriceCents, closed.PricePerShareCents);
+            Assert.InRange(closed.PricePerShareCents, 1_500, 1_700); // about a sixth of ₡100
+            Assert.Empty(registry.Companies);
+        }
+
+        [Fact]
+        public void ABusinessThatQualifiesDuringTheGracePeriodTakesTheCompanyIn()
+        {
+            IpoRules rules = Certain();
+            var registry = new CompanyRegistry { NextDrawDay = int.MaxValue };
+            CandidateBook book = Offices(1, rules);
+            var dice = new IpoDice(5UL);
+            var city = new City();
+            LocalCompany c = Trading(registry, rules, city);
+            city.Lost.Add(new BuildingKey(1, 1));
+            Assert.Equal(
+                IpoEventKind.HomeLost,
+                Assert.Single(Day(registry, book, 300, rules, dice, city)).Kind
+            );
+
+            book.Restore(new BuildingKey(7, 7), rules.HealthyDays, BusinessKind.Office);
+            IpoEvent moved = Assert.Single(Day(registry, book, 340, rules, dice, city));
+
+            Assert.Equal(IpoEventKind.Moved, moved.Kind);
+            Assert.Equal(new BuildingKey(7, 7), c.Home);
+            Assert.Equal(-1, c.HomeLostDay);
+            Assert.Empty(Day(registry, book, 400, rules, dice, city)); // no longer closing
+            Assert.Single(registry.Companies);
+        }
+
+        [Fact]
+        public void ACandidateWhoseBuildingIsAlsoLostIsNotAHome()
+        {
+            IpoRules rules = Certain();
+            var registry = new CompanyRegistry { NextDrawDay = int.MaxValue };
+            CandidateBook book = Offices(2, rules);
+            var dice = new IpoDice(5UL);
+            var city = new City();
+            LocalCompany c = Trading(registry, rules, city);
+            city.Lost.Add(new BuildingKey(1, 1));
+            city.Lost.Add(new BuildingKey(2, 2)); // abandoned the same day, its count not yet reset
+
+            Assert.Equal(
+                IpoEventKind.HomeLost,
+                Assert.Single(Day(registry, book, 300, rules, dice, city)).Kind
+            );
+            Assert.Equal(new BuildingKey(1, 1), c.Home);
+        }
+
+        [Fact]
+        public void ACompanyWithNoHeadquartersIsNeverBoughtOut()
+        {
+            IpoRules rules = new IpoRules { BuyoutPercentPerYear = 100, DrawEveryDays = 365 };
+            var registry = new CompanyRegistry();
+            CandidateBook book = Offices(1, rules);
+            var dice = new IpoDice(5UL);
+            var city = new City();
+            LocalCompany c = Trading(registry, rules, city);
+            city.Lost.Add(new BuildingKey(1, 1));
+            registry.NextDrawDay = 1_000; // the draw comes during the grace period
+
+            for (int day = 990; day < 990 + 80; day++)
+            {
+                foreach (IpoEvent e in Day(registry, book, day, rules, dice, city))
+                {
+                    Assert.NotEqual(IpoEventKind.BoughtOut, e.Kind);
+                }
+            }
+
+            Assert.False(registry.BuyoutScheduled);
+            Assert.Same(c, Assert.Single(registry.Companies));
         }
     }
 }

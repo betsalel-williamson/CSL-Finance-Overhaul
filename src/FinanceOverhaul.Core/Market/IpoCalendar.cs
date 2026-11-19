@@ -133,6 +133,15 @@ namespace FinanceOverhaul.Core
 
         /// <summary>How varied that premium is (its standard deviation), in percent.</summary>
         public int BuyoutPremiumSpreadPercent = 15;
+
+        /// <summary>
+        /// Days a company that lost its headquarters, with nowhere to move, stays listed before
+        /// it closes (the "Grace period after losing a home" option).
+        /// </summary>
+        public int HomeGraceDays = 90;
+
+        /// <summary>How much such a company's price falls each day of that grace period, in percent.</summary>
+        public int HomelessFallPercent = 2;
     }
 
     /// <summary>The kinds of business that list separately: the three zones and each specialisation.</summary>

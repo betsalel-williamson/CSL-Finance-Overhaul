@@ -160,6 +160,7 @@ namespace FinanceOverhaul.Core.Tests
                     HeldSpent = 1_300_000,
                     History = new[] { 61f, 59.5f, 52f },
                     WasHistorical = true,
+                    HomeLostDay = 4310,
                 }
             );
             registry.Companies.Add(
@@ -197,6 +198,8 @@ namespace FinanceOverhaul.Core.Tests
             Assert.Equal(new List<int> { 4000, 4300 }, back.IpoDays);
             Assert.Equal(2, back.Companies.Count);
             LocalCompany wso = back.Find(3);
+            Assert.Equal(4310, wso.HomeLostDay); // in its grace period
+            Assert.Equal(-1, back.Find(7).HomeLostDay); // has its headquarters
             Assert.Equal("Westdale Software | Tech Park", wso.Name); // a name may hold the separator
             Assert.Equal("WSO", wso.Symbol);
             // Whether the building was Historical before the listing is kept per company.

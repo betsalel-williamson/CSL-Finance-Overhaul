@@ -1,0 +1,29 @@
+# Local IPOs: a company whose headquarters is lost moves to another business of its kind; with
+# nowhere to go, its price falls for the grace period (3 days here, 90 in play) and then it
+# closes and the city is paid the last price. The buildings themselves are not touched: the
+# scenario only treats them as lost. Everything listed is removed in cleanup.
+name local ipos: a company that loses its headquarters moves, or closes after its grace period
+local-ipos on
+ipo-forget
+ipo-healthy-days 1
+ipo-grace 3
+ipo-scan
+ipo-list-now
+ipo-first-day
+expect-company trading listed
+ipo-buy 10
+ipo-lose-home
+expect-company-home moved
+expect-company trading listed
+expect-log lost its headquarters (building
+expect-log ) and moved to
+ipo-lose-home nowhere
+expect-company-home lost
+expect-log no business of its kind can take it; it closes in 3 days
+run-days 4
+expect-company gone unlisted
+expect-log closed with no headquarters at
+expect-log for 10 share(s)
+cleanup:
+ipo-remove-test
+local-ipos restore

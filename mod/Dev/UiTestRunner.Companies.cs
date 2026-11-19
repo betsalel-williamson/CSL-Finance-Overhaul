@@ -62,6 +62,74 @@ namespace FinanceOverhaul
                     CompanyDesk.Rules = new IpoRules { HealthyDays = (int)ParseFloat(a, 365f) };
                     break;
                 }
+                case "ipo-grace":
+                {
+                    // ipo-grace N — days a company with no headquarters stays listed, until the
+                    // scenario ends (the real rule is 90). After ipo-healthy-days, which resets
+                    // the rules.
+                    IpoRules rules = CompanyDesk.Rules ?? new IpoRules();
+                    rules.HomeGraceDays = (int)ParseFloat(a, 90f);
+                    CompanyDesk.Rules = rules;
+                    break;
+                }
+                case "ipo-lose-home":
+                {
+                    // ipo-lose-home [nowhere] — this scenario's newest company loses its
+                    // headquarters at today's step, which runs now; with nowhere, every
+                    // candidate of its kind counts as lost too. Only for this scenario: the
+                    // buildings themselves are untouched.
+                    if (ctx.TestCompanies.Count == 0)
+                    {
+                        r.Error = "ipo-list-now first";
+                        break;
+                    }
+
+                    SimulationManager sim = SimulationManager.instance;
+                    bool paused = sim.SimulationPaused;
+                    sim.SimulationPaused = true;
+                    yield return new WaitForSeconds(0.5f); // let a running step finish
+                    int lost = CompanyDesk.TestLoseHome(
+                        ctx.TestCompanies[ctx.TestCompanies.Count - 1].Id,
+                        a == "nowhere"
+                    );
+                    ModLog.Info("uitest: " + lost + " building(s) count as lost");
+                    CompanyDesk.TestStepToday();
+                    sim.SimulationPaused = paused;
+                    yield return new WaitForSeconds(1f);
+                    break;
+                }
+                case "expect-company-home":
+                {
+                    // expect-company-home moved|same|lost — where this scenario's newest
+                    // company has its headquarters: another building than the one it listed
+                    // on, the same one, or none (in its grace period).
+                    if (ctx.TestCompanies.Count == 0)
+                    {
+                        r.Error = "ipo-list-now first";
+                        break;
+                    }
+
+                    TestCompany listed = ctx.TestCompanies[ctx.TestCompanies.Count - 1];
+                    LocalCompany c = CompanyDesk.CompanyOf(listed.Id);
+                    string home =
+                        c == null ? "gone"
+                        : c.HomeLostDay >= 0 ? "lost"
+                        : c.Home.Equals(listed.Home) ? "same"
+                        : "moved";
+                    ModLog.Info(
+                        "uitest: company "
+                            + listed.Id
+                            + " home "
+                            + home
+                            + (c == null ? "" : " building " + c.Home.Id)
+                    );
+                    if (home != a)
+                    {
+                        r.Error = "the company's headquarters is " + home + ", expected " + a;
+                    }
+
+                    break;
+                }
                 case "ipo-forget":
                     // Forgets the healthy-day counts in memory (the save is untouched).
                     CompanyDesk.ForgetCounts();
@@ -731,7 +799,7 @@ namespace FinanceOverhaul
             Building[] buildings = BuildingManager.instance.m_buildings.m_buffer;
             foreach (TestCompany one in ctx.TestCompanies)
             {
-                CompanyDesk.TestRemove(one.Id, one.WasHistorical, one.AnnouncedDay);
+                CompanyDesk.TestRemove(one.Id, one.AnnouncedDay);
                 // A company the scenario had bought out is already gone from the records, but
                 // its building keeps the Historical flag: put that back too.
                 if (

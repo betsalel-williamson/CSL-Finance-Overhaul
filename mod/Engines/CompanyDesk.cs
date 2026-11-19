@@ -1,5 +1,5 @@
 using System; // Enum, Exception, Math
-using System.Collections.Generic; // Dictionary, KeyValuePair, List
+using System.Collections.Generic; // Dictionary, HashSet, KeyValuePair, List
 using System.Diagnostics; // Stopwatch
 using System.Text; // Encoding, StringBuilder
 using ColossalFramework.Math; // Randomizer
@@ -287,6 +287,70 @@ namespace FinanceOverhaul
                     }
 
                     break;
+                case IpoEventKind.Moved:
+                    // The building it left goes back to how it was (an abandoned one can then
+                    // be replaced by the game); the new one becomes its Historical headquarters.
+                    if (!c.WasHistorical)
+                    {
+                        ClearHistorical(e.From);
+                    }
+
+                    c.WasHistorical = IsHistorical(c.Home);
+                    MarkHistorical(c.Home);
+                    string newHome = Source.NameOf(c.Home);
+                    ModLog.Info(
+                        "ipo: "
+                            + c.Name
+                            + " lost its headquarters (building "
+                            + e.From.Id
+                            + ") and moved to "
+                            + newHome
+                            + " (building "
+                            + c.Home.Id
+                            + ")"
+                    );
+                    Chirp(NoticeText.IpoMoved(c.Name, newHome));
+                    break;
+                case IpoEventKind.HomeLost:
+                {
+                    int grace = (Rules ?? DefaultRules).HomeGraceDays;
+                    ModLog.Info(
+                        "ipo: "
+                            + c.Name
+                            + " lost its headquarters (building "
+                            + c.Home.Id
+                            + ") and no business of its kind can take it; it closes in "
+                            + grace
+                            + " days unless one can"
+                    );
+                    Chirp(NoticeText.IpoHomeLost(c.Name, grace));
+                    break;
+                }
+                case IpoEventKind.Defunct:
+                {
+                    uint shares;
+                    // Paid at the last price, as the game sells (whole ₡).
+                    long payout =
+                        CompanyListing.Delist(c.Id, e.PricePerShareCents, out shares) * 100;
+                    Chirp(NoticeText.IpoDefunct(c.Name, e.PricePerShareCents, shares, payout));
+                    ModLog.Info(
+                        "ipo: "
+                            + c.Name
+                            + " closed with no headquarters at "
+                            + BondText.WholeMoney(e.PricePerShareCents)
+                            + " a share; the city received "
+                            + BondText.WholeMoney(payout)
+                            + " for "
+                            + shares
+                            + " share(s)"
+                    );
+                    if (!c.WasHistorical)
+                    {
+                        ClearHistorical(c.Home);
+                    }
+
+                    break;
+                }
             }
         }
 
@@ -379,6 +443,73 @@ namespace FinanceOverhaul
                 // nothing the engine can go by: unknown, not zero.
                 return SameBuilding(building) ? CompanyDesk.AnnualEarningsCents(building.Id) : 0;
             }
+
+            public bool HomeStands(BuildingKey building)
+            {
+                if (!SameBuilding(building))
+                {
+                    return false; // demolished, or its id now belongs to another building
+                }
+
+                lock (Sync)
+                {
+                    if (testLost.Contains(building))
+                    {
+                        return false;
+                    }
+                }
+
+                const Building.Flags Closed =
+                    Building.Flags.Abandoned | Building.Flags.Collapsed | Building.Flags.BurnedDown;
+                return (BuildingManager.instance.m_buildings.m_buffer[building.Id].m_flags & Closed)
+                    == 0;
+            }
+        }
+
+        // Game UI tests: buildings a scenario treats as lost (the city's own are untouched).
+        private static readonly HashSet<BuildingKey> testLost = new HashSet<BuildingKey>();
+
+        /// <summary>
+        /// Game UI tests: a company's headquarters counts as lost from the next daily step;
+        /// with <paramref name="wholeKind"/>, every candidate of its kind too, so it has nowhere
+        /// to move. Returns how many buildings that is.
+        /// </summary>
+        public static int TestLoseHome(int companyId, bool wholeKind)
+        {
+            lock (Sync)
+            {
+                LocalCompany c = registry.Find(companyId);
+                if (c == null)
+                {
+                    return 0;
+                }
+
+                testLost.Add(c.Home);
+                if (wholeKind)
+                {
+                    foreach (BuildingKey b in Book().Candidates(Rules ?? DefaultRules, c.Kind))
+                    {
+                        testLost.Add(b);
+                    }
+                }
+
+                return testLost.Count;
+            }
+        }
+
+        /// <summary>Game UI tests: every building counts as standing again.</summary>
+        public static void TestFindHomes()
+        {
+            lock (Sync)
+            {
+                testLost.Clear();
+            }
+        }
+
+        /// <summary>Game UI tests: runs today's step now (simulation paused).</summary>
+        public static void TestStepToday()
+        {
+            Step(OrderDesk.Today);
         }
 
         /// <summary>
@@ -429,7 +560,7 @@ namespace FinanceOverhaul
             List<LocalCompany> all = Companies();
             foreach (LocalCompany c in all)
             {
-                TestRemove(c.Id, false, c.AnnouncedDay);
+                TestRemove(c.Id, c.AnnouncedDay);
             }
 
             lock (Sync)
@@ -475,7 +606,7 @@ namespace FinanceOverhaul
         /// Game UI tests: removes a company as if it had never listed (no payout), frees its
         /// pacing day and takes the Historical flag off its building again.
         /// </summary>
-        public static void TestRemove(int companyId, bool wasHistorical, int announcedDay)
+        public static void TestRemove(int companyId, int announcedDay)
         {
             LocalCompany c;
             lock (Sync)
@@ -497,7 +628,8 @@ namespace FinanceOverhaul
             uint none;
             CompanyListing.Delist(companyId, 0, out none);
             Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
-            if (!wasHistorical && buffer[c.Home.Id].m_buildIndex == c.Home.BuildIndex)
+            // Its headquarters now (it may have moved); the one it listed on is the runner's.
+            if (!c.WasHistorical && buffer[c.Home.Id].m_buildIndex == c.Home.BuildIndex)
             {
                 buffer[c.Home.Id].m_flags &= ~Building.Flags.Historical;
             }

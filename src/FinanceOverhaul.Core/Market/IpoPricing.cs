@@ -114,6 +114,18 @@ namespace FinanceOverhaul.Core
             return Math.Max(MinPriceCents, Math.Min(MaxPriceCents, next));
         }
 
+        /// <summary>
+        /// The price tomorrow of a company in its grace period (headquarters lost, nowhere to
+        /// move): <see cref="IpoRules.HomelessFallPercent"/> lower, no swing, never under ₡1.
+        /// About a sixth of the price is left after 90 days at 2%.
+        /// </summary>
+        public static long HomelessDayPriceCents(long priceCents, IpoRules rules)
+        {
+            double fall = Math.Max(0, Math.Min(100, rules.HomelessFallPercent)) / 100d;
+            long next = (long)Math.Round(priceCents * (1d - fall), MidpointRounding.AwayFromZero);
+            return Math.Max(MinPriceCents, Math.Min(MaxPriceCents, next));
+        }
+
         /// <summary>The opening price on the first trading day: whole ₡, inside the same range.</summary>
         public static long FirstDayPriceCents(long offeringPriceCents, double pop)
         {

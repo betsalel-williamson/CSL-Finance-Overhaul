@@ -289,6 +289,30 @@ namespace FinanceOverhaul.Core
                 "{0} was bought out at {1} a share, {2}% above its price. The city received {3} for its {4} shares."
             },
             {
+                "notice.ipo.moved",
+                "{0} lost its headquarters and moved to {1}. Its shares trade as before."
+            },
+            {
+                "notice.ipo.homeLost.one",
+                "{0} lost its headquarters and no business can take it in. Unless one can within {1} day, it closes, and its price falls until then."
+            },
+            {
+                "notice.ipo.homeLost.other",
+                "{0} lost its headquarters and no business can take it in. Unless one can within {1} days, it closes, and its price falls until then."
+            },
+            {
+                "notice.ipo.defunct.one",
+                "{0} closed with no headquarters. The city received {2} for its {3} share, at the last price of {1}."
+            },
+            {
+                "notice.ipo.defunct.other",
+                "{0} closed with no headquarters. The city received {2} for its {3} shares, at the last price of {1}."
+            },
+            {
+                "notice.ipo.defunct.none",
+                "{0} closed with no headquarters, at a last price of {1} a share. The city held no shares."
+            },
+            {
                 "notice.ipo.boughtOut.none",
                 "{0} was bought out at {1} a share, {2}% above its price. The city held no shares."
             },
