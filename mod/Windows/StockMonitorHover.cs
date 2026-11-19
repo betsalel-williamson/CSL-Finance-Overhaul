@@ -1,6 +1,6 @@
 using ColossalFramework.UI; // UIComponent, UILabel, UIPanel
 using FinanceOverhaul.Core; // Sparkline, StockDetail, StockMonitor
-using UnityEngine; // Color32, Mathf, RectOffset, Vector2, Vector3
+using UnityEngine; // Mathf, RectOffset, Vector2, Vector3
 
 namespace FinanceOverhaul
 {
@@ -126,7 +126,7 @@ namespace FinanceOverhaul
             hoverDot = window.AddUIComponent<UIPanel>();
             hoverDot.name = Prefix + "HoverDot";
             hoverDot.backgroundSprite = "EmptySprite";
-            hoverDot.color = new Color32(255, 255, 255, 255);
+            hoverDot.color = FoTheme.HoverDot;
             hoverDot.size = new Vector2(6f, 6f);
             hoverDot.isInteractive = false;
 

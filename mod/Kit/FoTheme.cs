@@ -50,6 +50,39 @@ namespace FinanceOverhaul
         /// <summary>The sprite behind the Invest dialog's share count.</summary>
         public const string GameFieldSprite = "GenericPanelLight";
 
+        /// <summary>The tint of the game's stock cards (Investments tab).</summary>
+        public static readonly Color32 GameStockCard = new Color32(107, 118, 135, 255);
+
+        /// <summary>The background of the game's Share value chart.</summary>
+        public static readonly Color32 GameChartBack = new Color32(30, 31, 33, 255);
+
+        /// <summary>The game's own tint for a dialog's body sprite (the IPO dialog uses it).</summary>
+        public static readonly Color32 GameDialogBody = new Color32(160, 160, 160, 255);
+
+        /// <summary>An order card when the game's own card style can't be read.</summary>
+        public static readonly Color32 GameCardFallback = new Color32(32, 38, 44, 255);
+
+        /// <summary>A sprite drawn in its own colours: no tint.</summary>
+        public static readonly Color32 Untinted = new Color32(255, 255, 255, 255);
+
+        // The game's stock coins (drawn by CoinIcons): gold face, darker rim and side, a
+        // lighter ring, a dark symbol.
+
+        /// <summary>Coin face.</summary>
+        public static readonly Color32 CoinFace = new Color32(246, 184, 60, 255);
+
+        /// <summary>Coin rim.</summary>
+        public static readonly Color32 CoinRim = new Color32(232, 152, 28, 255);
+
+        /// <summary>Coin side.</summary>
+        public static readonly Color32 CoinEdge = new Color32(186, 112, 16, 255);
+
+        /// <summary>The lighter ring inside the rim.</summary>
+        public static readonly Color32 CoinRing = new Color32(255, 214, 110, 255);
+
+        /// <summary>The symbol stamped on the coin.</summary>
+        public static readonly Color32 CoinSymbol = new Color32(122, 72, 6, 255);
+
         // The mod's own colours (windows and text the game has no equivalent for).
 
         /// <summary>Selected tab, switches on, accents. Figma: color/bg/tab-active.</summary>
@@ -100,8 +133,57 @@ namespace FinanceOverhaul
         /// <summary>The vertical line under the pointer on a chart.</summary>
         public static readonly Color32 HoverLine = new Color32(255, 255, 255, 150);
 
+        /// <summary>The dot on the line under the pointer on a chart.</summary>
+        public static readonly Color32 HoverDot = new Color32(255, 255, 255, 255);
+
         /// <summary>Background of a chart hover readout.</summary>
         public static readonly Color32 Tip = new Color32(9, 14, 17, 235);
+
+        /// <summary>Background of the Stock Monitor's settings popover: the window, see-through.</summary>
+        public static readonly Color32 Popover = new Color32(9, 14, 17, 235);
+
+        /// <summary>The track of a slider in the settings popover.</summary>
+        public static readonly Color32 SliderTrack = new Color32(255, 255, 255, 64);
+
+        /// <summary>A line between rows in the Stock Monitor.</summary>
+        public static readonly Color32 Divider = new Color32(255, 255, 255, 26);
+
+        /// <summary>The panel behind the Stock Monitor's detail chart (drawn at 35% opacity).</summary>
+        public static readonly Color32 ChartBack = new Color32(0, 0, 0, 255);
+
+        /// <summary>The shadow under every label the mod draws.</summary>
+        public static readonly Color32 TextShadow = new Color32(0, 0, 0, 220);
+
+        /// <summary>The arrow on a sort-direction button.</summary>
+        public static readonly Color32 ButtonGlyph = new Color32(230, 236, 240, 255);
+
+        /// <summary>Behind the gold symbol of a stock the city holds (Stock Monitor rows).</summary>
+        public static readonly Color32 HeldBack = new Color32(70, 52, 24, 255);
+
+        /// <summary>The track behind a progress bar (company cards, building panel).</summary>
+        public static readonly Color32 BarTrack = new Color32(8, 12, 18, 255);
+
+        // A company's building panel: the gold of an IPO offer.
+
+        /// <summary>The Buy shares button while the company is offering shares.</summary>
+        public static readonly Color32 OfferGold = new Color32(240, 170, 36, 255);
+
+        /// <summary>That button under the pointer.</summary>
+        public static readonly Color32 OfferGoldHover = new Color32(255, 200, 80, 255);
+
+        /// <summary>Text on the gold button.</summary>
+        public static readonly Color32 OfferGoldText = new Color32(58, 36, 4, 255);
+
+        /// <summary>A section inside the building panel.</summary>
+        public static readonly Color32 SectionFill = new Color32(30, 36, 44, 255);
+
+        // The Stock Exchange's LED boards (dot colours: LedPalette in the library).
+
+        /// <summary>The board face behind the dots. Figma: color/ticker/board.</summary>
+        public static readonly Color32 LedBoard = new Color32(0x1E, 0x30, 0x3E, 0xFF);
+
+        /// <summary>The frame around a board.</summary>
+        public static readonly Color32 LedFrame = new Color32(0x0E, 0x14, 0x18, 0xFF);
 
         /// <summary>Fully transparent.</summary>
         public static readonly Color32 Clear = new Color32(0, 0, 0, 0);

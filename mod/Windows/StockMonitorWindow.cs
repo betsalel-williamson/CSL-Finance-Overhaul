@@ -53,12 +53,12 @@ namespace FinanceOverhaul
         private static readonly Color32 Muted = FoTheme.TextMuted;
         private static readonly Color32 Cyan = FoTheme.Accent;
         private static readonly Color32 Gold = FoTheme.TickerSymbol;
-        private static readonly Color32 GoldBack = new Color32(70, 52, 24, 255);
+        private static readonly Color32 GoldBack = FoTheme.HeldBack;
         private static readonly Color32 PillText = FoTheme.Header; // black reads best on the light game colours
         private static readonly Color32 Gain = FoTheme.TickerGain;
         private static readonly Color32 Loss = FoTheme.Loss;
         private static readonly Color32 Flat = FoTheme.TickerFlat;
-        private static readonly Color32 Divider = new Color32(255, 255, 255, 26);
+        private static readonly Color32 Divider = FoTheme.Divider;
 
         public static StockMonitorHost Current { get; private set; }
 

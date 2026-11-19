@@ -3,7 +3,7 @@ using System; // DateTime, Exception
 //   UITextureSprite, UIView
 using ColossalFramework.UI;
 using FinanceOverhaul.Core; // CompanyPanelText, LocalCompany, StockMonitor, Strings
-// UnityEngine: Color, Color32, FilterMode, Mathf, MonoBehaviour, Texture2D, TextureFormat,
+// UnityEngine: Color32, FilterMode, Mathf, MonoBehaviour, Texture2D, TextureFormat,
 //   TextureWrapMode, Time, Vector2, Vector3
 using UnityEngine;
 
@@ -36,11 +36,11 @@ namespace FinanceOverhaul
             SparkH = 24,
             SparkScale = 2;
 
-        private static readonly Color32 Gold = new Color32(240, 170, 36, 255);
-        private static readonly Color32 GoldHover = new Color32(255, 200, 80, 255);
-        private static readonly Color32 GoldText = new Color32(58, 36, 4, 255);
-        private static readonly Color32 SectionFill = new Color32(30, 36, 44, 255);
-        private static readonly Color32 Track = new Color32(8, 12, 18, 255);
+        private static readonly Color32 Gold = FoTheme.OfferGold;
+        private static readonly Color32 GoldHover = FoTheme.OfferGoldHover;
+        private static readonly Color32 GoldText = FoTheme.OfferGoldText;
+        private static readonly Color32 SectionFill = FoTheme.SectionFill;
+        private static readonly Color32 Track = FoTheme.BarTrack;
         private static readonly Color32 White = FoTheme.TextPrimary;
         private static readonly Color32 Muted = FoTheme.TextMuted;
         private static readonly Color32 Note = FoTheme.TickerSymbol;
@@ -235,7 +235,7 @@ namespace FinanceOverhaul
             if (!decorated)
             {
                 decorated = true;
-                nameColour = name == null ? (Color32)Color.white : name.textColor;
+                nameColour = name == null ? FoTheme.GameText : name.textColor;
                 historicalY = historical.relativePosition.y;
                 zoneInfoY = zoneInfo == null ? 0f : zoneInfo.relativePosition.y;
                 panelHeight = panel.height;
@@ -414,10 +414,10 @@ namespace FinanceOverhaul
             buy.pressedBgSprite = offering ? art : "ButtonMenuPressed";
             buy.disabledBgSprite = offering ? art : "ButtonMenuDisabled";
             buy.focusedBgSprite = art;
-            buy.hoveredColor = offering ? GoldHover : (Color32)Color.white;
-            buy.pressedColor = offering ? Gold : (Color32)Color.white;
-            buy.focusedColor = offering ? Gold : (Color32)Color.white;
-            buy.color = offering ? Gold : (Color32)Color.white;
+            buy.hoveredColor = offering ? GoldHover : FoTheme.Untinted;
+            buy.pressedColor = offering ? Gold : FoTheme.Untinted;
+            buy.focusedColor = offering ? Gold : FoTheme.Untinted;
+            buy.color = offering ? Gold : FoTheme.Untinted;
             buy.textColor = offering ? GoldText : White;
             buy.hoveredTextColor = buy.textColor;
             buy.pressedTextColor = buy.textColor;

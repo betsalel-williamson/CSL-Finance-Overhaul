@@ -2,7 +2,7 @@
 //   UITextField
 using ColossalFramework.UI;
 using FinanceOverhaul.Core; // Strings
-using UnityEngine; // Color, Mathf, RectOffset, Vector2, Vector3
+using UnityEngine; // Mathf, RectOffset, Vector2, Vector3
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel
 
@@ -149,7 +149,7 @@ namespace FinanceOverhaul
             priceField.focusedBgSprite = FoTheme.GameFieldSprite;
             priceField.selectionSprite = "EmptySprite";
             priceField.color = FoTheme.Field;
-            priceField.textColor = Color.white;
+            priceField.textColor = FoTheme.GameText;
             priceField.tooltip = Strings.Get("order.price.tip");
             if (shareLabel != null && shareLabel.font != null)
             {

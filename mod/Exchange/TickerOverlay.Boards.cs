@@ -189,7 +189,7 @@ namespace FinanceOverhaul
 
                 var material = new Material(shader);
                 material.name = "FinanceOverhaulTickerFrame";
-                material.color = new Color32(0x0E, 0x14, 0x18, 0xFF);
+                material.color = FoTheme.LedFrame;
                 return material;
             }
 

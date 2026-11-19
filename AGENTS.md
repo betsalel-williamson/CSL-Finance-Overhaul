@@ -60,6 +60,13 @@ and `Harmony/`) or in the library's wording (`Text/`, `Views/`). Log lines stay 
 the log is for whoever fixes a bug. A literal that only looks like wording gets `// not shown` and
 the reason on its line.
 
+## Colours
+
+Every colour the mod draws is a named entry in `mod/Kit/FoTheme.cs`, matching the Figma library's
+variables where one exists; surfaces read `FoTheme.Name`, never `new Color32(…)` with numbers or
+`Color.white`. A shade made from a theme colour (its r, g, b with another alpha) is fine.
+`npm run layer:lint` (`scripts/colour-lint.py`) fails on a literal colour anywhere else in `mod/`.
+
 ## Game UI tests and the test stock (TST)
 
 `scripts/game-ui-test.sh [tests/game-ui/x.uitest]` drives the running game (a `--dev` install,

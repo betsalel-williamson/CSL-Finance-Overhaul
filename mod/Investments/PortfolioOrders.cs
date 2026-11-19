@@ -266,8 +266,7 @@ namespace FinanceOverhaul
             card.size = new Vector2(list.width, CardHeight);
             card.backgroundSprite =
                 backgroundStyle != null ? backgroundStyle.backgroundSprite : "GenericPanel";
-            card.color =
-                backgroundStyle != null ? backgroundStyle.color : new Color32(32, 38, 44, 255);
+            card.color = backgroundStyle != null ? backgroundStyle.color : FoTheme.GameCardFallback;
 
             Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
             string name = buffer[investmentId].Info.m_investmentAI.GetLocalizedName();

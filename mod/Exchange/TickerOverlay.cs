@@ -69,7 +69,7 @@ namespace FinanceOverhaul
 
         // Figma tokens color/ticker/*: board, symbol, gain, loss, unknown; plus a dim
         // unlit-dot shade between board and board-lit.
-        private static readonly Color32 BoardColour = new Color32(0x1E, 0x30, 0x3E, 0xFF);
+        private static readonly Color32 BoardColour = FoTheme.LedBoard;
 
         // Dot colours for the chosen Options brightness (LedPalette, Market); rebuilt on change.
         private Color32[] palette;

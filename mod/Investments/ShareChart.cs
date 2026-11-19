@@ -3,7 +3,7 @@ using System.Collections.Generic; // Dictionary, KeyValuePair, List
 using System.Reflection; // FieldInfo
 using ColossalFramework.UI; // UIComponent, UIGraph, UILabel, UIPanel, UITextureSprite, UIView
 using FinanceOverhaul.Core; // Sparkline, StockDetail, StockMonitor, Strings
-// UnityEngine: Color, Color32, FilterMode, GameObject, Mathf, RectOffset, Texture2D, TextureFormat,
+// UnityEngine: Color32, FilterMode, GameObject, Mathf, RectOffset, Texture2D, TextureFormat,
 //   TextureWrapMode, Vector2, Vector3
 using UnityEngine;
 
@@ -57,7 +57,7 @@ namespace FinanceOverhaul
             // or its opaque background never draws and the vanilla graph shows through.
             v.Root.atlas = UIView.GetAView().defaultAtlas;
             v.Root.backgroundSprite = opaque ? "EmptySprite" : string.Empty;
-            v.Root.color = new Color32(30, 31, 33, 255); // the game's chart background
+            v.Root.color = FoTheme.GameChartBack;
             v.Root.isInteractive = false;
 
             float axisW = 56f * labelScale / 0.7f,
@@ -217,9 +217,9 @@ namespace FinanceOverhaul
             if (hoverTip == null)
             {
                 hoverLine = Box(FoTheme.HoverLine);
-                hoverDot = Box(Color.white);
+                hoverDot = Box(FoTheme.HoverDot);
                 hoverDot.size = new Vector2(6f, 6f);
-                hoverTip = FoText.Label(Root, Root.name + "HoverTip", "", 0.7f, Color.white);
+                hoverTip = FoText.Label(Root, Root.name + "HoverTip", "", 0.7f, FoTheme.GameText);
                 hoverTip.backgroundSprite = "GenericPanelWhite";
                 hoverTip.color = FoTheme.Tip;
                 hoverTip.padding = new RectOffset(6, 6, 3, 2);

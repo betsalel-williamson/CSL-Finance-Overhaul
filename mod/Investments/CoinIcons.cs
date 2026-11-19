@@ -29,11 +29,11 @@ namespace FinanceOverhaul
         private const int TextureSize = 128;
 
         // The game's stock coins: gold face, darker rim and side, a lighter ring.
-        private static readonly Color32 FaceColour = new Color32(246, 184, 60, 255);
-        private static readonly Color32 RimColour = new Color32(232, 152, 28, 255);
-        private static readonly Color32 EdgeColour = new Color32(186, 112, 16, 255);
-        private static readonly Color32 RingColour = new Color32(255, 214, 110, 255);
-        private static readonly Color32 SymbolColour = new Color32(122, 72, 6, 255);
+        private static readonly Color32 FaceColour = FoTheme.CoinFace;
+        private static readonly Color32 RimColour = FoTheme.CoinRim;
+        private static readonly Color32 EdgeColour = FoTheme.CoinEdge;
+        private static readonly Color32 RingColour = FoTheme.CoinRing;
+        private static readonly Color32 SymbolColour = FoTheme.CoinSymbol;
 
         private static UITextureAtlas atlas;
 

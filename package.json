@@ -24,7 +24,7 @@
     "format:check": "npm run format:csharp:check",
     "imports": "bash scripts/import-comments.sh",
     "imports:check": "bash scripts/import-comments.sh --check",
-    "layer:lint": "python3 scripts/layer-import-lint.py && python3 scripts/strings-lint.py",
+    "layer:lint": "python3 scripts/layer-import-lint.py && python3 scripts/strings-lint.py && python3 scripts/colour-lint.py",
     "test:unit": "dotnet test tests/FinanceOverhaul.Core.Tests/FinanceOverhaul.Core.Tests.csproj --nologo --verbosity minimal",
     "build:mod": "bash scripts/build-mod.sh",
     "test": "npm run test:unit",

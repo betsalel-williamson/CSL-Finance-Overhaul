@@ -32,13 +32,13 @@ namespace FinanceOverhaul
         private const float CardHeight = 96f;
         private const float BarWidth = 250f;
         private const float BarHeight = 14f;
-        private static readonly Color32 CardTint = new Color32(107, 118, 135, 255); // the game's stock cards
+        private static readonly Color32 CardTint = FoTheme.GameStockCard;
         private static readonly Color32 Text = FoTheme.GameText;
         private static readonly Color32 Value = FoTheme.GameValue;
         private static readonly Color32 Muted = FoTheme.TextMuted;
         private static readonly Color32 Held = FoTheme.GameNegative;
         private static readonly Color32 Bar = FoTheme.GamePositive;
-        private static readonly Color32 BarTrack = new Color32(8, 12, 18, 255);
+        private static readonly Color32 BarTrack = FoTheme.BarTrack;
 
         private EconomyPanel economy;
         private string shown;

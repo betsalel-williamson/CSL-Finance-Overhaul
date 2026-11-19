@@ -26,7 +26,7 @@ namespace FinanceOverhaul
             l.textScale = scale;
             l.textColor = colour;
             l.useDropShadow = true;
-            l.dropShadowColor = new Color32(0, 0, 0, 220);
+            l.dropShadowColor = FoTheme.TextShadow;
             l.dropShadowOffset = new Vector2(1f, -1f);
             return l;
         }

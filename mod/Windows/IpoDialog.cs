@@ -331,7 +331,7 @@ namespace FinanceOverhaul
 
             UISlicedSprite body = panel.AddUIComponent<UISlicedSprite>();
             body.spriteName = "UnlockingPanel";
-            body.color = new Color32(160, 160, 160, 255); // the game's own tint for this sprite
+            body.color = FoTheme.GameDialogBody;
             body.relativePosition = new Vector3(3f, 3f + bannerHeight);
 
             UIButton close = panel.AddUIComponent<UIButton>();

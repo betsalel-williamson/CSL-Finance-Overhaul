@@ -133,7 +133,7 @@ namespace FinanceOverhaul
 
             UIPanel chartBack = detail.AddUIComponent<UIPanel>();
             chartBack.backgroundSprite = "EmptySprite";
-            chartBack.color = new Color32(0, 0, 0, 255);
+            chartBack.color = FoTheme.ChartBack;
             chartBack.opacity = 0.35f;
             chartBack.size = new Vector2(ChartW, ChartH);
             chartBack.relativePosition = new Vector3(ChartX, ChartY);

@@ -1,5 +1,5 @@
 using ColossalFramework.UI; // UIButton, UIComponent
-using UnityEngine; // Color32, FilterMode, Texture2D, TextureFormat, Vector2
+using UnityEngine; // FilterMode, Texture2D, TextureFormat, Vector2
 
 namespace FinanceOverhaul
 {
@@ -56,7 +56,7 @@ namespace FinanceOverhaul
                 for (int x = 0; x < w; x++)
                 {
                     bool lit = x >= w / 2 - half && x < w / 2 + half;
-                    t.SetPixel(x, y, lit ? new Color32(230, 236, 240, 255) : FoTheme.Clear);
+                    t.SetPixel(x, y, lit ? FoTheme.ButtonGlyph : FoTheme.Clear);
                 }
             }
 

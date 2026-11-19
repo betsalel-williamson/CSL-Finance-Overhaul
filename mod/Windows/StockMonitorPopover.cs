@@ -106,7 +106,7 @@ namespace FinanceOverhaul
             popover.name = PopoverName;
             popover.width = PopW;
             popover.backgroundSprite = "GenericPanelWhite";
-            popover.color = new Color32(FoTheme.Window.r, FoTheme.Window.g, FoTheme.Window.b, 235);
+            popover.color = FoTheme.Popover;
 
             UILabel title = FoText.Label(
                 popover,
@@ -136,7 +136,7 @@ namespace FinanceOverhaul
             track.name = Prefix + "OpacityTrack";
             track.size = new Vector2(TrackW, 20f); // a generous hit area around the 4 px bar
             track.relativePosition = new Vector3(14f, 56f);
-            UIPanel bar = Box(track, new Color32(255, 255, 255, 64), TrackW, 4f, 0f, 8f);
+            UIPanel bar = Box(track, FoTheme.SliderTrack, TrackW, 4f, 0f, 8f);
             bar.isInteractive = false;
             trackFill = Box(track, Accent, 0f, 4f, 0f, 8f);
             trackFill.isInteractive = false;

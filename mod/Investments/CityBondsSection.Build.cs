@@ -4,8 +4,8 @@ using System; // StringComparison
 //   UIScrollbar, UISlicedSprite, UITextField, UITextureSprite
 using ColossalFramework.UI;
 using FinanceOverhaul.Core; // BondTerm, BondText, IssuedBond, ScrollFade, Strings
-// UnityEngine: Color, Color32, Mathf, RectOffset, Texture2D, TextureFormat, TextureWrapMode,
-//   Vector2, Vector3
+// UnityEngine: Color32, Mathf, RectOffset, Texture2D, TextureFormat, TextureWrapMode, Vector2,
+//   Vector3
 using UnityEngine;
 
 namespace FinanceOverhaul
@@ -171,7 +171,7 @@ namespace FinanceOverhaul
             amount.focusedBgSprite = FoTheme.GameFieldSprite;
             amount.selectionSprite = "EmptySprite";
             amount.color = FoTheme.Field;
-            amount.textColor = Color.white;
+            amount.textColor = FoTheme.GameText;
             if (font != null)
             {
                 amount.font = font;
