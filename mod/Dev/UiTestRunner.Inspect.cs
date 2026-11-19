@@ -6,8 +6,8 @@ using System.IO; // Path
 // ColossalFramework.UI: UIComponent, UIFont, UILabel, UIPanel, UIScrollablePanel, UISlider,
 //   UITextComponent, UIView
 using ColossalFramework.UI;
-using FinanceOverhaul.Core; // SliderThumb
-using UnityEngine; // Application, Mathf, Resources, Vector2, Vector3, WaitForSeconds
+using FinanceOverhaul.Core; // DuplicateCopies, SliderThumb
+using UnityEngine; // Application, GameObject, Mathf, Resources, Vector2, Vector3, WaitForSeconds
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
 //   ConfirmPanel, EconomyManager, EconomyPanel, EffectInfo, Investment, InvestmentInfo
@@ -196,8 +196,56 @@ namespace FinanceOverhaul
                 case "duplicate-alert":
                 {
                     // duplicate-alert preview|close — shows the "switched on twice" dialog for
-                    // every installed copy (it changes nothing), or closes it.
-                    if (a == "close")
+                    // every installed copy (it changes nothing), or closes it with No.
+                    // duplicate-alert live — the real check over every installed copy, as a
+                    // rehearsal (answers are logged, nothing is switched off); end stops it.
+                    // duplicate-alert busy — another question on the game's Yes / No dialog.
+                    // duplicate-alert escape — closes the dialog as Escape does.
+                    // duplicate-alert expect-ours|expect-not-ours — what the dialog asks now.
+                    ConfirmPanel open = UIView.library.Get<ConfirmPanel>("ConfirmPanel");
+                    bool ours = open != null && open.component.isVisible && AsksDuplicate(open);
+                    if (a == "live")
+                    {
+                        DuplicateCopyAlert.Rehearsal = true;
+                        DuplicateCopyAlert.Schedule();
+                    }
+                    else if (a == "end")
+                    {
+                        DuplicateCopyAlert.Rehearsal = false;
+                        GameObject marker = GameObject.Find("FinanceOverhaulDuplicateCopyAlert");
+                        if (marker != null)
+                        {
+                            UnityEngine.Object.Destroy(marker);
+                        }
+                    }
+                    else if (a == "busy")
+                    {
+                        ConfirmPanel.ShowModal(
+                            "uitest: another question", // not shown: dev test dialog
+                            "uitest: asked before the duplicate check", // not shown: dev test dialog
+                            (component, answer) =>
+                                ModLog.Info("uitest: the other question got answer " + answer)
+                        );
+                    }
+                    else if (a == "escape")
+                    {
+                        if (open != null && open.component.isVisible)
+                        {
+                            UIView.library.Hide("ConfirmPanel", -1);
+                        }
+                    }
+                    else if (a == "expect-ours" || a == "expect-not-ours")
+                    {
+                        if (ours != (a == "expect-ours"))
+                        {
+                            r.Error = ours
+                                ? "the dialog asks the duplicate question"
+                                : "the dialog does not ask the duplicate question";
+                        }
+
+                        break;
+                    }
+                    else if (a == "close")
                     {
                         ConfirmPanel panel = UIView.library.Get<ConfirmPanel>("ConfirmPanel");
                         if (panel != null && panel.component.isVisible)
@@ -945,6 +993,21 @@ namespace FinanceOverhaul
                     r.Unknown = true; // not one of this group's commands
                     yield break;
             }
+        }
+
+        /// <summary>The game's Yes / No dialog is showing the duplicate-copies question.</summary>
+        private static bool AsksDuplicate(ConfirmPanel panel)
+        {
+            string title = DuplicateCopies.Title();
+            foreach (UILabel l in panel.component.GetComponentsInChildren<UILabel>())
+            {
+                if (l.text == title)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

@@ -52,6 +52,7 @@ namespace FinanceOverhaul
             try
             {
                 ModLog.Info("level loaded mode=" + mode);
+                DuplicateCopyAlert.Schedule(); // asks again if the question was closed unanswered
                 LogSaveData();
                 OrderDesk.Reset();
                 BondDesk.Reset();

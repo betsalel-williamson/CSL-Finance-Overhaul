@@ -57,14 +57,17 @@ presses through the field's own key handling, one a frame: a character types it;
 (scenarios 57–58: typing regroups thousands), `turn-exchange DEGREES|restore` and
 `expect-ticker-on-building` (turns the first Stock Exchange where it stands and checks the live
 boards stand on it — scenario 55), `duplicate-alert preview|close` (shows the "switched on twice"
-dialog for every installed copy without changing anything, or closes it; needs a second copy
-installed), `game-escape` (runs the game's own Esc handling, as the key would — scenario 60),
-`cash-set ₡`, `cash-restore`, `expect-cash ₡` and `bond-pay-due` (with the simulation paused by
-`pause on`: set the city's cash outright, put back what was taken, check the cash to the cent, and
-run the daily bond step now — scenario 61), `local-ipos on|off|restore`, `ipo-healthy-days N`,
-`ipo-forget`, `ipo-scan` (reads every zoned business now and logs each kind's squares, top-level
-buildings, candidates, slots and why businesses fail the health check) and
-`expect-ipo-candidates none|some` (scenario 64), `ipo-list-now`, `ipo-first-day`, `ipo-buyout`,
+dialog for every installed copy without changing anything, or closes it with No; needs a second copy
+installed), `duplicate-alert live|end|busy|escape|expect-ours|expect-not-ours` (the real check as a
+rehearsal over every installed copy, answers logged and nothing switched off; another question on
+the game's Yes / No dialog; Escape; what the dialog asks — scenario 73), `game-escape` (runs the
+game's own Esc handling, as the key would — scenario 60), `cash-set ₡`, `cash-restore`,
+`expect-cash ₡` and `bond-pay-due` (with the simulation paused by `pause on`: set the city's cash
+outright, put back what was taken, check the cash to the cent, and run the daily bond step now —
+scenario 61), `local-ipos on|off|restore`, `ipo-healthy-days N`, `ipo-forget`, `ipo-scan` (reads
+every zoned business now and logs each kind's squares, top-level buildings, candidates, slots and
+why businesses fail the health check) and `expect-ipo-candidates none|some` (scenario 64),
+`ipo-list-now`, `ipo-first-day`, `ipo-buyout`,
 `expect-company offering|trading|gone [listed|unlisted]` and `ipo-remove-test` (scenario 66: a
 company lists as a stock, opens and is bought out), `expect-company-cards` (scenario 68: a card per
 kind of business in Economy → Investments), `ipo-dialog on|off|close` and `ipo-buy SHARES` (scenario

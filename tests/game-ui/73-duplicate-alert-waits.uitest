@@ -1,0 +1,18 @@
+# Needs two installed copies of the mod (the Workshop one and a local one, say); nothing is
+# switched off: the check runs as a rehearsal.
+name the duplicate-copies question waits for another open question, then asks; Escape changes nothing
+duplicate-alert busy
+duplicate-alert live
+wait 3
+duplicate-alert expect-not-ours
+duplicate-alert close
+expect-log uitest: the other question got answer 0
+wait 3
+duplicate-alert expect-ours
+duplicate-alert escape
+expect-log duplicate copies: answer -1 (rehearsal)
+wait 2
+duplicate-alert expect-not-ours
+cleanup:
+duplicate-alert end
+duplicate-alert close
