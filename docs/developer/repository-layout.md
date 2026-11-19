@@ -1,13 +1,13 @@
 # Repository layout
 
-| Path                                | Role                                                          |
-| ----------------------------------- | ------------------------------------------------------------- |
-| `docs/`                             | Merlon Docs shards (features, client, developer, glossary)    |
-| `src/FinanceOverhaul.Core/`         | Every calculation; never references Cities                    |
-| `tests/FinanceOverhaul.Core.Tests/` | Unit and perf tests for the library                           |
-| `mod/`                              | The mod: hooks, save data, drawing; builds only with the game |
-| `tests/game-ui/`                    | Scenarios run in the game by `scripts/game-ui-test.sh`        |
-| `scripts/`                          | Install, release, hooks, layer lint                           |
+| Path                                | Role                                                                                                |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `docs/`                             | Merlon Docs shards (features, client, developer, glossary)                                          |
+| `src/FinanceOverhaul.Core/`         | Every calculation; never references Cities                                                          |
+| `tests/FinanceOverhaul.Core.Tests/` | Unit and perf tests for the library                                                                 |
+| `mod/`                              | The mod: hooks, save data, drawing; builds only with the game                                       |
+| `tests/game-ui/`                    | Scenarios run in the game by `scripts/game-ui-test.sh`                                              |
+| `scripts/`                          | Install, release, hooks, layer lint, import comments (`scripts/ImportComments/`, `npm run imports`) |
 
 The two projects are split by whether they reference the game
 ([ADR 0004](../features/adr/0004-project-boundary-is-the-game.md)). The mod reads game state, calls

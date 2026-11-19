@@ -9,8 +9,17 @@ green.
 npm run hooks:agent-validate
 ```
 
-That runs layer lint, Market unit+perf tests, a build of the mod (where the game is installed),
-csharpier check, and Merlon docs. Do **not** claim merge-ready without it.
+That runs layer lint, Core unit+perf tests, a build of the mod (where the game is installed),
+csharpier check, the import-comments check, and Merlon docs. Do **not** claim merge-ready without
+it.
+
+## Import comments
+
+Every `using` line ends with (or sits under) a comment naming what the file takes from that
+namespace, and files using the game's global-namespace classes (`LoadingManager`, `EconomyManager`,
+…) list them under the usings. Generated, not hand-written: after adding or removing usings or
+names, run `npm run imports` (Roslyn, `scripts/ImportComments/`). It also removes usings that bring
+in nothing. `npm run imports:check` fails when a comment is out of date.
 
 ## Changesets
 

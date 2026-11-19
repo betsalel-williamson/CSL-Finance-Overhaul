@@ -16,6 +16,8 @@ echo "==> agent-validate: build:mod (needs the game; skipped without it)"
 npm run build:mod
 echo "==> agent-validate: format:check"
 npm run format:check
+echo "==> agent-validate: imports:check (every using says what it brings in)"
+npm run imports:check
 echo "==> agent-validate: docs"
 npm run docs
 echo "==> agent-validate: ok"
