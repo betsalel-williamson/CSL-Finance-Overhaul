@@ -8,8 +8,10 @@ using FinanceOverhaul.Core;
 using UnityEngine; // Mathf, WaitForSeconds
 
 // Game classes used without a using (global namespace, Assembly-CSharp): Building, BuildingInfo,
-//   BuildingManager, CameraController, District, DistrictManager, EconomyManager, GameAreaManager,
-//   InstanceID, Investment, ItemClass, PrivateBuildingAI, SimulationManager, ToolsModifierControl
+//   BuildingManager, CameraController, District, DistrictAreaResourceData, DistrictManager,
+//   DistrictPark, EconomyManager, FastList, GameAreaManager, IndustryBuildingAI, InstanceID,
+//   Investment, ItemClass, LocaleFormatter, PrivateBuildingAI, SimulationManager,
+//   ToolsModifierControl, TransferManager, UniqueFactoryAI
 
 namespace FinanceOverhaul
 {
@@ -128,6 +130,16 @@ namespace FinanceOverhaul
                         r.Error = "the company's headquarters is " + home + ", expected " + a;
                     }
 
+                    break;
+                }
+                case "ipo-industry":
+                {
+                    // ipo-industry — logs every Industries DLC area (kind, name, level, workers,
+                    // the main building, a week's export income, raw material bought, upkeep)
+                    // and every unique factory (workers, production, a week's income, inputs,
+                    // upkeep), as the game's own panels work them out. For the industry-area
+                    // design of Local IPOs; changes nothing.
+                    LogIndustryAreas();
                     break;
                 }
                 case "ipo-forget":
@@ -812,6 +824,199 @@ namespace FinanceOverhaul
             }
 
             ctx.TestCompanies.Clear();
+        }
+
+        /// <summary>Dev: a week's money of one area resource as the game's industry panel shows it (whole ₡).</summary>
+        private static long Week(uint amount, TransferManager.TransferReason reason)
+        {
+            return (long)amount * IndustryBuildingAI.GetResourcePrice(reason) / 10000;
+        }
+
+        private static void LogIndustryAreas()
+        {
+            DistrictManager districts = DistrictManager.instance;
+            Building[] buildings = BuildingManager.instance.m_buildings.m_buffer;
+            int areas = 0;
+            for (int p = 1; p < districts.m_parks.m_size; p++)
+            {
+                DistrictPark park = districts.m_parks.m_buffer[p];
+                if ((park.m_flags & DistrictPark.Flags.Created) == 0 || !park.IsIndustry)
+                {
+                    continue;
+                }
+
+                areas++;
+                DistrictAreaResourceData raw,
+                    a,
+                    b;
+                TransferManager.TransferReason rr,
+                    ra,
+                    rb;
+                switch (park.m_parkType)
+                {
+                    case DistrictPark.ParkType.Farming:
+                        raw = park.m_grainData;
+                        a = park.m_animalProductsData;
+                        b = park.m_floursData;
+                        rr = TransferManager.TransferReason.Grain;
+                        ra = TransferManager.TransferReason.AnimalProducts;
+                        rb = TransferManager.TransferReason.Flours;
+                        break;
+                    case DistrictPark.ParkType.Forestry:
+                        raw = park.m_logsData;
+                        a = park.m_planedTimberData;
+                        b = park.m_paperData;
+                        rr = TransferManager.TransferReason.Logs;
+                        ra = TransferManager.TransferReason.PlanedTimber;
+                        rb = TransferManager.TransferReason.Paper;
+                        break;
+                    case DistrictPark.ParkType.Oil:
+                        raw = park.m_oilData;
+                        a = park.m_petroleumData;
+                        b = park.m_plasticsData;
+                        rr = TransferManager.TransferReason.Oil;
+                        ra = TransferManager.TransferReason.Petroleum;
+                        rb = TransferManager.TransferReason.Plastics;
+                        break;
+                    case DistrictPark.ParkType.Ore:
+                        raw = park.m_oreData;
+                        a = park.m_glassData;
+                        b = park.m_metalsData;
+                        rr = TransferManager.TransferReason.Ore;
+                        ra = TransferManager.TransferReason.Glass;
+                        rb = TransferManager.TransferReason.Metals;
+                        break;
+                    default:
+                        raw = a = b = default(DistrictAreaResourceData);
+                        rr = ra = rb = TransferManager.TransferReason.None;
+                        break;
+                }
+
+                long income =
+                    rr == TransferManager.TransferReason.None
+                        ? 0
+                        : Week(raw.m_finalExport, rr)
+                            + Week(a.m_finalExport, ra)
+                            + Week(b.m_finalExport, rb);
+                long bought =
+                    rr == TransferManager.TransferReason.None ? 0 : Week(raw.m_finalImport, rr);
+                int upkeep = 0;
+                int count = 0;
+                FastList<ushort> service = BuildingManager.instance.GetServiceBuildings(
+                    ItemClass.Service.PlayerIndustry
+                );
+                for (int i = 0; i < service.m_size; i++)
+                {
+                    ushort id = service.m_buffer[i];
+                    if (districts.GetPark(buildings[id].m_position) != p)
+                    {
+                        continue;
+                    }
+
+                    count++;
+                    upkeep += buildings[id]
+                        .Info.m_buildingAI.GetResourceRate(
+                            id,
+                            ref buildings[id],
+                            EconomyManager.Resource.Maintenance
+                        );
+                }
+
+                ModLog.Info(
+                    "uitest: industry area "
+                        + p
+                        + " "
+                        + park.m_parkType
+                        + " '"
+                        + districts.GetParkName((byte)p)
+                        + "' level "
+                        + (int)park.m_parkLevel
+                        + " workers "
+                        + park.m_finalWorkerCount
+                        + " buildings "
+                        + count
+                        + " main "
+                        + park.m_mainGate
+                        + (
+                            park.m_mainGate != 0
+                            && (buildings[park.m_mainGate].m_flags & Building.Flags.Active) != 0
+                                ? " (active)"
+                                : " (not active)"
+                        )
+                        + " production "
+                        + park.m_totalProductionAmount
+                        + " week: exports "
+                        + income
+                        + " bought "
+                        + bought
+                        + " upkeep "
+                        + LocaleFormatter.FormatUpkeep(upkeep, false)
+                        + " (rate "
+                        + upkeep
+                        + ")"
+                );
+            }
+
+            int factories = 0;
+            for (int id = 1; id < buildings.Length; id++)
+            {
+                if ((buildings[id].m_flags & Building.Flags.Created) == 0)
+                {
+                    continue;
+                }
+
+                var factory =
+                    buildings[id].Info == null
+                        ? null
+                        : buildings[id].Info.m_buildingAI as UniqueFactoryAI;
+                if (factory == null)
+                {
+                    continue;
+                }
+
+                factories++;
+                int made = buildings[id].m_education3 * factory.m_outputRate * 16 / 100;
+                long income =
+                    (long)made
+                    * IndustryBuildingAI.GetResourcePrice(factory.m_outputResource)
+                    / 10000;
+                ModLog.Info(
+                    "uitest: unique factory "
+                        + id
+                        + " '"
+                        + BuildingManager.instance.GetBuildingName(
+                            (ushort)id,
+                            new InstanceID { Building = (ushort)id }
+                        )
+                        + "' "
+                        + buildings[id].Info.name
+                        + " workplaces "
+                        + (
+                            factory.m_workPlaceCount0
+                            + factory.m_workPlaceCount1
+                            + factory.m_workPlaceCount2
+                            + factory.m_workPlaceCount3
+                        )
+                        + " production rate "
+                        + buildings[id].m_productionRate
+                        + "% park "
+                        + districts.GetPark(buildings[id].m_position)
+                        + " problems "
+                        + buildings[id].m_problems
+                        + " week: income "
+                        + income
+                        + " upkeep rate "
+                        + factory.GetResourceRate(
+                            (ushort)id,
+                            ref buildings[id],
+                            EconomyManager.Resource.Maintenance
+                        )
+                );
+            }
+
+            ModLog.Info(
+                "uitest: " + areas + " industry area(s), " + factories + " unique factory(ies)"
+            );
         }
     }
 }

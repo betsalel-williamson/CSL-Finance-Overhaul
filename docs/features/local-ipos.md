@@ -26,7 +26,7 @@ the Local IPOs flag.
 | Chirps and the IPO dialog                                 | `Notices`, `Views/IpoDialogText.cs`, `mod/Windows/IpoDialog.cs`, scenario 67 | **Built 2026-11-18** |
 | The Investments tab cards                                 | `Views/IpoCardText.cs`, `mod/Investments/CompanyCards.cs`, scenario 68       | **Built 2026-11-18** |
 | IPO dialog and cards in Figma                             | Figma library                                                                | Not started          |
-| Industry areas as companies (main buildings, factories)   | Not designed                                                                 | Not started          |
+| Industry areas and unique factories as companies          | [Designed](#industry-areas-and-unique-factories-design-2026-11-19-not-built) | Not started          |
 
 The library slices: `CandidateBook` counts healthy days per building (id plus build index, so a
 building that reuses an id starts from nothing) and lists the candidates of each kind in a fixed
@@ -663,6 +663,88 @@ survival after 1 and 3 years; delisting by industry.
   Mergers are the larger real cause: **decided and built**, see
   [Buy-outs](#buy-outs-decided-2026-11-17-maths-built). Together about 60% of listings would still
   be there after five years, as in history.
+
+## Industry areas and unique factories (design, 2026-11-19; not built)
+
+The natural farming, forestry, oil and ore companies are the Industries DLC's areas, not zoned
+plots: in the test city 109 of 110 zoned farm plots have one job, while its farming area
+employs 726. Unique factories (Bakery, Seafood Factory and the like) are businesses with a name of
+their own. Neither is a zoned business, so neither is a candidate today. This section designs how
+they become companies.
+
+### What the game keeps (checked in the code, 2026-11-19)
+
+| Needed          | Industry area (`DistrictPark`, `IsIndustry`)                                                                                                            | Unique factory (`UniqueFactoryAI`, a `ProcessingFacilityAI`)                                                            |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Identity        | Area id (reused when deleted) and its main building (`m_mainGate`); name `DistrictManager.GetParkName`                                                  | Building id and build index; name `BuildingManager.GetBuildingName`; built once per city (`CanBeBuiltOnlyOnce`)         |
+| Kind            | `m_parkType`: Farming, Forestry, Oil, Ore (Industry is the generic area that only hosts factories)                                                      | Its own: each factory makes one product (`m_outputResource`)                                                            |
+| Level           | `m_parkLevel` 1 to 5, raised by production and workers (`m_industryLevelInfo`)                                                                          | None                                                                                                                    |
+| Workers         | `m_finalWorkerCount`                                                                                                                                    | Workplaces from the prefab (38 to 75 in the test city)                                                                  |
+| A week's money  | As the area's panel shows it (`IndustryWorldInfoPanel`): exports of the raw and the two processed products × each price ÷ 10,000, raw bought in, upkeep | As the factory's panel shows it (`UniqueFactoryWorldInfoPanel`): output × price ÷ 10,000, inputs × their prices, upkeep |
+| Health          | Main building `Active`; production and workers                                                                                                          | `m_problems`, `m_productionRate` (the player's slider)                                                                  |
+| Historical flag | Not allowed (city service buildings)                                                                                                                    | Not allowed                                                                                                             |
+
+Industry buildings are city services: their sales go straight into the city's budget, unlike a zoned
+business, which pays tax. That changes nothing here: the company's shares are a separate investment,
+and the city keeps its income from the area or factory.
+
+### Measured in the test city (2026-11-19, dev command `ipo-industry`)
+
+| Business                             | Level | Workers | Exports a week | Bought in | Upkeep a week | Left a week |
+| ------------------------------------ | ----- | ------- | -------------- | --------- | ------------- | ----------- |
+| Park Oil Group (oil area)            | 5     | 434     | ₡15,840        | ₡1,920    | ₡4,960        | ₡8,960      |
+| Manor Orchard (farming area)         | 5     | 726     | ₡14,880        | ₡133      | ₡4,372        | ₡10,375     |
+| Seafood Factory (in the oil area)    | –     | 75      | ₡9,600         | not read  | ₡960          | –           |
+| Household Plastic Factory (oil area) | –     | 61      | ₡3,200         | not read  | ₡480          | –           |
+| Bakery (in the farming area)         | –     | 38      | ₡3,840         | not read  | ₡288          | –           |
+
+Priced like a zoned business (earnings × 20 × 10% ÷ 1,000 shares), the oil area would list at about
+₡930 a share: beside the city's largest offices (₡779), so the two kinds sit on one board without
+one dwarfing the other. One city, two areas: a first look, not a sample.
+
+### Proposal
+
+1. **An industry area is a company.** Named after the area ("Manor Orchard"), headquartered in its
+   main building, of its area's kind (farming, forestry, oil, ore: the same kinds and icons as
+   today). It is a candidate when the area is at **level 5** (the area's top level, as level 3 is a
+   zoned building's) and has been healthy for the year: main building active and **profitable** that
+   week (exports − raw bought − upkeep above zero). Healthy days, the look behind, the bad-day cost
+   and the 90% rule are the same as for businesses.
+2. **A unique factory is a company of its own,** separate from the area it stands in (its sales are
+   not part of the area's exports, so nothing is counted twice). A candidate when it has no problem
+   icons, its production slider is at 100% or more, it is profitable that week, and it has been
+   healthy for the year. A new kind, "Unique factory", with the factory icon.
+3. **Earnings** are what the panel shows, over a year: (income − bought in − upkeep) × 52. The
+   offering price, first-day pop, daily movement and buy-outs are unchanged.
+4. **Unlocking and slots:** an area kind unlocks with its first level-5 area, and each level-5 area
+   is one slot; zoned plots of that kind keep their 30-job floor and share the kind. Unique
+   factories unlock with the first factory, one slot per factory. The two-a-year pacing and the
+   board cap apply to everything together.
+5. **Losing its headquarters:** an area company's headquarters is its main building, a factory's is
+   the factory. Deleted, demolished or not active counts as lost. No other building can take an area
+   or a factory in (each is one of a kind), so it goes straight to the grace period and closes after
+   it unless the player rebuilds or reactivates it in time.
+6. **No Historical flag:** service buildings cannot be Historical; the building panel still shows
+   the listing (gold title bar and coin).
+
+### Slices (each with proofs, a game UI scenario and docs, behind the Local IPOs flag)
+
+1. Library: candidate rule and earnings for an area and for a factory, from plain numbers
+   (`IpoIndustry`), with unit tests.
+2. Game side: the daily scan reads areas and factories into the candidate book next to zoned
+   businesses (key: main building or factory building), and the engine lists them.
+3. Cards, symbols, the dialog's wording ("Manor Orchard, the city's farming area, is going public"),
+   the factory icon; Figma.
+4. Measure in a city left alone, then tune the level and profit rules.
+
+### Open decisions
+
+1. Level 5 only, or level 3 and up, for an area? (Level 5 matches "the top of its kind"; most cities
+   reach it late.)
+2. Unique factories as companies of their own, or part of their area's company?
+3. Should a factory outside any area (the generic industry area) qualify the same way?
+4. Should "not active" (the player switched the main building off) count as losing the headquarters,
+   or only deletion and demolition?
 
 ## Limits and room for later
 
