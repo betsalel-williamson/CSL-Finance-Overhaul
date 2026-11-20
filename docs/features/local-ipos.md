@@ -85,6 +85,16 @@ City bonds were about the same size. The IPO dialog, its preference and the bell
 A building that meets all of this becomes a **candidate** (name and building id recorded). Losing
 any condition resets its healthy-day count; it stays a candidate only while healthy.
 
+### The Stock Exchange gate (decided 2026-11-20, not built)
+
+Companies trade on the city's exchange, so a city lists none until it has one that has grown: **no
+IPO is drawn or announced while the Stock Exchange is below level 2** (`StockExchangeAI.GetLevel()`,
+1 to 5, `None` without one; each level is its own building, upgraded once it has earned enough). It
+applies to every kind, zoned businesses and industry alike. Healthy days still count meanwhile, so a
+city that levels its exchange up has candidates ready. Companies already listed keep trading if the
+exchange is later demolished; only new IPOs wait. The Investments cards say why: "Needs the Stock
+Exchange at level 2." An option, "Stock Exchange level for IPOs", default 2.
+
 ## How often (rare by design)
 
 Decided by what the city has built, not by a fixed interval: see
@@ -706,45 +716,50 @@ one dwarfing the other. One city, two areas: a first look, not a sample.
 
 1. **An industry area is a company.** Named after the area ("Manor Orchard"), headquartered in its
    main building, of its area's kind (farming, forestry, oil, ore: the same kinds and icons as
-   today). It is a candidate when the area is at **level 5** (the area's top level, as level 3 is a
-   zoned building's) and has been healthy for the year: main building active and **profitable** that
-   week (exports − raw bought − upkeep above zero). Healthy days, the look behind, the bad-day cost
-   and the 90% rule are the same as for businesses.
+   today). It is a candidate when the area is at **level 3 or higher** (as a zoned building needs
+   level 3) and has been healthy for the year: main building active and **profitable** that week
+   (exports − raw bought − upkeep above zero). Healthy days, the look behind, the bad-day cost and
+   the 90% rule are the same as for businesses.
 2. **A unique factory is a company of its own,** separate from the area it stands in (its sales are
    not part of the area's exports, so nothing is counted twice). A candidate when it has no problem
    icons, its production slider is at 100% or more, it is profitable that week, and it has been
    healthy for the year. A new kind, "Unique factory", with the factory icon.
 3. **Earnings** are what the panel shows, over a year: (income − bought in − upkeep) × 52. The
    offering price, first-day pop, daily movement and buy-outs are unchanged.
-4. **Unlocking and slots:** an area kind unlocks with its first level-5 area, and each level-5 area
-   is one slot; zoned plots of that kind keep their 30-job floor and share the kind. Unique
-   factories unlock with the first factory, one slot per factory. The two-a-year pacing and the
-   board cap apply to everything together.
+4. **Unlocking and slots:** an area kind unlocks with its first area at level 3 or higher, and each
+   such area is one slot; zoned plots of that kind keep their 30-job floor and share the kind.
+   Unique factories unlock with the first factory, one slot per factory. The two-a-year pacing, the
+   board cap and the [Stock Exchange gate](#the-stock-exchange-gate-decided-2026-11-20-not-built)
+   apply to everything together.
 5. **Losing its headquarters:** an area company's headquarters is its main building, a factory's is
-   the factory. Deleted, demolished or not active counts as lost. No other building can take an area
-   or a factory in (each is one of a kind), so it goes straight to the grace period and closes after
-   it unless the player rebuilds or reactivates it in time.
+   the factory. Deleted, demolished, or **switched off by the player** counts as lost. No other
+   building can take an area or a factory in (each is one of a kind), so it goes straight to the
+   grace period: switching the building back on within the 90 days keeps the company (its grace
+   period ends and its price moves normally again); otherwise it closes. Zoned businesses are
+   unchanged.
 6. **No Historical flag:** service buildings cannot be Historical; the building panel still shows
    the listing (gold title bar and coin).
 
 ### Slices (each with proofs, a game UI scenario and docs, behind the Local IPOs flag)
 
-1. Library: candidate rule and earnings for an area and for a factory, from plain numbers
+1. The Stock Exchange gate (all kinds): library rule, cards text, option; game UI scenario.
+2. Library: candidate rule and earnings for an area and for a factory, from plain numbers
    (`IpoIndustry`), with unit tests.
-2. Game side: the daily scan reads areas and factories into the candidate book next to zoned
+3. Game side: the daily scan reads areas and factories into the candidate book next to zoned
    businesses (key: main building or factory building), and the engine lists them.
-3. Cards, symbols, the dialog's wording ("Manor Orchard, the city's farming area, is going public"),
+4. Cards, symbols, the dialog's wording ("Manor Orchard, the city's farming area, is going public"),
    the factory icon; Figma.
-4. Measure in a city left alone, then tune the level and profit rules.
+5. Measure in a city left alone, then tune the level and profit rules.
 
-### Open decisions
+### Decisions (2026-11-20)
 
-1. Level 5 only, or level 3 and up, for an area? (Level 5 matches "the top of its kind"; most cities
-   reach it late.)
-2. Unique factories as companies of their own, or part of their area's company?
-3. Should a factory outside any area (the generic industry area) qualify the same way?
-4. Should "not active" (the player switched the main building off) count as losing the headquarters,
-   or only deletion and demolition?
+1. Decided: an area qualifies from **level 3**.
+2. Decided: each unique factory is **a company of its own**.
+3. Open: whether a factory outside any area (in the generic industry area) qualifies the same way.
+4. Decided: switching an area's main building or a factory **off counts as losing the
+   headquarters**; switching it back on within the grace period keeps the company.
+5. Decided: **no local company goes public until the city's Stock Exchange is at level 2 or
+   higher**, for every kind, zoned businesses too.
 
 ## Limits and room for later
 
@@ -756,11 +771,10 @@ one dwarfing the other. One city, two areas: a first look, not a sample.
   dozen to 50 listings needs the many-company interface (search, sector groups, watchlist; roadmap
   idea 14) as a slice of this epic before the cap is raised.
 
-- **Industry areas are not read yet:** the Industries DLC's main buildings and unique factories (and
-  large farms built that way) are the natural farming, forestry, oil and ore companies. They are not
-  zoned businesses: they have no tax income of their own and are already kept from levelling, so
-  they need their own way of being found, judged healthy and priced. Until that is built, those four
-  kinds only list a zoned plot with at least 30 jobs, which most cities do not have.
+- **Industry areas are not read yet:** designed in
+  [Industry areas and unique factories](#industry-areas-and-unique-factories-design-2026-11-19-not-built).
+  Until that is built, farming, forestry, oil and ore only list a zoned plot with at least 30 jobs,
+  which most cities do not have.
 
 ## Options (Level 1, while tuning the feel)
 
@@ -770,6 +784,7 @@ settings.
 | Option                                  | Default   | What it changes                                           |
 | --------------------------------------- | --------- | --------------------------------------------------------- |
 | Local IPOs                              | Off       | The whole feature                                         |
+| Stock Exchange level for IPOs (planned) | 2         | No IPO until the Stock Exchange is at this level          |
 | Squares to unlock a kind                | 200       | The gate: how much of a kind the city needs first         |
 | Top-level buildings for the second slot | 20        | Each doubling after that adds a slot                      |
 | Days an open slot waits (average)       | 548       | How soon an open slot is filled                           |
