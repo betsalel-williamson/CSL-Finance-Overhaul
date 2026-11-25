@@ -19,6 +19,12 @@ namespace FinanceOverhaul.Core
         /// <summary>The first day another IPO is allowed.</summary>
         public int NextAllowedDay;
 
+        /// <summary>The city's Stock Exchange is at the level IPOs need.</summary>
+        public bool ExchangeAllows = true;
+
+        /// <summary>The Stock Exchange level IPOs need.</summary>
+        public int ExchangeNeeded;
+
         /// <summary>The board is below its cap and pacing allows an IPO.</summary>
         public bool HasRoom
         {
@@ -39,11 +45,14 @@ namespace FinanceOverhaul.Core
             CompanyRegistry registry,
             int tilesOwned,
             int today,
-            IpoRules rules
+            IpoRules rules,
+            int exchangeLevel = IpoEngine.MaxExchangeLevel
         )
         {
             var view = new BoardView
             {
+                ExchangeAllows = IpoBoard.ExchangeAllows(exchangeLevel, rules),
+                ExchangeNeeded = rules.ExchangeLevel,
                 Listed = registry.Companies.Count,
                 Cap = IpoBoard.BoardCap(tilesOwned, rules),
                 Tiles = tilesOwned,
@@ -111,6 +120,7 @@ namespace FinanceOverhaul.Core
 
         /// <summary>
         /// The second line: what happens next. Empty while locked or full (the bar says it).
+        /// With a slot open and the Stock Exchange below the level IPOs need, that comes first.
         /// </summary>
         /// <param name="nextAllowedDate">The day pacing allows another IPO, formatted by the host.</param>
         /// <param name="rules">For the jobs a specialised-industry business needs (null: the defaults).</param>
@@ -121,6 +131,15 @@ namespace FinanceOverhaul.Core
             IpoRules rules = null
         )
         {
+            if (
+                !board.ExchangeAllows
+                && status.State != KindState.Locked
+                && status.State != KindState.Full
+            )
+            {
+                return Strings.Format("ipo.card.note.exchange", Number(board.ExchangeNeeded));
+            }
+
             switch (status.State)
             {
                 case KindState.Open:

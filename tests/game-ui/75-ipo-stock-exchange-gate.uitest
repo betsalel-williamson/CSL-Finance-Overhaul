@@ -1,0 +1,24 @@
+# Local IPOs: no company goes public while the city's Stock Exchange is below level 2. The cards
+# with a slot open say so; at level 2 they say what they said before. The level is only what this
+# scenario's IPOs see: the city's own Stock Exchange is untouched (both are logged).
+name local ipos: below Stock Exchange level 2 the cards say it must grow; at level 2 they do not
+local-ipos on
+ipo-scan
+ipo-exchange-level 1
+show-economy
+wait 1.5
+expect-company-cards
+expect-exchange-note on
+scroll-bottom InvestmentsScrollablePanel
+wait 0.5
+capture ipo-exchange-gate
+ipo-exchange-level 0
+wait 1.5
+expect-exchange-note on
+ipo-exchange-level 2
+wait 1.5
+expect-exchange-note off
+cleanup:
+close-economy
+ipo-exchange-level real
+local-ipos restore

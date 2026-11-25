@@ -4,7 +4,7 @@ using System.Linq; // Count(), Distinct(), Select()
 //   CompanyStatus, IBusinessSource, IpoBuyout, IpoDice, IpoEngine, IpoEvent, IpoEventKind,
 //   IpoPricing, IpoRules, KindFacts, LocalCompany
 using FinanceOverhaul.Core;
-using Xunit; // Assert, FactAttribute
+using Xunit; // Assert, FactAttribute, InlineDataAttribute, TheoryAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {
@@ -141,6 +141,93 @@ namespace FinanceOverhaul.Core.Tests
             Assert.Equal(CompanyStatus.Trading, company.Status);
             Assert.Equal(IpoPricing.FirstDayPriceCents(5_200, first.Fraction), company.PriceCents);
             Assert.InRange(first.Fraction, IpoPricing.MinPop, IpoPricing.MaxPop);
+        }
+
+        [Theory]
+        [InlineData(0)] // no Stock Exchange
+        [InlineData(1)]
+        public void NoIpoIsDrawnBelowTheStockExchangeLevel(int exchangeLevel)
+        {
+            IpoRules rules = Certain();
+            var registry = new CompanyRegistry();
+            CandidateBook book = Offices(5, rules);
+            var dice = new IpoDice(11UL);
+            var city = new City();
+            for (int day = 0; day < 3 * 365; day++)
+            {
+                Assert.Empty(
+                    IpoEngine.Step(
+                        registry,
+                        book,
+                        OfficeKind(10),
+                        6,
+                        day,
+                        rules,
+                        dice,
+                        city,
+                        exchangeLevel
+                    )
+                );
+            }
+
+            Assert.Empty(registry.Companies);
+            Assert.False(registry.IpoScheduled);
+            Assert.Empty(registry.IpoDays); // pacing is not used up while waiting
+
+            // Once the exchange reaches level 2 the waiting candidates list.
+            for (int day = 3 * 365; day < 3 * 365 + 60 && registry.Companies.Count == 0; day++)
+            {
+                IpoEngine.Step(registry, book, OfficeKind(10), 6, day, rules, dice, city, 2);
+            }
+
+            Assert.Single(registry.Companies);
+        }
+
+        [Fact]
+        public void AnIpoScheduledBeforeTheStockExchangeWasLostIsCancelled()
+        {
+            IpoRules rules = Certain();
+            var registry = new CompanyRegistry();
+            CandidateBook book = Offices(3, rules);
+            var dice = new IpoDice(3UL);
+            var city = new City();
+            Assert.Empty(IpoEngine.Step(registry, book, OfficeKind(3), 6, 0, rules, dice, city, 2));
+            Assert.True(registry.IpoScheduled);
+            int ipoDay = registry.IpoDay;
+            for (int day = 1; day < ipoDay; day++)
+            {
+                IpoEngine.Step(registry, book, OfficeKind(3), 6, day, rules, dice, city, 0);
+            }
+
+            IpoEvent cancelled = Assert.Single(
+                IpoEngine.Step(registry, book, OfficeKind(3), 6, ipoDay, rules, dice, city, 0)
+            );
+            Assert.Equal(IpoEventKind.Cancelled, cancelled.Kind);
+            Assert.Empty(registry.Companies);
+            Assert.False(registry.IpoScheduled);
+        }
+
+        [Fact]
+        public void ListedCompaniesKeepTradingWithoutAStockExchange()
+        {
+            IpoRules rules = Certain();
+            var registry = new CompanyRegistry();
+            CandidateBook book = Offices(5, rules);
+            var dice = new IpoDice(11UL);
+            var city = new City();
+            for (int day = 0; day < 60 && registry.Companies.Count == 0; day++)
+            {
+                IpoEngine.Step(registry, book, OfficeKind(10), 6, day, rules, dice, city, 5);
+            }
+
+            LocalCompany company = Assert.Single(registry.Companies);
+            for (int day = 60; day < 200; day++)
+            {
+                IpoEngine.Step(registry, book, OfficeKind(10), 6, day, rules, dice, city, 0);
+            }
+
+            Assert.Equal(CompanyStatus.Trading, company.Status);
+            Assert.Single(registry.Companies);
         }
 
         [Fact]

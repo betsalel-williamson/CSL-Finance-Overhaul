@@ -240,7 +240,8 @@ namespace FinanceOverhaul.Core
     /// <summary>
     /// One day of Local IPOs, in order:
     /// 1. On a draw day (once a period) the dice decide whether an IPO and whether a buy-out
-    ///    happen in the coming period, and on which day; both are only scheduled.
+    ///    happen in the coming period, and on which day; both are only scheduled. No IPO is
+    ///    drawn, or announced, while the Stock Exchange is below the rules' level.
     /// 2. A scheduled IPO whose day has come is announced if its business still qualifies:
     ///    the company is listed at its offering price and the offering window opens. Otherwise
     ///    it is cancelled.
@@ -258,6 +259,9 @@ namespace FinanceOverhaul.Core
         /// <summary>Days the city can buy at the offering price.</summary>
         public const int OfferDays = 7;
 
+        /// <summary>The game's highest Stock Exchange level (callers that do not read it pass this).</summary>
+        public const int MaxExchangeLevel = 5;
+
         public static List<IpoEvent> Step(
             CompanyRegistry registry,
             CandidateBook candidates,
@@ -266,21 +270,32 @@ namespace FinanceOverhaul.Core
             int today,
             IpoRules rules,
             IpoDice dice,
-            IBusinessSource source
+            IBusinessSource source,
+            int exchangeLevel = MaxExchangeLevel
         )
         {
             var events = new List<IpoEvent>();
+            bool exchangeAllows = IpoBoard.ExchangeAllows(exchangeLevel, rules);
             if (today >= registry.NextDrawDay)
             {
                 registry.NextDrawDay = today + IpoCalendar.PeriodDays(rules);
-                DrawIpo(registry, candidates, kinds, tilesOwned, today, rules, dice);
+                if (exchangeAllows)
+                {
+                    DrawIpo(registry, candidates, kinds, tilesOwned, today, rules, dice);
+                }
+
                 DrawBuyout(registry, today, rules, dice);
             }
 
             if (registry.IpoScheduled && today >= registry.IpoDay)
             {
                 registry.IpoScheduled = false;
-                events.Add(Announce(registry, candidates, today, rules, source));
+                // The exchange was demolished or replaced by a lower level since the draw.
+                events.Add(
+                    exchangeAllows
+                        ? Announce(registry, candidates, today, rules, source)
+                        : new IpoEvent { Kind = IpoEventKind.Cancelled }
+                );
             }
 
             foreach (LocalCompany c in registry.Companies)

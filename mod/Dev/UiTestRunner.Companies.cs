@@ -3,7 +3,7 @@ using System.Collections.Generic; // List
 using System.Text; // StringBuilder
 using ColossalFramework.UI; // UICheckBox, UIComponent, UILabel, UISprite, UIView
 // FinanceOverhaul.Core: BoardView, BuildingFraming, CompanyStatus, IpoBoard, IpoEarnings,
-//   IpoPricing, IpoRules, KindFacts, KindStatus, LocalCompany
+//   IpoPricing, IpoRules, KindFacts, KindState, KindStatus, LocalCompany, Strings
 using FinanceOverhaul.Core;
 using UnityEngine; // Mathf, WaitForSeconds
 
@@ -62,6 +62,62 @@ namespace FinanceOverhaul
                     // ipo-healthy-days N — the healthy days a business needs to be a candidate,
                     // until the scenario ends (the real rule is 365).
                     CompanyDesk.Rules = new IpoRules { HealthyDays = (int)ParseFloat(a, 365f) };
+                    break;
+                }
+                case "ipo-exchange-level":
+                {
+                    // ipo-exchange-level N|real — the Stock Exchange level IPOs see, until the
+                    // scenario ends (0 = none); real reads the city's own. Logs both.
+                    CompanyDesk.TestExchangeLevel = -1;
+                    int own = CompanyDesk.ExchangeLevel();
+                    CompanyDesk.TestExchangeLevel = a == "real" ? -1 : (int)ParseFloat(a, -1f);
+                    ModLog.Info(
+                        "uitest: Stock Exchange level "
+                            + CompanyDesk.ExchangeLevel()
+                            + " (the city's own: "
+                            + own
+                            + ")"
+                    );
+                    break;
+                }
+                case "expect-exchange-note":
+                {
+                    // expect-exchange-note on|off — on: every card with a slot open says the
+                    // Stock Exchange must grow (locked and full cards keep their own lines);
+                    // off: no card says so.
+                    bool on = a == "on";
+                    BoardView board = CompanyDesk.Board();
+                    string needs = Strings.Format(
+                        "ipo.card.note.exchange",
+                        (CompanyDesk.Rules ?? new IpoRules()).ExchangeLevel
+                    );
+                    int checkedCards = 0;
+                    foreach (KindStatus k in board.Kinds)
+                    {
+                        UILabel note = FindControl(CompanyCards.NotePrefix + k.Kind) as UILabel;
+                        string text = note == null ? string.Empty : note.text;
+                        bool slotOpen = k.State != KindState.Locked && k.State != KindState.Full;
+                        ModLog.Info("uitest: card " + k.Kind + " note: " + text);
+                        if (on && slotOpen && text != needs)
+                        {
+                            r.Error = k.Kind + " says \"" + text + "\", not \"" + needs + "\"";
+                            break;
+                        }
+
+                        if (!on && text == needs)
+                        {
+                            r.Error = k.Kind + " still says \"" + needs + "\"";
+                            break;
+                        }
+
+                        checkedCards += slotOpen ? 1 : 0;
+                    }
+
+                    if (r.Error == null && on && checkedCards == 0)
+                    {
+                        r.Error = "no card has a slot open (ipo-scan first)";
+                    }
+
                     break;
                 }
                 case "ipo-grace":

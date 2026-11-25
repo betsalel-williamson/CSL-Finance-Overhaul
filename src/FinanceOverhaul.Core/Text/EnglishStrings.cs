@@ -371,6 +371,7 @@ namespace FinanceOverhaul.Core
                 "Only a large operation lists: a business with at least {0} jobs, steady for a year."
             },
             { "ipo.card.note.pacing", "Next listing possible from {0}." },
+            { "ipo.card.note.exchange", "Needs the Stock Exchange at level {0}." },
             { "ipo.card.note.boardFull", "The local board is full ({0} of {1})." },
             { "ipo.card.bar.unlock", "To unlock" },
             { "ipo.card.bar.nextSlot", "Next slot" },

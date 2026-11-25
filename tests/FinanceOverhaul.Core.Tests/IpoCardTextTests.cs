@@ -53,6 +53,28 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
+        public void AnOpenKindSaysItNeedsTheStockExchangeBelowItsLevel()
+        {
+            var rules = new IpoRules();
+            var kinds = new List<KindFacts>
+            {
+                Kind(BusinessKind.Office, 900, 9, 4), // open
+                Kind(BusinessKind.Commercial, 900, 9, 0), // waiting
+                Kind(BusinessKind.Leisure, 132, 9, 2), // locked
+            };
+            BoardView low = IpoCardText.View(kinds, new CompanyRegistry(), 3, 1000, rules, 1);
+            Assert.False(low.ExchangeAllows);
+            string needs = "Needs the Stock Exchange at level 2.";
+            Assert.Equal(needs, IpoCardText.Note(low.Kinds[0], low, "-"));
+            Assert.Equal(needs, IpoCardText.Note(low.Kinds[1], low, "-"));
+            Assert.Equal(string.Empty, IpoCardText.Note(low.Kinds[2], low, "-")); // the bar says it
+
+            BoardView grown = IpoCardText.View(kinds, new CompanyRegistry(), 3, 1000, rules, 2);
+            Assert.True(grown.ExchangeAllows);
+            Assert.NotEqual(needs, IpoCardText.Note(grown.Kinds[0], grown, "-"));
+        }
+
+        [Fact]
         public void ALockedKindShowsItsRequirementAndTheBarTowardsIt()
         {
             var rules = new IpoRules();

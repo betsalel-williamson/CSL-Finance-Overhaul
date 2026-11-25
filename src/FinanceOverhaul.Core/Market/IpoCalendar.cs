@@ -142,6 +142,12 @@ namespace FinanceOverhaul.Core
 
         /// <summary>How much such a company's price falls each day of that grace period, in percent.</summary>
         public int HomelessFallPercent = 2;
+
+        /// <summary>
+        /// The Stock Exchange level (the game's 1 to 5; 0 without one) the city needs before any
+        /// local company goes public. Healthy days still count while the city waits.
+        /// </summary>
+        public int ExchangeLevel = 2;
     }
 
     /// <summary>The kinds of business that list separately: the three zones and each specialisation.</summary>

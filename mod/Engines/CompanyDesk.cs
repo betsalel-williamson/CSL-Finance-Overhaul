@@ -11,7 +11,7 @@ using FinanceOverhaul.Core;
 
 // Game classes used without a using (global namespace, Assembly-CSharp): Building, BuildingInfo,
 //   BuildingManager, EconomyManager, GameAreaManager, ImmaterialResourceManager, InstanceID,
-//   ItemClass, LoadingManager, Notification, PrivateBuildingAI, SimulationManager
+//   ItemClass, LoadingManager, Notification, PrivateBuildingAI, SimulationManager, StockExchangeAI
 
 namespace FinanceOverhaul
 {
@@ -36,6 +36,30 @@ namespace FinanceOverhaul
 
         /// <summary>The rules in force (game UI tests may swap them; null puts the defaults back).</summary>
         public static IpoRules Rules = DefaultRules;
+
+        /// <summary>Game UI tests: the Stock Exchange level IPOs see (-1: the city's own).</summary>
+        public static int TestExchangeLevel = -1;
+
+        /// <summary>
+        /// The city's Stock Exchange level: the game's 1 to 5, 0 without one (or if it cannot
+        /// be read). IPOs wait below <see cref="IpoRules.ExchangeLevel"/>.
+        /// </summary>
+        public static int ExchangeLevel()
+        {
+            if (TestExchangeLevel >= 0)
+            {
+                return TestExchangeLevel;
+            }
+
+            try
+            {
+                return (int)StockExchangeAI.GetLevel();
+            }
+            catch
+            {
+                return 0; // fail soft: no IPOs rather than a broken day
+            }
+        }
 
         /// <summary>How the last scan went, for the log and tests.</summary>
         public static int LastBusinesses { get; private set; }
@@ -108,7 +132,8 @@ namespace FinanceOverhaul
                     registry,
                     GameAreaManager.instance.m_areaCount,
                     OrderDesk.Today,
-                    Rules ?? DefaultRules
+                    Rules ?? DefaultRules,
+                    ExchangeLevel()
                 );
             }
         }
@@ -188,7 +213,8 @@ namespace FinanceOverhaul
                     today,
                     Rules ?? DefaultRules,
                     dice,
-                    Source
+                    Source,
+                    ExchangeLevel()
                 );
             }
 

@@ -163,6 +163,15 @@ namespace FinanceOverhaul.Core
         }
 
         /// <summary>The city has not had its IPOs for the year.</summary>
+        /// <summary>
+        /// The city's Stock Exchange is grown enough for IPOs: at <see cref="IpoRules.ExchangeLevel"/>
+        /// or higher (0 = no Stock Exchange).
+        /// </summary>
+        public static bool ExchangeAllows(int exchangeLevel, IpoRules rules)
+        {
+            return exchangeLevel >= rules.ExchangeLevel;
+        }
+
         public static bool PacingAllows(IList<int> ipoDays, int today, IpoRules rules)
         {
             return IposInLastYear(ipoDays, today) < rules.MaxIposPerYear;

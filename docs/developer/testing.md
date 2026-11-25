@@ -77,9 +77,11 @@ year's limit), `ipo-remove-all` (dev clean-up: every local company removed as if
 mod data rewritten), `historical-off NAME` (takes the Historical flag off businesses of that name),
 `ipo-industry` (logs every industry area and unique factory with its level, workers and a week's
 money, as the game's panels work them out), `ipo-grace N` (days a company with no headquarters stays
-listed, until the scenario ends), `ipo-lose-home [nowhere]` (the scenario's company loses its
-headquarters at a step run now; with `nowhere`, every candidate of its kind counts as lost too; the
-buildings are not touched) and `expect-company-home moved|same|lost|gone` (scenario 74),
+listed, until the scenario ends), `ipo-exchange-level N|real` (the Stock Exchange level IPOs see,
+until the scenario ends; 0 = none), `expect-exchange-note on|off` (every card with a slot open says
+the Stock Exchange must grow, or none does), `ipo-lose-home [nowhere]` (the scenario's company loses
+its headquarters at a step run now; with `nowhere`, every candidate of its kind counts as lost too;
+the buildings are not touched) and `expect-company-home moved|same|lost|gone` (scenario 74),
 `ipo-income` (per zone: the income the game reports and the offering prices its businesses would
 list at — scenario 65), `log-loan-expenses` and `expect-loan-expenses ₡MIN` (what Economy shows as
 loan expenses — scenario 63), `dump-library NAME` and `peek-library NAME` (log the tree of one of
