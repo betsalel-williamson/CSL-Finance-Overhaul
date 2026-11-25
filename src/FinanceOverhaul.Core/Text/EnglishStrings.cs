@@ -432,11 +432,45 @@ namespace FinanceOverhaul.Core
             { "options.ipo.group.Prices", "Local IPOs: prices" },
             { "options.ipo.group.BuyoutsAndClosing", "Local IPOs: buy-outs and closing" },
             { "options.ipo.group.Market", "Local IPOs: the finer workings (dev builds only)" },
-            { "options.ipo.reset", "Put the Local IPOs values back to their defaults" },
+            { "options.ipo.group.Presets", "Local IPOs: presets" },
+            { "options.ipo.preset", "Preset" },
+            { "options.ipo.preset.new", "New Preset" },
+            { "options.ipo.preset.name.LessLikely", "Less likely" },
+            { "options.ipo.preset.name.Default", "Default" },
+            { "options.ipo.preset.name.MoreLikely", "More likely" },
+            { "options.ipo.preset.suggest", "My preset" },
+            { "options.ipo.preset.saveAs", "Save as…" },
+            { "options.ipo.preset.delete", "Delete" },
+            { "options.ipo.preset.saveTitle", "Save Local IPOs preset as…" },
+            { "options.ipo.preset.ok", "OK" },
+            { "options.ipo.preset.cancel", "Cancel" },
+            {
+                "options.ipo.preset.tip",
+                "The player's Local IPOs values all at once. Changing any value makes it a New Preset; Save as… keeps it under a name."
+            },
+            { "options.ipo.preset.LessLikely", "Less likely" },
+            { "options.ipo.preset.Default", "Defaults" },
+            { "options.ipo.preset.MoreLikely", "More likely" },
+            {
+                "options.ipo.preset.tip.Listing",
+                "Less likely: fewer IPOs, later. More likely: more IPOs, sooner. Defaults: the values above as they come."
+            },
+            {
+                "options.ipo.preset.tip.Candidates",
+                "Less likely: only the steadiest, largest businesses can list. More likely: smaller and newer ones can too. Defaults: the values above as they come."
+            },
+            {
+                "options.ipo.preset.tip.Prices",
+                "Less likely: calmer first days and a short offering window. More likely: bigger first-day jumps and a longer window. Defaults: the values above as they come."
+            },
+            {
+                "options.ipo.preset.tip.BuyoutsAndClosing",
+                "Less likely: rare buy-outs with small premiums, a short grace period. More likely: more buy-outs with larger premiums, a long grace period. Defaults: the values above as they come."
+            },
+            { "options.ipo.preset.tip.Market", "Puts this section's values back as they come." },
             { "options.ipo.min", "Min {0}" },
             { "options.ipo.max", "Max {0}" },
             { "options.ipo.field.tip", "Type a number, then press Enter" },
-            { "options.ipo.resetDev", "Put the finer workings back to their defaults" },
             { "options.ipo.exchangeLevel", "Stock Exchange level before any IPO: {0}" },
             {
                 "options.ipo.gateSquares",

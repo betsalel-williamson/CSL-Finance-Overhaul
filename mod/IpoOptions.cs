@@ -1,10 +1,14 @@
 using System.Collections.Generic; // List
-// ColossalFramework.UI: UIAnchorStyle, UIComponent, UIHorizontalAlignment, UILabel, UIPanel,
-//   UISlider, UITextField, UIVerticalAlignment
+// ColossalFramework.UI: LayoutDirection, UIAnchorStyle, UIButton, UIComponent, UIDropDown,
+//   UIHorizontalAlignment, UILabel, UIPanel, UISlider, UITextField, UIVerticalAlignment
 using ColossalFramework.UI;
-using FinanceOverhaul.Core; // IpoTuning, ModSettings, Strings, TuningAudience, TuningGroup
+// FinanceOverhaul.Core: IpoPresets, IpoRules, IpoTuning, IpoUserPreset, ModSettings, Strings,
+//   TuningAudience, TuningGroup, TuningPreset
+using FinanceOverhaul.Core;
 using ICities; // UIHelperBase
 using UnityEngine; // RectOffset, Vector2, Vector3
+
+// Game classes used without a using (global namespace, Assembly-CSharp): UIHelper
 
 namespace FinanceOverhaul
 {
@@ -26,10 +30,22 @@ namespace FinanceOverhaul
 
         private static readonly List<Row> rows = new List<Row>();
 
+        private static UIDropDown presetDropdown;
+        private static string[] presetItems = new string[0];
+        private static bool presetSyncing;
+        private static UIButton deleteButton;
+
+        /// <summary>Control names (game UI tests).</summary>
+        internal const string PresetDropdownName = "FinanceOverhaulIpoPreset"; // not shown: a control name
+        internal const string SaveAsName = "FinanceOverhaulIpoPresetSaveAs"; // not shown: a control name
+        internal const string DeleteName = "FinanceOverhaulIpoPresetDelete"; // not shown: a control name
+        internal const string SectionButtonPrefix = "FinanceOverhaulIpoSection-"; // not shown: a control name
+
         /// <summary>The player's groups (every build, while Local IPOs is on).</summary>
         public static void AddPlayerGroups(UIHelperBase helper, ModSettings settings)
         {
             rows.RemoveAll(r => r.Tuning.Audience == TuningAudience.Player);
+            AddPresets(helper, settings);
             foreach (
                 TuningGroup group in new[]
                 {
@@ -43,21 +59,273 @@ namespace FinanceOverhaul
                 AddGroup(helper, settings, group, TuningAudience.Player);
             }
 
-            helper.AddButton(
-                Strings.Get("options.ipo.reset"),
-                () => Reset(settings, TuningAudience.Player)
+            RefreshPresets(settings);
+        }
+
+        /// <summary>
+        /// The presets section: the preset in use (a built-in, a saved one or New Preset),
+        /// Save as… and Delete, as in Trackpad Camera Control.
+        /// </summary>
+        private static void AddPresets(UIHelperBase helper, ModSettings settings)
+        {
+            UIHelperBase group = helper.AddGroup(Strings.Get("options.ipo.group.Presets"));
+            presetItems = IpoPresets.Names(settings.Ipo, settings.IpoUserPresets).ToArray();
+            string current = IpoPresets.Identify(settings.Ipo, settings.IpoUserPresets);
+            presetDropdown =
+                group.AddDropdown(
+                    Strings.Get("options.ipo.preset"),
+                    presetItems,
+                    System.Array.IndexOf(presetItems, current),
+                    index => OnPresetPicked(settings, index)
+                ) as UIDropDown;
+            if (presetDropdown != null)
+            {
+                presetDropdown.name = PresetDropdownName;
+                presetDropdown.width = 380f; // room for a saved preset's name
+                presetDropdown.tooltip = Strings.Get("options.ipo.preset.tip");
+            }
+
+            UIComponent container = Container(group);
+            if (container == null)
+            {
+                return;
+            }
+
+            UIPanel buttons = ButtonRow(container);
+            UIButton save = FoButton.Add(
+                buttons,
+                SaveAsName,
+                Strings.Get("options.ipo.preset.saveAs"),
+                new Vector2(140f, 30f),
+                0.875f
             );
+            save.eventClick += (c, e) => OpenSaveAs(settings);
+            deleteButton = FoButton.Add(
+                buttons,
+                DeleteName,
+                Strings.Get("options.ipo.preset.delete"),
+                new Vector2(140f, 30f),
+                0.875f
+            );
+            deleteButton.eventClick += (c, e) => DeleteCurrent(settings);
+        }
+
+        private static void OnPresetPicked(ModSettings settings, int index)
+        {
+            if (presetSyncing || index < 0 || index >= presetItems.Length)
+            {
+                return;
+            }
+
+            if (IpoPresets.ApplyNamed(settings.Ipo, settings.IpoUserPresets, presetItems[index]))
+            {
+                ModLog.Info("ipo preset " + presetItems[index]);
+                AfterChange(settings);
+            }
+        }
+
+        /// <summary>Opens Save as…: the values now are kept under the name given.</summary>
+        internal static void OpenSaveAs(ModSettings settings)
+        {
+            FoNameDialog.Show(
+                Strings.Get("options.ipo.preset.saveTitle"),
+                IpoPresets.SuggestName(settings.IpoUserPresets),
+                Strings.Get("options.ipo.preset.ok"),
+                Strings.Get("options.ipo.preset.cancel"),
+                name =>
+                {
+                    if (!IpoPresets.Save(settings.IpoUserPresets, settings.Ipo, name))
+                    {
+                        return false; // empty or a built-in's name: the dialog stays open
+                    }
+
+                    ModLog.Info("ipo preset saved: " + IpoPresets.Clean(name));
+                    AfterChange(settings);
+                    return true;
+                }
+            );
+        }
+
+        /// <summary>Deletes the saved preset in use (not a built-in or New Preset).</summary>
+        internal static bool DeleteCurrent(ModSettings settings)
+        {
+            string current = IpoPresets.Identify(settings.Ipo, settings.IpoUserPresets);
+            if (!IpoPresets.Delete(settings.IpoUserPresets, current))
+            {
+                return false;
+            }
+
+            ModLog.Info("ipo preset deleted: " + current);
+            AfterChange(settings);
+            return true;
+        }
+
+        /// <summary>Applies a quick preset to one section, as its buttons do.</summary>
+        internal static void ApplySection(
+            ModSettings settings,
+            TuningGroup group,
+            TuningPreset preset
+        )
+        {
+            int changed = IpoTuning.Apply(settings.Ipo, group, preset);
+            ModLog.Info(
+                "ipo section " + group + " set to " + preset + " (" + changed + " value(s))"
+            );
+            AfterChange(settings);
+        }
+
+        /// <summary>Game UI tests: the values and saved presets are replaced, and the page shows them.</summary>
+        internal static void TestPutBack(IpoRules values, List<IpoUserPreset> presets)
+        {
+            ModSettings settings = Mod.EnsureSettings();
+            foreach (IpoTuning t in IpoTuning.All)
+            {
+                t.Set(settings.Ipo, t.Get(values));
+            }
+
+            settings.IpoUserPresets.Clear();
+            settings.IpoUserPresets.AddRange(presets);
+            AfterChange(settings);
+        }
+
+        /// <summary>The preset the dropdown shows now (null without one).</summary>
+        internal static string ShownPreset
+        {
+            get
+            {
+                return
+                    presetDropdown == null
+                    || presetDropdown.selectedIndex < 0
+                    || presetDropdown.selectedIndex >= presetItems.Length
+                    ? null
+                    : presetItems[presetDropdown.selectedIndex];
+            }
+        }
+
+        /// <summary>After values changed in bulk: every row, the presets and the file.</summary>
+        private static void AfterChange(ModSettings settings)
+        {
+            foreach (Row row in rows)
+            {
+                ShowRow(settings, row);
+            }
+
+            RefreshPresets(settings);
+            Mod.SaveSettings();
+        }
+
+        private static void ShowRow(ModSettings settings, Row row)
+        {
+            int stored = row.Tuning.Get(settings.Ipo);
+            if (row.Slider != null)
+            {
+                row.Slider.value = row.Tuning.Shown(stored);
+            }
+
+            if (row.Label != null)
+            {
+                row.Label.text = row.Tuning.Label(settings.Ipo);
+            }
+
+            if (row.Field != null)
+            {
+                row.Field.text = row.Tuning.FieldText(settings.Ipo);
+            }
+        }
+
+        /// <summary>The dropdown shows the preset the values are now; Delete is for a saved one.</summary>
+        private static void RefreshPresets(ModSettings settings)
+        {
+            if (presetDropdown == null)
+            {
+                return;
+            }
+
+            presetItems = IpoPresets.Names(settings.Ipo, settings.IpoUserPresets).ToArray();
+            string current = IpoPresets.Identify(settings.Ipo, settings.IpoUserPresets);
+            presetSyncing = true;
+            try
+            {
+                presetDropdown.items = presetItems;
+                presetDropdown.selectedIndex = System.Array.IndexOf(presetItems, current);
+            }
+            finally
+            {
+                presetSyncing = false;
+            }
+
+            if (deleteButton != null)
+            {
+                bool saved = false;
+                foreach (IpoUserPreset p in settings.IpoUserPresets)
+                {
+                    saved |= p.Name == current;
+                }
+
+                deleteButton.isEnabled = saved;
+            }
+        }
+
+        private static UIComponent Container(UIHelperBase group)
+        {
+            var h = group as UIHelper;
+            return h == null ? null : h.self as UIComponent;
+        }
+
+        private static UIPanel ButtonRow(UIComponent container)
+        {
+            UIPanel row = container.AddUIComponent<UIPanel>();
+            row.size = new Vector2(RowWidth, 34f);
+            row.autoLayout = true;
+            row.autoLayoutDirection = LayoutDirection.Horizontal;
+            row.autoLayoutPadding = new RectOffset(0, 10, 2, 2);
+            return row;
+        }
+
+        /// <summary>Less likely, Defaults and More likely for one section (the dev section: Defaults).</summary>
+        private static void AddSectionButtons(
+            UIHelperBase group,
+            ModSettings settings,
+            TuningGroup which
+        )
+        {
+            UIComponent container = Container(group);
+            if (container == null)
+            {
+                return;
+            }
+
+            UIPanel buttons = ButtonRow(container);
+            string tip = Strings.Get("options.ipo.preset.tip." + which);
+            foreach (
+                TuningPreset preset in IpoTuning.HasPresets(which)
+                    ? new[]
+                    {
+                        TuningPreset.LessLikely,
+                        TuningPreset.Default,
+                        TuningPreset.MoreLikely,
+                    }
+                    : new[] { TuningPreset.Default }
+            )
+            {
+                TuningPreset p = preset;
+                UIButton b = FoButton.Add(
+                    buttons,
+                    SectionButtonPrefix + which + "-" + preset,
+                    Strings.Get("options.ipo.preset." + preset),
+                    new Vector2(140f, 30f),
+                    0.875f
+                );
+                b.tooltip = tip;
+                b.eventClick += (c, e) => ApplySection(settings, which, p);
+            }
         }
 
         /// <summary>The finer workings (dev builds only).</summary>
         public static void AddDevGroup(UIHelperBase helper, ModSettings settings)
         {
             rows.RemoveAll(r => r.Tuning.Audience == TuningAudience.Dev);
-            UIHelperBase group = AddGroup(helper, settings, TuningGroup.Market, TuningAudience.Dev);
-            group.AddButton(
-                Strings.Get("options.ipo.resetDev"),
-                () => Reset(settings, TuningAudience.Dev)
-            );
+            AddGroup(helper, settings, TuningGroup.Market, TuningAudience.Dev);
         }
 
         private static UIHelperBase AddGroup(
@@ -102,6 +370,7 @@ namespace FinanceOverhaul
                 rows.Add(row);
             }
 
+            AddSectionButtons(group, settings, which);
             return group;
         }
 
@@ -295,37 +564,7 @@ namespace FinanceOverhaul
             }
 
             ModLog.Info("ipo option " + row.Tuning.Key + "=" + stored);
-        }
-
-        private static void Reset(ModSettings settings, TuningAudience audience)
-        {
-            IpoTuning.Reset(settings.Ipo, audience);
-            foreach (Row row in rows)
-            {
-                if (row.Tuning.Audience != audience)
-                {
-                    continue;
-                }
-
-                int stored = row.Tuning.Get(settings.Ipo);
-                if (row.Slider != null)
-                {
-                    row.Slider.value = row.Tuning.Shown(stored);
-                }
-
-                if (row.Label != null)
-                {
-                    row.Label.text = row.Tuning.Label(settings.Ipo);
-                }
-
-                if (row.Field != null)
-                {
-                    row.Field.text = row.Tuning.FieldText(settings.Ipo);
-                }
-            }
-
-            Mod.SaveSettings();
-            ModLog.Info("ipo options reset (" + audience + ")");
+            RefreshPresets(settings);
         }
     }
 }

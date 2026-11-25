@@ -901,13 +901,21 @@ unit test fails if a value is added to `IpoRules` without an option. Options sho
 row: its sentence with the value ("Stock Exchange level before any IPO: 2"), a slider with its Min
 and Max under the two ends, and a number field on the right where the player can type a value (Enter
 or leaving the field applies it; it is kept in range and snapped to its step, and anything that is
-not a number is ignored). Dev builds show the rows with Local IPOs off too. After a new build is
-loaded in place the Options page is rebuilt (`OptionsRefresh`, through
-`GameInternals.Options.RebuildModPages`), since the game only rebuilds it when a mod is switched on
-or off; a change is used from the next game day, and a button in each audience puts its values back.
-Game UI scenario 77 builds the Options page as the game does and checks every slider and label;
-Figma UI Map band 02 has the capture. Local IPOs is on by default (see
-[Switched on for every player](#switched-on-for-every-player-decided-2026-11-25-not-built)).
+not a number is ignored). Dev builds show the rows with Local IPOs off too. **Presets (built
+2026-11-25, after Trackpad Camera Control's feel presets):** a "Local IPOs: presets" section first,
+with a Preset dropdown (Less likely, Default, More likely, the player's saved presets, and New
+Preset while the values match none: worked out from the values, `IpoPresets.Identify`), Save as… (a
+name dialog, `FoNameDialog` in `mod/Kit`; a built-in's name or New Preset is refused) and Delete (a
+saved preset in use). Each section ends with Less likely, Defaults and More likely, which set that
+section alone (`IpoTuning.Apply`; the values per option are in `IpoTuning.Build`, "Quick presets");
+the dev section has Defaults only. A preset covers the player's values, not the finer workings.
+Saved presets are `ipoPreset=Name|key=v;…` lines in the settings file. The old "put all back"
+buttons are gone. After a new build is loaded in place the Options page is rebuilt
+(`OptionsRefresh`, through `GameInternals.Options.RebuildModPages`), since the game only rebuilds it
+when a mod is switched on or off; a change is used from the next game day, and a button in each
+audience puts its values back. Game UI scenario 77 builds the Options page as the game does and
+checks every slider and label; Figma UI Map band 02 has the capture. Local IPOs is on by default
+(see [Switched on for every player](#switched-on-for-every-player-decided-2026-11-25-not-built)).
 
 **For every player** (four groups, shown while Local IPOs is on):
 

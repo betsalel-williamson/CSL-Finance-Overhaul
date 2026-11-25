@@ -4,6 +4,7 @@
 # is changed.
 name local ipos: Options has a slider for every Local IPOs value, each label saying its value
 local-ipos on
+ipo-options-keep
 options-preview on
 expect-ipo-options 37
 capture ipo-options
@@ -18,11 +19,38 @@ ipo-option-type ipo.gateSquares 230
 expect-ipo-option ipo.gateSquares 250
 ipo-option-type ipo.exchangeLevel restore
 ipo-option-type ipo.gateSquares restore
+# quick presets per section, the preset in use, Save as… and Delete
+ipo-section Listing Default
+ipo-section Candidates Default
+ipo-section Prices Default
+ipo-section BuyoutsAndClosing Default
+expect-ipo-preset Default
+ipo-section Listing MoreLikely
+expect-ipo-option ipo.maxIposPerYear 4
+expect-ipo-preset New Preset
+ipo-section Candidates MoreLikely
+ipo-section Prices MoreLikely
+ipo-section BuyoutsAndClosing MoreLikely
+expect-ipo-preset More likely
+ipo-section Listing LessLikely
+expect-ipo-option ipo.maxIposPerYear 1
+ipo-preset-save Default
+expect-ipo-preset New Preset
+ipo-preset-save Test preset (uitest)
+expect-ipo-preset Test preset (uitest)
+capture ipo-options-presets
+options-preview scroll 1000
+capture ipo-options-sections
+options-preview scroll 0
+ipo-preset-delete
+expect-ipo-preset New Preset
+ipo-options-put-back
 # dev builds show them with Local IPOs off too, so they can be set before switching it on
 local-ipos off
 options-preview on
 expect-ipo-options 37
 cleanup:
+ipo-options-put-back
 ipo-option-type ipo.exchangeLevel restore
 ipo-option-type ipo.gateSquares restore
 options-preview off

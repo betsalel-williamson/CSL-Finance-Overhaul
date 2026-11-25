@@ -1,3 +1,5 @@
+using System.Collections.Generic; // List
+
 namespace FinanceOverhaul.Core
 {
     /// <summary>
@@ -80,6 +82,9 @@ namespace FinanceOverhaul.Core
         /// differs from its default.
         /// </summary>
         public IpoRules Ipo { get; set; } = new IpoRules();
+
+        /// <summary>Local IPOs presets the player saved by name (<see cref="IpoPresets"/>).</summary>
+        public List<IpoUserPreset> IpoUserPresets { get; set; } = new List<IpoUserPreset>();
 
         /// <summary>How the Stock Exchange LED ticker shows the change (visual only).</summary>
         public TickerDisplay TickerShows { get; set; }

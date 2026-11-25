@@ -1,4 +1,4 @@
-using System; // Action, Func, Math, StringComparison
+using System; // Action, ArgumentException, Func, Math, StringComparison
 using System.Collections.Generic; // IEnumerable, List
 using System.Globalization; // CultureInfo, NumberStyles
 
@@ -12,6 +12,19 @@ namespace FinanceOverhaul.Core
 
         /// <summary>Dev builds only, in their own group: the finer workings of the market.</summary>
         Dev,
+    }
+
+    /// <summary>A quick setting for a whole section of Local IPOs options.</summary>
+    public enum TuningPreset
+    {
+        /// <summary>Rarer: fewer IPOs, stricter candidates, calmer first days, fewer buy-outs.</summary>
+        LessLikely,
+
+        /// <summary>Every value of the section back to its default.</summary>
+        Default,
+
+        /// <summary>Livelier: more IPOs, easier candidates, bigger first days, more buy-outs.</summary>
+        MoreLikely,
     }
 
     /// <summary>Which Local IPOs group a value sits in, in Options.</summary>
@@ -42,6 +55,67 @@ namespace FinanceOverhaul.Core
         public int Factor = 1;
         public Func<IpoRules, int> Get;
         public Action<IpoRules, int> Set;
+
+        /// <summary>Its value (stored) in the section's "less likely" preset; null: the default.</summary>
+        public int? Less;
+
+        /// <summary>Its value (stored) in the section's "more likely" preset; null: the default.</summary>
+        public int? More;
+
+        /// <summary>Its value (stored) in a preset.</summary>
+        public int PresetValue(TuningPreset preset)
+        {
+            int? v =
+                preset == TuningPreset.LessLikely ? Less
+                : preset == TuningPreset.MoreLikely ? More
+                : null;
+            return v ?? Default;
+        }
+
+        /// <summary>
+        /// Sets every value of a section to a preset (the dev section has only its defaults).
+        /// Returns how many values changed.
+        /// </summary>
+        public static int Apply(IpoRules rules, TuningGroup group, TuningPreset preset)
+        {
+            int changed = 0;
+            foreach (IpoTuning t in All)
+            {
+                if (t.Group != group)
+                {
+                    continue;
+                }
+
+                int v = t.PresetValue(preset);
+                if (t.Get(rules) != v)
+                {
+                    t.Set(rules, v);
+                    changed++;
+                }
+            }
+
+            return changed;
+        }
+
+        /// <summary>The section's values are exactly a preset's (to show which one is in use).</summary>
+        public static bool Matches(IpoRules rules, TuningGroup group, TuningPreset preset)
+        {
+            foreach (IpoTuning t in All)
+            {
+                if (t.Group == group && t.Get(rules) != t.PresetValue(preset))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>A section with less and more likely presets (the dev section has only defaults).</summary>
+        public static bool HasPresets(TuningGroup group)
+        {
+            return group != TuningGroup.Market;
+        }
 
         /// <summary>The default, as stored (from a fresh <see cref="IpoRules"/>).</summary>
         public int Default
@@ -627,7 +701,51 @@ namespace FinanceOverhaul.Core
                 r => r.BuyoutPremiumMaxPercent,
                 (r, v) => r.BuyoutPremiumMaxPercent = v
             );
+            // Quick presets for each player section (stored values; others keep their default).
+            // When companies list: rarer or more often.
+            Preset(list, "exchangeLevel", 3, 1);
+            Preset(list, "gateSquares", 400, 100);
+            Preset(list, "slotDoublingBase", 20, 5);
+            Preset(list, "listingsPerTile", 1, 3);
+            Preset(list, "listingCap", 8, 20);
+            Preset(list, "maxIposPerYear", 1, 4);
+            Preset(list, "slotFillDays", 1095, 274);
+            // Which businesses can: stricter or easier.
+            Preset(list, "healthyDays", 730, 180);
+            Preset(list, "topEmployersPercent", 20, 50);
+            Preset(list, "minJobs", 20, 5);
+            Preset(list, "specialisedMinJobs", 50, 20);
+            Preset(list, "maxVacancyPercent", 5, 20);
+            Preset(list, "landValueFloor", 50, 30);
+            Preset(list, "areaMinLevel", 4, 2);
+            Preset(list, "factoryMinProductionPercent", 110, 90);
+            // Prices: a calmer or a bigger first day, a shorter or a longer offering window.
+            Preset(list, "offerDays", 3, 14);
+            Preset(list, "popAveragePercent", 8, 25);
+            Preset(list, "popSpreadPercent", 12, 40);
+            // Buy-outs and closing: rarer or more often, smaller or larger premiums; a company
+            // without a headquarters gets a shorter or a longer grace period.
+            Preset(list, "buyoutPercentPerYear", 2, 8);
+            Preset(list, "buyoutMinDaysListed", 730, 180);
+            Preset(list, "buyoutPremiumAveragePercent", 25, 60);
+            Preset(list, "buyoutPremiumSpreadPercent", 10, 20);
+            Preset(list, "homeGraceDays", 45, 180);
             return list;
+        }
+
+        private static void Preset(List<IpoTuning> list, string name, int less, int more)
+        {
+            foreach (IpoTuning t in list)
+            {
+                if (t.Key == KeyPrefix + name)
+                {
+                    t.Less = less;
+                    t.More = more;
+                    return;
+                }
+            }
+
+            throw new ArgumentException("no Local IPOs option " + name); // not shown: a coding error
         }
 
         private static IpoTuning Add(

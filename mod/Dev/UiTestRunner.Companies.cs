@@ -1,12 +1,12 @@
 using System.Collections; // IEnumerator
 using System.Collections.Generic; // Dictionary, List
 using System.Text; // StringBuilder
-// ColossalFramework.UI: LayoutDirection, UICheckBox, UIComponent, UILabel, UIScrollablePanel,
-//   UISlider, UISprite, UITextField, UITextureAtlas, UIView
+// ColossalFramework.UI: LayoutDirection, UIButton, UICheckBox, UIComponent, UILabel,
+//   UIScrollablePanel, UISlider, UISprite, UITextField, UITextureAtlas, UIView
 using ColossalFramework.UI;
 // FinanceOverhaul.Core: BoardView, BondText, BuildingFraming, BusinessSite, CompanyStatus,
-//   IpoBoard, IpoCardText, IpoEarnings, IpoPricing, IpoRules, IpoTuning, KindFacts, KindState,
-//   KindStatus, LocalCompany, ModSettings, Strings
+//   IpoBoard, IpoCardText, IpoEarnings, IpoPricing, IpoRules, IpoTuning, IpoUserPreset, KindFacts,
+//   KindState, KindStatus, LocalCompany, ModSettings, Strings
 using FinanceOverhaul.Core;
 using UnityEngine; // Mathf, Object, RectOffset, Vector2, Vector3, WaitForSeconds
 
@@ -22,6 +22,10 @@ namespace FinanceOverhaul
     public partial class UiTestRunner
     {
         private const string OptionsPreviewName = "FinanceOverhaulOptionsPreview";
+
+        // The player's Local IPOs values and saved presets, kept by ipo-options-keep.
+        private static IpoRules keptValues;
+        private static List<IpoUserPreset> keptPresets;
 
         // Options this scenario typed into, with their values before (put back by "restore").
         private static readonly Dictionary<string, int> typedBefore = new Dictionary<string, int>();
@@ -74,9 +78,23 @@ namespace FinanceOverhaul
                 }
                 case "options-preview":
                 {
-                    // options-preview on|off — builds the Options page (Options → Finance
+                    // options-preview on|off|scroll Y — builds the Options page (Options → Finance
                     // Overhaul) into a panel over the game, as the game would, so a scenario can
-                    // read and capture it; logs how many Local IPOs sliders it has.
+                    // read and capture it; logs how many Local IPOs sliders it has. scroll Y
+                    // scrolls the preview down Y pixels.
+                    if (a == "scroll")
+                    {
+                        var shown = FindControl(OptionsPreviewName, true) as UIScrollablePanel;
+                        string[] parts = line.Substring(cmd.Length).Trim().Split(' ');
+                        if (shown != null && parts.Length == 2)
+                        {
+                            shown.scrollPosition = new Vector2(0f, ParseFloat(parts[1], 0f));
+                        }
+
+                        yield return new WaitForSeconds(0.3f);
+                        break;
+                    }
+
                     UIComponent old = FindControl(OptionsPreviewName, true);
                     if (old != null)
                     {
@@ -175,6 +193,105 @@ namespace FinanceOverhaul
                     {
                         r.Error =
                             t.Key + "'s field reads '" + (field == null ? "-" : field.text) + "'";
+                    }
+
+                    break;
+                }
+                case "ipo-options-keep":
+                case "ipo-options-put-back":
+                {
+                    // ipo-options-keep — remembers the player's Local IPOs values and saved
+                    // presets; ipo-options-put-back puts them back (and the page shows them).
+                    ModSettings settings = Mod.EnsureSettings();
+                    if (cmd == "ipo-options-keep")
+                    {
+                        keptValues = new IpoRules();
+                        foreach (IpoTuning t in IpoTuning.All)
+                        {
+                            t.Set(keptValues, t.Get(settings.Ipo));
+                        }
+
+                        keptPresets = new List<IpoUserPreset>(settings.IpoUserPresets);
+                    }
+                    else if (keptValues != null)
+                    {
+                        IpoOptions.TestPutBack(keptValues, keptPresets);
+                        keptValues = null;
+                    }
+
+                    break;
+                }
+                case "ipo-section":
+                {
+                    // ipo-section GROUP LessLikely|Default|MoreLikely — clicks that section's button.
+                    string[] parts = line.Substring(cmd.Length).Trim().Split(' ');
+                    UIButton sectionButton =
+                        parts.Length == 2
+                            ? FindControl(
+                                IpoOptions.SectionButtonPrefix + parts[0] + "-" + parts[1],
+                                true
+                            ) as UIButton
+                            : null;
+                    if (sectionButton == null)
+                    {
+                        r.Error = "no such section button (options-preview on first)";
+                        break;
+                    }
+
+                    sectionButton.SimulateClick();
+                    break;
+                }
+                case "ipo-preset-save":
+                {
+                    // ipo-preset-save NAME — Save as…, types NAME and clicks OK.
+                    string name = line.Substring(cmd.Length).Trim();
+                    UIButton save = FindControl(IpoOptions.SaveAsName, true) as UIButton;
+                    if (save == null)
+                    {
+                        r.Error = "no Save as… button (options-preview on first)";
+                        break;
+                    }
+
+                    save.SimulateClick();
+                    yield return new WaitForSeconds(0.3f);
+                    if (FoNameDialog.Field == null)
+                    {
+                        r.Error = "the name dialog did not open";
+                        break;
+                    }
+
+                    FoNameDialog.Field.text = name;
+                    FoNameDialog.TestOkOpen();
+                    yield return new WaitForSeconds(0.3f);
+                    if (FoNameDialog.IsOpen)
+                    {
+                        ModLog.Info("uitest: the name dialog stayed open for '" + name + "'");
+                        FoNameDialog.Close();
+                    }
+
+                    break;
+                }
+                case "ipo-preset-delete":
+                {
+                    UIButton delete = FindControl(IpoOptions.DeleteName, true) as UIButton;
+                    if (delete == null)
+                    {
+                        r.Error = "no Delete button (options-preview on first)";
+                        break;
+                    }
+
+                    delete.SimulateClick();
+                    break;
+                }
+                case "expect-ipo-preset":
+                {
+                    // expect-ipo-preset NAME — the presets dropdown shows NAME.
+                    string want = line.Substring(cmd.Length).Trim();
+                    string shown = IpoOptions.ShownPreset;
+                    ModLog.Info("uitest: preset shown: " + shown);
+                    if (shown != want)
+                    {
+                        r.Error = "the preset shown is '" + shown + "', expected '" + want + "'";
                     }
 
                     break;

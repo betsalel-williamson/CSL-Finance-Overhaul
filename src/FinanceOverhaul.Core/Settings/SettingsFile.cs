@@ -28,6 +28,7 @@ namespace FinanceOverhaul.Core
         private const string TickerPercent = "changePercent";
         private const string TickerPrice = "priceAndChange";
         private const string OrderLifetimeKey = "ordersLifetimeDays";
+        private const string IpoPresetKey = "ipoPreset";
 
         /// <summary>Settings key of an order type's flag, e.g. <c>ordersStopLossEnabled</c>.</summary>
         public static string OrderKey(OrderKind kind)
@@ -62,6 +63,18 @@ namespace FinanceOverhaul.Core
                 string value = line.Substring(eq + 1).Trim();
                 if (settings.Monitor.TryRead(key, value))
                 {
+                    continue;
+                }
+
+                if (string.Equals(key, IpoPresetKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    IpoUserPreset preset = IpoPresets.Parse(value);
+                    if (preset != null)
+                    {
+                        IpoPresets.Delete(settings.IpoUserPresets, preset.Name); // the last wins
+                        settings.IpoUserPresets.Add(preset);
+                    }
+
                     continue;
                 }
 
@@ -275,6 +288,11 @@ namespace FinanceOverhaul.Core
             foreach (string line in IpoTuning.Lines(settings.Ipo))
             {
                 sb.Append(line).Append('\n');
+            }
+
+            foreach (IpoUserPreset preset in settings.IpoUserPresets)
+            {
+                sb.Append(IpoPresetKey).Append('=').Append(IpoPresets.Format(preset)).Append('\n');
             }
 
             return sb.ToString();
