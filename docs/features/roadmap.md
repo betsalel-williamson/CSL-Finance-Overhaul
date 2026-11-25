@@ -18,7 +18,7 @@ Status as of 2026-11-15. Figma: UI Map band 04 "Roadmap — status" shows the sa
 | 8   | Utility commodities (power, water)                         | Commodity  | Not started                                                                           |
 | 9   | Cargo / freight basket                                     | Commodity  | Not started                                                                           |
 | 10  | Company listings and IPOs                                  | Listings   | Not started                                                                           |
-| 11  | Local IPOs (companies grown in the city list)              | Listings   | In progress: built behind the experimental flag ([design](./local-ipos.md))           |
+| 11  | Local IPOs (companies grown in the city list)              | Listings   | In progress, target 0.2.0 ([list](./local-ipos.md#road-to-020-list-of-2026-11-25))    |
 | 12  | Dividend shares (and dividend reinvestment orders)         | Listings   | Not started                                                                           |
 | 13  | Other exchanges (neighbour / regional boards)              | Listings   | Not started                                                                           |
 | 14  | Interface for many companies (search, group, watchlist)    | Listings   | Partly: Stock Monitor filters, sort and direction; Investments panel unchanged        |

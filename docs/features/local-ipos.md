@@ -28,6 +28,27 @@ the Local IPOs flag.
 | IPO dialog and cards in Figma                             | Figma library                                                                | Not started          |
 | Industry areas and unique factories as companies          | [Designed](#industry-areas-and-unique-factories-design-2026-11-19-not-built) | Not started          |
 
+## Road to 0.2.0 (list of 2026-11-25)
+
+Goal: Local IPOs ship in 0.2.0, on in release builds (`ModSettings.PinReleaseFlags`). Worked top to
+bottom, one in-game-verified step at a time; each step updates this shard, Figma and its changeset.
+
+| #   | Kind   | Work                                                                                                                                                                                                                                                                     | Status      |
+| --- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
+| 1   | Build  | The [Stock Exchange gate](#the-stock-exchange-gate-decided-2026-11-20-not-built): library rule with unit tests, the cards' "Needs the Stock Exchange at level 2.", game UI scenario                                                                                      | Not started |
+| 2   | Build  | Industry areas and unique factories, slices 2–4 of [the design](#industry-areas-and-unique-factories-design-2026-11-19-not-built): rule and earnings (`IpoIndustry`), the daily scan reads them, cards, symbols, dialog wording, icon. Needs: a factory outside any area | Not started |
+| 3   | Build  | The extra swing of a new listing's first year ("New-listing volatility", 2×): build it, or take it out of the design                                                                                                                                                     | Not started |
+| 4   | Decide | Which [Options](#options-level-1-while-tuning-the-feel) players get. Today only the flag and the dialog preference exist; the tuning values are fixed in `IpoRules`. Proposal: "Local IPOs" on/off and the dialog preference; tuning stays for later                     | Open        |
+| 5   | Decide | Whether Local IPOs are on or off for a player who updates from 0.1.0                                                                                                                                                                                                     | Open        |
+| 6   | Decide | [Open decisions](#open-decisions) 3, 4, 6, 7 and 8: settle or park each (the dialog already plays the sale sound and draws the money banner, so 4 and 6 may be done)                                                                                                     | Open        |
+| 7   | Check  | Tuning in a city left alone: how many candidates hold under the steadiness rule, how often IPOs come, prices over years; then the industry level and profit rules                                                                                                        | Not started |
+| 8   | Check  | A real abandoned and a real burned-down headquarters (scenario 74 only treats buildings as lost)                                                                                                                                                                         | Not started |
+| 9   | Check  | Saves: quit and reload with companies and a holding, the city without the mod and with it back ([Save compatibility](./save-compatibility.md)), a DLL hot reload with companies listed                                                                                   | Not started |
+| 10  | Check  | A release install with the flag pinned on: Options, a city loads with no warnings, the daily scan's cost in a large city                                                                                                                                                 | Not started |
+| 11  | Ship   | Figma: the IPO dialog, cards, building panel and industry cards match what is built                                                                                                                                                                                      | Not started |
+| 12  | Ship   | Player guide: a Local IPOs page in `docs/client` and the Options page; the Workshop description                                                                                                                                                                          | Not started |
+| 13  | Ship   | One `minor` changeset for the feature; this shard's stale "not built" notes; the [Roadmap](./roadmap.md) row; `PinReleaseFlags` turns Local IPOs on                                                                                                                      | Not started |
+
 The library slices: `CandidateBook` counts healthy days per building (id plus build index, so a
 building that reuses an id starts from nothing) and lists the candidates of each kind in a fixed
 order; `IpoBoard` decides what may list (gate, slots, board cap, pacing) and, once a period, whether
