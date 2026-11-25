@@ -2,8 +2,9 @@ using System.Collections; // IEnumerator
 using System.Collections.Generic; // List
 using System.Text; // StringBuilder
 using ColossalFramework.UI; // UICheckBox, UIComponent, UILabel, UISprite, UIView
-// FinanceOverhaul.Core: BoardView, BuildingFraming, CompanyStatus, IpoBoard, IpoEarnings,
-//   IpoPricing, IpoRules, KindFacts, KindState, KindStatus, LocalCompany, Strings
+// FinanceOverhaul.Core: BoardView, BondText, BuildingFraming, BusinessSite, CompanyStatus,
+//   IpoBoard, IpoEarnings, IpoPricing, IpoRules, KindFacts, KindState, KindStatus, LocalCompany,
+//   Strings
 using FinanceOverhaul.Core;
 using UnityEngine; // Mathf, WaitForSeconds
 
@@ -62,6 +63,50 @@ namespace FinanceOverhaul
                     // ipo-healthy-days N — the healthy days a business needs to be a candidate,
                     // until the scenario ends (the real rule is 365).
                     CompanyDesk.Rules = new IpoRules { HealthyDays = (int)ParseFloat(a, 365f) };
+                    break;
+                }
+                case "ipo-home-back":
+                {
+                    // ipo-home-back — every building this scenario treated as lost stands
+                    // again, and today's step runs now (a company in its grace period whose
+                    // headquarters stands gets it back).
+                    SimulationManager sim = SimulationManager.instance;
+                    bool paused = sim.SimulationPaused;
+                    sim.SimulationPaused = true;
+                    yield return new WaitForSeconds(0.5f); // let a running step finish
+                    CompanyDesk.TestFindHomes();
+                    CompanyDesk.TestStepToday();
+                    sim.SimulationPaused = paused;
+                    yield return new WaitForSeconds(1f);
+                    break;
+                }
+                case "expect-company-site":
+                {
+                    // expect-company-site area|factory|zoned — what this scenario's newest
+                    // company is; logs its name, kind, headquarters and price.
+                    if (ctx.TestCompanies.Count == 0)
+                    {
+                        r.Error = "ipo-list-now first";
+                        break;
+                    }
+
+                    LocalCompany c = CompanyDesk.CompanyOf(
+                        ctx.TestCompanies[ctx.TestCompanies.Count - 1].Id
+                    );
+                    string site = c == null ? "gone" : c.Site.ToString().ToLowerInvariant();
+                    ModLog.Info(
+                        "uitest: company "
+                            + (c == null ? "-" : c.Name + " (" + c.Kind + ", " + c.SiteRef)
+                            + ") headquarters "
+                            + (c == null ? "-" : c.Home.Id.ToString())
+                            + " offered at "
+                            + (c == null ? "-" : BondText.WholeMoney(c.OfferPriceCents))
+                    );
+                    if (site != a)
+                    {
+                        r.Error = "the company is " + site + ", expected " + a;
+                    }
+
                     break;
                 }
                 case "ipo-exchange-level":
@@ -262,6 +307,7 @@ namespace FinanceOverhaul
                         .Append(city.m_industrialData.m_finalLevel3);
                     ModLog.Info("uitest: ipo game tallies (count/area):" + game);
                     ModLog.Info("uitest: ipo health:" + CompanyDesk.LastHealthBreakdown);
+                    ModLog.Info("uitest: ipo areas and factories:" + CompanyDesk.LastSites);
                     ModLog.Info("uitest: ipo jobs:" + CompanyDesk.LastJobSizes);
                     ModLog.Info(
                         "uitest: ipo scanned "
@@ -398,10 +444,21 @@ namespace FinanceOverhaul
                     else if (cmd == "ipo-list-now")
                     {
                         bool wasHistorical;
-                        LocalCompany listed = CompanyDesk.TestListFirstCandidate(out wasHistorical);
+                        // ipo-list-now area|factory — the first industry area or unique factory.
+                        BusinessSite site =
+                            a == "area" ? BusinessSite.Area
+                            : a == "factory" ? BusinessSite.Factory
+                            : BusinessSite.Zoned;
+                        LocalCompany listed = CompanyDesk.TestListFirstCandidate(
+                            out wasHistorical,
+                            site
+                        );
                         if (listed == null)
                         {
-                            r.Error = "no candidate to list (ipo-healthy-days and ipo-scan first)";
+                            r.Error =
+                                "no "
+                                + (site == BusinessSite.Zoned ? "business" : a)
+                                + " to list (ipo-healthy-days and ipo-scan first)";
                         }
                         else if (a == "keep")
                         {

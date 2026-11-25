@@ -1,0 +1,23 @@
+# Local IPOs: an industry area and a unique factory go public as companies of their own (the
+# test city has a level-5 oil area and three unique factories). The area is named after the area,
+# is never moved into another building when its main building is lost, and takes it back when it
+# stands again. Needs a city with an industry area at level 3+ and a unique factory: the scan logs
+# what it read. Nothing in the city is touched: lost buildings are only treated as lost.
+name local ipos: an industry area and a unique factory list; a lost area waits and gets its home back
+local-ipos on
+ipo-healthy-days 1
+ipo-scan
+ipo-list-now area
+expect-company-site area
+expect-company-home same
+ipo-lose-home nowhere
+expect-company-home lost
+ipo-home-back
+expect-company-home same
+expect-log has its headquarters back
+ipo-list-now factory
+expect-company-site factory
+expect-company-home same
+cleanup:
+ipo-remove-test
+local-ipos restore

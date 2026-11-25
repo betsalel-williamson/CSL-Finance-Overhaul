@@ -4,9 +4,9 @@ using System.Diagnostics; // Stopwatch
 using System.Text; // Encoding, StringBuilder
 using ColossalFramework.Math; // Randomizer
 // FinanceOverhaul.Core: BoardView, BondText, BuildingKey, BusinessFacts, BusinessKind,
-//   BusinessKinds, CandidateBook, CompaniesCodec, CompanyRegistry, IBusinessSource, IpoCardText,
-//   IpoDice, IpoEarnings, IpoEngine, IpoEvent, IpoEventKind, IpoRules, KindFacts, LocalCompany,
-//   Notice, NoticeText
+//   BusinessKinds, BusinessSite, CandidateBook, CompaniesCodec, CompanyRegistry, IBusinessSource,
+//   IpoCardText, IpoDice, IpoEarnings, IpoEngine, IpoEvent, IpoEventKind, IpoRules, KindFacts,
+//   LocalCompany, Notice, NoticeText
 using FinanceOverhaul.Core;
 
 // Game classes used without a using (global namespace, Assembly-CSharp): Building, BuildingInfo,
@@ -32,6 +32,10 @@ namespace FinanceOverhaul
         private static IpoDice dice;
         private static CompanyRegistry registry;
         private static KindFacts[] kinds = new KindFacts[0];
+
+        // Industry areas and unique factories as the last scan read them, by headquarters.
+        private static Dictionary<BuildingKey, SiteReading> sites =
+            new Dictionary<BuildingKey, SiteReading>();
         private static int lastScanDay = -1;
 
         /// <summary>The rules in force (game UI tests may swap them; null puts the defaults back).</summary>
@@ -58,6 +62,18 @@ namespace FinanceOverhaul
             catch
             {
                 return 0; // fail soft: no IPOs rather than a broken day
+            }
+        }
+
+        /// <summary>The industry areas and unique factories the last scan read, for the log and tests.</summary>
+        public static string LastSites { get; private set; }
+
+        /// <summary>An industry area or unique factory the last scan read, by its headquarters.</summary>
+        internal static bool TrySite(BuildingKey home, out SiteReading site)
+        {
+            lock (Sync)
+            {
+                return sites.TryGetValue(home, out site);
             }
         }
 
@@ -401,7 +417,11 @@ namespace FinanceOverhaul
             ChirpNotices.PostDay(new List<Notice> { notice });
         }
 
-        /// <summary>A company's headquarters becomes a Historical building (if it is still that building).</summary>
+        /// <summary>
+        /// A company's headquarters becomes a Historical building (if it is still that building).
+        /// Only a zoned building: an industry area's main building or a unique factory is a
+        /// service building, which the game never lets be Historical.
+        /// </summary>
         private static void MarkHistorical(BuildingKey home)
         {
             Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
@@ -409,6 +429,8 @@ namespace FinanceOverhaul
                 home.Id < buffer.Length
                 && (buffer[home.Id].m_flags & Building.Flags.Created) != 0
                 && buffer[home.Id].m_buildIndex == home.BuildIndex
+                && buffer[home.Id].Info != null
+                && buffer[home.Id].Info.m_buildingAI is PrivateBuildingAI
             )
             {
                 buffer[home.Id].m_flags |= Building.Flags.Historical;
@@ -462,14 +484,17 @@ namespace FinanceOverhaul
         {
             public bool TrySuccessor(LocalCompany company, out BuildingKey home)
             {
-                // Industry areas and unique factories are not read from the game yet (item 2
-                // of the Road to 0.2.0, slice 3): no company has one to take back.
-                home = default(BuildingKey);
-                return false;
+                return IndustrySites.TrySuccessor(company, out home);
             }
 
             public string NameOf(BuildingKey building)
             {
+                SiteReading site;
+                if (TrySite(building, out site) && !string.IsNullOrEmpty(site.Name))
+                {
+                    return site.Name; // an area is named after the area, not its main building
+                }
+
                 return BuildingManager.instance.GetBuildingName(
                     building.Id,
                     new InstanceID { Building = building.Id }
@@ -487,7 +512,15 @@ namespace FinanceOverhaul
             {
                 // A building that is gone (or whose id another building has now) earns
                 // nothing the engine can go by: unknown, not zero.
-                return SameBuilding(building) ? CompanyDesk.AnnualEarningsCents(building.Id) : 0;
+                if (!SameBuilding(building))
+                {
+                    return 0;
+                }
+
+                SiteReading site;
+                return TrySite(building, out site)
+                    ? site.AnnualCents
+                    : CompanyDesk.AnnualEarningsCents(building.Id);
             }
 
             public bool HomeStands(BuildingKey building)
@@ -507,8 +540,18 @@ namespace FinanceOverhaul
 
                 const Building.Flags Closed =
                     Building.Flags.Abandoned | Building.Flags.Collapsed | Building.Flags.BurnedDown;
-                return (BuildingManager.instance.m_buildings.m_buffer[building.Id].m_flags & Closed)
-                    == 0;
+                if (
+                    (BuildingManager.instance.m_buildings.m_buffer[building.Id].m_flags & Closed)
+                    != 0
+                )
+                {
+                    return false;
+                }
+
+                // An area's main building or a factory switched off by the player counts as
+                // lost too (decided 2026-11-20); switched back on in time, it is back.
+                SiteReading site;
+                return !TrySite(building, out site) || IndustrySites.SwitchedOn(building.Id);
             }
         }
 
@@ -562,7 +605,10 @@ namespace FinanceOverhaul
         /// Game UI tests (simulation paused): lists the first candidate now, as the scheduled
         /// path would. Null if the city has no candidate.
         /// </summary>
-        public static LocalCompany TestListFirstCandidate(out bool wasHistorical)
+        public static LocalCompany TestListFirstCandidate(
+            out bool wasHistorical,
+            BusinessSite site = BusinessSite.Zoned
+        )
         {
             wasHistorical = false;
             IpoEvent e;
@@ -572,6 +618,7 @@ namespace FinanceOverhaul
                 IpoRules rules = Rules ?? DefaultRules;
                 List<BuildingKey> pool = b.Candidates(rules);
                 pool.RemoveAll(registry.IsHome);
+                pool.RemoveAll(k => b.SiteOf(k) != site);
                 if (pool.Count == 0)
                 {
                     return null;
@@ -588,7 +635,9 @@ namespace FinanceOverhaul
                     b.KindOf(pool[0]),
                     OrderDesk.Today,
                     rules,
-                    Source
+                    Source,
+                    b.SiteOf(pool[0]),
+                    b.SiteRefOf(pool[0])
                 );
             }
 
@@ -875,6 +924,37 @@ namespace FinanceOverhaul
                     b.Observe(one.Key, facts, rules);
                 }
 
+                // Industry areas and unique factories: companies of their own, judged by the
+                // library's IpoIndustry. Each area at the level areas need, and each factory,
+                // gives its kind a slot.
+                var read = new Dictionary<BuildingKey, SiteReading>();
+                var siteLog = new StringBuilder();
+                foreach (SiteReading s in IndustrySites.Read(rules))
+                {
+                    read[s.Home] = s;
+                    b.Observe(s.Home, s.Kind, s.Healthy, rules, s.Site, s.Ref);
+                    KindFacts total = totals[s.Kind];
+                    if (s.Site == BusinessSite.Factory || s.Level >= rules.AreaMinLevel)
+                    {
+                        total.ExtraSlots++;
+                    }
+
+                    totals[s.Kind] = total;
+                    siteLog
+                        .Append(' ')
+                        .Append(s.Site)
+                        .Append(" '")
+                        .Append(s.Name)
+                        .Append("' ")
+                        .Append(s.Kind)
+                        .Append(s.Site == BusinessSite.Area ? " level " + s.Level : string.Empty)
+                        .Append(s.Healthy ? " healthy " : " not healthy ")
+                        .Append(BondText.WholeMoney(s.AnnualCents))
+                        .Append("/yr;");
+                }
+
+                sites = read;
+                LastSites = siteLog.ToString();
                 bool lookingBehind = !b.LookedBehind;
                 b.EndDay();
                 if (lookingBehind)
