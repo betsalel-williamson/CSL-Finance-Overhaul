@@ -151,6 +151,24 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "ipo-site-profit":
+                {
+                    // ipo-site-profit CENTS|real — the weekly profit (in cents) every industry area
+                    // and unique factory reports until the scenario ends; real: the game's. A
+                    // scenario never assumes what the city's areas earn. Not recorded in their
+                    // history.
+                    IndustrySites.TestWeeklyProfitCents =
+                        a == "real" ? (long?)null : (long)ParseFloat(a, 0f);
+                    break;
+                }
+                case "ipo-credit-sites-again":
+                {
+                    // ipo-credit-sites-again — dev: the one-time credit for industry areas and
+                    // unique factories starts again from today, as for a city updating to 0.2.0
+                    // (kept: it changes the city's counts as an update would).
+                    CompanyDesk.TestCreditSitesAgain();
+                    break;
+                }
                 case "ipo-home-back":
                 {
                     // ipo-home-back — every building this scenario treated as lost stands

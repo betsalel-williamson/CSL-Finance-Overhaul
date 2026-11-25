@@ -1,7 +1,7 @@
 using System.Collections.Generic; // List
 // FinanceOverhaul.Core: AreaFacts, BoardView, BuildingKey, BusinessKind, BusinessSite,
 //   CandidateBook, CompaniesCodec, CompanyRegistry, FactoryFacts, IpoBoard, IpoCardText, IpoDice,
-//   IpoIndustry, IpoRules, KindFacts, KindState, KindStatus
+//   IpoIndustry, IpoRules, KindFacts, KindState, KindStatus, SiteProfits
 using FinanceOverhaul.Core;
 using Xunit; // Assert, FactAttribute, InlineDataAttribute, TheoryAttribute
 
@@ -202,13 +202,13 @@ namespace FinanceOverhaul.Core.Tests
         [Fact]
         public void AreasAndFactoriesAlreadyInACityAreCreditedWithThePastYearOnce()
         {
-            var rules = new IpoRules();
+            var rules = new IpoRules(); // profit averaged over 4 weeks: the credit stays open 28 days
             var book = new CandidateBook { LookedBehind = true }; // a city scanned before 0.2.0
             var area = new BuildingKey(40, 4);
             var factory = new BuildingKey(41, 5);
             var shop = new BuildingKey(42, 6);
-            var shutFactory = new BuildingKey(43, 7);
-            book.Observe(area, BusinessKind.Oil, true, rules, BusinessSite.Area, "area:7");
+            book.StartSiteDay(1000, rules);
+            Assert.Equal(1028, book.SiteCreditUntilDay);
             book.Observe(
                 factory,
                 BusinessKind.UniqueFactory,
@@ -217,25 +217,31 @@ namespace FinanceOverhaul.Core.Tests
                 BusinessSite.Factory,
                 "factory:Bakery"
             );
-            book.Observe(
-                shutFactory,
-                BusinessKind.UniqueFactory,
-                false,
-                rules,
-                BusinessSite.Factory,
-                "factory:Mill"
-            );
+            book.Observe(area, BusinessKind.Oil, false, rules, BusinessSite.Area, "area:7"); // a bad week
             book.Observe(shop, BusinessKind.Office, true, rules); // a zoned business earns its days
             book.EndDay();
-
-            Assert.True(book.IsCandidate(area, rules));
             Assert.True(book.IsCandidate(factory, rules));
-            Assert.Equal(rules.HealthyDays, book.HealthyDaysOf(factory));
-            Assert.False(book.IsCandidate(shutFactory, rules)); // only one healthy that day
+            Assert.False(book.IsCandidate(area, rules));
             Assert.Equal(1, book.HealthyDaysOf(shop));
-            Assert.True(book.LookedBehindSites);
 
-            // Once: a factory built afterwards counts its days one at a time.
+            // Still within the weeks: the area, healthy on its average now, gets the credit too.
+            book.StartSiteDay(1010, rules);
+            book.Observe(
+                factory,
+                BusinessKind.UniqueFactory,
+                true,
+                rules,
+                BusinessSite.Factory,
+                "factory:Bakery"
+            );
+            book.Observe(area, BusinessKind.Oil, true, rules, BusinessSite.Area, "area:7");
+            book.EndDay();
+            Assert.True(book.IsCandidate(area, rules));
+            Assert.False(book.LookedBehindSites);
+
+            // Over: one built afterwards counts its days one at a time.
+            book.StartSiteDay(1028, rules);
+            Assert.True(book.LookedBehindSites);
             var later = new BuildingKey(44, 8);
             book.Observe(
                 later,
@@ -250,26 +256,89 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
-        public void TheCreditIsRememberedInTheSave()
+        public void TheCreditAndTheWeeksAreRememberedInTheSave()
         {
-            var book = new CandidateBook { LookedBehind = true, LookedBehindSites = true };
+            var rules = new IpoRules();
+            var book = new CandidateBook { LookedBehind = true };
+            book.StartSiteDay(500, rules);
+            var area = new BuildingKey(40, 4);
+            book.Profits.Record(area, 896_000, rules, 500);
+            book.Profits.Record(area, -150_000, rules, 501);
             string saved = CompaniesCodec.Format(book, new IpoDice(1UL), new CompanyRegistry());
-            Assert.Contains("lookbehind-sites=done", saved);
+            Assert.Contains("sitecredit=528", saved);
+            Assert.Contains("profit|40|4|896000,-150000", saved);
+
             CandidateBook back = CompaniesCodec.Parse(
                 saved,
                 new IpoDice(1UL),
                 new CompanyRegistry()
             );
-            Assert.True(back.LookedBehindSites);
+            Assert.Equal(528, back.SiteCreditUntilDay);
+            Assert.Equal(373_000L, back.Profits.Average(area));
+            Assert.Equal(
+                saved,
+                CompaniesCodec.Format(back, new IpoDice(1UL), new CompanyRegistry())
+            );
 
-            // A save from before areas and factories were read has no such line: they get it.
+            book.StartSiteDay(528, rules);
+            Assert.Contains(
+                "lookbehind-sites=done",
+                CompaniesCodec.Format(book, new IpoDice(1UL), new CompanyRegistry())
+            );
+
+            // A save from before areas and factories were read: they get the credit.
             CandidateBook old = CompaniesCodec.Parse(
                 "v1\nlookbehind=done\n",
                 new IpoDice(1UL),
                 new CompanyRegistry()
             );
-            Assert.True(old.LookedBehind);
             Assert.False(old.LookedBehindSites);
+            Assert.Equal(-1, old.SiteCreditUntilDay);
+        }
+
+        [Fact]
+        public void OneBadWeekDoesNotSinkAStrongArea()
+        {
+            var rules = new IpoRules();
+            var profits = new SiteProfits();
+            var area = new BuildingKey(40, 4);
+            long average = 0;
+            // Three weeks at ₡8,960, then a week at a loss of ₡3,273 (the test city's oil area).
+            for (int day = 0; day < 21; day++)
+            {
+                average = profits.Record(area, 896_000, rules, day);
+            }
+
+            for (int day = 21; day < 28; day++)
+            {
+                average = profits.Record(area, -327_300, rules, day);
+            }
+
+            // A second reading the same day replaces the first.
+            Assert.Equal(average, profits.Record(area, -327_300, rules, 27));
+
+            Assert.Equal(28, profits.Count(area));
+            Assert.True(average > 0);
+            Assert.True(IpoIndustry.AreaHealthy(OilArea(), average, rules));
+            Assert.Equal(average * 52, IpoIndustry.AnnualCents(average));
+
+            // A whole month at a loss is not healthy, and the oldest readings drop out.
+            for (int day = 28; day < 56; day++)
+            {
+                average = profits.Record(area, -327_300, rules, day);
+            }
+
+            Assert.Equal(28, profits.Count(area));
+            Assert.Equal(-327_300L, average);
+            Assert.False(IpoIndustry.AreaHealthy(OilArea(), average, rules));
+            Assert.Equal(0L, IpoIndustry.AnnualCents(average));
+
+            var one = new IpoRules { ProfitWeeks = 1 };
+            profits.Record(area, 100, one, 56);
+            Assert.Equal(7, profits.Count(area));
+
+            profits.KeepOnly(new List<BuildingKey>());
+            Assert.Equal(0, profits.Count(area));
         }
     }
 }

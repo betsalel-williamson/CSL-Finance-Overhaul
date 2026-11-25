@@ -155,6 +155,13 @@ namespace FinanceOverhaul.Core
         /// <summary>A unique factory's production slider (percent of its budget) it needs to count as healthy.</summary>
         public int FactoryMinProductionPercent = 100;
 
+        /// <summary>
+        /// Weeks an industry area's or unique factory's profit is averaged over: healthy when
+        /// the average is above zero, and its earnings are that average × 52. One bad week does
+        /// not sink a strong area.
+        /// </summary>
+        public int ProfitWeeks = 4;
+
         /// <summary>Days the city can buy at the offering price before the first trading day.</summary>
         public int OfferDays = 7;
 
@@ -316,6 +323,38 @@ namespace FinanceOverhaul.Core
         /// </summary>
         public bool LookedBehindSites;
 
+        /// <summary>
+        /// The last day of that look behind (−1: not started). It stays open for
+        /// <see cref="IpoRules.ProfitWeeks"/> weeks from the first read, so an area or factory
+        /// is judged on its average over full weeks, not on the one week it happened to be read.
+        /// </summary>
+        public int SiteCreditUntilDay = -1;
+
+        /// <summary>Industry areas' and unique factories' weekly profit over recent weeks.</summary>
+        public readonly SiteProfits Profits = new SiteProfits();
+
+        /// <summary>
+        /// The host calls this before reading areas and factories each day: starts the look
+        /// behind on the first day, and ends it once its weeks are over.
+        /// </summary>
+        public void StartSiteDay(int today, IpoRules rules)
+        {
+            if (LookedBehindSites)
+            {
+                return;
+            }
+
+            if (SiteCreditUntilDay < 0)
+            {
+                SiteCreditUntilDay = today + Math.Max(1, rules.ProfitWeeks) * 7;
+            }
+
+            if (today >= SiteCreditUntilDay)
+            {
+                LookedBehindSites = true;
+            }
+        }
+
         /// <summary>One business as the game shows it today. Call once per business, then <see cref="EndDay"/>.</summary>
         public void Observe(BuildingKey building, BusinessFacts facts, IpoRules rules)
         {
@@ -400,7 +439,6 @@ namespace FinanceOverhaul.Core
 
             seenToday.Clear();
             LookedBehind = true; // only the first day of scanning looks behind
-            LookedBehindSites = true;
         }
 
         /// <summary>Healthy days in a row so far (0 if unknown).</summary>

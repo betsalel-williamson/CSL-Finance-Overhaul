@@ -1,7 +1,7 @@
 using System; // Math
 using System.Collections.Generic; // Dictionary, List
 // FinanceOverhaul.Core: AreaFacts, BuildingKey, BusinessKind, BusinessSite, FactoryFacts,
-//   IpoIndustry, IpoRules, LocalCompany
+//   IpoIndustry, IpoRules, LocalCompany, SiteProfits
 using FinanceOverhaul.Core;
 
 // Game classes used without a using (global namespace, Assembly-CSharp): Building, BuildingInfo,
@@ -30,6 +30,9 @@ namespace FinanceOverhaul
 
         public bool Healthy;
         public long AnnualCents;
+
+        /// <summary>Its average weekly profit over the recent weeks it was read, in cents.</summary>
+        public long WeeklyProfitCents;
     }
 
     /// <summary>
@@ -49,11 +52,23 @@ namespace FinanceOverhaul
         private const long UpkeepCentsPerRate100 = 16;
 
         /// <summary>Every industry area and unique factory in the city today.</summary>
-        public static List<SiteReading> Read(IpoRules rules)
+        /// <remarks>
+        /// Each one's week is recorded in <paramref name="profits"/>, and it is judged and priced
+        /// on its average over <see cref="IpoRules.ProfitWeeks"/> weeks; sites no longer there
+        /// are forgotten.
+        /// </remarks>
+        public static List<SiteReading> Read(IpoRules rules, SiteProfits profits, int today)
         {
             var list = new List<SiteReading>();
-            ReadAreas(rules, list);
-            ReadFactories(rules, list);
+            ReadAreas(rules, profits, today, list);
+            ReadFactories(rules, profits, today, list);
+            var standing = new List<BuildingKey>();
+            foreach (SiteReading s in list)
+            {
+                standing.Add(s.Home);
+            }
+
+            profits.KeepOnly(standing);
             return list;
         }
 
@@ -117,13 +132,37 @@ namespace FinanceOverhaul
             return false;
         }
 
+        /// <summary>
+        /// Game UI tests: the weekly profit every area and factory reports, in cents, until the
+        /// scenario ends (null: the game's). Not recorded in the city's history.
+        /// </summary>
+        internal static long? TestWeeklyProfitCents;
+
+        private static long Average(
+            SiteProfits profits,
+            BuildingKey home,
+            long weeklyProfitCents,
+            IpoRules rules,
+            int today
+        )
+        {
+            return TestWeeklyProfitCents.HasValue
+                ? TestWeeklyProfitCents.Value
+                : profits.Record(home, weeklyProfitCents, rules, today);
+        }
+
         /// <summary>The player has the building switched on (the game's On/Off is its production rate).</summary>
         public static bool SwitchedOn(ushort building)
         {
             return BuildingManager.instance.m_buildings.m_buffer[building].m_productionRate != 0;
         }
 
-        private static void ReadAreas(IpoRules rules, List<SiteReading> list)
+        private static void ReadAreas(
+            IpoRules rules,
+            SiteProfits profits,
+            int today,
+            List<SiteReading> list
+        )
         {
             DistrictManager districts = DistrictManager.instance;
             Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
@@ -185,23 +224,41 @@ namespace FinanceOverhaul
                     WeeklyBoughtCents = bought,
                     WeeklyUpkeepCents = Math.Abs(upkeep) * UpkeepCentsPerRate100 / 100,
                 };
+                var home = new BuildingKey(gate, buffer[gate].m_buildIndex);
+                long average = Average(
+                    profits,
+                    home,
+                    IpoIndustry.WeeklyProfitCents(
+                        facts.WeeklySalesCents,
+                        facts.WeeklyBoughtCents,
+                        facts.WeeklyUpkeepCents
+                    ),
+                    rules,
+                    today
+                );
                 list.Add(
                     new SiteReading
                     {
-                        Home = new BuildingKey(gate, buffer[gate].m_buildIndex),
+                        Home = home,
                         Kind = kind,
                         Site = BusinessSite.Area,
                         Ref = AreaRef + p,
                         Name = districts.GetParkName((byte)p),
                         Level = facts.Level,
-                        Healthy = IpoIndustry.AreaHealthy(facts, rules),
-                        AnnualCents = IpoIndustry.AnnualCents(facts),
+                        Healthy = IpoIndustry.AreaHealthy(facts, average, rules),
+                        AnnualCents = IpoIndustry.AnnualCents(average),
+                        WeeklyProfitCents = average,
                     }
                 );
             }
         }
 
-        private static void ReadFactories(IpoRules rules, List<SiteReading> list)
+        private static void ReadFactories(
+            IpoRules rules,
+            SiteProfits profits,
+            int today,
+            List<SiteReading> list
+        )
         {
             Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
             FastList<ushort> service = BuildingManager.instance.GetServiceBuildings(
@@ -242,10 +299,22 @@ namespace FinanceOverhaul
                     WeeklyBoughtCents = bought,
                     WeeklyUpkeepCents = Math.Abs(upkeep) * UpkeepCentsPerRate100 / 100,
                 };
+                var home = new BuildingKey(id, buffer[id].m_buildIndex);
+                long average = Average(
+                    profits,
+                    home,
+                    IpoIndustry.WeeklyProfitCents(
+                        facts.WeeklySalesCents,
+                        facts.WeeklyBoughtCents,
+                        facts.WeeklyUpkeepCents
+                    ),
+                    rules,
+                    today
+                );
                 list.Add(
                     new SiteReading
                     {
-                        Home = new BuildingKey(id, buffer[id].m_buildIndex),
+                        Home = home,
                         Kind = BusinessKind.UniqueFactory,
                         Site = BusinessSite.Factory,
                         Ref = FactoryRef + info.name,
@@ -253,8 +322,9 @@ namespace FinanceOverhaul
                             id,
                             new InstanceID { Building = id }
                         ),
-                        Healthy = IpoIndustry.FactoryHealthy(facts, rules),
-                        AnnualCents = IpoIndustry.AnnualCents(facts),
+                        Healthy = IpoIndustry.FactoryHealthy(facts, average, rules),
+                        AnnualCents = IpoIndustry.AnnualCents(average),
+                        WeeklyProfitCents = average,
                     }
                 );
             }

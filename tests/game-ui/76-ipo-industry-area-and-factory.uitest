@@ -2,10 +2,12 @@
 # test city has a level-5 oil area and three unique factories). The area is named after the area,
 # is never moved into another building when its main building is lost, and takes it back when it
 # stands again. Needs a city with an industry area at level 3+ and a unique factory: the scan logs
-# what it read. Nothing in the city is touched: lost buildings are only treated as lost.
+# what it read. Their profit is fixed at ₡5,000 a week for the scenario (ipo-site-profit), whatever
+# the city's week was. Nothing in the city is touched: lost buildings are only treated as lost.
 name local ipos: an industry area and a unique factory list; a lost area waits and gets its home back
 local-ipos on
 ipo-healthy-days 1
+ipo-site-profit 500000
 ipo-scan
 ipo-list-now area
 expect-company-site area
@@ -19,5 +21,6 @@ ipo-list-now factory
 expect-company-site factory
 expect-company-home same
 cleanup:
+ipo-site-profit real
 ipo-remove-test
 local-ipos restore

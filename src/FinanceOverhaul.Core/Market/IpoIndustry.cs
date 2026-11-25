@@ -1,4 +1,5 @@
-using System; // Math
+using System; // Math, MidpointRounding
+using System.Collections.Generic; // Dictionary, ICollection, IEnumerable, IList, KeyValuePair, List
 
 namespace FinanceOverhaul.Core
 {
@@ -139,6 +140,43 @@ namespace FinanceOverhaul.Core
             return slots;
         }
 
+        /// <summary>
+        /// Healthy today, judged on <paramref name="averageWeeklyProfitCents"/> (the last
+        /// <see cref="IpoRules.ProfitWeeks"/> weeks, <see cref="SiteProfits"/>) rather than this
+        /// week alone: at the level areas need, its main building switched on, and profitable on
+        /// average.
+        /// </summary>
+        public static bool AreaHealthy(
+            AreaFacts facts,
+            long averageWeeklyProfitCents,
+            IpoRules rules
+        )
+        {
+            return BusinessKinds.IsSpecialisedIndustry(facts.Kind)
+                && facts.Level >= rules.AreaMinLevel
+                && facts.MainBuildingActive
+                && averageWeeklyProfitCents > 0;
+        }
+
+        /// <summary>Healthy today, judged on its average weekly profit (see the area's overload).</summary>
+        public static bool FactoryHealthy(
+            FactoryFacts facts,
+            long averageWeeklyProfitCents,
+            IpoRules rules
+        )
+        {
+            return facts.Active
+                && !facts.HasProblems
+                && facts.ProductionPercent >= rules.FactoryMinProductionPercent
+                && averageWeeklyProfitCents > 0;
+        }
+
+        /// <summary>A year's earnings from an average week's profit: × 52, nothing for a loss.</summary>
+        public static long AnnualCents(long averageWeeklyProfitCents)
+        {
+            return Annual(averageWeeklyProfitCents);
+        }
+
         private static long Annual(long weekly)
         {
             if (weekly <= 0)
@@ -149,6 +187,108 @@ namespace FinanceOverhaul.Core
             return weekly > long.MaxValue / IpoEarnings.WeeksPerYear
                 ? long.MaxValue
                 : weekly * IpoEarnings.WeeksPerYear;
+        }
+    }
+
+    /// <summary>
+    /// The weekly profit of each industry area and unique factory, as read each day over the
+    /// last <see cref="IpoRules.ProfitWeeks"/> weeks (the game keeps only last week's). Its
+    /// average is what the area is judged and priced on. Kept in the save.
+    /// </summary>
+    public sealed class SiteProfits
+    {
+        private readonly Dictionary<BuildingKey, List<long>> days =
+            new Dictionary<BuildingKey, List<long>>();
+
+        // The game day of each site's newest reading (not saved: at worst one day is counted
+        // twice after a reload).
+        private readonly Dictionary<BuildingKey, int> lastDay = new Dictionary<BuildingKey, int>();
+
+        /// <summary>
+        /// Records a site's weekly profit as read on <paramref name="today"/> (a second reading
+        /// the same day replaces the first); returns the average of its readings.
+        /// </summary>
+        public long Record(BuildingKey site, long weeklyProfitCents, IpoRules rules, int today)
+        {
+            List<long> list;
+            if (!days.TryGetValue(site, out list))
+            {
+                list = new List<long>();
+                days[site] = list;
+            }
+
+            int seen;
+            if (lastDay.TryGetValue(site, out seen) && seen == today && list.Count > 0)
+            {
+                list[list.Count - 1] = weeklyProfitCents;
+                return Average(site);
+            }
+
+            lastDay[site] = today;
+            list.Add(weeklyProfitCents);
+            int keep = Math.Max(1, rules.ProfitWeeks) * 7;
+            if (list.Count > keep)
+            {
+                list.RemoveRange(0, list.Count - keep);
+            }
+
+            return Average(site);
+        }
+
+        /// <summary>The average weekly profit over the readings kept (0 with none).</summary>
+        public long Average(BuildingKey site)
+        {
+            List<long> list;
+            if (!days.TryGetValue(site, out list) || list.Count == 0)
+            {
+                return 0;
+            }
+
+            decimal sum = 0;
+            foreach (long v in list)
+            {
+                sum += v;
+            }
+
+            return (long)Math.Round(sum / list.Count, MidpointRounding.AwayFromZero);
+        }
+
+        /// <summary>Readings kept for a site.</summary>
+        public int Count(BuildingKey site)
+        {
+            List<long> list;
+            return days.TryGetValue(site, out list) ? list.Count : 0;
+        }
+
+        /// <summary>Forgets every site not in <paramref name="standing"/> (demolished areas and factories).</summary>
+        public void KeepOnly(ICollection<BuildingKey> standing)
+        {
+            var gone = new List<BuildingKey>();
+            foreach (BuildingKey k in days.Keys)
+            {
+                if (!standing.Contains(k))
+                {
+                    gone.Add(k);
+                }
+            }
+
+            foreach (BuildingKey k in gone)
+            {
+                days.Remove(k);
+                lastDay.Remove(k);
+            }
+        }
+
+        /// <summary>Every site's readings, oldest first (for the save).</summary>
+        public IEnumerable<KeyValuePair<BuildingKey, List<long>>> All
+        {
+            get { return days; }
+        }
+
+        /// <summary>Sets a site's readings read from the save.</summary>
+        public void Restore(BuildingKey site, IList<long> readings)
+        {
+            days[site] = new List<long>(readings);
         }
     }
 }

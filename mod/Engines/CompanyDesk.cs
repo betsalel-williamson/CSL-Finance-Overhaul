@@ -746,6 +746,19 @@ namespace FinanceOverhaul
         }
 
         /// <summary>
+        /// Dev: the one-time credit for industry areas and unique factories starts again from
+        /// the next scan, as for a city updating to 0.2.0.
+        /// </summary>
+        public static void TestCreditSitesAgain()
+        {
+            lock (Sync)
+            {
+                Book().LookedBehindSites = false;
+                Book().SiteCreditUntilDay = -1;
+            }
+        }
+
+        /// <summary>
         /// Dev: the next scan looks behind again, as on the first scan of a city (for a test
         /// city whose first look behind was spent under an older rule).
         /// </summary>
@@ -945,7 +958,9 @@ namespace FinanceOverhaul
                 // gives its kind a slot.
                 var read = new Dictionary<BuildingKey, SiteReading>();
                 var siteLog = new StringBuilder();
-                foreach (SiteReading s in IndustrySites.Read(rules))
+                bool creditWasOpen = !b.LookedBehindSites;
+                b.StartSiteDay(OrderDesk.Today, rules);
+                foreach (SiteReading s in IndustrySites.Read(rules, b.Profits, OrderDesk.Today))
                 {
                     read[s.Home] = s;
                     b.Observe(s.Home, s.Kind, s.Healthy, rules, s.Site, s.Ref);
@@ -966,7 +981,9 @@ namespace FinanceOverhaul
                         .Append(s.Site == BusinessSite.Area ? " level " + s.Level : string.Empty)
                         .Append(s.Healthy ? " healthy " : " not healthy ") // not shown: the log
                         .Append(BondText.WholeMoney(s.AnnualCents))
-                        .Append("/yr;");
+                        .Append("/yr (") // not shown: the log
+                        .Append(b.Profits.Count(s.Home))
+                        .Append(" day(s) read);");
                 }
 
                 sites = read;
@@ -974,6 +991,13 @@ namespace FinanceOverhaul
                 bool lookingBehind = !b.LookedBehind;
                 bool lookingBehindSites = !b.LookedBehindSites;
                 b.EndDay();
+                if (creditWasOpen && b.LookedBehindSites)
+                {
+                    ModLog.Info(
+                        "ipo: the one-time credit for industry areas and factories is over"
+                    );
+                }
+
                 if (lookingBehind)
                 {
                     ModLog.Info(
@@ -991,9 +1015,11 @@ namespace FinanceOverhaul
                     }
 
                     ModLog.Info(
-                        "ipo: first read of this city's industry areas and unique factories: "
+                        "ipo: industry areas and factories within their one-time credit (until day "
+                            + b.SiteCreditUntilDay
+                            + "): "
                             + credited
-                            + " healthy today count as healthy for the past year"
+                            + " healthy on their average count as healthy for the past year"
                     );
                 }
 

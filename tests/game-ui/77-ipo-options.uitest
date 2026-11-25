@@ -4,7 +4,7 @@
 name local ipos: Options has a slider for every Local IPOs value, each label saying its value
 local-ipos on
 options-preview on
-expect-ipo-options 36
+expect-ipo-options 37
 capture ipo-options
 cleanup:
 options-preview off

@@ -456,6 +456,10 @@ namespace FinanceOverhaul.Core
                 "options.ipo.factoryMinProductionPercent",
                 "Production a unique factory needs: {0}%"
             },
+            {
+                "options.ipo.profitWeeks",
+                "Weeks an industry area's or factory's profit is averaged over: {0}"
+            },
             { "options.ipo.offerDays", "Days the city can buy at the offering price: {0}" },
             { "options.ipo.priceToEarnings", "Offering price: earnings × {0}" },
             { "options.ipo.cityStakePercent", "The city's 1,000 shares are {0}% of a company" },

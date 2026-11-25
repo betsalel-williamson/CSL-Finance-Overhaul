@@ -327,6 +327,17 @@ namespace FinanceOverhaul.Core
                 r => r.FactoryMinProductionPercent,
                 (r, v) => r.FactoryMinProductionPercent = v
             );
+            Add(
+                list,
+                "profitWeeks",
+                P,
+                TuningGroup.Candidates,
+                1,
+                12,
+                1,
+                r => r.ProfitWeeks,
+                (r, v) => r.ProfitWeeks = v
+            );
 
             // Prices.
             Add(

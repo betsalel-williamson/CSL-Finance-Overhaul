@@ -168,6 +168,8 @@ namespace FinanceOverhaul.Core
         private const string CompanySiteTag = "cosite";
         private const string LookBehindLine = "lookbehind=done";
         private const string LookBehindSitesLine = "lookbehind-sites=done";
+        private const string SiteCreditPrefix = "sitecredit=";
+        private const string ProfitTag = "profit";
 
         public static string Format(CandidateBook book, IpoDice dice, CompanyRegistry registry)
         {
@@ -184,6 +186,34 @@ namespace FinanceOverhaul.Core
             if (book.LookedBehindSites)
             {
                 sb.Append(LookBehindSitesLine).Append('\n');
+            }
+            else if (book.SiteCreditUntilDay >= 0)
+            {
+                sb.Append(SiteCreditPrefix).Append(Int(book.SiteCreditUntilDay)).Append('\n');
+            }
+
+            var profits = new List<KeyValuePair<BuildingKey, List<long>>>(book.Profits.All);
+            profits.Sort(
+                (a, b) =>
+                    a.Key.Id != b.Key.Id
+                        ? a.Key.Id.CompareTo(b.Key.Id)
+                        : a.Key.BuildIndex.CompareTo(b.Key.BuildIndex)
+            );
+            foreach (KeyValuePair<BuildingKey, List<long>> kv in profits)
+            {
+                sb.Append(ProfitTag)
+                    .Append('|')
+                    .Append(kv.Key.Id.ToString(CultureInfo.InvariantCulture))
+                    .Append('|')
+                    .Append(kv.Key.BuildIndex.ToString(CultureInfo.InvariantCulture))
+                    .Append('|');
+                for (int i = 0; i < kv.Value.Count; i++)
+                {
+                    sb.Append(i == 0 ? string.Empty : ",")
+                        .Append(kv.Value[i].ToString(CultureInfo.InvariantCulture));
+                }
+
+                sb.Append('\n');
             }
 
             var counted = new List<KeyValuePair<BuildingKey, int>>(book.Counted);
@@ -361,6 +391,49 @@ namespace FinanceOverhaul.Core
         private static string Clean(string text)
         {
             return (text ?? string.Empty).Replace('\n', ' ').Replace('\r', ' ');
+        }
+
+        /// <summary>A <c>profit|id|buildIndex|v,v,…</c> line: a site's recent weekly profits, oldest first.</summary>
+        private static void ReadProfits(string line, CandidateBook book)
+        {
+            string[] f = line.Split('|');
+            ushort id;
+            uint buildIndex;
+            if (
+                f.Length != 4
+                || !ushort.TryParse(f[1], NumberStyles.None, CultureInfo.InvariantCulture, out id)
+                || !uint.TryParse(
+                    f[2],
+                    NumberStyles.None,
+                    CultureInfo.InvariantCulture,
+                    out buildIndex
+                )
+            )
+            {
+                return;
+            }
+
+            var readings = new List<long>();
+            foreach (string v in f[3].Split(','))
+            {
+                long reading;
+                if (
+                    long.TryParse(
+                        v,
+                        NumberStyles.Integer,
+                        CultureInfo.InvariantCulture,
+                        out reading
+                    )
+                )
+                {
+                    readings.Add(reading);
+                }
+            }
+
+            if (readings.Count > 0)
+            {
+                book.Profits.Restore(new BuildingKey(id, buildIndex), readings);
+            }
         }
 
         private static bool TryInt(string text, out int value)
@@ -607,6 +680,23 @@ namespace FinanceOverhaul.Core
                 if (line == LookBehindSitesLine)
                 {
                     book.LookedBehindSites = true;
+                    continue;
+                }
+
+                if (line.StartsWith(SiteCreditPrefix, StringComparison.Ordinal))
+                {
+                    int until;
+                    if (TryInt(line.Substring(SiteCreditPrefix.Length), out until))
+                    {
+                        book.SiteCreditUntilDay = until;
+                    }
+
+                    continue;
+                }
+
+                if (line.StartsWith(ProfitTag + "|", StringComparison.Ordinal))
+                {
+                    ReadProfits(line, book);
                     continue;
                 }
 
