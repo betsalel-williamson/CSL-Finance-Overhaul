@@ -32,22 +32,26 @@ the Local IPOs flag.
 
 Goal: Local IPOs ship in 0.2.0, on in release builds (`ModSettings.PinReleaseFlags`). Worked top to
 bottom, one in-game-verified step at a time; each step updates this shard, Figma and its changeset.
+Decisions of 2026-11-25: a factory outside any area qualifies; the first-year swing is built; the
+tuning values become player options; Local IPOs are on for everyone, and players updating from 0.1.0
+are asked; a lost headquarters brings up a dialog to choose the new one.
 
-| #   | Kind   | Work                                                                                                                                                                                                                                                                     | Status      |
-| --- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
-| 1   | Build  | The [Stock Exchange gate](#the-stock-exchange-gate-decided-2026-11-20-not-built): library rule with unit tests, the cards' "Needs the Stock Exchange at level 2.", game UI scenario                                                                                      | Not started |
-| 2   | Build  | Industry areas and unique factories, slices 2–4 of [the design](#industry-areas-and-unique-factories-design-2026-11-19-not-built): rule and earnings (`IpoIndustry`), the daily scan reads them, cards, symbols, dialog wording, icon. Needs: a factory outside any area | Not started |
-| 3   | Build  | The extra swing of a new listing's first year ("New-listing volatility", 2×): build it, or take it out of the design                                                                                                                                                     | Not started |
-| 4   | Decide | Which [Options](#options-level-1-while-tuning-the-feel) players get. Today only the flag and the dialog preference exist; the tuning values are fixed in `IpoRules`. Proposal: "Local IPOs" on/off and the dialog preference; tuning stays for later                     | Open        |
-| 5   | Decide | Whether Local IPOs are on or off for a player who updates from 0.1.0                                                                                                                                                                                                     | Open        |
-| 6   | Decide | [Open decisions](#open-decisions) 3, 4, 6, 7 and 8: settle or park each (the dialog already plays the sale sound and draws the money banner, so 4 and 6 may be done)                                                                                                     | Open        |
-| 7   | Check  | Tuning in a city left alone: how many candidates hold under the steadiness rule, how often IPOs come, prices over years; then the industry level and profit rules                                                                                                        | Not started |
-| 8   | Check  | A real abandoned and a real burned-down headquarters (scenario 74 only treats buildings as lost)                                                                                                                                                                         | Not started |
-| 9   | Check  | Saves: quit and reload with companies and a holding, the city without the mod and with it back ([Save compatibility](./save-compatibility.md)), a DLL hot reload with companies listed                                                                                   | Not started |
-| 10  | Check  | A release install with the flag pinned on: Options, a city loads with no warnings, the daily scan's cost in a large city                                                                                                                                                 | Not started |
-| 11  | Ship   | Figma: the IPO dialog, cards, building panel and industry cards match what is built                                                                                                                                                                                      | Not started |
-| 12  | Ship   | Player guide: a Local IPOs page in `docs/client` and the Options page; the Workshop description                                                                                                                                                                          | Not started |
-| 13  | Ship   | One `minor` changeset for the feature; this shard's stale "not built" notes; the [Roadmap](./roadmap.md) row; `PinReleaseFlags` turns Local IPOs on                                                                                                                      | Not started |
+| #   | Kind   | Work                                                                                                                                                                                                                                                                                     | Status      |
+| --- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| 1   | Build  | The [Stock Exchange gate](#the-stock-exchange-gate-decided-2026-11-20-not-built): library rule with unit tests, the cards' "Needs the Stock Exchange at level 2.", game UI scenario                                                                                                      | Not started |
+| 2   | Build  | Industry areas and unique factories, slices 2–4 of [the design](#industry-areas-and-unique-factories-design-2026-11-19-not-built): rule and earnings (`IpoIndustry`), the daily scan reads them, cards, symbols, dialog wording, icon. A factory outside any area qualifies the same way | Not started |
+| 3   | Build  | The extra swing of a new listing's first year ("New-listing volatility", 2×, settling over the year)                                                                                                                                                                                     | Not started |
+| 4   | Build  | [The player chooses the new headquarters](#losing-a-headquarters-the-player-chooses-decided-2026-11-25-not-built): a dialog when a headquarters burns, collapses, is abandoned or deleted                                                                                                | Not started |
+| 5   | Build  | The tuning values as [Options](#options-level-1-while-tuning-the-feel) for every player, in a "Local IPOs" group                                                                                                                                                                         | Not started |
+| 6   | Build  | [A dialog introducing Local IPOs](#switched-on-for-every-player-decided-2026-11-25-not-built) to players updating from 0.1.0                                                                                                                                                             | Not started |
+| 7   | Decide | [Open decisions](#open-decisions) 3, 4, 6, 7 and 8: settle or park each (the dialog already plays the sale sound and draws the money banner, so 4 and 6 may be done)                                                                                                                     | Open        |
+| 8   | Check  | Tuning in a city left alone: how many candidates hold under the steadiness rule, how often IPOs come, prices over years; then the industry level and profit rules                                                                                                                        | Not started |
+| 9   | Check  | A real abandoned, burned-down and deleted headquarters, with the new dialog (scenario 74 only treats buildings as lost)                                                                                                                                                                  | Not started |
+| 10  | Check  | Saves: quit and reload with companies and a holding, the city without the mod and with it back ([Save compatibility](./save-compatibility.md)), a DLL hot reload with companies listed                                                                                                   | Not started |
+| 11  | Check  | A release install with the flag pinned on: Options, a city loads with no warnings, the daily scan's cost in a large city                                                                                                                                                                 | Not started |
+| 12  | Ship   | Figma: the IPO dialog, cards, building panel, industry cards and the two new dialogs match what is built                                                                                                                                                                                 | Not started |
+| 13  | Ship   | Player guide: a Local IPOs page in `docs/client` and the Options page; the Workshop description                                                                                                                                                                                          | Not started |
+| 14  | Ship   | One `minor` changeset for the feature; this shard's stale "not built" notes; the [Roadmap](./roadmap.md) row; `PinReleaseFlags` turns Local IPOs on                                                                                                                                      | Not started |
 
 The library slices: `CandidateBook` counts healthy days per building (id plus build index, so a
 building that reuses an id starts from nothing) and lists the candidates of each kind in a fixed
@@ -276,7 +280,8 @@ extra swing of the first year and a different swing for each kind of business ar
 
 - **Drift** follows the building's health: staffed, problem-free and earning → gentle rise; problems
   → decline. Not tied to the game's sector stocks (they already follow city industry).
-- **Volatility** starts high and settles over the first year, like real new listings.
+- **Volatility** starts high and settles over the first year, like real new listings. Decided
+  2026-11-25: built for 0.2.0 (option "New-listing volatility", 2×).
 - **Moving (built 2026-11-19):** the company is stored separately from its building (building id
   plus the game's build index, since ids are reused). Its headquarters counts as lost when the
   building is demolished or replaced, abandoned, collapsed or burned down (`HomeStands`). The next
@@ -292,6 +297,29 @@ extra swing of the first year and a different swing for each kind of business ar
   can sell at any time; at the end the company delists, the city's shares are paid at the last
   price, and a chirp says what the city received. Unit tests in `IpoEngineTests`; game UI scenario
   74 (a 3-day grace period, buildings only treated as lost, nothing in the city touched).
+
+### Losing a headquarters: the player chooses (decided 2026-11-25, not built)
+
+Replaces the automatic move above for every way a headquarters is lost: burned down, collapsed,
+abandoned, demolished or deleted by the player.
+
+- **A dialog comes up** the day it is lost, in the IPO dialog's style, and the game pauses as for an
+  IPO. It names the company and what happened ("Goldwoman Investments' headquarters burned down"),
+  and lists the buildings that can take it in, **best first** (highest yearly earnings), each with
+  View (moves the camera there) and Move here.
+- **Which buildings:** any business of the **same kind**, whatever its size or age, that is not
+  already a company's headquarters or picked for the coming IPO. The company keeps its name, symbol,
+  price and shareholders; the new building is marked Historical, as today.
+- **Other choices:** "Let it find a home" (today's automatic move: the best candidate, else the
+  grace period) and "Close it" (it delists at once at the day's price and the city is paid for its
+  shares). Esc or × is "Let it find a home".
+- **No building of the kind:** the list says so; the grace period starts and the company keeps
+  looking each day.
+- **Industry areas and unique factories** have no other building: the dialog says the company waits
+  for the main building or factory to be rebuilt or switched back on within the grace period (a
+  factory of the same type rebuilt takes it back), with "Close it" as the other choice.
+- **Dialog hidden** (the "don't show" preference shared with the IPO dialog, or several lost the
+  same day): each company finds a home on its own, and the chirp says where it went.
 
 ### Buy-outs (decided 2026-11-17; maths built)
 
@@ -776,7 +804,8 @@ one dwarfing the other. One city, two areas: a first look, not a sample.
 
 1. Decided: an area qualifies from **level 3**.
 2. Decided: each unique factory is **a company of its own**.
-3. Open: whether a factory outside any area (in the generic industry area) qualifies the same way.
+3. Decided (2026-11-25): a factory outside any area (in the generic industry area) **qualifies the
+   same way**.
 4. Decided: switching an area's main building or a factory **off counts as losing the
    headquarters**; switching it back on within the grace period keeps the company.
 5. Decided: **no local company goes public until the city's Stock Exchange is at level 2 or
@@ -797,14 +826,24 @@ one dwarfing the other. One city, two areas: a first look, not a sample.
   Until that is built, farming, forestry, oil and ore only list a zoned plot with at least 30 jobs,
   which most cities do not have.
 
+## Switched on for every player (decided 2026-11-25, not built)
+
+- **New players:** Local IPOs are on from the start.
+- **Players updating from 0.1.0** (settings saved by an earlier version): the first time a city
+  loads, a dialog introduces the feature (what can go public, the Stock Exchange at level 2, where
+  the cards are) with Local IPOs on by default; one choice leaves it off. Asked once; the answer is
+  the "Local IPOs" option, which can be changed later.
+
 ## Options (Level 1, while tuning the feel)
 
-All under an experimental "Local IPOs" group, off by default; every value is saved with the player's
-settings.
+Decided 2026-11-25: these become **player options** in every build, in a "Local IPOs" group (today
+only the feature flag and the dialog preference exist; the values are fixed in `IpoRules`). Every
+value is saved with the player's settings. Local IPOs are on by default (see
+[Switched on for every player](#switched-on-for-every-player-decided-2026-11-25-not-built)).
 
 | Option                                  | Default   | What it changes                                           |
 | --------------------------------------- | --------- | --------------------------------------------------------- |
-| Local IPOs                              | Off       | The whole feature                                         |
+| Local IPOs                              | On        | The whole feature                                         |
 | Stock Exchange level for IPOs (planned) | 2         | No IPO until the Stock Exchange is at this level          |
 | Squares to unlock a kind                | 200       | The gate: how much of a kind the city needs first         |
 | Top-level buildings for the second slot | 20        | Each doubling after that adds a slot                      |
