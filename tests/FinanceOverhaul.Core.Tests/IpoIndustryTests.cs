@@ -1,7 +1,8 @@
 using System.Collections.Generic; // List
 // FinanceOverhaul.Core: AreaFacts, BoardView, BuildingKey, BusinessKind, BusinessSite,
-//   CandidateBook, CompaniesCodec, CompanyRegistry, FactoryFacts, IpoBoard, IpoCardText, IpoDice,
-//   IpoIndustry, IpoRules, KindFacts, KindState, KindStatus, SiteProfits
+//   CandidateBook, CompaniesCodec, CompanyRegistry, FactoryFacts, IpoBoard, IpoCardText,
+//   IpoDialogText, IpoDice, IpoIndustry, IpoRules, KindFacts, KindState, KindStatus, LocalCompany,
+//   SiteProfits
 using FinanceOverhaul.Core;
 using Xunit; // Assert, FactAttribute, InlineDataAttribute, TheoryAttribute
 
@@ -339,6 +340,104 @@ namespace FinanceOverhaul.Core.Tests
 
             profits.KeepOnly(new List<BuildingKey>());
             Assert.Equal(0, profits.Count(area));
+        }
+
+        [Fact]
+        public void TheCardsSayWhatAnAreaOrAFactoryNeeds()
+        {
+            var rules = new IpoRules();
+            var kinds = new List<KindFacts>
+            {
+                new KindFacts { Kind = BusinessKind.UniqueFactory, ExtraSlots = 3 },
+                new KindFacts
+                {
+                    Kind = BusinessKind.Oil,
+                    Squares = 552,
+                    TopLevelBuildings = 135,
+                    ExtraSlots = 1,
+                },
+                new KindFacts
+                {
+                    Kind = BusinessKind.Farming,
+                    Squares = 552,
+                    TopLevelBuildings = 98,
+                },
+            };
+            BoardView board = IpoCardText.View(kinds, new CompanyRegistry(), 9, 0, rules);
+            Assert.Equal(
+                "No factory has been healthy for a year yet.",
+                IpoCardText.Note(board.Kinds[0], board, "-")
+            );
+            Assert.False(IpoCardText.HasBar(board.Kinds[0]));
+            Assert.Equal(
+                "No industry area or large business has been steady for a year yet.",
+                IpoCardText.Note(board.Kinds[1], board, "-")
+            );
+            Assert.True(IpoCardText.HasBar(board.Kinds[1]));
+            Assert.Equal(
+                "A business needs 30 jobs and a steady year to list.",
+                IpoCardText.Note(board.Kinds[2], board, "-", rules)
+            );
+        }
+
+        [Fact]
+        public void TheDialogSaysAnAreaOrAFactoryIsListing()
+        {
+            var area = new LocalCompany
+            {
+                Name = "Park Oil Group",
+                Kind = BusinessKind.Oil,
+                Site = BusinessSite.Area,
+            };
+            var factory = new LocalCompany
+            {
+                Name = "Bakery",
+                Kind = BusinessKind.UniqueFactory,
+                Site = BusinessSite.Factory,
+            };
+            var shop = new LocalCompany { Name = "Shop", Kind = BusinessKind.Commercial };
+            Assert.Equal(
+                "Oil industry area · in Westdale",
+                IpoDialogText.Where(area, null, null, "Westdale")
+            );
+            Assert.Equal(
+                "Unique factory · on Main Street",
+                IpoDialogText.Where(factory, "Main Street", null, null)
+            );
+            Assert.Equal(
+                "An industry area your city grew is listing on the Stock Exchange.",
+                IpoDialogText.LeadFor(area)
+            );
+            Assert.Equal(
+                "A unique factory your city built is listing on the Stock Exchange.",
+                IpoDialogText.LeadFor(factory)
+            );
+            Assert.Equal(IpoDialogText.Lead, IpoDialogText.LeadFor(shop));
+            Assert.DoesNotContain("Historical", IpoDialogText.SmallPrintFor(area));
+            Assert.Contains("Historical", IpoDialogText.SmallPrintFor(shop));
+        }
+
+        [Fact]
+        public void ForgettingSitesKeepsZonedBusinessesAndOpensTheCreditAgain()
+        {
+            var rules = new IpoRules();
+            var book = new CandidateBook { LookedBehind = true };
+            var area = new BuildingKey(40, 4);
+            var shop = new BuildingKey(42, 6);
+            book.StartSiteDay(10, rules);
+            book.Observe(area, BusinessKind.Oil, true, rules, BusinessSite.Area, "area:7");
+            book.Observe(shop, BusinessKind.Office, true, rules);
+            book.Profits.Record(area, 5, rules, 10);
+            book.EndDay();
+            book.StartSiteDay(40, rules);
+            Assert.True(book.LookedBehindSites);
+
+            book.ForgetSites();
+            Assert.Equal(0, book.HealthyDaysOf(area));
+            Assert.Equal(0, book.Profits.Count(area));
+            Assert.Equal(1, book.HealthyDaysOf(shop));
+            Assert.False(book.LookedBehindSites);
+            Assert.Equal(-1, book.SiteCreditUntilDay);
         }
     }
 }

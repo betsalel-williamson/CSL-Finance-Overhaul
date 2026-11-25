@@ -1,11 +1,16 @@
 # Local IPOs: every value the market uses is an option. The Options page, built as the game
-# builds it, has a slider for each: the player's four groups while Local IPOs is on, and the finer
-# workings in dev builds. Each label says its value. Reads only; nothing is changed.
+# builds it, has a slider for each: the player's four groups (while Local IPOs is on, and always in
+# dev builds) and the finer workings in dev builds. Each label says its value. Reads only; nothing
+# is changed.
 name local ipos: Options has a slider for every Local IPOs value, each label saying its value
 local-ipos on
 options-preview on
 expect-ipo-options 37
 capture ipo-options
+# dev builds show them with Local IPOs off too, so they can be set before switching it on
+local-ipos off
+options-preview on
+expect-ipo-options 37
 cleanup:
 options-preview off
 local-ipos restore

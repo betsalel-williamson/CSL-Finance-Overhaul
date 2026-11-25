@@ -2,11 +2,11 @@ using System.Collections; // IEnumerator
 using System.Collections.Generic; // List
 using System.Text; // StringBuilder
 // ColossalFramework.UI: LayoutDirection, UICheckBox, UIComponent, UILabel, UIScrollablePanel,
-//   UISlider, UISprite, UIView
+//   UISlider, UISprite, UITextureAtlas, UIView
 using ColossalFramework.UI;
 // FinanceOverhaul.Core: BoardView, BondText, BuildingFraming, BusinessSite, CompanyStatus,
-//   IpoBoard, IpoEarnings, IpoPricing, IpoRules, IpoTuning, KindFacts, KindState, KindStatus,
-//   LocalCompany, Strings
+//   IpoBoard, IpoCardText, IpoEarnings, IpoPricing, IpoRules, IpoTuning, KindFacts, KindState,
+//   KindStatus, LocalCompany, Strings
 using FinanceOverhaul.Core;
 using UnityEngine; // Mathf, Object, RectOffset, Vector2, Vector3, WaitForSeconds
 
@@ -151,6 +151,29 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "sprites":
+                {
+                    // sprites PATTERN — logs the game's default atlas sprite names that contain
+                    // PATTERN (case ignored), to find an icon by name.
+                    var found = new StringBuilder();
+                    int count = 0;
+                    foreach (
+                        UITextureAtlas.SpriteInfo info in UIView.GetAView().defaultAtlas.sprites
+                    )
+                    {
+                        if (
+                            info != null
+                            && info.name.ToLowerInvariant().Contains(a.ToLowerInvariant())
+                        )
+                        {
+                            found.Append(' ').Append(info.name);
+                            count++;
+                        }
+                    }
+
+                    ModLog.Info("uitest: " + count + " sprite(s) with '" + a + "':" + found);
+                    break;
+                }
                 case "ipo-site-profit":
                 {
                     // ipo-site-profit CENTS|real — the weekly profit (in cents) every industry area
@@ -163,9 +186,10 @@ namespace FinanceOverhaul
                 }
                 case "ipo-credit-sites-again":
                 {
-                    // ipo-credit-sites-again — dev: the one-time credit for industry areas and
-                    // unique factories starts again from today, as for a city updating to 0.2.0
-                    // (kept: it changes the city's counts as an update would).
+                    // ipo-credit-sites-again — dev: industry areas and unique factories are
+                    // forgotten and their one-time credit starts again from the next scan, as for
+                    // a city updating to 0.2.0 (kept: it changes the city's counts as an update
+                    // would).
                     CompanyDesk.TestCreditSitesAgain();
                     break;
                 }
@@ -926,7 +950,11 @@ namespace FinanceOverhaul
                         UIComponent card = FindControl(CompanyCards.CardPrefix + k.Kind);
                         UILabel cardLine = FindControl(CompanyCards.LinePrefix + k.Kind) as UILabel;
                         UILabel bar = FindControl(CompanyCards.BarTextPrefix + k.Kind) as UILabel;
-                        if (card == null || cardLine == null || bar == null)
+                        if (
+                            card == null
+                            || cardLine == null
+                            || (bar == null && IpoCardText.HasBar(k))
+                        )
                         {
                             r.Error = "no card for " + k.Kind;
                             break;
@@ -934,7 +962,12 @@ namespace FinanceOverhaul
 
                         found++;
                         ModLog.Info(
-                            "uitest: card " + k.Kind + ": " + cardLine.text + " | " + bar.text
+                            "uitest: card "
+                                + k.Kind
+                                + ": "
+                                + cardLine.text
+                                + " | "
+                                + (bar == null ? "no bar" : bar.text)
                         );
                     }
 

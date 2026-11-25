@@ -746,15 +746,15 @@ namespace FinanceOverhaul
         }
 
         /// <summary>
-        /// Dev: the one-time credit for industry areas and unique factories starts again from
-        /// the next scan, as for a city updating to 0.2.0.
+        /// Dev: industry areas and unique factories are forgotten (healthy days, weekly profits)
+        /// and their one-time credit starts again from the next scan, as for a city updating to
+        /// 0.2.0.
         /// </summary>
         public static void TestCreditSitesAgain()
         {
             lock (Sync)
             {
-                Book().LookedBehindSites = false;
-                Book().SiteCreditUntilDay = -1;
+                Book().ForgetSites();
             }
         }
 

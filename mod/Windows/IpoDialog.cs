@@ -36,6 +36,7 @@ namespace FinanceOverhaul
         private const string NameCanBuy = "CanBuy"; // not shown: a control name
         private const string NameFirstDay = "FirstDay"; // not shown: a control name
         private const string NameWhere = "Where"; // not shown: a control name
+        private const string NameLead = "Lead"; // not shown: a control name
 
         private static readonly Color32 Frame = FoTheme.Dialog;
         private static readonly Color32 Header = FoTheme.Header;
@@ -369,7 +370,9 @@ namespace FinanceOverhaul
             card.height = where.relativePosition.y + where.height + 10f;
             y += card.height + 12f;
 
-            y = Place(Label(panel, IpoDialogText.Lead, 0.875f, White, inner), y, 8f);
+            UILabel lead = Label(panel, IpoDialogText.LeadFor(company), 0.875f, White, inner);
+            lead.name = PanelName + NameLead;
+            y = Place(lead, y, 8f);
             DateTime now = SimulationManager.instance.m_currentGameTime;
             int days = company.FirstTradingDay - company.AnnouncedDay;
             y = Row(y, IpoDialogText.PriceLabel, IpoDialogText.Price(company), Price, NamePrice);
@@ -395,7 +398,11 @@ namespace FinanceOverhaul
                 NameFirstDay
             );
             y += 4f;
-            y = Place(Label(panel, IpoDialogText.SmallPrint, 0.6875f, Muted, inner), y, 12f);
+            y = Place(
+                Label(panel, IpoDialogText.SmallPrintFor(company), 0.6875f, Muted, inner),
+                y,
+                12f
+            );
 
             // Two buttons of one size, centred like the game's OK: the same height and text, and
             // the width of the wider.

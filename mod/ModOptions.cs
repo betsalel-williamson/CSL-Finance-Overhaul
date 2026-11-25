@@ -95,7 +95,9 @@ namespace FinanceOverhaul
                 );
             }
 
-            if (Settings.LocalIposEnabled)
+            // Local IPOs: shown while the feature is on, and always in dev builds (where the flag
+            // is switched on and off below) so its values can be set before switching it on.
+            if (Settings.LocalIposEnabled || BuildInfo.ShowDevBuildIdentity)
             {
                 group.AddCheckbox(
                     Strings.Get("options.ipo.dialog"),
@@ -154,10 +156,7 @@ namespace FinanceOverhaul
                     Settings.DevTestStockEnabled,
                     OnDevTestStockChanged
                 );
-                if (Settings.LocalIposEnabled)
-                {
-                    IpoOptions.AddDevGroup(helper, Settings);
-                }
+                IpoOptions.AddDevGroup(helper, Settings);
             }
 
             // Build info goes on the Options page itself after the group, as plain labels (not

@@ -372,10 +372,12 @@ namespace FinanceOverhaul.Core
             { "ipo.card.candidates.other", "{0} candidates" },
             { "ipo.card.note.open", "A listing is likely within one to two years." },
             { "ipo.card.note.waiting", "No business has been healthy long enough yet." },
+            { "ipo.card.note.large", "A business needs {0} jobs and a steady year to list." },
             {
-                "ipo.card.note.large",
-                "Only a large operation lists: a business with at least {0} jobs, steady for a year."
+                "ipo.card.note.waitingArea",
+                "No industry area or large business has been steady for a year yet."
             },
+            { "ipo.card.note.waitingFactory", "No factory has been healthy for a year yet." },
             { "ipo.card.note.pacing", "Next listing possible from {0}." },
             { "ipo.card.note.exchange", "Needs the Stock Exchange at level {0}." },
             { "ipo.card.note.boardFull", "The local board is full ({0} of {1})." },
@@ -394,6 +396,15 @@ namespace FinanceOverhaul.Core
             { "ipo.dialog.where.street", "{0} · on {1}" },
             { "ipo.dialog.where.district", "{0} · in {1}" },
             { "ipo.dialog.lead", "A business your city grew is listing on the Stock Exchange." },
+            {
+                "ipo.dialog.lead.Area",
+                "An industry area your city grew is listing on the Stock Exchange."
+            },
+            {
+                "ipo.dialog.lead.Factory",
+                "A unique factory your city built is listing on the Stock Exchange."
+            },
+            { "company.kind.area", "{0} industry area" },
             { "ipo.dialog.price", "Offering price" },
             { "ipo.dialog.price.value", "{0} a share" },
             { "ipo.dialog.window", "Offering window" },
@@ -406,6 +417,10 @@ namespace FinanceOverhaul.Core
             {
                 "ipo.dialog.smallPrint",
                 "The headquarters is now a Historical building. Closing this changes nothing: the listing stays in Economy → Investments and the offering price holds for the window."
+            },
+            {
+                "ipo.dialog.smallPrint.site",
+                "Closing this changes nothing: the listing stays in Economy → Investments and the offering price holds for the window."
             },
             { "ipo.dialog.buy", "Buy at the offering price" },
             { "ipo.dialog.view", "View headquarters" },

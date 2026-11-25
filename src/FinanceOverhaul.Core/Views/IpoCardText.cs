@@ -145,13 +145,23 @@ namespace FinanceOverhaul.Core
                 case KindState.Open:
                     return Strings.Get("ipo.card.note.open");
                 case KindState.Waiting:
+                    if (status.Kind == BusinessKind.UniqueFactory)
+                    {
+                        return Strings.Get("ipo.card.note.waitingFactory");
+                    }
+
+                    if (!BusinessKinds.IsSpecialisedIndustry(status.Kind))
+                    {
+                        return Strings.Get("ipo.card.note.waiting");
+                    }
+
                     // Farm, forest, oil and ore plots are small: say what would list.
-                    return BusinessKinds.IsSpecialisedIndustry(status.Kind)
-                        ? Strings.Format(
+                    return status.ExtraSlots > 0
+                        ? Strings.Get("ipo.card.note.waitingArea")
+                        : Strings.Format(
                             "ipo.card.note.large",
                             Number((rules ?? new IpoRules()).SpecialisedMinJobs)
-                        )
-                        : Strings.Get("ipo.card.note.waiting");
+                        );
                 case KindState.Paused:
                     return board.Listed >= board.Cap
                         ? Strings.Format(
@@ -171,6 +181,12 @@ namespace FinanceOverhaul.Core
             return Strings.Get(
                 status.State == KindState.Locked ? "ipo.card.bar.unlock" : "ipo.card.bar.nextSlot"
             );
+        }
+
+        /// <summary>The card has a bar: not for unique factories (one slot per factory, nothing to count towards).</summary>
+        public static bool HasBar(KindStatus status)
+        {
+            return status.BarNeed > 0;
         }
 
         /// <summary>"132 / 200" (squares while locked, else top-level buildings).</summary>

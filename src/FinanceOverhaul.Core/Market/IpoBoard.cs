@@ -56,6 +56,9 @@ namespace FinanceOverhaul.Core
         public int OpenSlots;
         public int Candidates;
 
+        /// <summary>Slots from industry areas or unique factories (<see cref="KindFacts.ExtraSlots"/>).</summary>
+        public int ExtraSlots;
+
         /// <summary>The bar: squares towards the gate while locked, else buildings towards the next slot.</summary>
         public int BarHave;
         public int BarNeed;
@@ -242,6 +245,7 @@ namespace FinanceOverhaul.Core
                 Listed = Math.Max(0, facts.Listed),
                 OpenSlots = OpenSlots(facts, rules),
                 Candidates = Math.Max(0, facts.Candidates),
+                ExtraSlots = Math.Max(0, facts.ExtraSlots),
             };
             if (!GateOpen(facts, rules))
             {

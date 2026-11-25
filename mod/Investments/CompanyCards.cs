@@ -329,6 +329,11 @@ namespace FinanceOverhaul
                 note.relativePosition = new Vector3((width - note.width) / 2f, 51f);
             }
 
+            if (!IpoCardText.HasBar(status))
+            {
+                return; // unique factories: one slot per factory, nothing to count towards
+            }
+
             float barX = (width - BarWidth) / 2f;
             float barY = CardHeight - BarHeight - 9f;
             UILabel caption = Label(card, IpoCardText.BarCaption(status), 0.7f, Muted, font);

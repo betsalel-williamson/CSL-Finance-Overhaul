@@ -39,7 +39,10 @@ namespace FinanceOverhaul.Core
             string district
         )
         {
-            string kind = KindName(company.Kind);
+            string kind =
+                company.Site == BusinessSite.Area
+                    ? Strings.Format("company.kind.area", KindName(company.Kind))
+                    : KindName(company.Kind);
             bool hasStreet = !string.IsNullOrEmpty(street);
             bool hasCross = hasStreet && !string.IsNullOrEmpty(cross) && cross != street;
             bool hasDistrict = !string.IsNullOrEmpty(district);
@@ -69,6 +72,14 @@ namespace FinanceOverhaul.Core
         public static string Lead
         {
             get { return Strings.Get("ipo.dialog.lead"); }
+        }
+
+        /// <summary>The line under the title: what kind of company is listing.</summary>
+        public static string LeadFor(LocalCompany company)
+        {
+            return company == null || company.Site == BusinessSite.Zoned
+                ? Lead
+                : Strings.Get("ipo.dialog.lead." + company.Site);
         }
 
         public static string PriceLabel
@@ -127,6 +138,17 @@ namespace FinanceOverhaul.Core
         public static string FirstDay(string date)
         {
             return Strings.Format("ipo.dialog.firstDay.value", date);
+        }
+
+        /// <summary>
+        /// The small print: a zoned headquarters becomes Historical; an industry area's main
+        /// building or a unique factory cannot (service buildings), so that sentence is left out.
+        /// </summary>
+        public static string SmallPrintFor(LocalCompany company)
+        {
+            return company == null || company.Site == BusinessSite.Zoned
+                ? SmallPrint
+                : Strings.Get("ipo.dialog.smallPrint.site");
         }
 
         public static string SmallPrint

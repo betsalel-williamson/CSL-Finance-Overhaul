@@ -479,6 +479,23 @@ namespace FinanceOverhaul.Core
             return sites.TryGetValue(building, out s) ? s.Ref : null;
         }
 
+        /// <summary>
+        /// Forgets every industry area and unique factory (their healthy days and weekly
+        /// profits) and opens their one-time credit again, as on the first read; zoned
+        /// businesses keep their counts.
+        /// </summary>
+        public void ForgetSites()
+        {
+            foreach (BuildingKey building in new List<BuildingKey>(sites.Keys))
+            {
+                Forget(building);
+            }
+
+            Profits.KeepOnly(new List<BuildingKey>());
+            LookedBehindSites = false;
+            SiteCreditUntilDay = -1;
+        }
+
         /// <summary>Sets a counted building's site read from the save (ignored for one not counted).</summary>
         public void RestoreSite(BuildingKey building, BusinessSite site, string siteRef)
         {

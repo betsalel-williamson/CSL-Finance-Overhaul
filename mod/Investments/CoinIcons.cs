@@ -92,6 +92,8 @@ namespace FinanceOverhaul
                     return new[] { "IconPolicyOil", "ZoningIndustrial" }; // not shown: game sprite names
                 case BusinessKind.Ore:
                     return new[] { "IconPolicyOre", "ZoningIndustrial" }; // not shown: game sprite names
+                case BusinessKind.UniqueFactory:
+                    return new[] { "SubBarIndustryUniqueFactory", "ZoningIndustrial" }; // not shown: game sprite names
                 default:
                     return new[] { "ZoningIndustrial" }; // not shown: a game sprite name
             }
