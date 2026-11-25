@@ -754,6 +754,7 @@ namespace FinanceOverhaul
             lock (Sync)
             {
                 Book().LookedBehind = false;
+                Book().LookedBehindSites = false;
             }
         }
 
@@ -971,6 +972,7 @@ namespace FinanceOverhaul
                 sites = read;
                 LastSites = siteLog.ToString();
                 bool lookingBehind = !b.LookedBehind;
+                bool lookingBehindSites = !b.LookedBehindSites;
                 b.EndDay();
                 if (lookingBehind)
                 {
@@ -978,6 +980,20 @@ namespace FinanceOverhaul
                         "ipo: first scan of this city: "
                             + b.Candidates(rules).Count
                             + " business(es) healthy today count as healthy for the past year"
+                    );
+                }
+                else if (lookingBehindSites)
+                {
+                    int credited = 0;
+                    foreach (SiteReading s in read.Values)
+                    {
+                        credited += b.IsCandidate(s.Home, rules) ? 1 : 0;
+                    }
+
+                    ModLog.Info(
+                        "ipo: first read of this city's industry areas and unique factories: "
+                            + credited
+                            + " healthy today count as healthy for the past year"
                     );
                 }
 
@@ -1250,7 +1266,7 @@ namespace FinanceOverhaul
                 }
 
                 // As a city already being watched: the tests count days one at a time.
-                book = new CandidateBook { LookedBehind = true };
+                book = new CandidateBook { LookedBehind = true, LookedBehindSites = true };
             }
         }
 

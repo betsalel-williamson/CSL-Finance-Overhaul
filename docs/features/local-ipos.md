@@ -827,7 +827,14 @@ one dwarfing the other. One city, two areas: a first look, not a sample.
    factory is a factory of the same prefab (`SiteRef` `area:<id>` / `factory:<prefab>`). Measured in
    the test city: Park Oil Group (level 5) ₡540,818 a year, listing at ₡1,081; Seafood Factory
    ₡389,376, at ₡778; Bakery ₡118,144; Household Plastic Factory ₡41,600. Manor Orchard (farming,
-   level 5) has no main building today. Game UI scenario 76.
+   level 5) has no main building today. Game UI scenario 76. **One-time credit (decided and built
+   2026-11-25):** areas and factories were first read in 0.2.0, after a city's own look behind, so
+   the first day they are read each one healthy that day counts as healthy for the past year
+   (`CandidateBook.LookedBehindSites`, save line `lookbehind-sites=done`); one built later earns its
+   days one at a time. In the test city the three factories were credited; Park Oil Group was not:
+   that week its exports were ₡3,467 against ₡1,280 bought in and ₡4,960 upkeep (₡15,840 exports the
+   week before), so it was at a loss that day. An area's week swings this much: whether to judge it
+   over several weeks is open (Road to 0.2.0, item 8).
 4. Cards, symbols, the dialog's wording ("Manor Orchard, the city's farming area, is going public"),
    the factory icon; Figma.
 5. Measure in a city left alone, then tune the level and profit rules.

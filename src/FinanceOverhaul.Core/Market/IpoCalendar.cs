@@ -307,6 +307,15 @@ namespace FinanceOverhaul.Core
         /// </summary>
         public bool LookedBehind;
 
+        /// <summary>
+        /// The same one-time look behind for industry areas and unique factories (kept in the
+        /// save). They were first read in 0.2.0, after a city's own look behind: one healthy on
+        /// the first day they are read counts as healthy for the past year, so a city that
+        /// already has them does not wait a year (decided 2026-11-25). One built later earns its
+        /// days one at a time.
+        /// </summary>
+        public bool LookedBehindSites;
+
         /// <summary>One business as the game shows it today. Call once per business, then <see cref="EndDay"/>.</summary>
         public void Observe(BuildingKey building, BusinessFacts facts, IpoRules rules)
         {
@@ -347,7 +356,8 @@ namespace FinanceOverhaul.Core
 
             kinds[building] = kind;
             SetSite(building, site, siteRef);
-            if (!LookedBehind && days < rules.HealthyDays)
+            bool lookBehind = site == BusinessSite.Zoned ? !LookedBehind : !LookedBehindSites;
+            if (lookBehind && days < rules.HealthyDays)
             {
                 days = rules.HealthyDays - 1; // today makes it the full period
             }
@@ -390,6 +400,7 @@ namespace FinanceOverhaul.Core
 
             seenToday.Clear();
             LookedBehind = true; // only the first day of scanning looks behind
+            LookedBehindSites = true;
         }
 
         /// <summary>Healthy days in a row so far (0 if unknown).</summary>

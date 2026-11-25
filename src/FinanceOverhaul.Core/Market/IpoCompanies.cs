@@ -167,6 +167,7 @@ namespace FinanceOverhaul.Core
         private const string SiteTag = "site";
         private const string CompanySiteTag = "cosite";
         private const string LookBehindLine = "lookbehind=done";
+        private const string LookBehindSitesLine = "lookbehind-sites=done";
 
         public static string Format(CandidateBook book, IpoDice dice, CompanyRegistry registry)
         {
@@ -178,6 +179,11 @@ namespace FinanceOverhaul.Core
             if (book.LookedBehind)
             {
                 sb.Append(LookBehindLine).Append('\n');
+            }
+
+            if (book.LookedBehindSites)
+            {
+                sb.Append(LookBehindSitesLine).Append('\n');
             }
 
             var counted = new List<KeyValuePair<BuildingKey, int>>(book.Counted);
@@ -595,6 +601,12 @@ namespace FinanceOverhaul.Core
                         dice.State = state;
                     }
 
+                    continue;
+                }
+
+                if (line == LookBehindSitesLine)
+                {
+                    book.LookedBehindSites = true;
                     continue;
                 }
 

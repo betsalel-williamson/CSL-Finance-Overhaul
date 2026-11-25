@@ -1,7 +1,7 @@
 using System.Collections.Generic; // List
 // FinanceOverhaul.Core: AreaFacts, BoardView, BuildingKey, BusinessKind, BusinessSite,
-//   CandidateBook, CompanyRegistry, FactoryFacts, IpoBoard, IpoCardText, IpoIndustry, IpoRules,
-//   KindFacts, KindState, KindStatus
+//   CandidateBook, CompaniesCodec, CompanyRegistry, FactoryFacts, IpoBoard, IpoCardText, IpoDice,
+//   IpoIndustry, IpoRules, KindFacts, KindState, KindStatus
 using FinanceOverhaul.Core;
 using Xunit; // Assert, FactAttribute, InlineDataAttribute, TheoryAttribute
 
@@ -197,6 +197,79 @@ namespace FinanceOverhaul.Core.Tests
             book.EndDay();
             Assert.Equal(BusinessSite.Zoned, book.SiteOf(factory));
             Assert.Equal(0, book.HealthyDaysOf(factory));
+        }
+
+        [Fact]
+        public void AreasAndFactoriesAlreadyInACityAreCreditedWithThePastYearOnce()
+        {
+            var rules = new IpoRules();
+            var book = new CandidateBook { LookedBehind = true }; // a city scanned before 0.2.0
+            var area = new BuildingKey(40, 4);
+            var factory = new BuildingKey(41, 5);
+            var shop = new BuildingKey(42, 6);
+            var shutFactory = new BuildingKey(43, 7);
+            book.Observe(area, BusinessKind.Oil, true, rules, BusinessSite.Area, "area:7");
+            book.Observe(
+                factory,
+                BusinessKind.UniqueFactory,
+                true,
+                rules,
+                BusinessSite.Factory,
+                "factory:Bakery"
+            );
+            book.Observe(
+                shutFactory,
+                BusinessKind.UniqueFactory,
+                false,
+                rules,
+                BusinessSite.Factory,
+                "factory:Mill"
+            );
+            book.Observe(shop, BusinessKind.Office, true, rules); // a zoned business earns its days
+            book.EndDay();
+
+            Assert.True(book.IsCandidate(area, rules));
+            Assert.True(book.IsCandidate(factory, rules));
+            Assert.Equal(rules.HealthyDays, book.HealthyDaysOf(factory));
+            Assert.False(book.IsCandidate(shutFactory, rules)); // only one healthy that day
+            Assert.Equal(1, book.HealthyDaysOf(shop));
+            Assert.True(book.LookedBehindSites);
+
+            // Once: a factory built afterwards counts its days one at a time.
+            var later = new BuildingKey(44, 8);
+            book.Observe(
+                later,
+                BusinessKind.UniqueFactory,
+                true,
+                rules,
+                BusinessSite.Factory,
+                "factory:Toys"
+            );
+            book.EndDay();
+            Assert.Equal(1, book.HealthyDaysOf(later));
+        }
+
+        [Fact]
+        public void TheCreditIsRememberedInTheSave()
+        {
+            var book = new CandidateBook { LookedBehind = true, LookedBehindSites = true };
+            string saved = CompaniesCodec.Format(book, new IpoDice(1UL), new CompanyRegistry());
+            Assert.Contains("lookbehind-sites=done", saved);
+            CandidateBook back = CompaniesCodec.Parse(
+                saved,
+                new IpoDice(1UL),
+                new CompanyRegistry()
+            );
+            Assert.True(back.LookedBehindSites);
+
+            // A save from before areas and factories were read has no such line: they get it.
+            CandidateBook old = CompaniesCodec.Parse(
+                "v1\nlookbehind=done\n",
+                new IpoDice(1UL),
+                new CompanyRegistry()
+            );
+            Assert.True(old.LookedBehind);
+            Assert.False(old.LookedBehindSites);
         }
     }
 }
