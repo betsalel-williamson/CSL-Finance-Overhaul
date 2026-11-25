@@ -948,7 +948,7 @@ namespace FinanceOverhaul
                         .Append("' ")
                         .Append(s.Kind)
                         .Append(s.Site == BusinessSite.Area ? " level " + s.Level : string.Empty)
-                        .Append(s.Healthy ? " healthy " : " not healthy ")
+                        .Append(s.Healthy ? " healthy " : " not healthy ") // not shown: the log
                         .Append(BondText.WholeMoney(s.AnnualCents))
                         .Append("/yr;");
                 }
