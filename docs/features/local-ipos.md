@@ -827,14 +827,21 @@ one dwarfing the other. One city, two areas: a first look, not a sample.
    factory is a factory of the same prefab (`SiteRef` `area:<id>` / `factory:<prefab>`). Measured in
    the test city: Park Oil Group (level 5) ₡540,818 a year, listing at ₡1,081; Seafood Factory
    ₡389,376, at ₡778; Bakery ₡118,144; Household Plastic Factory ₡41,600. Manor Orchard (farming,
-   level 5) has no main building today. Game UI scenario 76. **One-time credit (decided and built
-   2026-11-25):** areas and factories were first read in 0.2.0, after a city's own look behind, so
-   the first day they are read each one healthy that day counts as healthy for the past year
-   (`CandidateBook.LookedBehindSites`, save line `lookbehind-sites=done`); one built later earns its
-   days one at a time. In the test city the three factories were credited; Park Oil Group was not:
-   that week its exports were ₡3,467 against ₡1,280 bought in and ₡4,960 upkeep (₡15,840 exports the
-   week before), so it was at a loss that day. An area's week swings this much: whether to judge it
-   over several weeks is open (Road to 0.2.0, item 8).
+   level 5) has no main building today. Game UI scenario 76. **Four weeks, not one (decided and
+   built 2026-11-25):** an area's week swings (Park Oil Group: ₡15,840 exports one week, ₡3,467 the
+   next, at a loss), and the game keeps only last week's figures. So the mod reads each area's and
+   factory's weekly profit every day and keeps the last `ProfitWeeks` weeks of readings (option
+   "Weeks an industry area's or factory's profit is averaged over", 4; `SiteProfits`, save lines
+   `profit|id|buildIndex|v,v,…`): it is healthy when that average is above zero, and its earnings
+   are the average × 52. One reading a day; a second the same day replaces it. **One-time credit
+   (decided and built 2026-11-25):** areas and factories were first read in 0.2.0, after a city's
+   own look behind, so for their first `ProfitWeeks` weeks of being read
+   (`CandidateBook.SiteCreditUntilDay`, save line `sitecredit=DAY`, then `lookbehind-sites=done`)
+   each one healthy on its average counts as healthy for the past year; one built later earns its
+   days one at a time. In the test city the three factories were credited on the first day; Park Oil
+   Group, at a loss that week, gets its credit once its average turns positive within the four
+   weeks. Game UI scenario 76 fixes every site's profit at ₡5,000 a week (`ipo-site-profit`), so it
+   does not depend on the city's week.
 4. Cards, symbols, the dialog's wording ("Manor Orchard, the city's farming area, is going public"),
    the factory icon; Figma.
 5. Measure in a city left alone, then tune the level and profit rules.
@@ -906,6 +913,7 @@ capture. Local IPOs is on by default (see
 |                           | Land value a shop or office needs                    | 41      | 0–100    |
 |                           | Industry area level to go public                     | 3       | 1–5      |
 |                           | Production a unique factory needs                    | 100%    | 1–150%   |
+|                           | Weeks an area's or factory's profit is averaged over | 4       | 1–12     |
 | Prices                    | Days the city can buy at the offering price          | 7       | 1–60     |
 |                           | Offering price: earnings × N                         | 20      | 1–100    |
 |                           | The city's 1,000 shares are N% of a company          | 10%     | 1–100%   |
