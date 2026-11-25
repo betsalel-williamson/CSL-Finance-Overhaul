@@ -64,6 +64,7 @@ namespace FinanceOverhaul
             ModLog.Info("mod enabled product=" + (ModBuildInfo.GetProductVersionDisplay() ?? "?"));
             GameLanguage.Follow();
             DuplicateCopyAlert.Watch();
+            OptionsRefresh.Schedule();
 
             try
             {

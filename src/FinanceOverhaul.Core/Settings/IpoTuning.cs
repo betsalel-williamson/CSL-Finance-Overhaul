@@ -79,6 +79,69 @@ namespace FinanceOverhaul.Core
             );
         }
 
+        /// <summary>"Min 1": the lowest value, as the player sees it, under the slider's left end.</summary>
+        public string MinLabel()
+        {
+            return Strings.Format("options.ipo.min", Number(Shown(Min)));
+        }
+
+        /// <summary>"Max 5": the highest value, under the slider's right end.</summary>
+        public string MaxLabel()
+        {
+            return Strings.Format("options.ipo.max", Number(Shown(Max)));
+        }
+
+        /// <summary>The value as the number field shows it ("548", "-50", "2,000").</summary>
+        public string FieldText(IpoRules rules)
+        {
+            return Number(Shown(Get(rules)));
+        }
+
+        /// <summary>
+        /// A number typed into the field, as the player sees values (separators, spaces and a
+        /// trailing % are ignored; a leading minus is kept). False for anything else; the
+        /// caller then shows the value again.
+        /// </summary>
+        public static bool TryParseTyped(string text, out int shown)
+        {
+            shown = 0;
+            if (string.IsNullOrEmpty(text))
+            {
+                return false;
+            }
+
+            var digits = new System.Text.StringBuilder();
+            string t = text.Trim();
+            for (int i = 0; i < t.Length; i++)
+            {
+                char c = t[i];
+                if (c >= '0' && c <= '9')
+                {
+                    digits.Append(c);
+                }
+                else if ((c == '-' || c == '−') && digits.Length == 0 && i == 0)
+                {
+                    digits.Append('-');
+                }
+                else if (c != ',' && c != ' ' && c != '%' && c != '\u00a0')
+                {
+                    return false;
+                }
+            }
+
+            return int.TryParse(
+                digits.ToString(),
+                NumberStyles.AllowLeadingSign,
+                CultureInfo.InvariantCulture,
+                out shown
+            );
+        }
+
+        private static string Number(int value)
+        {
+            return value.ToString("#,0", CultureInfo.InvariantCulture);
+        }
+
         /// <summary>Settings keys start with this; the rest is the value's name.</summary>
         public const string KeyPrefix = "ipo.";
 

@@ -7,10 +7,23 @@ local-ipos on
 options-preview on
 expect-ipo-options 37
 capture ipo-options
+# typing a number: kept in range, snapped to its step, nonsense ignored; put back at the end
+ipo-option-type ipo.exchangeLevel 4
+expect-ipo-option ipo.exchangeLevel 4
+ipo-option-type ipo.exchangeLevel 9
+expect-ipo-option ipo.exchangeLevel 5
+ipo-option-type ipo.exchangeLevel abc
+expect-ipo-option ipo.exchangeLevel 5
+ipo-option-type ipo.gateSquares 230
+expect-ipo-option ipo.gateSquares 250
+ipo-option-type ipo.exchangeLevel restore
+ipo-option-type ipo.gateSquares restore
 # dev builds show them with Local IPOs off too, so they can be set before switching it on
 local-ipos off
 options-preview on
 expect-ipo-options 37
 cleanup:
+ipo-option-type ipo.exchangeLevel restore
+ipo-option-type ipo.gateSquares restore
 options-preview off
 local-ipos restore

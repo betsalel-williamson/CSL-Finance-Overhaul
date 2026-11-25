@@ -3,7 +3,7 @@ using ColossalFramework.UI; // UIComponent, UIKeyEventParameter, UISlider, UITex
 using HarmonyLib; // AccessTools
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
-//   EconomyManager, EconomyPanel, GameKeyShortcuts, InvestmentTooltip
+//   EconomyManager, EconomyPanel, GameKeyShortcuts, InvestmentTooltip, OptionsMainPanel
 
 namespace FinanceOverhaul
 {
@@ -45,6 +45,43 @@ namespace FinanceOverhaul
 
                 Escape.Invoke(shortcuts, null);
                 return true;
+            }
+        }
+
+        /// <summary>The game's Options window (<see cref="OptionsMainPanel"/>).</summary>
+        internal static class Options
+        {
+            /// <summary>Rebuilds the category list and every mod's page (calls each OnSettingsUI).</summary>
+            public static readonly MethodInfo CreateCategories = AccessTools.Method(
+                typeof(OptionsMainPanel),
+                "CreateCategories"
+            );
+
+            /// <summary>
+            /// Rebuilds the mods' pages, as the game does when a mod is switched on or off: a
+            /// mod reloaded in place gets no such event, and its page would stay the old
+            /// build's. False when the window or the method is not there.
+            /// </summary>
+            public static bool RebuildModPages()
+            {
+                if (CreateCategories == null)
+                {
+                    return false;
+                }
+
+                bool done = false;
+                foreach (
+                    OptionsMainPanel panel in UnityEngine.Resources.FindObjectsOfTypeAll<OptionsMainPanel>()
+                )
+                {
+                    if (panel != null && panel.gameObject.scene.IsValid())
+                    {
+                        CreateCategories.Invoke(panel, null);
+                        done = true;
+                    }
+                }
+
+                return done;
             }
         }
 

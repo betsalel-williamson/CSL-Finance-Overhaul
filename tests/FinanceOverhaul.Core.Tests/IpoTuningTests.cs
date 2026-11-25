@@ -4,7 +4,7 @@ using System.Reflection; // BindingFlags, FieldInfo
 //   IpoDice, IpoEngine, IpoPricing, IpoRules, IpoTuning, LocalCompany, ModSettings, SettingsFile,
 //   Strings, TuningAudience, TuningGroup
 using FinanceOverhaul.Core;
-using Xunit; // Assert, FactAttribute
+using Xunit; // Assert, FactAttribute, InlineDataAttribute, TheoryAttribute
 
 namespace FinanceOverhaul.Core.Tests
 {
@@ -161,6 +161,38 @@ namespace FinanceOverhaul.Core.Tests
             {
                 Assert.InRange(IpoPricing.FirstDayPop(rules, dice), 0d, 0.2d);
                 Assert.InRange(IpoBuyout.Premium(rules, dice), 0.5d, 0.6d);
+            }
+        }
+
+        [Fact]
+        public void EachOptionSaysItsMinAndMaxAndShowsItsValueInTheField()
+        {
+            IpoTuning slot = IpoTuning.Find("ipo.slotDoublingBase");
+            Assert.Equal("Min 4", slot.MinLabel()); // shown as the player sees it: base × 2
+            Assert.Equal("Max 200", slot.MaxLabel());
+            Assert.Equal("20", slot.FieldText(new IpoRules()));
+            IpoTuning fill = IpoTuning.Find("ipo.slotFillDays");
+            Assert.Equal("Max 3,650", fill.MaxLabel());
+            Assert.Equal("548", fill.FieldText(new IpoRules()));
+            Assert.Equal("Min -50", IpoTuning.Find("ipo.popAveragePercent").MinLabel());
+        }
+
+        [Theory]
+        [InlineData("548", true, 548)]
+        [InlineData(" 2,000 ", true, 2000)]
+        [InlineData("-50", true, -50)]
+        [InlineData("15%", true, 15)]
+        [InlineData("", false, 0)]
+        [InlineData("abc", false, 0)]
+        [InlineData("5-0", false, 0)]
+        [InlineData("1.5", false, 0)]
+        public void ATypedNumberIsReadWithSeparatorsAndASign(string text, bool ok, int value)
+        {
+            int shown;
+            Assert.Equal(ok, IpoTuning.TryParseTyped(text, out shown));
+            if (ok)
+            {
+                Assert.Equal(value, shown);
             }
         }
 

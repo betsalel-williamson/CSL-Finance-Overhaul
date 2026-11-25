@@ -433,6 +433,9 @@ namespace FinanceOverhaul.Core
             { "options.ipo.group.BuyoutsAndClosing", "Local IPOs: buy-outs and closing" },
             { "options.ipo.group.Market", "Local IPOs: the finer workings (dev builds only)" },
             { "options.ipo.reset", "Put the Local IPOs values back to their defaults" },
+            { "options.ipo.min", "Min {0}" },
+            { "options.ipo.max", "Max {0}" },
+            { "options.ipo.field.tip", "Type a number, then press Enter" },
             { "options.ipo.resetDev", "Put the finer workings back to their defaults" },
             { "options.ipo.exchangeLevel", "Stock Exchange level before any IPO: {0}" },
             {

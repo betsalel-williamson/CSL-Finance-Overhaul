@@ -1,12 +1,12 @@
 using System.Collections; // IEnumerator
-using System.Collections.Generic; // List
+using System.Collections.Generic; // Dictionary, List
 using System.Text; // StringBuilder
 // ColossalFramework.UI: LayoutDirection, UICheckBox, UIComponent, UILabel, UIScrollablePanel,
-//   UISlider, UISprite, UITextureAtlas, UIView
+//   UISlider, UISprite, UITextField, UITextureAtlas, UIView
 using ColossalFramework.UI;
 // FinanceOverhaul.Core: BoardView, BondText, BuildingFraming, BusinessSite, CompanyStatus,
 //   IpoBoard, IpoCardText, IpoEarnings, IpoPricing, IpoRules, IpoTuning, KindFacts, KindState,
-//   KindStatus, LocalCompany, Strings
+//   KindStatus, LocalCompany, ModSettings, Strings
 using FinanceOverhaul.Core;
 using UnityEngine; // Mathf, Object, RectOffset, Vector2, Vector3, WaitForSeconds
 
@@ -22,6 +22,9 @@ namespace FinanceOverhaul
     public partial class UiTestRunner
     {
         private const string OptionsPreviewName = "FinanceOverhaulOptionsPreview";
+
+        // Options this scenario typed into, with their values before (put back by "restore").
+        private static readonly Dictionary<string, int> typedBefore = new Dictionary<string, int>();
 
         private IEnumerator CompanySteps(
             string line,
@@ -110,6 +113,72 @@ namespace FinanceOverhaul
                     yield return new WaitForSeconds(0.5f);
                     break;
                 }
+                case "ipo-option-type":
+                {
+                    // ipo-option-type KEY TEXT|restore — types TEXT into that option's number
+                    // field in the Options preview and submits it (restore: the value it had
+                    // before this scenario first typed into it). Logs the field afterwards.
+                    string[] parts = line.Substring(cmd.Length).Trim().Split(new[] { ' ' }, 2);
+                    IpoTuning t = IpoTuning.Find(parts[0]);
+                    if (t == null || parts.Length < 2)
+                    {
+                        r.Error = "ipo-option-type KEY TEXT";
+                        break;
+                    }
+
+                    ModSettings settings = Mod.EnsureSettings();
+                    if (!typedBefore.ContainsKey(t.Key))
+                    {
+                        typedBefore[t.Key] = t.Get(settings.Ipo);
+                    }
+
+                    string text =
+                        parts[1] == "restore" ? t.Shown(typedBefore[t.Key]).ToString() : parts[1];
+                    string shown = IpoOptions.TestType(t.Key, text);
+                    if (shown == null)
+                    {
+                        r.Error = "no number field for " + t.Key + " (options-preview on first)";
+                        break;
+                    }
+
+                    if (parts[1] == "restore")
+                    {
+                        typedBefore.Remove(t.Key);
+                    }
+
+                    ModLog.Info(
+                        "uitest: typed '" + text + "' into " + t.Key + "; it shows " + shown
+                    );
+                    break;
+                }
+                case "expect-ipo-option":
+                {
+                    // expect-ipo-option KEY VALUE — the option's value as the player sees it,
+                    // in the settings, in its label and in its number field.
+                    string[] parts = line.Substring(cmd.Length).Trim().Split(' ');
+                    IpoTuning t = IpoTuning.Find(parts[0]);
+                    int want;
+                    if (t == null || parts.Length != 2 || !int.TryParse(parts[1], out want))
+                    {
+                        r.Error = "expect-ipo-option KEY VALUE";
+                        break;
+                    }
+
+                    int have = t.Shown(t.Get(Mod.EnsureSettings().Ipo));
+                    UITextField field =
+                        FindControl(IpoOptions.FieldPrefix + t.Key, true) as UITextField;
+                    if (have != want)
+                    {
+                        r.Error = t.Key + " is " + have + ", expected " + want;
+                    }
+                    else if (field == null || field.text != t.FieldText(Mod.EnsureSettings().Ipo))
+                    {
+                        r.Error =
+                            t.Key + "'s field reads '" + (field == null ? "-" : field.text) + "'";
+                    }
+
+                    break;
+                }
                 case "expect-ipo-options":
                 {
                     // expect-ipo-options N — the Options preview shows N Local IPOs sliders, each
@@ -130,6 +199,16 @@ namespace FinanceOverhaul
                         }
 
                         found++;
+                        UITextField field = s.parent.Find<UITextField>(
+                            IpoOptions.FieldPrefix
+                                + s.name.Substring("FinanceOverhaulIpoOption-".Length)
+                        );
+                        if (field == null)
+                        {
+                            r.Error = s.name + " has no number field";
+                            break;
+                        }
+
                         UILabel label = s.parent.Find<UILabel>("Label");
                         IpoTuning t = IpoTuning.Find(
                             s.name.Substring("FinanceOverhaulIpoOption-".Length)
