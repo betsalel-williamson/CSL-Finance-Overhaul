@@ -31,6 +31,7 @@ namespace FinanceOverhaul.Core
 
         /// <summary>A local company lost its headquarters with nowhere to move: it closes after a grace period.</summary>
         IpoHomeLost,
+        IpoHomeRestored,
 
         /// <summary>A local company closed: the city was paid its last price.</summary>
         IpoDefunct,
@@ -288,6 +289,15 @@ namespace FinanceOverhaul.Core
         public static Notice IpoMoved(string company, string newHome)
         {
             return Ipo(NoticeKind.IpoMoved, Strings.Format("notice.ipo.moved", company, newHome));
+        }
+
+        /// <summary>A company in its grace period has its headquarters back (switched on again, or rebuilt).</summary>
+        public static Notice IpoHomeRestored(string company)
+        {
+            return Ipo(
+                NoticeKind.IpoHomeRestored,
+                Strings.Format("notice.ipo.homeRestored", company)
+            );
         }
 
         /// <summary>A company lost its headquarters and found none to move to.</summary>

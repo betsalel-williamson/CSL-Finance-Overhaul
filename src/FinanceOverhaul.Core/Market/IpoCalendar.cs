@@ -148,6 +148,12 @@ namespace FinanceOverhaul.Core
         /// local company goes public. Healthy days still count while the city waits.
         /// </summary>
         public int ExchangeLevel = 2;
+
+        /// <summary>The level (the game's 1 to 5) an industry area needs before it can go public.</summary>
+        public int AreaMinLevel = 3;
+
+        /// <summary>A unique factory's production slider (percent of its budget) it needs to count as healthy.</summary>
+        public int FactoryMinProductionPercent = 100;
     }
 
     /// <summary>The kinds of business that list separately: the three zones and each specialisation.</summary>
@@ -164,6 +170,22 @@ namespace FinanceOverhaul.Core
         Forestry,
         Oil,
         Ore,
+
+        /// <summary>The Industries unique factories (one company per factory).</summary>
+        UniqueFactory,
+    }
+
+    /// <summary>What a company is: a zoned business, an industry area, or a unique factory.</summary>
+    public enum BusinessSite
+    {
+        /// <summary>A zoned business: it can move to another business of its kind.</summary>
+        Zoned,
+
+        /// <summary>An industry area, headquartered in its main building.</summary>
+        Area,
+
+        /// <summary>A unique factory, headquartered in the factory.</summary>
+        Factory,
     }
 
     /// <summary>What the mod reads from the game about one zoned business on one day.</summary>
@@ -232,6 +254,16 @@ namespace FinanceOverhaul.Core
         private readonly Dictionary<BuildingKey, BusinessKind> kinds =
             new Dictionary<BuildingKey, BusinessKind>();
 
+        // Industry areas and unique factories; a building not here is a zoned business.
+        private readonly Dictionary<BuildingKey, SiteNote> sites =
+            new Dictionary<BuildingKey, SiteNote>();
+
+        private struct SiteNote
+        {
+            public BusinessSite Site;
+            public string Ref;
+        }
+
         /// <summary>
         /// Healthy enough to count today: top level, staffed, no problems, among the larger
         /// employers of its kind, and (shops and offices) on
@@ -263,16 +295,33 @@ namespace FinanceOverhaul.Core
         /// <summary>One business as the game shows it today. Call once per business, then <see cref="EndDay"/>.</summary>
         public void Observe(BuildingKey building, BusinessFacts facts, IpoRules rules)
         {
+            Observe(building, facts.Kind, Healthy(facts, rules), rules);
+        }
+
+        /// <summary>
+        /// One business, industry area or unique factory as the game shows it today, already
+        /// judged healthy or not (an area or factory by <see cref="IpoIndustry"/>).
+        /// <paramref name="siteRef"/> is the host's own note of which area or factory it is,
+        /// kept with the company so a rebuilt one can take it back.
+        /// </summary>
+        public void Observe(
+            BuildingKey building,
+            BusinessKind kind,
+            bool healthy,
+            IpoRules rules,
+            BusinessSite site = BusinessSite.Zoned,
+            string siteRef = null
+        )
+        {
             int days;
             healthyDays.TryGetValue(building, out days);
-            if (!Healthy(facts, rules))
+            if (!healthy)
             {
                 // A bad day costs some of the count, not all of it: steady, not perfect.
                 days -= Math.Max(1, rules.BadDayCost);
                 if (days <= 0)
                 {
-                    healthyDays.Remove(building);
-                    kinds.Remove(building);
+                    Forget(building);
                     return;
                 }
 
@@ -281,7 +330,8 @@ namespace FinanceOverhaul.Core
                 return;
             }
 
-            kinds[building] = facts.Kind;
+            kinds[building] = kind;
+            SetSite(building, site, siteRef);
             if (!LookedBehind && days < rules.HealthyDays)
             {
                 days = rules.HealthyDays - 1; // today makes it the full period
@@ -320,8 +370,7 @@ namespace FinanceOverhaul.Core
 
             foreach (BuildingKey building in gone)
             {
-                healthyDays.Remove(building);
-                kinds.Remove(building);
+                Forget(building);
             }
 
             seenToday.Clear();
@@ -339,14 +388,59 @@ namespace FinanceOverhaul.Core
         public void Restore(
             BuildingKey building,
             int days,
-            BusinessKind kind = BusinessKind.Commercial
+            BusinessKind kind = BusinessKind.Commercial,
+            BusinessSite site = BusinessSite.Zoned,
+            string siteRef = null
         )
         {
             if (days > 0)
             {
                 healthyDays[building] = days;
                 kinds[building] = kind;
+                SetSite(building, site, siteRef);
             }
+        }
+
+        /// <summary>Whether a counted building is a zoned business, an industry area or a unique factory.</summary>
+        public BusinessSite SiteOf(BuildingKey building)
+        {
+            SiteNote s;
+            return sites.TryGetValue(building, out s) ? s.Site : BusinessSite.Zoned;
+        }
+
+        /// <summary>The host's note of which area or factory a counted building is (null for a zoned business).</summary>
+        public string SiteRefOf(BuildingKey building)
+        {
+            SiteNote s;
+            return sites.TryGetValue(building, out s) ? s.Ref : null;
+        }
+
+        /// <summary>Sets a counted building's site read from the save (ignored for one not counted).</summary>
+        public void RestoreSite(BuildingKey building, BusinessSite site, string siteRef)
+        {
+            if (healthyDays.ContainsKey(building))
+            {
+                SetSite(building, site, siteRef);
+            }
+        }
+
+        private void SetSite(BuildingKey building, BusinessSite site, string siteRef)
+        {
+            if (site == BusinessSite.Zoned)
+            {
+                sites.Remove(building);
+            }
+            else
+            {
+                sites[building] = new SiteNote { Site = site, Ref = siteRef };
+            }
+        }
+
+        private void Forget(BuildingKey building)
+        {
+            healthyDays.Remove(building);
+            kinds.Remove(building);
+            sites.Remove(building);
         }
 
         /// <summary>The kind a counted business was last seen as.</summary>

@@ -1,6 +1,7 @@
 using System.Collections.Generic; // KeyValuePair, List
-// FinanceOverhaul.Core: BuildingKey, BusinessKind, BusinessKinds, CandidateBook, CompaniesCodec,
-//   CompanyRegistry, CompanyStatus, IpoDice, IpoRules, LocalCompany, LocalCompanyNames
+// FinanceOverhaul.Core: BuildingKey, BusinessKind, BusinessKinds, BusinessSite, CandidateBook,
+//   CompaniesCodec, CompanyRegistry, CompanyStatus, IpoDice, IpoRules, LocalCompany,
+//   LocalCompanyNames
 using FinanceOverhaul.Core;
 using Xunit; // Assert, FactAttribute, InlineDataAttribute, TheoryAttribute
 
@@ -225,6 +226,56 @@ namespace FinanceOverhaul.Core.Tests
             Assert.Equal(BusinessKind.Oil, back.IpoKind);
             Assert.Equal(4340, back.IpoDay);
             Assert.Equal(saved, CompaniesCodec.Format(new CandidateBook(), dice, back));
+        }
+
+        [Fact]
+        public void AreasAndFactoriesSurviveTheSave()
+        {
+            var rules = new IpoRules();
+            var book = new CandidateBook();
+            book.Restore(
+                new BuildingKey(40, 4),
+                300,
+                BusinessKind.Oil,
+                BusinessSite.Area,
+                "park|7"
+            );
+            book.Restore(
+                new BuildingKey(41, 5),
+                200,
+                BusinessKind.UniqueFactory,
+                BusinessSite.Factory,
+                "Bakery"
+            );
+            book.Restore(new BuildingKey(42, 6), 100, BusinessKind.Oil);
+            var registry = new CompanyRegistry { NextId = 3 };
+            registry.Companies.Add(
+                new LocalCompany
+                {
+                    Id = 2,
+                    Name = "Park Oil Group",
+                    Symbol = "POG",
+                    Kind = BusinessKind.Oil,
+                    Home = new BuildingKey(40, 4),
+                    Site = BusinessSite.Area,
+                    SiteRef = "park 7",
+                    Status = CompanyStatus.Trading,
+                }
+            );
+            var dice = new IpoDice(9UL);
+            string saved = CompaniesCodec.Format(book, dice, registry);
+
+            var loaded = new CompanyRegistry();
+            CandidateBook back = CompaniesCodec.Parse(saved, new IpoDice(1UL), loaded);
+            Assert.Equal(BusinessSite.Area, back.SiteOf(new BuildingKey(40, 4)));
+            Assert.Equal("park7", back.SiteRefOf(new BuildingKey(40, 4))); // no bars in a field
+            Assert.Equal(BusinessSite.Factory, back.SiteOf(new BuildingKey(41, 5)));
+            Assert.Equal(BusinessKind.UniqueFactory, back.KindOf(new BuildingKey(41, 5)));
+            Assert.Equal(BusinessSite.Zoned, back.SiteOf(new BuildingKey(42, 6)));
+            LocalCompany c = Assert.Single(loaded.Companies);
+            Assert.Equal(BusinessSite.Area, c.Site);
+            Assert.Equal("park 7", c.SiteRef);
+            Assert.Equal(saved, CompaniesCodec.Format(back, new IpoDice(9UL), loaded));
         }
 
         [Fact]

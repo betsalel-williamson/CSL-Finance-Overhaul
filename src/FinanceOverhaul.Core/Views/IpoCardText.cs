@@ -63,7 +63,7 @@ namespace FinanceOverhaul.Core
             {
                 KindFacts seen = k;
                 seen.Listed = registry.ListedOf(k.Kind);
-                if (seen.Squares <= 0 && seen.Listed == 0)
+                if (seen.Squares <= 0 && seen.Listed == 0 && seen.ExtraSlots <= 0)
                 {
                     continue; // the city has none of this kind: no card
                 }

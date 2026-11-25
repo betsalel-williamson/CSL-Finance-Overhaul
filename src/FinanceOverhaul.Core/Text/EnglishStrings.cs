@@ -289,6 +289,10 @@ namespace FinanceOverhaul.Core
                 "{0} was bought out at {1} a share, {2}% above its price. The city received {3} for its {4} shares."
             },
             {
+                "notice.ipo.homeRestored",
+                "{0} has its headquarters back and stays on the exchange. Its shares trade as before."
+            },
+            {
                 "notice.ipo.moved",
                 "{0} lost its headquarters and moved to {1}. Its shares trade as before."
             },
@@ -327,6 +331,7 @@ namespace FinanceOverhaul.Core
             { "company.kind.Forestry", "Forestry" },
             { "company.kind.Oil", "Oil" },
             { "company.kind.Ore", "Ore" },
+            { "company.kind.UniqueFactory", "Unique factory" },
             { "company.panel.offering", "OFFERING" },
             { "company.panel.trading", "TRADING" },
             { "company.panel.line.offering", "{0} · First trading day {1}" },
@@ -354,6 +359,7 @@ namespace FinanceOverhaul.Core
             { "ipo.card.title.Forestry", "Forestry companies" },
             { "ipo.card.title.Oil", "Oil companies" },
             { "ipo.card.title.Ore", "Ore companies" },
+            { "ipo.card.title.UniqueFactory", "Unique factories" },
             {
                 "ipo.card.locked",
                 "Unlock requirement: {0} squares of these businesses in your city."

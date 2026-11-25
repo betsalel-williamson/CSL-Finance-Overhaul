@@ -24,6 +24,12 @@ namespace FinanceOverhaul.Core
         /// <summary>Its headquarters.</summary>
         public BuildingKey Home;
 
+        /// <summary>A zoned business, an industry area or a unique factory.</summary>
+        public BusinessSite Site;
+
+        /// <summary>The host's note of which area or factory it is (null for a zoned business).</summary>
+        public string SiteRef;
+
         public int AnnouncedDay;
         public int FirstTradingDay;
         public long OfferPriceCents;
@@ -115,6 +121,13 @@ namespace FinanceOverhaul.Core
 
         /// <summary>The grace period ended with no new headquarters: pay the city for its shares at the price and delist it.</summary>
         Defunct,
+
+        /// <summary>
+        /// In its grace period, its headquarters is back: switched on again, or (an area or a
+        /// factory) rebuilt. The grace period ends; <see cref="IpoEvent.From"/> is the building
+        /// it had if the headquarters is a new one.
+        /// </summary>
+        HomeRestored,
     }
 
     public struct IpoEvent
@@ -235,6 +248,13 @@ namespace FinanceOverhaul.Core
         /// abandoned, not collapsed or burned down.
         /// </summary>
         bool HomeStands(BuildingKey building);
+
+        /// <summary>
+        /// An industry area's or unique factory's headquarters as it is now, when the one the
+        /// company has is lost: the area's main building rebuilt, or a factory of the same type
+        /// built again (from <see cref="LocalCompany.SiteRef"/>). False when there is none.
+        /// </summary>
+        bool TrySuccessor(LocalCompany company, out BuildingKey home);
     }
 
     /// <summary>
@@ -385,10 +405,12 @@ namespace FinanceOverhaul.Core
         }
 
         /// <summary>
-        /// Each company whose headquarters no longer stands moves to the candidate of its kind
-        /// that earns the most (first in the queue on a tie), keeping its name, symbol and
-        /// shareholders. With no candidate free it starts its grace period, and keeps looking
-        /// every day of it.
+        /// Each zoned company whose headquarters no longer stands moves to the candidate of its
+        /// kind that earns the most (first in the queue on a tie), keeping its name, symbol and
+        /// shareholders. An industry area or unique factory cannot move: it takes back its
+        /// headquarters once rebuilt (<see cref="IBusinessSource.TrySuccessor"/>). With nowhere
+        /// to go a company starts its grace period, and keeps looking every day of it; one
+        /// whose headquarters stands again (switched back on) leaves it.
         /// </summary>
         private static void Homes(
             CompanyRegistry registry,
@@ -403,6 +425,43 @@ namespace FinanceOverhaul.Core
             {
                 if (source.HomeStands(c.Home))
                 {
+                    if (c.HomeLostDay >= 0)
+                    {
+                        c.HomeLostDay = -1;
+                        events.Add(new IpoEvent { Kind = IpoEventKind.HomeRestored, Company = c });
+                    }
+
+                    continue;
+                }
+
+                if (c.Site != BusinessSite.Zoned)
+                {
+                    BuildingKey rebuilt;
+                    if (
+                        source.TrySuccessor(c, out rebuilt)
+                        && !rebuilt.Equals(c.Home)
+                        && !registry.IsHome(rebuilt)
+                        && source.HomeStands(rebuilt)
+                    )
+                    {
+                        BuildingKey old = c.Home;
+                        c.Home = rebuilt;
+                        c.HomeLostDay = -1;
+                        events.Add(
+                            new IpoEvent
+                            {
+                                Kind = IpoEventKind.HomeRestored,
+                                Company = c,
+                                From = old,
+                            }
+                        );
+                    }
+                    else if (c.HomeLostDay < 0)
+                    {
+                        c.HomeLostDay = today;
+                        events.Add(new IpoEvent { Kind = IpoEventKind.HomeLost, Company = c });
+                    }
+
                     continue;
                 }
 
@@ -411,7 +470,8 @@ namespace FinanceOverhaul.Core
                 foreach (BuildingKey b in candidates.Candidates(rules, c.Kind))
                 {
                     if (
-                        registry.IsHome(b)
+                        candidates.SiteOf(b) != BusinessSite.Zoned
+                        || registry.IsHome(b)
                         || (registry.IpoScheduled && registry.IpoBusiness.Equals(b))
                         || !source.HomeStands(b)
                     )
@@ -545,7 +605,16 @@ namespace FinanceOverhaul.Core
                 && !registry.IsHome(business);
             if (stillQualifies)
             {
-                return List(registry, business, registry.IpoKind, today, rules, source);
+                return List(
+                    registry,
+                    business,
+                    registry.IpoKind,
+                    today,
+                    rules,
+                    source,
+                    candidates.SiteOf(business),
+                    candidates.SiteRefOf(business)
+                );
             }
 
             // The business picked at the draw lost its place before its day: the next
@@ -557,7 +626,16 @@ namespace FinanceOverhaul.Core
                 return new IpoEvent { Kind = IpoEventKind.Cancelled };
             }
 
-            IpoEvent listed = List(registry, standIn, registry.IpoKind, today, rules, source);
+            IpoEvent listed = List(
+                registry,
+                standIn,
+                registry.IpoKind,
+                today,
+                rules,
+                source,
+                candidates.SiteOf(standIn),
+                candidates.SiteRefOf(standIn)
+            );
             listed.StoodIn = true;
             return listed;
         }
@@ -610,7 +688,9 @@ namespace FinanceOverhaul.Core
             BusinessKind kind,
             int today,
             IpoRules rules,
-            IBusinessSource source
+            IBusinessSource source,
+            BusinessSite site = BusinessSite.Zoned,
+            string siteRef = null
         )
         {
             string name = source.NameOf(business) ?? string.Empty;
@@ -622,6 +702,8 @@ namespace FinanceOverhaul.Core
                 Symbol = source.SymbolFor(name),
                 Kind = kind,
                 Home = business,
+                Site = site,
+                SiteRef = siteRef,
                 AnnouncedDay = today,
                 FirstTradingDay = today + OfferDays,
                 OfferPriceCents = offer,

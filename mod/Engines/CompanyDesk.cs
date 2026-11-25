@@ -352,6 +352,18 @@ namespace FinanceOverhaul
                     Chirp(NoticeText.IpoHomeLost(c.Name, grace));
                     break;
                 }
+                case IpoEventKind.HomeRestored:
+                {
+                    ModLog.Info(
+                        "ipo: "
+                            + c.Name
+                            + " has its headquarters back (building "
+                            + c.Home.Id
+                            + "); its grace period is over"
+                    );
+                    Chirp(NoticeText.IpoHomeRestored(c.Name));
+                    break;
+                }
                 case IpoEventKind.Defunct:
                 {
                     uint shares;
@@ -448,6 +460,14 @@ namespace FinanceOverhaul
         /// <summary>What the engine asks the game about a business that is about to list.</summary>
         private sealed class GameBusinesses : IBusinessSource
         {
+            public bool TrySuccessor(LocalCompany company, out BuildingKey home)
+            {
+                // Industry areas and unique factories are not read from the game yet (item 2
+                // of the Road to 0.2.0, slice 3): no company has one to take back.
+                home = default(BuildingKey);
+                return false;
+            }
+
             public string NameOf(BuildingKey building)
             {
                 return BuildingManager.instance.GetBuildingName(

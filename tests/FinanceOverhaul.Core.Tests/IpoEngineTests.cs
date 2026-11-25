@@ -1,8 +1,8 @@
 using System.Collections.Generic; // Dictionary, HashSet, List
 using System.Linq; // Count(), Distinct(), Select()
-// FinanceOverhaul.Core: BuildingKey, BusinessFacts, BusinessKind, CandidateBook, CompanyRegistry,
-//   CompanyStatus, IBusinessSource, IpoBuyout, IpoDice, IpoEngine, IpoEvent, IpoEventKind,
-//   IpoPricing, IpoRules, KindFacts, LocalCompany
+// FinanceOverhaul.Core: BuildingKey, BusinessFacts, BusinessKind, BusinessSite, CandidateBook,
+//   CompanyRegistry, CompanyStatus, IBusinessSource, IpoBuyout, IpoDice, IpoEngine, IpoEvent,
+//   IpoEventKind, IpoPricing, IpoRules, KindFacts, LocalCompany
 using FinanceOverhaul.Core;
 using Xunit; // Assert, FactAttribute, InlineDataAttribute, TheoryAttribute
 
@@ -42,6 +42,15 @@ namespace FinanceOverhaul.Core.Tests
             public bool HomeStands(BuildingKey building)
             {
                 return !Lost.Contains(building);
+            }
+
+            /// <summary>An area's or factory's rebuilt headquarters, by its site note.</summary>
+            public readonly Dictionary<string, BuildingKey> Rebuilt =
+                new Dictionary<string, BuildingKey>();
+
+            public bool TrySuccessor(LocalCompany company, out BuildingKey home)
+            {
+                return Rebuilt.TryGetValue(company.SiteRef ?? string.Empty, out home);
             }
         }
 
@@ -530,6 +539,111 @@ namespace FinanceOverhaul.Core.Tests
             Assert.Equal(symbol, c.Symbol);
             Assert.Single(registry.Companies);
             Assert.Empty(Day(registry, book, 202, rules, dice, city)); // settled in its new home
+        }
+
+        [Fact]
+        public void AnAreaCompanyNeverMovesIntoAZonedBusinessAndWaitsToBeRebuilt()
+        {
+            IpoRules rules = Certain();
+            var registry = new CompanyRegistry { NextDrawDay = int.MaxValue };
+            CandidateBook book = Offices(4, rules); // offices 1 to 4, all candidates
+            var dice = new IpoDice(5UL);
+            var city = new City();
+            var gate = new BuildingKey(1, 1);
+            LocalCompany c = IpoEngine
+                .List(
+                    registry,
+                    gate,
+                    BusinessKind.Office,
+                    100,
+                    rules,
+                    city,
+                    BusinessSite.Area,
+                    "area 7"
+                )
+                .Company;
+            c.Status = CompanyStatus.Trading;
+            Assert.Equal(BusinessSite.Area, c.Site);
+
+            city.Lost.Add(gate); // demolished, or switched off
+            IpoEvent lost = Assert.Single(Day(registry, book, 201, rules, dice, city));
+            Assert.Equal(IpoEventKind.HomeLost, lost.Kind);
+            Assert.Equal(gate, c.Home); // the offices 2 to 4 were not an option
+            Assert.Equal(201, c.HomeLostDay);
+            Assert.Empty(Day(registry, book, 202, rules, dice, city));
+
+            // The main building is rebuilt: the company takes it back.
+            var rebuilt = new BuildingKey(90, 91);
+            city.Rebuilt["area 7"] = rebuilt;
+            IpoEvent back = Assert.Single(Day(registry, book, 220, rules, dice, city));
+            Assert.Equal(IpoEventKind.HomeRestored, back.Kind);
+            Assert.Equal(gate, back.From);
+            Assert.Equal(rebuilt, c.Home);
+            Assert.Equal(-1, c.HomeLostDay);
+        }
+
+        [Fact]
+        public void AHeadquartersSwitchedBackOnEndsTheGracePeriod()
+        {
+            IpoRules rules = Certain();
+            var registry = new CompanyRegistry { NextDrawDay = int.MaxValue };
+            CandidateBook book = Offices(1, rules);
+            var dice = new IpoDice(5UL);
+            var city = new City();
+            var factory = new BuildingKey(1, 1);
+            LocalCompany c = IpoEngine
+                .List(
+                    registry,
+                    factory,
+                    BusinessKind.UniqueFactory,
+                    100,
+                    rules,
+                    city,
+                    BusinessSite.Factory,
+                    "Bakery"
+                )
+                .Company;
+            c.Status = CompanyStatus.Trading;
+
+            city.Lost.Add(factory);
+            Assert.Equal(
+                IpoEventKind.HomeLost,
+                Assert.Single(Day(registry, book, 201, rules, dice, city)).Kind
+            );
+            long falling = c.PriceCents;
+            city.Lost.Remove(factory); // switched back on within the grace period
+            IpoEvent back = Assert.Single(Day(registry, book, 230, rules, dice, city));
+            Assert.Equal(IpoEventKind.HomeRestored, back.Kind);
+            Assert.Equal(default(BuildingKey), back.From); // the same building
+            Assert.Equal(factory, c.Home);
+            Assert.Equal(-1, c.HomeLostDay);
+            for (int day = 231; day < 231 + rules.HomeGraceDays + 5; day++)
+            {
+                Day(registry, book, day, rules, dice, city);
+            }
+
+            Assert.Single(registry.Companies); // never closed
+            Assert.True(falling > 0);
+        }
+
+        [Fact]
+        public void AZonedCompanyDoesNotMoveIntoAnAreasMainBuilding()
+        {
+            IpoRules rules = Certain();
+            var registry = new CompanyRegistry { NextDrawDay = int.MaxValue };
+            CandidateBook book = Offices(1, rules); // the company's own office
+            var gate = new BuildingKey(5, 5);
+            book.Observe(gate, BusinessKind.Office, true, rules, BusinessSite.Area, "area 1");
+            book.Restore(gate, rules.HealthyDays, BusinessKind.Office, BusinessSite.Area, "area 1");
+            var dice = new IpoDice(5UL);
+            var city = new City();
+            LocalCompany c = Trading(registry, rules, city);
+            Assert.Contains(gate, book.Candidates(rules, BusinessKind.Office));
+
+            city.Lost.Add(new BuildingKey(1, 1));
+            IpoEvent lost = Assert.Single(Day(registry, book, 201, rules, dice, city));
+            Assert.Equal(IpoEventKind.HomeLost, lost.Kind);
+            Assert.NotEqual(gate, c.Home);
         }
 
         [Fact]

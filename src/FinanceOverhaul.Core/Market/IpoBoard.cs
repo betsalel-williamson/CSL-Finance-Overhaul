@@ -19,6 +19,12 @@ namespace FinanceOverhaul.Core
 
         /// <summary>Local companies of this kind listed now.</summary>
         public int Listed;
+
+        /// <summary>
+        /// Slots beside the zoned ones: one per industry area of this kind at the level areas
+        /// need, or (for <see cref="BusinessKind.UniqueFactory"/>) one per unique factory.
+        /// </summary>
+        public int ExtraSlots;
     }
 
     /// <summary>Where a kind of business stands on the board, for its card in Economy → Investments.</summary>
@@ -103,19 +109,35 @@ namespace FinanceOverhaul.Core
             return (int)Math.Min(int.MaxValue, need * 2);
         }
 
+        /// <summary>The kind can list: enough squares of zoned buildings, or an area or factory that gives a slot.</summary>
         public static bool GateOpen(KindFacts facts, IpoRules rules)
         {
-            return facts.Squares >= rules.GateSquares;
+            return ZonedGateOpen(facts, rules) || facts.ExtraSlots > 0;
+        }
+
+        /// <summary>Enough squares of the kind's zoned buildings for their first slot.</summary>
+        public static bool ZonedGateOpen(KindFacts facts, IpoRules rules)
+        {
+            return facts.Kind != BusinessKind.UniqueFactory && facts.Squares >= rules.GateSquares;
         }
 
         /// <summary>
-        /// Listing slots the kind has earned: none before the gate; the gate gives one; then one
-        /// more each time its top-level buildings double (20, 40, 80… with the default base).
-        /// Slow growth at any size: 1,280 buildings earn 8.
+        /// Listing slots the kind has earned: its zoned slots and its
+        /// <see cref="KindFacts.ExtraSlots"/> (areas, factories) together.
         /// </summary>
         public static int Slots(KindFacts facts, IpoRules rules)
         {
-            if (!GateOpen(facts, rules))
+            return ZonedSlots(facts, rules) + Math.Max(0, facts.ExtraSlots);
+        }
+
+        /// <summary>
+        /// Slots its zoned buildings earn: none before the gate; the gate gives one; then one
+        /// more each time its top-level buildings double (20, 40, 80… with the default base).
+        /// Slow growth at any size: 1,280 buildings earn 8.
+        /// </summary>
+        public static int ZonedSlots(KindFacts facts, IpoRules rules)
+        {
+            if (!ZonedGateOpen(facts, rules))
             {
                 return 0;
             }
@@ -229,8 +251,19 @@ namespace FinanceOverhaul.Core
                 return status;
             }
 
-            status.BarHave = Math.Max(0, facts.TopLevelBuildings);
-            status.BarNeed = NextSlotAt(status.Slots, rules);
+            if (ZonedGateOpen(facts, rules))
+            {
+                status.BarHave = Math.Max(0, facts.TopLevelBuildings);
+                status.BarNeed = NextSlotAt(ZonedSlots(facts, rules), rules);
+            }
+            else if (facts.Kind != BusinessKind.UniqueFactory)
+            {
+                // Open through its areas alone: zoned buildings can still earn a slot.
+                status.BarHave = Math.Max(0, facts.Squares);
+                status.BarNeed = rules.GateSquares;
+            }
+            // A unique factory's slots come one per factory: no bar (BarNeed stays 0).
+
             status.State =
                 status.OpenSlots == 0 ? KindState.Full
                 : status.Candidates == 0 ? KindState.Waiting

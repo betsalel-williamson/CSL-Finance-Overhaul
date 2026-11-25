@@ -164,6 +164,8 @@ namespace FinanceOverhaul.Core
         private const string HoldingTag = "holding";
         private const string HistoricalTag = "historical";
         private const string HomeLostTag = "homelost";
+        private const string SiteTag = "site";
+        private const string CompanySiteTag = "cosite";
         private const string LookBehindLine = "lookbehind=done";
 
         public static string Format(CandidateBook book, IpoDice dice, CompanyRegistry registry)
@@ -197,6 +199,21 @@ namespace FinanceOverhaul.Core
                     .Append('|')
                     .Append(book.KindOf(kv.Key).ToString())
                     .Append('\n');
+                BusinessSite site = book.SiteOf(kv.Key);
+                if (site != BusinessSite.Zoned)
+                {
+                    // An industry area or unique factory; a zoned business has no line.
+                    sb.Append(SiteTag)
+                        .Append('|')
+                        .Append(kv.Key.Id.ToString(CultureInfo.InvariantCulture))
+                        .Append('|')
+                        .Append(kv.Key.BuildIndex.ToString(CultureInfo.InvariantCulture))
+                        .Append('|')
+                        .Append(site.ToString())
+                        .Append('|')
+                        .Append(Ref(book.SiteRefOf(kv.Key)))
+                        .Append('\n');
+                }
             }
 
             sb.Append("next=").Append(Int(registry.NextId)).Append('\n');
@@ -263,6 +280,18 @@ namespace FinanceOverhaul.Core
                     sb.Append(HistoricalTag).Append('|').Append(Int(c.Id)).Append('\n');
                 }
 
+                if (c.Site != BusinessSite.Zoned)
+                {
+                    sb.Append(CompanySiteTag)
+                        .Append('|')
+                        .Append(Int(c.Id))
+                        .Append('|')
+                        .Append(c.Site.ToString())
+                        .Append('|')
+                        .Append(Ref(c.SiteRef))
+                        .Append('\n');
+                }
+
                 if (c.HomeLostDay >= 0)
                 {
                     sb.Append(HomeLostTag)
@@ -303,6 +332,24 @@ namespace FinanceOverhaul.Core
         private static string Int(int value)
         {
             return value.ToString(CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>A site note as saved: one field, so no line breaks or bars.</summary>
+        private static string Ref(string siteRef)
+        {
+            return Clean(siteRef).Replace("|", string.Empty);
+        }
+
+        private static bool TrySite(string text, out BusinessSite site)
+        {
+            site = BusinessSite.Zoned;
+            if (!Enum.IsDefined(typeof(BusinessSite), text))
+            {
+                return false;
+            }
+
+            site = (BusinessSite)Enum.Parse(typeof(BusinessSite), text);
+            return true;
         }
 
         private static string Clean(string text)
@@ -392,6 +439,17 @@ namespace FinanceOverhaul.Core
                 if (marked != null)
                 {
                     marked.WasHistorical = true;
+                }
+            }
+            else if (f[0] == CompanySiteTag && f.Length == 4 && TryInt(f[1], out number))
+            {
+                // Follows its company's line. A company with none is a zoned business.
+                LocalCompany sited = registry.Find(number);
+                BusinessSite site;
+                if (sited != null && TrySite(f[2], out site))
+                {
+                    sited.Site = site;
+                    sited.SiteRef = f[3].Length == 0 ? null : f[3];
                 }
             }
             else if (
@@ -543,6 +601,40 @@ namespace FinanceOverhaul.Core
                 if (line == LookBehindLine)
                 {
                     book.LookedBehind = true;
+                    continue;
+                }
+
+                if (line.StartsWith(SiteTag + "|", StringComparison.Ordinal))
+                {
+                    // Follows its business's healthy line.
+                    string[] sf = line.Split('|');
+                    ushort siteId;
+                    uint siteIndex;
+                    BusinessSite site;
+                    if (
+                        sf.Length == 5
+                        && ushort.TryParse(
+                            sf[1],
+                            NumberStyles.None,
+                            CultureInfo.InvariantCulture,
+                            out siteId
+                        )
+                        && uint.TryParse(
+                            sf[2],
+                            NumberStyles.None,
+                            CultureInfo.InvariantCulture,
+                            out siteIndex
+                        )
+                        && TrySite(sf[3], out site)
+                    )
+                    {
+                        book.RestoreSite(
+                            new BuildingKey(siteId, siteIndex),
+                            site,
+                            sf[4].Length == 0 ? null : sf[4]
+                        );
+                    }
+
                     continue;
                 }
 
