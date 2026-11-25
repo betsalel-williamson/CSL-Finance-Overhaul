@@ -1,6 +1,5 @@
 using System; // Exception
-// FinanceOverhaul.Core: CityIndexBasket, IpoRules, LocalCompany, StressStock, Strings, TestStock
-using FinanceOverhaul.Core;
+using FinanceOverhaul.Core; // CityIndexBasket, LocalCompany, StressStock, Strings, TestStock
 using HarmonyLib; // AccessTools, Harmony
 
 // Game classes used without a using (global namespace, Assembly-CSharp): Investment, InvestmentAI,
@@ -221,7 +220,7 @@ namespace FinanceOverhaul
                     __result = Strings.Format(
                         "company.description",
                         company.Name,
-                        (CompanyDesk.Rules ?? new IpoRules()).CityStakePercent.ToString()
+                        (CompanyDesk.Current).CityStakePercent.ToString()
                     );
                     return false;
                 }

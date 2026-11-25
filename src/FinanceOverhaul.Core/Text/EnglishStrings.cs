@@ -412,6 +412,85 @@ namespace FinanceOverhaul.Core
             { "ipo.dialog.dontShow", "Don't show this for future IPOs" },
             { "ipo.dialog.closeTip", "Close (the listing stays; nothing else changes)" },
             { "options.ipo.dialog", "Show a dialog when a local company goes public" },
+            { "options.ipo.group.Listing", "Local IPOs: when companies list" },
+            { "options.ipo.group.Candidates", "Local IPOs: which businesses can list" },
+            { "options.ipo.group.Prices", "Local IPOs: prices" },
+            { "options.ipo.group.BuyoutsAndClosing", "Local IPOs: buy-outs and closing" },
+            { "options.ipo.group.Market", "Local IPOs: the finer workings (dev builds only)" },
+            { "options.ipo.reset", "Put the Local IPOs values back to their defaults" },
+            { "options.ipo.resetDev", "Put the finer workings back to their defaults" },
+            { "options.ipo.exchangeLevel", "Stock Exchange level before any IPO: {0}" },
+            {
+                "options.ipo.gateSquares",
+                "Squares of a kind of business to unlock its listings: {0}"
+            },
+            {
+                "options.ipo.slotDoublingBase",
+                "Top-level buildings for a kind's second listing slot: {0}"
+            },
+            {
+                "options.ipo.listingsPerTile",
+                "Local listings for each map tile the city owns: {0}"
+            },
+            { "options.ipo.listingCap", "Most local companies listed at once: {0}" },
+            { "options.ipo.maxIposPerYear", "Most IPOs in a year: {0}" },
+            { "options.ipo.slotFillDays", "Days an open listing slot waits on average: {0}" },
+            { "options.ipo.drawEveryDays", "Days between the rolls for IPOs and buy-outs: {0}" },
+            { "options.ipo.healthyDays", "Healthy days a business needs to go public: {0}" },
+            {
+                "options.ipo.topEmployersPercent",
+                "A business must be among the largest {0}% of its kind by jobs"
+            },
+            { "options.ipo.minJobs", "Jobs any business needs to go public: {0}" },
+            {
+                "options.ipo.specialisedMinJobs",
+                "Jobs a zoned farm, forest, oil or ore business needs: {0}"
+            },
+            {
+                "options.ipo.maxVacancyPercent",
+                "Most jobs a healthy business may leave unfilled: {0}%"
+            },
+            { "options.ipo.landValueFloor", "Land value a shop or office needs: {0}" },
+            { "options.ipo.areaMinLevel", "Industry area level to go public: {0}" },
+            {
+                "options.ipo.factoryMinProductionPercent",
+                "Production a unique factory needs: {0}%"
+            },
+            { "options.ipo.offerDays", "Days the city can buy at the offering price: {0}" },
+            { "options.ipo.priceToEarnings", "Offering price: earnings × {0}" },
+            { "options.ipo.cityStakePercent", "The city's 1,000 shares are {0}% of a company" },
+            { "options.ipo.popAveragePercent", "First-day jump on average: {0}%" },
+            { "options.ipo.popSpreadPercent", "How much the first-day jump varies: {0}%" },
+            {
+                "options.ipo.buyoutPercentPerYear",
+                "A listed company's chance of a buy-out each year: {0}%"
+            },
+            { "options.ipo.buyoutMinDaysListed", "No buy-out in a company's first {0} days" },
+            { "options.ipo.buyoutPremiumAveragePercent", "Buy-out premium on average: {0}%" },
+            {
+                "options.ipo.buyoutPremiumSpreadPercent",
+                "How much the buy-out premium varies: {0}%"
+            },
+            {
+                "options.ipo.homeGraceDays",
+                "Days a company without a headquarters stays listed: {0}"
+            },
+            {
+                "options.ipo.steadyPercent",
+                "Share of the healthy days a candidate must keep: {0}%"
+            },
+            { "options.ipo.badDayCost", "Healthy days lost for one bad day: {0}" },
+            { "options.ipo.dailySwingPercent", "A company's daily swing: {0}%" },
+            {
+                "options.ipo.fairPullPercent",
+                "Daily pull towards what the business is worth: {0}%"
+            },
+            { "options.ipo.maxDailyMovePercent", "Most a price moves in a day: {0}%" },
+            { "options.ipo.homelessFallPercent", "Daily fall without a headquarters: {0}%" },
+            { "options.ipo.popMinPercent", "Lowest first-day jump: {0}%" },
+            { "options.ipo.popMaxPercent", "Highest first-day jump: {0}%" },
+            { "options.ipo.buyoutPremiumMinPercent", "Lowest buy-out premium: {0}%" },
+            { "options.ipo.buyoutPremiumMaxPercent", "Highest buy-out premium: {0}%" },
             { "options.investments.layout", "Investments tab layout" },
             { "options.investments.layout.vanilla", "The game's cards" },
             { "options.investments.layout.compact", "Compact: one line a stock" },

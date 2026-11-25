@@ -106,6 +106,7 @@ namespace FinanceOverhaul
                         Mod.SaveSettings();
                     }
                 );
+                IpoOptions.AddPlayerGroups(helper, Settings);
             }
 
             // Feature flags: whether a feature exists at all. Dev builds only; release builds
@@ -153,6 +154,10 @@ namespace FinanceOverhaul
                     Settings.DevTestStockEnabled,
                     OnDevTestStockChanged
                 );
+                if (Settings.LocalIposEnabled)
+                {
+                    IpoOptions.AddDevGroup(helper, Settings);
+                }
             }
 
             // Build info goes on the Options page itself after the group, as plain labels (not

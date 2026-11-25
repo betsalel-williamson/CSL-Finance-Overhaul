@@ -42,7 +42,7 @@ are asked; a lost headquarters brings up a dialog to choose the new one.
 | 2   | Build  | Industry areas and unique factories, slices 2–4 of [the design](#industry-areas-and-unique-factories-design-2026-11-19-not-built): rule and earnings (`IpoIndustry`), the daily scan reads them, cards, symbols, dialog wording, icon. A factory outside any area qualifies the same way | In progress: library and game scan built 2026-11-25; cards next |
 | 3   | Build  | The extra swing of a new listing's first year ("New-listing volatility", 2×, settling over the year)                                                                                                                                                                                     | Not started                                                     |
 | 4   | Build  | [The player chooses the new headquarters](#losing-a-headquarters-the-player-chooses-decided-2026-11-25-not-built): a dialog when a headquarters burns, collapses, is abandoned or deleted                                                                                                | Not started                                                     |
-| 5   | Build  | The tuning values as [Options](#options-level-1-while-tuning-the-feel) for every player, in a "Local IPOs" group                                                                                                                                                                         | Not started                                                     |
+| 5   | Build  | The tuning values as [Options](#options-level-1-while-tuning-the-feel) for every player, in a "Local IPOs" group                                                                                                                                                                         | **Built 2026-11-25**                                            |
 | 6   | Build  | [A dialog introducing Local IPOs](#switched-on-for-every-player-decided-2026-11-25-not-built) to players updating from 0.1.0                                                                                                                                                             | Not started                                                     |
 | 7   | Decide | [Open decisions](#open-decisions) 3, 4, 6, 7 and 8: settle or park each (the dialog already plays the sale sound and draws the money banner, so 4 and 6 may be done)                                                                                                                     | Open                                                            |
 | 8   | Check  | Tuning in a city left alone: how many candidates hold under the steadiness rule, how often IPOs come, prices over years; then the industry level and profit rules                                                                                                                        | Not started                                                     |
@@ -118,8 +118,8 @@ IPO is drawn or announced while the Stock Exchange is below level 2** (`StockExc
 applies to every kind, zoned businesses and industry alike. Healthy days still count meanwhile, so a
 city that levels its exchange up has candidates ready. Companies already listed keep trading if the
 exchange is later demolished; only new IPOs wait. The Investments cards say why: "Needs the Stock
-Exchange at level 2." An option, "Stock Exchange level for IPOs", default 2 (with the other options,
-item 5 of the [Road to 0.2.0](#road-to-020-list-of-2026-11-25)).
+Exchange at level 2." The option "Stock Exchange level before any IPO", default 2, is built with the
+other [Options](#options-level-1-while-tuning-the-feel) (2026-11-25).
 
 **Built:** `IpoRules.ExchangeLevel` and `IpoBoard.ExchangeAllows`; `IpoEngine.Step` draws no IPO
 below it and cancels one scheduled before the exchange was lost (buy-outs, moves and prices go on);
@@ -868,35 +868,56 @@ one dwarfing the other. One city, two areas: a first look, not a sample.
 
 ## Options (Level 1, while tuning the feel)
 
-Decided 2026-11-25: these become **player options** in every build, in a "Local IPOs" group (today
-only the feature flag and the dialog preference exist; the values are fixed in `IpoRules`). Every
-value is saved with the player's settings. Local IPOs are on by default (see
+**Built 2026-11-25:** every value Local IPOs uses is an option, saved with the player's settings
+(`ipo.*` lines, only where a value differs from its default). The table of values is the library's
+`IpoTuning` (key, wording, range, step, group, who sees it), read and written by `SettingsFile`; the
+game uses `CompanyDesk.Current` (a game UI test's rules, else the player's `ModSettings.Ipo`). A
+unit test fails if a value is added to `IpoRules` without an option. Options shows one slider per
+value with its sentence and value ("Stock Exchange level before any IPO: 2"); a change is used from
+the next game day, and a button in each audience puts its values back. Game UI scenario 77 builds
+the Options page as the game does and checks every slider and label; Figma UI Map band 02 has the
+capture. Local IPOs is on by default (see
 [Switched on for every player](#switched-on-for-every-player-decided-2026-11-25-not-built)).
 
-| Option                                  | Default   | What it changes                                           |
-| --------------------------------------- | --------- | --------------------------------------------------------- |
-| Local IPOs                              | On        | The whole feature                                         |
-| Stock Exchange level for IPOs (planned) | 2         | No IPO until the Stock Exchange is at this level          |
-| Squares to unlock a kind                | 200       | The gate: how much of a kind the city needs first         |
-| Top-level buildings for the second slot | 20        | Each doubling after that adds a slot                      |
-| Days an open slot waits (average)       | 548       | How soon an open slot is filled                           |
-| Most IPOs a year                        | 2         | Pacing                                                    |
-| Listings per map tile                   | 2         | The whole board, up to the listing cap                    |
-| Healthy days to become a candidate      | 365       | How long a business must stay healthy                     |
-| Larger employers of a kind              | Top 33%   | A business must be in this share of its kind, by jobs     |
-| Most jobs unfilled                      | 10%       | Still counts as staffed                                   |
-| Land value floor (shops, offices)       | 41        | The game's threshold for a level-3 building               |
-| Offering window (days)                  | 7         | Days to buy at the offering price                         |
-| First-day pop: average / spread         | 15% / 25% | The first-day jump and how varied it is                   |
-| Price-to-earnings multiple              | 20        | Offering price from measured earnings                     |
-| City's largest stake                    | 10%       | What the full 1,000-share holding is of the company       |
-| New-listing volatility                  | 2×        | Extra swing in the first year (settles to normal)         |
-| Local listing cap                       | 12        | Most local companies listed at once                       |
-| Roll every (days)                       | 30        | How often it is decided whether an IPO or buy-out happens |
-| Buy-out chance a year                   | 4%        | A listed company's chance of being bought in a year       |
-| Buy-out premium: average / spread       | 40% / 15% | What the buyer pays above the price                       |
-| No buy-out before (days listed)         | 365       | A new listing is not bought in its first year             |
-| Grace period after losing a home        | 90 days   | Before an un-homed company delists                        |
+**For every player** (four groups, shown while Local IPOs is on):
+
+| Group                     | Option                                               | Default | Range    |
+| ------------------------- | ---------------------------------------------------- | ------- | -------- |
+| When companies list       | Stock Exchange level before any IPO                  | 2       | 1–5      |
+|                           | Squares of a kind of business to unlock its listings | 200     | 50–2,000 |
+|                           | Top-level buildings for a kind's second listing slot | 20      | 4–200    |
+|                           | Local listings for each map tile the city owns       | 2       | 1–10     |
+|                           | Most local companies listed at once                  | 12      | 1–100    |
+|                           | Most IPOs in a year                                  | 2       | 1–24     |
+|                           | Days an open listing slot waits on average           | 548     | 30–3,650 |
+|                           | Days between the rolls for IPOs and buy-outs         | 30      | 1–365    |
+| Which businesses can list | Healthy days a business needs to go public           | 365     | 1–1,825  |
+|                           | A business must be among the largest N% of its kind  | 33%     | 1–100%   |
+|                           | Jobs any business needs to go public                 | 10      | 1–500    |
+|                           | Jobs a zoned farm, forest, oil or ore business needs | 30      | 1–500    |
+|                           | Most jobs a healthy business may leave unfilled      | 10%     | 0–100%   |
+|                           | Land value a shop or office needs                    | 41      | 0–100    |
+|                           | Industry area level to go public                     | 3       | 1–5      |
+|                           | Production a unique factory needs                    | 100%    | 1–150%   |
+| Prices                    | Days the city can buy at the offering price          | 7       | 1–60     |
+|                           | Offering price: earnings × N                         | 20      | 1–100    |
+|                           | The city's 1,000 shares are N% of a company          | 10%     | 1–100%   |
+|                           | First-day jump on average                            | 15%     | −50–200% |
+|                           | How much the first-day jump varies                   | 25%     | 0–200%   |
+| Buy-outs and closing      | A listed company's chance of a buy-out each year     | 4%      | 0–100%   |
+|                           | No buy-out in a company's first N days               | 365     | 0–3,650  |
+|                           | Buy-out premium on average                           | 40%     | 0–300%   |
+|                           | How much the buy-out premium varies                  | 15%     | 0–200%   |
+|                           | Days a company without a headquarters stays listed   | 90      | 1–730    |
+
+**Dev builds only** ("the finer workings"): share of the healthy days a candidate must keep (90%),
+healthy days lost for one bad day (4), daily swing (2%), daily pull towards worth (1%), most a price
+moves in a day (15%), daily fall without a headquarters (2%), lowest and highest first-day jump
+(−50%, 300%), lowest and highest buy-out premium (10%, 150%).
+
+Not an option: the game's own limits (1,000 shares a stock, the price range of the game's stocks,
+Stock Exchange levels 1 to 5). Not built yet, so not here: the extra swing of a new listing's first
+year (Road to 0.2.0, item 3).
 
 ## In the game (built 2026-11-18)
 

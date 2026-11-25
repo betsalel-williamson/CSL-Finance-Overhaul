@@ -6,7 +6,7 @@ using ColossalFramework.Math; // Randomizer
 // FinanceOverhaul.Core: BoardView, BondText, BuildingKey, BusinessFacts, BusinessKind,
 //   BusinessKinds, BusinessSite, CandidateBook, CompaniesCodec, CompanyRegistry, IBusinessSource,
 //   IpoCardText, IpoDice, IpoEarnings, IpoEngine, IpoEvent, IpoEventKind, IpoRules, KindFacts,
-//   LocalCompany, Notice, NoticeText
+//   LocalCompany, ModSettings, Notice, NoticeText
 using FinanceOverhaul.Core;
 
 // Game classes used without a using (global namespace, Assembly-CSharp): Building, BuildingInfo,
@@ -38,8 +38,23 @@ namespace FinanceOverhaul
             new Dictionary<BuildingKey, SiteReading>();
         private static int lastScanDay = -1;
 
-        /// <summary>The rules in force (game UI tests may swap them; null puts the defaults back).</summary>
-        public static IpoRules Rules = DefaultRules;
+        /// <summary>Game UI tests: rules for the scenario (null: the player's Options).</summary>
+        public static IpoRules Rules;
+
+        /// <summary>The rules in force: a scenario's, else the player's Options, else the defaults.</summary>
+        public static IpoRules Current
+        {
+            get
+            {
+                if (Rules != null)
+                {
+                    return Rules;
+                }
+
+                ModSettings settings = Mod.Settings;
+                return settings != null && settings.Ipo != null ? settings.Ipo : DefaultRules;
+            }
+        }
 
         /// <summary>Game UI tests: the Stock Exchange level IPOs see (-1: the city's own).</summary>
         public static int TestExchangeLevel = -1;
@@ -148,7 +163,7 @@ namespace FinanceOverhaul
                     registry,
                     GameAreaManager.instance.m_areaCount,
                     OrderDesk.Today,
-                    Rules ?? DefaultRules,
+                    Current,
                     ExchangeLevel()
                 );
             }
@@ -227,7 +242,7 @@ namespace FinanceOverhaul
                     kinds,
                     GameAreaManager.instance.m_areaCount,
                     today,
-                    Rules ?? DefaultRules,
+                    Current,
                     dice,
                     Source,
                     ExchangeLevel()
@@ -355,7 +370,7 @@ namespace FinanceOverhaul
                     break;
                 case IpoEventKind.HomeLost:
                 {
-                    int grace = (Rules ?? DefaultRules).HomeGraceDays;
+                    int grace = Current.HomeGraceDays;
                     ModLog.Info(
                         "ipo: "
                             + c.Name
@@ -576,7 +591,7 @@ namespace FinanceOverhaul
                 testLost.Add(c.Home);
                 if (wholeKind)
                 {
-                    foreach (BuildingKey b in Book().Candidates(Rules ?? DefaultRules, c.Kind))
+                    foreach (BuildingKey b in Book().Candidates(Current, c.Kind))
                     {
                         testLost.Add(b);
                     }
@@ -615,7 +630,7 @@ namespace FinanceOverhaul
             lock (Sync)
             {
                 CandidateBook b = Book();
-                IpoRules rules = Rules ?? DefaultRules;
+                IpoRules rules = Current;
                 List<BuildingKey> pool = b.Candidates(rules);
                 pool.RemoveAll(registry.IsHome);
                 pool.RemoveAll(k => b.SiteOf(k) != site);
@@ -764,7 +779,7 @@ namespace FinanceOverhaul
             {
                 Stopwatch watch = Stopwatch.StartNew();
                 CandidateBook b = Book();
-                IpoRules rules = Rules ?? DefaultRules;
+                IpoRules rules = Current;
                 var totals = new Dictionary<BusinessKind, KindFacts>();
                 foreach (BusinessKind kind in Enum.GetValues(typeof(BusinessKind)))
                 {
@@ -1217,7 +1232,7 @@ namespace FinanceOverhaul
                 registry = null;
                 kinds = new KindFacts[0];
                 lastScanDay = -1;
-                Rules = DefaultRules;
+                Rules = null;
                 IpoDialog.Reset();
             }
         }

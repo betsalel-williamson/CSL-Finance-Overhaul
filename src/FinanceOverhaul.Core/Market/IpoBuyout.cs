@@ -73,21 +73,34 @@ namespace FinanceOverhaul.Core
 
         /// <summary>
         /// What the buyer pays above the price, as a fraction (0.4 = 40% above): most near the
-        /// average, now and then far more, between <see cref="MinPremium"/> and
-        /// <see cref="MaxPremium"/>. Takes two numbers from the dice.
+        /// average, now and then far more, between <see cref="IpoRules.BuyoutPremiumMinPercent"/>
+        /// and <see cref="IpoRules.BuyoutPremiumMaxPercent"/> (by default <see cref="MinPremium"/>
+        /// and <see cref="MaxPremium"/>). Takes two numbers from the dice.
         /// </summary>
         public static double Premium(IpoRules rules, IpoDice dice)
         {
             double mean = 1d + Math.Max(0, rules.BuyoutPremiumAveragePercent) / 100d;
             double spread = Math.Max(0, rules.BuyoutPremiumSpreadPercent) / 100d;
             double paid = dice.LogNormal(mean, spread) - 1d;
-            return Math.Max(MinPremium, Math.Min(MaxPremium, paid));
+            double low = Math.Max(0d, rules.BuyoutPremiumMinPercent / 100d);
+            double high = Math.Max(low, rules.BuyoutPremiumMaxPercent / 100d);
+            return Math.Max(low, Math.Min(high, paid));
         }
 
-        /// <summary>The buyer's price a share: the price plus the premium, a whole ₡.</summary>
-        public static long PricePerShareCents(long priceCents, double premium)
+        /// <summary>
+        /// The buyer's price a share: the price plus the premium (kept inside the rules' range,
+        /// the defaults without rules), a whole ₡.
+        /// </summary>
+        public static long PricePerShareCents(
+            long priceCents,
+            double premium,
+            IpoRules rules = null
+        )
         {
-            double bounded = Math.Max(MinPremium, Math.Min(MaxPremium, premium));
+            rules = rules ?? new IpoRules();
+            double low = Math.Max(0d, rules.BuyoutPremiumMinPercent / 100d);
+            double high = Math.Max(low, rules.BuyoutPremiumMaxPercent / 100d);
+            double bounded = Math.Max(low, Math.Min(high, premium));
             return (long)
                     Math.Round(priceCents * (1d + bounded) / 100d, MidpointRounding.AwayFromZero)
                 * 100;

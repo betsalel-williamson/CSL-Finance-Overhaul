@@ -1,4 +1,4 @@
-using System; // StringComparison
+using System; // Math, StringComparison
 using System.Collections.Generic; // IList, List
 
 namespace FinanceOverhaul.Core
@@ -276,7 +276,7 @@ namespace FinanceOverhaul.Core
     /// </summary>
     public static class IpoEngine
     {
-        /// <summary>Days the city can buy at the offering price.</summary>
+        /// <summary>Days the city can buy at the offering price by default (<see cref="IpoRules.OfferDays"/>).</summary>
         public const int OfferDays = 7;
 
         /// <summary>The game's highest Stock Exchange level (callers that do not read it pass this).</summary>
@@ -323,7 +323,7 @@ namespace FinanceOverhaul.Core
                 if (c.Status == CompanyStatus.Offering && today >= c.FirstTradingDay)
                 {
                     double pop = IpoPricing.FirstDayPop(rules, dice);
-                    c.PriceCents = IpoPricing.FirstDayPriceCents(c.OfferPriceCents, pop);
+                    c.PriceCents = IpoPricing.FirstDayPriceCents(c.OfferPriceCents, pop, rules);
                     c.Status = CompanyStatus.Trading;
                     c.MovedDay = today;
                     events.Add(
@@ -394,7 +394,8 @@ namespace FinanceOverhaul.Core
                             Fraction = premium,
                             PricePerShareCents = IpoBuyout.PricePerShareCents(
                                 bought.PriceCents,
-                                premium
+                                premium,
+                                rules
                             ),
                         }
                     );
@@ -705,7 +706,7 @@ namespace FinanceOverhaul.Core
                 Site = site,
                 SiteRef = siteRef,
                 AnnouncedDay = today,
-                FirstTradingDay = today + OfferDays,
+                FirstTradingDay = today + Math.Max(1, rules.OfferDays),
                 OfferPriceCents = offer,
                 PriceCents = offer,
                 Status = CompanyStatus.Offering,

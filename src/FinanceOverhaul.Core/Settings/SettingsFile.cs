@@ -65,6 +65,14 @@ namespace FinanceOverhaul.Core
                     continue;
                 }
 
+                if (
+                    key.StartsWith(IpoTuning.KeyPrefix, StringComparison.OrdinalIgnoreCase)
+                    && IpoTuning.TryRead(settings.Ipo, key, value)
+                )
+                {
+                    continue;
+                }
+
                 if (string.Equals(key, TickerBrightnessKey, StringComparison.OrdinalIgnoreCase))
                 {
                     // classic | bright | brightest; unknown values keep the default.
@@ -264,6 +272,11 @@ namespace FinanceOverhaul.Core
             }
 
             settings.Monitor.Write(sb);
+            foreach (string line in IpoTuning.Lines(settings.Ipo))
+            {
+                sb.Append(line).Append('\n');
+            }
+
             return sb.ToString();
         }
 

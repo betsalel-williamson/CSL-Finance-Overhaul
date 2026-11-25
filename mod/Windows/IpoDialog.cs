@@ -3,8 +3,8 @@ using System.Collections.Generic; // Queue
 // ColossalFramework.UI: UIButton, UIComponent, UIHorizontalAlignment, UILabel, UIPanel,
 //   UISlicedSprite, UISprite, UIView
 using ColossalFramework.UI;
-// FinanceOverhaul.Core: BuildingFraming, BuildingKey, CompanyStatus, IpoDialogText, IpoRules,
-//   LocalCompany, ModSettings
+// FinanceOverhaul.Core: BuildingFraming, BuildingKey, CompanyStatus, IpoDialogText, LocalCompany,
+//   ModSettings
 using FinanceOverhaul.Core;
 using UnityEngine; // AudioClip, Color32, Mathf, MonoBehaviour, RectOffset, Time, Vector2, Vector3
 
@@ -383,7 +383,7 @@ namespace FinanceOverhaul
             y = Row(
                 y,
                 IpoDialogText.CanBuyLabel,
-                IpoDialogText.CanBuy(company, CompanyDesk.Rules ?? new IpoRules()),
+                IpoDialogText.CanBuy(company, CompanyDesk.Current),
                 Value,
                 NameCanBuy
             );

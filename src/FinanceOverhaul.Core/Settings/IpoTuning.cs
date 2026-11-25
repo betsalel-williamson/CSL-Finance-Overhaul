@@ -1,0 +1,587 @@
+using System; // Action, Func, Math, StringComparison
+using System.Collections.Generic; // IEnumerable, List
+using System.Globalization; // CultureInfo, NumberStyles
+
+namespace FinanceOverhaul.Core
+{
+    /// <summary>Who sees a Local IPOs value in Options.</summary>
+    public enum TuningAudience
+    {
+        /// <summary>Every player, in the Local IPOs groups (while Local IPOs is on).</summary>
+        Player,
+
+        /// <summary>Dev builds only, in their own group: the finer workings of the market.</summary>
+        Dev,
+    }
+
+    /// <summary>Which Local IPOs group a value sits in, in Options.</summary>
+    public enum TuningGroup
+    {
+        Listing,
+        Candidates,
+        Prices,
+        BuyoutsAndClosing,
+        Market,
+    }
+
+    /// <summary>
+    /// One Local IPOs value as an option: its settings key, its wording, its range and step,
+    /// and where it lives in <see cref="IpoRules"/>. Shown as a slider; the label is
+    /// <c>Strings.Format(LabelId, value)</c>. <see cref="Factor"/> scales what the player sees
+    /// (the second slot comes at twice the doubling base, so that option shows the base × 2).
+    /// </summary>
+    public sealed class IpoTuning
+    {
+        public string Key;
+        public string LabelId;
+        public TuningAudience Audience;
+        public TuningGroup Group;
+        public int Min;
+        public int Max;
+        public int Step = 1;
+        public int Factor = 1;
+        public Func<IpoRules, int> Get;
+        public Action<IpoRules, int> Set;
+
+        /// <summary>The default, as stored (from a fresh <see cref="IpoRules"/>).</summary>
+        public int Default
+        {
+            get { return Get(new IpoRules()); }
+        }
+
+        /// <summary>A stored value as the player sees it.</summary>
+        public int Shown(int stored)
+        {
+            return stored * Factor;
+        }
+
+        /// <summary>
+        /// A value the player picked, as stored: snapped to the step and kept in range. A value
+        /// outside the range (a hand-edited file) is brought inside it.
+        /// </summary>
+        public int Stored(int shown)
+        {
+            int value = Factor <= 1 ? shown : (int)Math.Round((double)shown / Factor);
+            if (Step > 1)
+            {
+                value = Min + (int)Math.Round((double)(value - Min) / Step) * Step;
+            }
+
+            return Math.Max(Min, Math.Min(Max, value));
+        }
+
+        /// <summary>The option's line: its sentence with the value in it.</summary>
+        public string Label(IpoRules rules)
+        {
+            return Strings.Format(
+                LabelId,
+                Shown(Get(rules)).ToString("#,0", CultureInfo.InvariantCulture)
+            );
+        }
+
+        /// <summary>Settings keys start with this; the rest is the value's name.</summary>
+        public const string KeyPrefix = "ipo.";
+
+        /// <summary>Every Local IPOs value, in the order Options shows them.</summary>
+        public static readonly List<IpoTuning> All = Build();
+
+        /// <summary>Reads one settings line into the rules; false if the key is not a Local IPOs value.</summary>
+        public static bool TryRead(IpoRules rules, string key, string value)
+        {
+            IpoTuning t = Find(key);
+            int number;
+            if (t == null)
+            {
+                return false;
+            }
+
+            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out number))
+            {
+                t.Set(rules, Math.Max(t.Min, Math.Min(t.Max, number)));
+            }
+
+            return true; // ours, even if unreadable: the default stays
+        }
+
+        /// <summary>The settings lines for every value that differs from its default.</summary>
+        public static IEnumerable<string> Lines(IpoRules rules)
+        {
+            foreach (IpoTuning t in All)
+            {
+                int v = t.Get(rules);
+                if (v != t.Default)
+                {
+                    yield return t.Key + "=" + v.ToString(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        /// <summary>Every value back to its default.</summary>
+        public static void Reset(IpoRules rules, TuningAudience audience)
+        {
+            var fresh = new IpoRules();
+            foreach (IpoTuning t in All)
+            {
+                if (t.Audience == audience)
+                {
+                    t.Set(rules, t.Get(fresh));
+                }
+            }
+        }
+
+        public static IpoTuning Find(string key)
+        {
+            foreach (IpoTuning t in All)
+            {
+                if (string.Equals(t.Key, key, StringComparison.OrdinalIgnoreCase))
+                {
+                    return t;
+                }
+            }
+
+            return null;
+        }
+
+        private static List<IpoTuning> Build()
+        {
+            var list = new List<IpoTuning>();
+            const TuningAudience P = TuningAudience.Player;
+            const TuningAudience D = TuningAudience.Dev;
+
+            // When companies list.
+            Add(
+                list,
+                "exchangeLevel",
+                P,
+                TuningGroup.Listing,
+                1,
+                5,
+                1,
+                r => r.ExchangeLevel,
+                (r, v) => r.ExchangeLevel = v
+            );
+            Add(
+                list,
+                "gateSquares",
+                P,
+                TuningGroup.Listing,
+                50,
+                2000,
+                50,
+                r => r.GateSquares,
+                (r, v) => r.GateSquares = v
+            );
+            Add(
+                list,
+                "slotDoublingBase",
+                P,
+                TuningGroup.Listing,
+                2,
+                100,
+                1,
+                r => r.SlotDoublingBase,
+                (r, v) => r.SlotDoublingBase = v
+            ).Factor = 2;
+            Add(
+                list,
+                "listingsPerTile",
+                P,
+                TuningGroup.Listing,
+                1,
+                10,
+                1,
+                r => r.ListingsPerTile,
+                (r, v) => r.ListingsPerTile = v
+            );
+            Add(
+                list,
+                "listingCap",
+                P,
+                TuningGroup.Listing,
+                1,
+                100,
+                1,
+                r => r.ListingCap,
+                (r, v) => r.ListingCap = v
+            );
+            Add(
+                list,
+                "maxIposPerYear",
+                P,
+                TuningGroup.Listing,
+                1,
+                24,
+                1,
+                r => r.MaxIposPerYear,
+                (r, v) => r.MaxIposPerYear = v
+            );
+            Add(
+                list,
+                "slotFillDays",
+                P,
+                TuningGroup.Listing,
+                30,
+                3650,
+                1,
+                r => r.SlotFillDays,
+                (r, v) => r.SlotFillDays = v
+            );
+            Add(
+                list,
+                "drawEveryDays",
+                P,
+                TuningGroup.Listing,
+                1,
+                365,
+                1,
+                r => r.DrawEveryDays,
+                (r, v) => r.DrawEveryDays = v
+            );
+
+            // Which businesses can.
+            Add(
+                list,
+                "healthyDays",
+                P,
+                TuningGroup.Candidates,
+                1,
+                1825,
+                1,
+                r => r.HealthyDays,
+                (r, v) => r.HealthyDays = v
+            );
+            Add(
+                list,
+                "topEmployersPercent",
+                P,
+                TuningGroup.Candidates,
+                1,
+                100,
+                1,
+                r => r.TopEmployersPercent,
+                (r, v) => r.TopEmployersPercent = v
+            );
+            Add(
+                list,
+                "minJobs",
+                P,
+                TuningGroup.Candidates,
+                1,
+                500,
+                1,
+                r => r.MinJobs,
+                (r, v) => r.MinJobs = v
+            );
+            Add(
+                list,
+                "specialisedMinJobs",
+                P,
+                TuningGroup.Candidates,
+                1,
+                500,
+                1,
+                r => r.SpecialisedMinJobs,
+                (r, v) => r.SpecialisedMinJobs = v
+            );
+            Add(
+                list,
+                "maxVacancyPercent",
+                P,
+                TuningGroup.Candidates,
+                0,
+                100,
+                1,
+                r => r.MaxVacancyPercent,
+                (r, v) => r.MaxVacancyPercent = v
+            );
+            Add(
+                list,
+                "landValueFloor",
+                P,
+                TuningGroup.Candidates,
+                0,
+                100,
+                1,
+                r => r.LandValueFloor,
+                (r, v) => r.LandValueFloor = v
+            );
+            Add(
+                list,
+                "areaMinLevel",
+                P,
+                TuningGroup.Candidates,
+                1,
+                5,
+                1,
+                r => r.AreaMinLevel,
+                (r, v) => r.AreaMinLevel = v
+            );
+            Add(
+                list,
+                "factoryMinProductionPercent",
+                P,
+                TuningGroup.Candidates,
+                1,
+                150,
+                1,
+                r => r.FactoryMinProductionPercent,
+                (r, v) => r.FactoryMinProductionPercent = v
+            );
+
+            // Prices.
+            Add(
+                list,
+                "offerDays",
+                P,
+                TuningGroup.Prices,
+                1,
+                60,
+                1,
+                r => r.OfferDays,
+                (r, v) => r.OfferDays = v
+            );
+            Add(
+                list,
+                "priceToEarnings",
+                P,
+                TuningGroup.Prices,
+                1,
+                100,
+                1,
+                r => r.PriceToEarnings,
+                (r, v) => r.PriceToEarnings = v
+            );
+            Add(
+                list,
+                "cityStakePercent",
+                P,
+                TuningGroup.Prices,
+                1,
+                100,
+                1,
+                r => r.CityStakePercent,
+                (r, v) => r.CityStakePercent = v
+            );
+            Add(
+                list,
+                "popAveragePercent",
+                P,
+                TuningGroup.Prices,
+                -50,
+                200,
+                1,
+                r => r.PopAveragePercent,
+                (r, v) => r.PopAveragePercent = v
+            );
+            Add(
+                list,
+                "popSpreadPercent",
+                P,
+                TuningGroup.Prices,
+                0,
+                200,
+                1,
+                r => r.PopSpreadPercent,
+                (r, v) => r.PopSpreadPercent = v
+            );
+
+            // Buy-outs and closing.
+            Add(
+                list,
+                "buyoutPercentPerYear",
+                P,
+                TuningGroup.BuyoutsAndClosing,
+                0,
+                100,
+                1,
+                r => r.BuyoutPercentPerYear,
+                (r, v) => r.BuyoutPercentPerYear = v
+            );
+            Add(
+                list,
+                "buyoutMinDaysListed",
+                P,
+                TuningGroup.BuyoutsAndClosing,
+                0,
+                3650,
+                1,
+                r => r.BuyoutMinDaysListed,
+                (r, v) => r.BuyoutMinDaysListed = v
+            );
+            Add(
+                list,
+                "buyoutPremiumAveragePercent",
+                P,
+                TuningGroup.BuyoutsAndClosing,
+                0,
+                300,
+                1,
+                r => r.BuyoutPremiumAveragePercent,
+                (r, v) => r.BuyoutPremiumAveragePercent = v
+            );
+            Add(
+                list,
+                "buyoutPremiumSpreadPercent",
+                P,
+                TuningGroup.BuyoutsAndClosing,
+                0,
+                200,
+                1,
+                r => r.BuyoutPremiumSpreadPercent,
+                (r, v) => r.BuyoutPremiumSpreadPercent = v
+            );
+            Add(
+                list,
+                "homeGraceDays",
+                P,
+                TuningGroup.BuyoutsAndClosing,
+                1,
+                730,
+                1,
+                r => r.HomeGraceDays,
+                (r, v) => r.HomeGraceDays = v
+            );
+
+            // The finer workings (dev builds).
+            Add(
+                list,
+                "steadyPercent",
+                D,
+                TuningGroup.Market,
+                1,
+                100,
+                1,
+                r => r.SteadyPercent,
+                (r, v) => r.SteadyPercent = v
+            );
+            Add(
+                list,
+                "badDayCost",
+                D,
+                TuningGroup.Market,
+                1,
+                365,
+                1,
+                r => r.BadDayCost,
+                (r, v) => r.BadDayCost = v
+            );
+            Add(
+                list,
+                "dailySwingPercent",
+                D,
+                TuningGroup.Market,
+                0,
+                50,
+                1,
+                r => r.DailySwingPercent,
+                (r, v) => r.DailySwingPercent = v
+            );
+            Add(
+                list,
+                "fairPullPercent",
+                D,
+                TuningGroup.Market,
+                0,
+                100,
+                1,
+                r => r.FairPullPercent,
+                (r, v) => r.FairPullPercent = v
+            );
+            Add(
+                list,
+                "maxDailyMovePercent",
+                D,
+                TuningGroup.Market,
+                1,
+                100,
+                1,
+                r => r.MaxDailyMovePercent,
+                (r, v) => r.MaxDailyMovePercent = v
+            );
+            Add(
+                list,
+                "homelessFallPercent",
+                D,
+                TuningGroup.Market,
+                0,
+                50,
+                1,
+                r => r.HomelessFallPercent,
+                (r, v) => r.HomelessFallPercent = v
+            );
+            Add(
+                list,
+                "popMinPercent",
+                D,
+                TuningGroup.Market,
+                -99,
+                0,
+                1,
+                r => r.PopMinPercent,
+                (r, v) => r.PopMinPercent = v
+            );
+            Add(
+                list,
+                "popMaxPercent",
+                D,
+                TuningGroup.Market,
+                0,
+                2000,
+                10,
+                r => r.PopMaxPercent,
+                (r, v) => r.PopMaxPercent = v
+            );
+            Add(
+                list,
+                "buyoutPremiumMinPercent",
+                D,
+                TuningGroup.Market,
+                0,
+                300,
+                1,
+                r => r.BuyoutPremiumMinPercent,
+                (r, v) => r.BuyoutPremiumMinPercent = v
+            );
+            Add(
+                list,
+                "buyoutPremiumMaxPercent",
+                D,
+                TuningGroup.Market,
+                0,
+                1000,
+                10,
+                r => r.BuyoutPremiumMaxPercent,
+                (r, v) => r.BuyoutPremiumMaxPercent = v
+            );
+            return list;
+        }
+
+        private static IpoTuning Add(
+            List<IpoTuning> list,
+            string name,
+            TuningAudience audience,
+            TuningGroup group,
+            int min,
+            int max,
+            int step,
+            Func<IpoRules, int> get,
+            Action<IpoRules, int> set
+        )
+        {
+            var t = new IpoTuning
+            {
+                Key = KeyPrefix + name,
+                LabelId = "options.ipo." + name,
+                Audience = audience,
+                Group = group,
+                Min = min,
+                Max = max,
+                Step = step,
+                Get = get,
+                Set = set,
+            };
+            list.Add(t);
+            return t;
+        }
+    }
+}

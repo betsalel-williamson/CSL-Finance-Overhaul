@@ -1,0 +1,11 @@
+# Local IPOs: every value the market uses is an option. The Options page, built as the game
+# builds it, has a slider for each: the player's four groups while Local IPOs is on, and the finer
+# workings in dev builds. Each label says its value. Reads only; nothing is changed.
+name local ipos: Options has a slider for every Local IPOs value, each label saying its value
+local-ipos on
+options-preview on
+expect-ipo-options 36
+capture ipo-options
+cleanup:
+options-preview off
+local-ipos restore

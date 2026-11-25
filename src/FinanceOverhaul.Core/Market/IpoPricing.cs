@@ -67,19 +67,22 @@ namespace FinanceOverhaul.Core
         /// The first-day pop as a fraction of the offering price (0.15 = opens 15% up), modelled
         /// on real IPOs: most rise modestly, a few soar, a few fall. A log-normal jump whose
         /// average and standard deviation are the two options, cut off at
-        /// <see cref="MinPop"/> and <see cref="MaxPop"/>. Takes two numbers from the dice.
+        /// <see cref="IpoRules.PopMinPercent"/> and <see cref="IpoRules.PopMaxPercent"/>
+        /// (by default <see cref="MinPop"/> and <see cref="MaxPop"/>). Takes two numbers from the dice.
         /// </summary>
         public static double FirstDayPop(IpoRules rules, IpoDice dice)
         {
             double mean = 1d + rules.PopAveragePercent / 100d;
             double spread = Math.Max(0, rules.PopSpreadPercent) / 100d;
             double jump = dice.LogNormal(mean, spread);
+            double low = Math.Max(-0.99d, rules.PopMinPercent / 100d);
+            double high = Math.Max(low, rules.PopMaxPercent / 100d);
             if (mean <= 0d)
             {
-                return MinPop;
+                return low;
             }
 
-            return Math.Max(MinPop, Math.Min(MaxPop, jump - 1d));
+            return Math.Max(low, Math.Min(high, jump - 1d));
         }
 
         /// <summary>
@@ -126,10 +129,20 @@ namespace FinanceOverhaul.Core
             return Math.Max(MinPriceCents, Math.Min(MaxPriceCents, next));
         }
 
-        /// <summary>The opening price on the first trading day: whole ₡, inside the same range.</summary>
-        public static long FirstDayPriceCents(long offeringPriceCents, double pop)
+        /// <summary>
+        /// The opening price on the first trading day: whole ₡, the pop kept inside the rules'
+        /// range (the defaults without rules), the price inside the game's.
+        /// </summary>
+        public static long FirstDayPriceCents(
+            long offeringPriceCents,
+            double pop,
+            IpoRules rules = null
+        )
         {
-            double opened = offeringPriceCents * (1d + Math.Max(MinPop, Math.Min(MaxPop, pop)));
+            rules = rules ?? new IpoRules();
+            double low = Math.Max(-0.99d, rules.PopMinPercent / 100d);
+            double high = Math.Max(low, rules.PopMaxPercent / 100d);
+            double opened = offeringPriceCents * (1d + Math.Max(low, Math.Min(high, pop)));
             long whole = (long)Math.Round(opened / 100d, MidpointRounding.AwayFromZero) * 100;
             return Math.Max(MinPriceCents, Math.Min(MaxPriceCents, whole));
         }

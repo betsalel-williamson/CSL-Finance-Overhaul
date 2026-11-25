@@ -154,6 +154,21 @@ namespace FinanceOverhaul.Core
 
         /// <summary>A unique factory's production slider (percent of its budget) it needs to count as healthy.</summary>
         public int FactoryMinProductionPercent = 100;
+
+        /// <summary>Days the city can buy at the offering price before the first trading day.</summary>
+        public int OfferDays = 7;
+
+        /// <summary>The lowest first-day jump, in percent (−50: never opens below half the offering price).</summary>
+        public int PopMinPercent = -50;
+
+        /// <summary>The highest first-day jump, in percent (300: never opens above four times the offering price).</summary>
+        public int PopMaxPercent = 300;
+
+        /// <summary>The lowest buy-out premium, in percent.</summary>
+        public int BuyoutPremiumMinPercent = 10;
+
+        /// <summary>The highest buy-out premium, in percent.</summary>
+        public int BuyoutPremiumMaxPercent = 150;
     }
 
     /// <summary>The kinds of business that list separately: the three zones and each specialisation.</summary>

@@ -1,24 +1,28 @@
 using System.Collections; // IEnumerator
 using System.Collections.Generic; // List
 using System.Text; // StringBuilder
-using ColossalFramework.UI; // UICheckBox, UIComponent, UILabel, UISprite, UIView
+// ColossalFramework.UI: LayoutDirection, UICheckBox, UIComponent, UILabel, UIScrollablePanel,
+//   UISlider, UISprite, UIView
+using ColossalFramework.UI;
 // FinanceOverhaul.Core: BoardView, BondText, BuildingFraming, BusinessSite, CompanyStatus,
-//   IpoBoard, IpoEarnings, IpoPricing, IpoRules, KindFacts, KindState, KindStatus, LocalCompany,
-//   Strings
+//   IpoBoard, IpoEarnings, IpoPricing, IpoRules, IpoTuning, KindFacts, KindState, KindStatus,
+//   LocalCompany, Strings
 using FinanceOverhaul.Core;
-using UnityEngine; // Mathf, WaitForSeconds
+using UnityEngine; // Mathf, Object, RectOffset, Vector2, Vector3, WaitForSeconds
 
 // Game classes used without a using (global namespace, Assembly-CSharp): Building, BuildingInfo,
 //   BuildingManager, CameraController, District, DistrictAreaResourceData, DistrictManager,
 //   DistrictPark, EconomyManager, FastList, GameAreaManager, IndustryBuildingAI, InstanceID,
 //   Investment, ItemClass, LocaleFormatter, PrivateBuildingAI, SimulationManager,
-//   ToolsModifierControl, TransferManager, UniqueFactoryAI
+//   ToolsModifierControl, TransferManager, UIHelper, UniqueFactoryAI
 
 namespace FinanceOverhaul
 {
     /// <summary>Game UI test commands: Local IPOs (the daily scan of businesses).</summary>
     public partial class UiTestRunner
     {
+        private const string OptionsPreviewName = "FinanceOverhaulOptionsPreview";
+
         private IEnumerator CompanySteps(
             string line,
             string cmd,
@@ -63,6 +67,88 @@ namespace FinanceOverhaul
                     // ipo-healthy-days N — the healthy days a business needs to be a candidate,
                     // until the scenario ends (the real rule is 365).
                     CompanyDesk.Rules = new IpoRules { HealthyDays = (int)ParseFloat(a, 365f) };
+                    break;
+                }
+                case "options-preview":
+                {
+                    // options-preview on|off — builds the Options page (Options → Finance
+                    // Overhaul) into a panel over the game, as the game would, so a scenario can
+                    // read and capture it; logs how many Local IPOs sliders it has.
+                    UIComponent old = FindControl(OptionsPreviewName, true);
+                    if (old != null)
+                    {
+                        Object.Destroy(old.gameObject);
+                    }
+
+                    if (a != "on")
+                    {
+                        break;
+                    }
+
+                    UIView view = UIView.GetAView();
+                    var root = view.AddUIComponent(typeof(UIScrollablePanel)) as UIScrollablePanel;
+                    root.name = OptionsPreviewName;
+                    root.backgroundSprite = "MenuPanel2"; // not shown: a game sprite name
+                    root.size = new Vector2(1860f, 1080f);
+                    root.relativePosition = new Vector3(30f, 40f);
+                    root.autoLayout = true;
+                    root.autoLayoutDirection = LayoutDirection.Horizontal;
+                    root.wrapLayout = true;
+                    root.autoLayoutPadding = new RectOffset(10, 10, 10, 0);
+                    root.clipChildren = true;
+                    ModOptions.Build(new UIHelper(root));
+                    int sliders = 0;
+                    foreach (UISlider s in root.GetComponentsInChildren<UISlider>())
+                    {
+                        if (s.name.StartsWith("FinanceOverhaulIpoOption-"))
+                        {
+                            sliders++;
+                        }
+                    }
+
+                    ModLog.Info("uitest: options preview has " + sliders + " Local IPOs slider(s)");
+                    yield return new WaitForSeconds(0.5f);
+                    break;
+                }
+                case "expect-ipo-options":
+                {
+                    // expect-ipo-options N — the Options preview shows N Local IPOs sliders, each
+                    // label saying its value.
+                    UIComponent root = FindControl(OptionsPreviewName, true);
+                    if (root == null)
+                    {
+                        r.Error = "options-preview on first";
+                        break;
+                    }
+
+                    int found = 0;
+                    foreach (UISlider s in root.GetComponentsInChildren<UISlider>())
+                    {
+                        if (!s.name.StartsWith("FinanceOverhaulIpoOption-"))
+                        {
+                            continue;
+                        }
+
+                        found++;
+                        UILabel label = s.parent.Find<UILabel>("Label");
+                        IpoTuning t = IpoTuning.Find(
+                            s.name.Substring("FinanceOverhaulIpoOption-".Length)
+                        );
+                        string want = t == null ? null : t.Label(CompanyDesk.Current);
+                        if (label == null || label.text != want)
+                        {
+                            r.Error =
+                                s.name + " reads '" + (label == null ? "-" : label.text) + "'";
+                            break;
+                        }
+                    }
+
+                    ModLog.Info("uitest: " + found + " Local IPOs slider(s) with their values");
+                    if (r.Error == null && found != (int)ParseFloat(a, -1f))
+                    {
+                        r.Error = found + " Local IPOs sliders, expected " + a;
+                    }
+
                     break;
                 }
                 case "ipo-home-back":
@@ -134,7 +220,7 @@ namespace FinanceOverhaul
                     BoardView board = CompanyDesk.Board();
                     string needs = Strings.Format(
                         "ipo.card.note.exchange",
-                        (CompanyDesk.Rules ?? new IpoRules()).ExchangeLevel
+                        CompanyDesk.Current.ExchangeLevel
                     );
                     int checkedCards = 0;
                     foreach (KindStatus k in board.Kinds)

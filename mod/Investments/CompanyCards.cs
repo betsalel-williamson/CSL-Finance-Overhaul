@@ -82,7 +82,7 @@ namespace FinanceOverhaul
                 }
 
                 BoardView board = CompanyDesk.Board();
-                IpoRules rules = CompanyDesk.Rules ?? new IpoRules();
+                IpoRules rules = CompanyDesk.Current;
                 string next = SimulationManager
                     .instance.m_currentGameTime.AddDays(board.NextAllowedDay - OrderDesk.Today)
                     .ToString("dd/MM/yyyy");

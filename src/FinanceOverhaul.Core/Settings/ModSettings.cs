@@ -74,6 +74,13 @@ namespace FinanceOverhaul.Core
         /// </summary>
         public bool IpoDialogEnabled { get; set; } = true;
 
+        /// <summary>
+        /// Every Local IPOs value (Options: the player's groups and, in dev builds, the finer
+        /// workings; <see cref="IpoTuning"/>). Saved as <c>ipo.*</c> lines, only where a value
+        /// differs from its default.
+        /// </summary>
+        public IpoRules Ipo { get; set; } = new IpoRules();
+
         /// <summary>How the Stock Exchange LED ticker shows the change (visual only).</summary>
         public TickerDisplay TickerShows { get; set; }
 
