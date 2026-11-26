@@ -26,16 +26,22 @@ namespace FinanceOverhaul
                 Settings.LiveTickerEnabled,
                 OnLiveTickerChanged
             );
-            group.AddDropdown(
-                Strings.Get("options.ticker.shows"),
-                new[]
-                {
-                    Strings.Get("options.ticker.shows.percent"),
-                    Strings.Get("options.ticker.shows.price"),
-                },
-                Settings.TickerShows == TickerDisplay.PriceAndChange ? 1 : 0,
-                OnTickerShowsChanged
-            );
+            var shows =
+                group.AddDropdown(
+                    Strings.Get("options.ticker.shows"),
+                    new[]
+                    {
+                        Strings.Get("options.ticker.shows.percent"),
+                        Strings.Get("options.ticker.shows.price"),
+                    },
+                    Settings.TickerShows == TickerDisplay.PriceAndChange ? 1 : 0,
+                    OnTickerShowsChanged
+                ) as ColossalFramework.UI.UIDropDown;
+            if (shows != null)
+            {
+                // Wide enough for its longest choice ("Price and change (₡1,234 +3.22%)").
+                shows.width = 360f;
+            }
             group.AddCheckbox(
                 Strings.Get("options.ticker.infoViews"),
                 Settings.TickerInInfoViews,
@@ -75,16 +81,21 @@ namespace FinanceOverhaul
             // The Investments list (being built): shown while its flag is on, and in dev builds.
             if (Settings.InvestmentListEnabled || BuildInfo.ShowDevBuildIdentity)
             {
-                group.AddCheckbox(
-                    Strings.Get("options.investmentList.syncSort"),
-                    Settings.InvestmentListSortSynced,
-                    v =>
-                    {
-                        Settings.InvestmentListSortSynced = v;
-                        Mod.SaveSettings();
-                        ModLog.Info("investment list sort synced=" + v);
-                    }
-                );
+                var sync =
+                    group.AddCheckbox(
+                        Strings.Get("options.investmentList.syncSort"),
+                        Settings.InvestmentListSortSynced,
+                        v =>
+                        {
+                            Settings.InvestmentListSortSynced = v;
+                            Mod.SaveSettings();
+                            ModLog.Info("investment list sort synced=" + v);
+                        }
+                    ) as ColossalFramework.UI.UICheckBox;
+                if (sync != null)
+                {
+                    sync.tooltip = Strings.Get("options.investmentList.syncSort.tip");
+                }
             }
 
             group.AddCheckbox(
