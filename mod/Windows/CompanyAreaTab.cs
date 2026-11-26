@@ -3,8 +3,7 @@ using ColossalFramework.UI; // UIButton, UIComponent, UIPanel, UITabContainer, U
 using FinanceOverhaul.Core; // BusinessSite, CompanyPanelText, LocalCompany
 using UnityEngine; // Mathf, MonoBehaviour, Time, Vector2, Vector3
 
-// Game classes used without a using (global namespace, Assembly-CSharp): DistrictManager,
-//   WorldInfoPanel
+// Game classes used without a using (global namespace, Assembly-CSharp): WorldInfoPanel
 
 namespace FinanceOverhaul
 {
@@ -102,7 +101,7 @@ namespace FinanceOverhaul
                 return null;
             }
 
-            ushort gate = DistrictManager.instance.m_parks.m_buffer[park].m_mainGate;
+            ushort gate = IndustrySites.MainBuilding(park);
             LocalCompany company = CompanyBuildingPanel.CompanyAt(gate);
             return company != null && company.Site == BusinessSite.Area ? company : null;
         }

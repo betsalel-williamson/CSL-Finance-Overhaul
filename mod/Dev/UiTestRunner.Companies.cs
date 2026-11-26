@@ -1,12 +1,12 @@
 using System.Collections; // IEnumerator
-using System.Collections.Generic; // Dictionary, List
+using System.Collections.Generic; // Dictionary, KeyValuePair, List, SortedDictionary
 using System.Text; // StringBuilder
 // ColossalFramework.UI: LayoutDirection, UIButton, UICheckBox, UIComponent, UILabel,
 //   UIScrollablePanel, UISlider, UISprite, UITextField, UITextureAtlas, UIView
 using ColossalFramework.UI;
-// FinanceOverhaul.Core: BoardView, BondText, BuildingFraming, BusinessSite, CompanyStatus,
-//   IpoBoard, IpoCardText, IpoEarnings, IpoPricing, IpoRules, IpoTuning, IpoUserPreset, KindFacts,
-//   KindState, KindStatus, LocalCompany, ModSettings, Strings
+// FinanceOverhaul.Core: BoardView, BondText, BuildingFraming, BusinessKind, BusinessKinds,
+//   BusinessSite, CompanyStatus, IpoBoard, IpoCardText, IpoEarnings, IpoPricing, IpoRules,
+//   IpoTuning, IpoUserPreset, KindFacts, KindState, KindStatus, LocalCompany, ModSettings, Strings
 using FinanceOverhaul.Core;
 using UnityEngine; // Mathf, Object, RectOffset, Vector2, Vector3, WaitForSeconds
 
@@ -625,6 +625,154 @@ namespace FinanceOverhaul
                     // Forgets the healthy-day counts in memory (the save is untouched).
                     CompanyDesk.ForgetCounts();
                     break;
+                case "ipo-workers":
+                {
+                    // ipo-workers — counts every business in the city as the game's panels do:
+                    // each zoned kind grouped by building type, every industry area summed over
+                    // its buildings, and every unique factory. Jobs and workers today.
+                    Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
+                    DistrictManager districts = DistrictManager.instance;
+                    var groups = new SortedDictionary<string, int[]>();
+                    var parkJobs = new Dictionary<byte, int[]>();
+                    for (int i = 1; i < buffer.Length; i++)
+                    {
+                        if ((buffer[i].m_flags & Building.Flags.Created) == 0)
+                        {
+                            continue;
+                        }
+
+                        BuildingInfo info = buffer[i].Info;
+                        if (info == null || info.m_class == null || info.m_buildingAI == null)
+                        {
+                            continue;
+                        }
+
+                        var id = (ushort)i;
+                        BusinessKind kind;
+                        bool zoned =
+                            info.m_buildingAI is PrivateBuildingAI
+                            && BusinessKinds.TryFromGame(
+                                info.m_class.m_service.ToString(),
+                                info.m_class.m_subService.ToString(),
+                                out kind
+                            );
+                        bool industry = info.m_class.m_service == ItemClass.Service.PlayerIndustry;
+                        if (!zoned && !industry)
+                        {
+                            continue;
+                        }
+
+                        int jobs = BuildingStaff.Jobs(id);
+                        int workers = BuildingStaff.Workers(id);
+                        if (zoned)
+                        {
+                            string key =
+                                info.m_class.m_subService
+                                + " "
+                                + info.m_buildingAI.GetType().Name
+                                + " "
+                                + buffer[i].Width
+                                + "x"
+                                + buffer[i].Length; // not shown: the log
+                            int[] g;
+                            if (!groups.TryGetValue(key, out g))
+                            {
+                                g = new[] { 0, 0, 0, int.MaxValue, 0 };
+                                groups[key] = g;
+                            }
+
+                            g[0]++;
+                            g[1] += jobs;
+                            g[2] += workers;
+                            g[3] = Mathf.Min(g[3], workers);
+                            g[4] = Mathf.Max(g[4], workers);
+                            continue;
+                        }
+
+                        if (info.m_buildingAI is UniqueFactoryAI)
+                        {
+                            ModLog.Info(
+                                "uitest: workers factory '"
+                                    + info.name
+                                    + "' building "
+                                    + i
+                                    + " jobs "
+                                    + jobs
+                                    + " workers "
+                                    + workers
+                            );
+                        }
+
+                        byte park = districts.GetPark(buffer[i].m_position);
+                        ModLog.Info(
+                            "uitest: workers industry building "
+                                + i
+                                + " '"
+                                + info.name
+                                + "' "
+                                + info.m_buildingAI.GetType().Name
+                                + " area "
+                                + park
+                                + " jobs "
+                                + jobs
+                                + " workers "
+                                + workers
+                        );
+                        int[] pj;
+                        if (!parkJobs.TryGetValue(park, out pj))
+                        {
+                            pj = new int[3];
+                            parkJobs[park] = pj;
+                        }
+
+                        pj[0]++;
+                        pj[1] += jobs;
+                        pj[2] += workers;
+                    }
+
+                    foreach (KeyValuePair<string, int[]> g in groups)
+                    {
+                        ModLog.Info(
+                            "uitest: workers zoned "
+                                + g.Key
+                                + " n="
+                                + g.Value[0]
+                                + " jobs="
+                                + g.Value[1]
+                                + " workers="
+                                + g.Value[2]
+                                + " min="
+                                + g.Value[3]
+                                + " max="
+                                + g.Value[4]
+                        );
+                    }
+
+                    foreach (KeyValuePair<byte, int[]> pj in parkJobs)
+                    {
+                        DistrictPark park = districts.m_parks.m_buffer[pj.Key];
+                        ModLog.Info(
+                            "uitest: workers area "
+                                + pj.Key
+                                + " '"
+                                + (pj.Key == 0 ? "(no area)" : districts.GetParkName(pj.Key))
+                                + "' type "
+                                + park.m_parkType
+                                + " level "
+                                + park.m_parkLevel
+                                + " gate "
+                                + park.m_mainGate
+                                + " buildings "
+                                + pj.Value[0]
+                                + " jobs "
+                                + pj.Value[1]
+                                + " workers "
+                                + pj.Value[2]
+                        );
+                    }
+
+                    break;
+                }
                 case "ipo-scan":
                 {
                     // ipo-scan — reads every zoned business now, with the simulation paused, and

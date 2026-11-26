@@ -66,15 +66,17 @@ game's own Esc handling, as the key would — scenario 60), `cash-set ₡`, `cas
 outright, put back what was taken, check the cash to the cent, and run the daily bond step now —
 scenario 61), `local-ipos on|off|restore`, `ipo-healthy-days N`, `ipo-forget`, `ipo-scan` (reads
 every zoned business now and logs each kind's squares, top-level buildings, candidates, slots and
-why businesses fail the health check) and `expect-ipo-candidates none|some` (scenario 64),
-`ipo-list-now`, `ipo-first-day`, `ipo-buyout`,
-`expect-company offering|trading|gone [listed|unlisted]` and `ipo-remove-test` (scenario 66: a
-company lists as a stock, opens and is bought out), `expect-company-cards` (scenario 68: a card per
-kind of business in Economy → Investments), `ipo-dialog on|off|close` and `ipo-buy SHARES` (scenario
-67: the IPO dialog and the chirps), `ipo-look-behind` (dev: the next scan looks behind again, as on
-a city's first scan), `ipo-forget-pacing` (dev clean-up: forgets the IPO days counted towards the
-year's limit), `ipo-remove-all` (dev clean-up: every local company removed as if none had listed,
-mod data rewritten), `historical-off NAME` (takes the Historical flag off businesses of that name),
+why businesses fail the health check, and every business's jobs and workers per kind), `ipo-workers`
+(a full count of jobs and workers today: zoned kinds by building type, every industry building with
+its area, every unique factory) and `expect-ipo-candidates none|some` (scenario 64), `ipo-list-now`,
+`ipo-first-day`, `ipo-buyout`, `expect-company offering|trading|gone [listed|unlisted]` and
+`ipo-remove-test` (scenario 66: a company lists as a stock, opens and is bought out),
+`expect-company-cards` (scenario 68: a card per kind of business in Economy → Investments),
+`ipo-dialog on|off|close` and `ipo-buy SHARES` (scenario 67: the IPO dialog and the chirps),
+`ipo-look-behind` (dev: the next scan looks behind again, as on a city's first scan),
+`ipo-forget-pacing` (dev clean-up: forgets the IPO days counted towards the year's limit),
+`ipo-remove-all` (dev clean-up: every local company removed as if none had listed, mod data
+rewritten), `historical-off NAME` (takes the Historical flag off businesses of that name),
 `ipo-industry` (logs every industry area and unique factory with its level, workers and a week's
 money, as the game's panels work them out), `ipo-grace N` (days a company with no headquarters stays
 listed, until the scenario ends), `ipo-list-now area|factory` (lists the first industry area or

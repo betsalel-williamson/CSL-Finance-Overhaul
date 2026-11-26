@@ -6,8 +6,8 @@ using FinanceOverhaul.Core;
 
 // Game classes used without a using (global namespace, Assembly-CSharp): Building, BuildingInfo,
 //   BuildingManager, DistrictAreaResourceData, DistrictManager, DistrictPark, EconomyManager,
-//   FastList, IndustryBuildingAI, InstanceID, ItemClass, Notification, TransferManager,
-//   UniqueFactoryAI
+//   FastList, IndustryBuildingAI, InstanceID, ItemClass, MainIndustryBuildingAI, Notification,
+//   TransferManager, UniqueFactoryAI
 
 namespace FinanceOverhaul
 {
@@ -101,7 +101,7 @@ namespace FinanceOverhaul
                 }
 
                 DistrictPark p = districts.m_parks.m_buffer[park];
-                ushort gate = p.m_mainGate;
+                ushort gate = MainBuilding((byte)park);
                 if ((p.m_flags & DistrictPark.Flags.Created) == 0 || !p.IsIndustry || gate == 0)
                 {
                     return false;
@@ -130,6 +130,54 @@ namespace FinanceOverhaul
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// The industry area's main building, or 0. The game's own note of it (the park's main
+        /// gate) can be 0 while the main building stands (seen in a level 5 farming area), so
+        /// the area's buildings are searched for it then.
+        /// </summary>
+        public static ushort MainBuilding(byte park)
+        {
+            DistrictManager districts = DistrictManager.instance;
+            Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
+            ushort gate = districts.m_parks.m_buffer[park].m_mainGate;
+            if (park == 0 || IsMainBuilding(gate))
+            {
+                return park == 0 ? (ushort)0 : gate;
+            }
+
+            FastList<ushort> service = BuildingManager.instance.GetServiceBuildings(
+                ItemClass.Service.PlayerIndustry
+            );
+            ushort found = 0;
+            for (int i = 0; i < service.m_size; i++)
+            {
+                ushort id = service.m_buffer[i];
+                if (
+                    IsMainBuilding(id)
+                    && districts.GetPark(buffer[id].m_position) == park
+                    && (found == 0 || id < found)
+                )
+                {
+                    found = id;
+                }
+            }
+
+            return found;
+        }
+
+        private static bool IsMainBuilding(ushort id)
+        {
+            if (id == 0)
+            {
+                return false;
+            }
+
+            Building b = BuildingManager.instance.m_buildings.m_buffer[id];
+            return (b.m_flags & Building.Flags.Created) != 0
+                && b.Info != null
+                && b.Info.m_buildingAI is MainIndustryBuildingAI;
         }
 
         /// <summary>
@@ -198,7 +246,7 @@ namespace FinanceOverhaul
             for (int p = 1; p < districts.m_parks.m_size; p++)
             {
                 DistrictPark park = districts.m_parks.m_buffer[p];
-                ushort gate = park.m_mainGate;
+                ushort gate = MainBuilding((byte)p);
                 BusinessKind kind;
                 if (
                     (park.m_flags & DistrictPark.Flags.Created) == 0

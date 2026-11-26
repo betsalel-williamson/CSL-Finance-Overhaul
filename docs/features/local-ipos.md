@@ -1006,6 +1006,14 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
   building with its info panel, as the IPO dialog's button does (without the fireworks). It is
   disabled with a tooltip while the headquarters is lost or being rebuilt, and hidden for the game's
   own stocks. Both dialogs use `CompanyHome.Show`. Scenario 71 opens it from Economy and clicks it.
+- **Farming area missed (fixed 2026-11-26):** the game can leave an industry area's main-gate note
+  at 0 while its main building stands (seen on a level 5 farming area), and the scan skipped such
+  areas, so they never went public. `IndustrySites.MainBuilding` now searches the area's buildings
+  for its main building then (the Shares tab uses it too). Zoned jobs are now counted as the
+  building panel counts them (after Industry 4.0 trims them, `BuildingStaff`). The dev `ipo-workers`
+  step logs a full count: every zoned kind by building type, every industry building with its area,
+  and every unique factory, with jobs and workers today (alive, not moving in). The unique factory
+  panel's "Workplaces" is its job slots, not its workers.
 - **Charts start when the company does (fixed 2026-11-25):** the game seeds a new listing's 30 daily
   prices with its offering price, so every chart showed a flat line back to "30 days ago". The mod's
   charts (the Invest dialog's Share value chart, the stock tooltip, the Stock Monitor's rows and

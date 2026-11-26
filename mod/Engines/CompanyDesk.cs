@@ -817,6 +817,13 @@ namespace FinanceOverhaul
                     jobsOfKind[kind] = new List<int>();
                 }
 
+                // Dev readout only: the people working in each business today.
+                var workersOfKind = new Dictionary<BusinessKind, List<int>>();
+                foreach (BusinessKind kind in Enum.GetValues(typeof(BusinessKind)))
+                {
+                    workersOfKind[kind] = new List<int>();
+                }
+
                 const Building.Flags Gone =
                     Building.Flags.Abandoned
                     | Building.Flags.Collapsed
@@ -858,8 +865,13 @@ namespace FinanceOverhaul
                     }
 
                     totals[kind] = total;
-                    int jobs = Workplaces(ai, level, i, width, length);
+                    int jobs = BuildingStaff.Jobs((ushort)i);
                     jobsOfKind[kind].Add(jobs);
+                    if (MeasureJobSizes)
+                    {
+                        workersOfKind[kind].Add(BuildingStaff.Workers((ushort)i));
+                    }
+
                     int landValue;
                     land.CheckLocalResource(
                         ImmaterialResourceManager.Resource.LandValue,
@@ -929,7 +941,22 @@ namespace FinanceOverhaul
                         .Append(jobs[jobs.Count - 1])
                         .Append(" floor=")
                         .Append(floors[kind])
-                        .Append(';');
+                        .Append(" jobs=");
+                    // Every business's jobs, for plotting the spread.
+                    for (int j = 0; j < jobs.Count; j++)
+                    {
+                        sizes.Append(j == 0 ? string.Empty : ",").Append(jobs[j]);
+                    }
+
+                    var workers = new List<int>(workersOfKind[kind]);
+                    workers.Sort();
+                    sizes.Append(" workers=");
+                    for (int j = 0; j < workers.Count; j++)
+                    {
+                        sizes.Append(j == 0 ? string.Empty : ",").Append(workers[j]);
+                    }
+
+                    sizes.Append(';');
                 }
 
                 LastJobSizes = sizes.ToString();
