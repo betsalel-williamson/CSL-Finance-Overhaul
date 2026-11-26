@@ -54,6 +54,16 @@ expect-investments Portfolio TST
 expect-visible FinanceOverhaulInvestmentsHeading-Portfolio
 click FinanceOverhaulInvestmentsGroup
 wait 0.5
+# with the dialog open, the line behind it under the pointer is not outlined
+investments-scroll-to TST
+click FinanceOverhaulInvestmentsRow-TSTBuy
+wait 1
+hover FinanceOverhaulInvestmentsRow-TST 0.3 0.5
+wait 0.3
+expect-hidden FinanceOverhaulInvestmentsRow-TSTOutline
+hover off
+close-dialog
+wait 0.5
 # the dialog turns from Buy to Sell and back without closing
 investments-scroll-to TST
 click FinanceOverhaulInvestmentsRow-TSTBuy

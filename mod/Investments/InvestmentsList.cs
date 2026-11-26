@@ -263,6 +263,24 @@ namespace FinanceOverhaul
         /// </summary>
         private void Hover()
         {
+            // A dialog over the panel (the game's Buy / Sell, any modal) owns the mouse: nothing
+            // behind it is outlined or opens its chart.
+            if (UIView.GetModalComponent() != null)
+            {
+                foreach (Row r in pool)
+                {
+                    r.Outline(false);
+                }
+
+                if (hovered != null)
+                {
+                    hovered = null;
+                    Row.HideChart();
+                }
+
+                return;
+            }
+
             Vector2 at = FoPointer.Position;
             Row over = null;
             foreach (Row r in pool)

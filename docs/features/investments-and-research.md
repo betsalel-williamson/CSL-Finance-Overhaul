@@ -140,7 +140,8 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
   hover.
 - **Hover and click:** the stock line under the pointer is outlined in the accent colour; a click
   anywhere on it (not on Buy, Sell or Cancel) opens the game's dialog (Buy, with Buy | Sell tabs to
-  turn it). Figma component FO/InvestmentListRow.
+  turn it). Figma component FO/InvestmentListRow. While a dialog is open over the panel (the game's
+  Buy / Sell, any modal) nothing behind it is outlined or opens its chart.
 - **Buy | Sell in the dialog:** the Invest dialog has a Buy | Sell tab group above the order types
   (`OrderTicket`). Picking the other side turns the open dialog to it in place, through the game's
   own set-up for that side, with that side's order types (Buy now, Limit / Sell now, Stop-loss,
