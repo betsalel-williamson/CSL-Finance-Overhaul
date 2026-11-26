@@ -1002,9 +1002,10 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
   2026-11-25: the single wide Buy greyed out at the cap and left nothing to click).
 - **View headquarters from the Invest dialog (2026-11-25):** for a local company, the game's Buy /
   Sell dialog has a "View headquarters" button right of "Current value" (`OrderTicket`): it closes
-  the dialog and shows the building with its info panel, as the IPO dialog's button does (without
-  the fireworks). It is disabled with a tooltip while the headquarters is lost or being rebuilt, and
-  hidden for the game's own stocks. Both dialogs use `CompanyHome.Show`. Scenario 71 clicks it.
+  the dialog and the Economy window (its toolbar tab, as its close button would), then shows the
+  building with its info panel, as the IPO dialog's button does (without the fireworks). It is
+  disabled with a tooltip while the headquarters is lost or being rebuilt, and hidden for the game's
+  own stocks. Both dialogs use `CompanyHome.Show`. Scenario 71 opens it from Economy and clicks it.
 - **Charts start when the company does (fixed 2026-11-25):** the game seeds a new listing's 30 daily
   prices with its offering price, so every chart showed a flat line back to "30 days ago". The mod's
   charts (the Invest dialog's Share value chart, the stock tooltip, the Stock Monitor's rows and

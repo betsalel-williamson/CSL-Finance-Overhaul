@@ -47,7 +47,9 @@ expect-visible FinanceOverhaulBuildingGain
 expect-no-overflow FinanceOverhaulBuildingListing
 capture building-panel-trading
 # the Invest dialog of a local company has View headquarters: it closes the dialog and shows the
-# building with its info panel, as the IPO dialog does
+# building with its info panel, as the IPO dialog does; the Economy window closes too
+show-economy
+expect-visible EconomyPanel
 ipo-open-buy
 wait 1
 expect-visible FinanceOverhaulOrderViewHome
@@ -56,6 +58,7 @@ capture invest-dialog-view-home
 click FinanceOverhaulOrderViewHome
 wait 1.5
 expect-hidden FinanceOverhaulOrderViewHome
+expect-hidden EconomyPanel
 expect-log company home: showing headquarters building
 expect-building-panel
 # all the city may hold: Buy is greyed out, and a dialog opened on Buy turns to Sell (an empty

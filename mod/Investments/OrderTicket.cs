@@ -6,7 +6,7 @@ using FinanceOverhaul.Core;
 using UnityEngine; // Color32
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
-//   EconomyManager, Investment, InvestmentAI
+//   EconomyManager, EconomyPanel, Investment, InvestmentAI, ToolsModifierControl
 
 namespace FinanceOverhaul
 {
@@ -242,7 +242,15 @@ namespace FinanceOverhaul
             int company;
             if (CompanyListing.IsCompany(ai, out company))
             {
+                // Out of the way of the building: the dialog, then the Economy window (its
+                // toolbar tab closes as its close button would).
                 BuySellInvestmentPanel.HidePanel();
+                EconomyPanel economy = ToolsModifierControl.economyPanel;
+                if (economy != null && economy.component.isVisible)
+                {
+                    economy.OnCloseButton();
+                }
+
                 CompanyHome.Show(CompanyDesk.CompanyOf(company), false);
             }
         }
