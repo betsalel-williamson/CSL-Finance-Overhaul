@@ -95,17 +95,18 @@ presets), `ipo-section GROUP LessLikely|Default|MoreLikely` (clicks a section's 
 preset the dropdown shows), `ipo-exchange-level N|real` (the Stock Exchange level IPOs see, until
 the scenario ends; 0 = none), `expect-exchange-note on|off` (every card with a slot open says the
 Stock Exchange must grow, or none does), `ipo-lose-home [nowhere]` (the scenario's company loses its
-headquarters at a step run now; with `nowhere`, every candidate of its kind counts as lost too; the
-buildings are not touched) and `expect-company-home moved|same|lost|gone` (scenario 74),
-`ipo-income` (per zone: the income the game reports and the offering prices its businesses would
-list at — scenario 65), `log-loan-expenses` and `expect-loan-expenses ₡MIN` (what Economy shows as
-loan expenses — scenario 63), `dump-library NAME` and `peek-library NAME` (log the tree of one of
-the game's own dialogs, such as `ParkAreaUnlockingPanel`, or show it for two seconds for a capture
-of its look), `expect-wheel-step LIST MIN` (pixels the mouse wheel moves a list a notch — scenario
-69), `log-prices` (logs every listed stock's kept daily prices, up to 30 and newest first, with its
-price rule, for measuring how the game's stocks move), `local-ipos keep` and `ipo-list-now keep`
-(switch the flag on for good and leave the company listed: for trying the feature in a test city,
-not for scenarios), `ipo-view`, `expect-building-panel`, `expect-fireworks`, `expect-paused on|off`,
+headquarters at a step run now; with `nowhere`, every business of its kind counts as lost too, also
+one that qualifies later; the buildings are not touched) and
+`expect-company-home moved|same|lost|gone` (scenario 74), `ipo-income` (per zone: the income the
+game reports and the offering prices its businesses would list at — scenario 65),
+`log-loan-expenses` and `expect-loan-expenses ₡MIN` (what Economy shows as loan expenses — scenario
+63), `dump-library NAME` and `peek-library NAME` (log the tree of one of the game's own dialogs,
+such as `ParkAreaUnlockingPanel`, or show it for two seconds for a capture of its look),
+`expect-wheel-step LIST MIN` (pixels the mouse wheel moves a list a notch — scenario 69),
+`log-prices` (logs every listed stock's kept daily prices, up to 30 and newest first, with its price
+rule, for measuring how the game's stocks move), `local-ipos keep` and `ipo-list-now keep` (switch
+the flag on for good and leave the company listed: for trying the feature in a test city, not for
+scenarios), `ipo-view`, `expect-building-panel`, `expect-fireworks`, `expect-paused on|off`,
 `expect-company-moving DAYS` (the company's stock closed at a different price on each of its last
 DAYS days) and `expect-company-first` (scenario 70: View headquarters opens the building's info
 panel with the camera framed on it, fireworks go off, and the new company is the first card),

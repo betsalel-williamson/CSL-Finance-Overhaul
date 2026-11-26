@@ -75,6 +75,9 @@ namespace FinanceOverhaul.Core
         /// <summary>Which of that kind's candidates (in the candidate book's fixed order).</summary>
         public int CandidateIndex;
 
+        /// <summary>The roll in [0, 1) that picked the candidate (for a pick weighted by size).</summary>
+        public double CandidateRoll;
+
         /// <summary>Days from the draw to the announcement.</summary>
         public int DayOffset;
 
@@ -368,14 +371,16 @@ namespace FinanceOverhaul.Core
                 int open = kinds[i].Candidates > 0 ? OpenSlots(kinds[i], rules) : 0;
                 if (target < open)
                 {
+                    double roll = dice.Next();
                     return new IpoPick
                     {
                         Happens = true,
                         KindIndex = i,
                         CandidateIndex = Math.Min(
                             kinds[i].Candidates - 1,
-                            (int)(dice.Next() * kinds[i].Candidates)
+                            (int)(roll * kinds[i].Candidates)
                         ),
+                        CandidateRoll = roll,
                         DayOffset = draw.DayOffset,
                     };
                 }

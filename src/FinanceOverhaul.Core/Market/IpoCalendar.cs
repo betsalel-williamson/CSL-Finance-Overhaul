@@ -1,5 +1,5 @@
 using System; // IEquatable, Math
-using System.Collections.Generic; // Dictionary, HashSet, IEnumerable, KeyValuePair, List
+using System.Collections.Generic; // Dictionary, HashSet, IEnumerable, IList, KeyValuePair, List
 
 namespace FinanceOverhaul.Core
 {
@@ -34,20 +34,36 @@ namespace FinanceOverhaul.Core
         public int HealthyDays = 365;
 
         /// <summary>
-        /// Jobs a zoned farming, forestry, oil or ore business needs before it can go public,
-        /// whatever its neighbours have. A zoned plot of specialised industry is a shed with
-        /// a handful of workers; a company on the Stock Exchange is a large operation. (The
-        /// industry areas' main buildings and unique factories are the natural companies of
-        /// these kinds, and are not read yet.)
+        /// People a zoned farming, forestry, oil or ore business must have working in it
+        /// before it can go public, whatever its neighbours have. A zoned plot of specialised
+        /// industry is a shed with a handful of workers; a company on the Stock Exchange is a
+        /// large operation. (The industry areas and unique factories are the natural companies
+        /// of these kinds.)
         /// </summary>
-        public int SpecialisedMinJobs = 30;
+        public int SpecialisedMinWorkers = 50;
 
         /// <summary>
-        /// Jobs any business needs before it can go public, whatever its kind and whatever its
-        /// neighbours have: a one-worker shop or workshop is never a listed company, even in a
-        /// city where it is among the larger of its kind.
+        /// People any zoned business must have working in it today before it can go public,
+        /// whatever its kind and whatever its neighbours have: a corner shop is never a listed
+        /// company, even in a city where it is among the larger of its kind. Workers, not job
+        /// slots: a half-empty building is not a large employer. Industry areas and unique
+        /// factories are judged on their profit instead.
         /// </summary>
-        public int MinJobs = 10;
+        public int MinWorkers = 45;
+
+        /// <summary>
+        /// The draw picks from only this many candidates of a kind: the ones with the most
+        /// workers today (ties: the older building). The largest businesses of the city go
+        /// public, not whichever qualifying shop the dice land on.
+        /// </summary>
+        public int ShortlistSize = 10;
+
+        /// <summary>
+        /// How much a candidate's workers weigh in the draw, in percent: 100, its chance is in
+        /// proportion to its workers (a 200-worker store twice as likely as a 100-worker one);
+        /// 0, every shortlisted candidate is as likely as any other.
+        /// </summary>
+        public int SizeWeightPercent = 100;
 
         /// <summary>
         /// Healthy days a business loses for a day it is not healthy (staffing swings from day
@@ -66,7 +82,7 @@ namespace FinanceOverhaul.Core
 
         /// <summary>
         /// A business must be among the larger employers of its kind in this city: in the top
-        /// this-many percent by jobs (33 = the top third). Relative, so it holds in any city and
+        /// this-many percent by workers today (33 = the top third). Relative, so it holds in any city and
         /// for kinds whose buildings are all small (farming, oil).
         /// </summary>
         public int TopEmployersPercent = 33;
@@ -224,10 +240,14 @@ namespace FinanceOverhaul.Core
         /// <summary>Every job filled.</summary>
         public bool FullyStaffed;
 
+        /// <summary>Its job slots.</summary>
         public int Jobs;
 
-        /// <summary>The jobs a business of this kind needs today to count among its larger employers.</summary>
-        public int JobsFloor;
+        /// <summary>The people working in it today.</summary>
+        public int Workers;
+
+        /// <summary>The workers a business of this kind needs today to count among its larger employers.</summary>
+        public int WorkersFloor;
 
         public int LandValue;
     }
@@ -296,7 +316,7 @@ namespace FinanceOverhaul.Core
             return facts.TopLevel
                 && !facts.HasProblems
                 && facts.FullyStaffed
-                && facts.Jobs >= facts.JobsFloor
+                && facts.Workers >= facts.WorkersFloor
                 && (
                     !BusinessKinds.LandValueMatters(facts.Kind)
                     || facts.LandValue >= rules.LandValueFloor
@@ -355,10 +375,45 @@ namespace FinanceOverhaul.Core
             }
         }
 
+        // The people working in each business, area or factory at its latest reading (not
+        // saved: every scan reads them again).
+        private readonly Dictionary<BuildingKey, int> workers = new Dictionary<BuildingKey, int>();
+
         /// <summary>One business as the game shows it today. Call once per business, then <see cref="EndDay"/>.</summary>
         public void Observe(BuildingKey building, BusinessFacts facts, IpoRules rules)
         {
             Observe(building, facts.Kind, Healthy(facts, rules), rules);
+            SetWorkers(building, facts.Workers);
+        }
+
+        /// <summary>The people working in a business, area or factory at its latest reading.</summary>
+        public void SetWorkers(BuildingKey building, int count)
+        {
+            if (healthyDays.ContainsKey(building))
+            {
+                workers[building] = Math.Max(0, count);
+            }
+            else
+            {
+                workers.Remove(building);
+            }
+        }
+
+        /// <summary>The people working there at its latest reading (0 if never read).</summary>
+        public int WorkersOf(BuildingKey building)
+        {
+            int count;
+            return workers.TryGetValue(building, out count) ? count : 0;
+        }
+
+        /// <summary>
+        /// The candidates of a kind the draw picks from, largest first: <paramref name="pool"/>
+        /// (the kind's candidates the caller has left in) cut to
+        /// <see cref="IpoRules.ShortlistSize"/> by <see cref="IpoShortlist.Rank"/>.
+        /// </summary>
+        public List<BuildingKey> Shortlist(IList<BuildingKey> pool, IpoRules rules)
+        {
+            return IpoShortlist.Rank(pool, WorkersOf, rules.ShortlistSize);
         }
 
         /// <summary>
@@ -521,6 +576,7 @@ namespace FinanceOverhaul.Core
         {
             healthyDays.Remove(building);
             kinds.Remove(building);
+            workers.Remove(building);
             sites.Remove(building);
         }
 

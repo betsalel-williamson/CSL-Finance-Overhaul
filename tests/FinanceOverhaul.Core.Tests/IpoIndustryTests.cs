@@ -375,7 +375,7 @@ namespace FinanceOverhaul.Core.Tests
             );
             Assert.True(IpoCardText.HasBar(board.Kinds[1]));
             Assert.Equal(
-                "A business needs 30 jobs and a steady year to list.",
+                "A business needs 50 workers and a steady year to list.",
                 IpoCardText.Note(board.Kinds[2], board, "-", rules)
             );
         }

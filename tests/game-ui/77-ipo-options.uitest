@@ -6,7 +6,7 @@ name local ipos: Options has a slider for every Local IPOs value, each label say
 local-ipos on
 ipo-options-keep
 options-preview on
-expect-ipo-options 37
+expect-ipo-options 39
 capture ipo-options
 # typing a number: kept in range, snapped to its step, nonsense ignored; put back at the end
 ipo-option-type ipo.exchangeLevel 4
@@ -17,6 +17,13 @@ ipo-option-type ipo.exchangeLevel abc
 expect-ipo-option ipo.exchangeLevel 5
 ipo-option-type ipo.gateSquares 230
 expect-ipo-option ipo.gateSquares 250
+# the draw: the largest candidates of a kind by workers, a bigger one likelier
+expect-ipo-option ipo.shortlistSize 10
+expect-ipo-option ipo.sizeWeightPercent 100
+expect-ipo-option ipo.minWorkers 45
+ipo-option-type ipo.sizeWeightPercent 55
+expect-ipo-option ipo.sizeWeightPercent 60
+ipo-option-type ipo.sizeWeightPercent restore
 ipo-option-type ipo.exchangeLevel restore
 ipo-option-type ipo.gateSquares restore
 # quick presets per section, the preset in use, Save as… and Delete
@@ -48,7 +55,7 @@ ipo-options-put-back
 # dev builds show them with Local IPOs off too, so they can be set before switching it on
 local-ipos off
 options-preview on
-expect-ipo-options 37
+expect-ipo-options 39
 cleanup:
 ipo-options-put-back
 ipo-option-type ipo.exchangeLevel restore

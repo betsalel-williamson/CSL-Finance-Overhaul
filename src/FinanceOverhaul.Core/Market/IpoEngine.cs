@@ -528,6 +528,8 @@ namespace FinanceOverhaul.Core
             {
                 List<BuildingKey> pool = candidates.Candidates(rules, k.Kind);
                 pool.RemoveAll(registry.IsHome);
+                // Only the kind's largest employers are in the draw.
+                pool = candidates.Shortlist(pool, rules);
                 KindFacts seen = k;
                 seen.Listed = registry.ListedOf(k.Kind);
                 seen.Candidates = pool.Count;
@@ -551,7 +553,16 @@ namespace FinanceOverhaul.Core
             }
 
             registry.IpoScheduled = true;
-            registry.IpoBusiness = pools[pick.KindIndex][pick.CandidateIndex];
+            // A bigger candidate is likelier (the same roll, weighted by workers).
+            List<BuildingKey> chosenPool = pools[pick.KindIndex];
+            var sizes = new List<int>();
+            foreach (BuildingKey b in chosenPool)
+            {
+                sizes.Add(candidates.WorkersOf(b));
+            }
+
+            int index = IpoShortlist.Pick(sizes, rules.SizeWeightPercent, pick.CandidateRoll);
+            registry.IpoBusiness = chosenPool[index < 0 ? pick.CandidateIndex : index];
             registry.IpoKind = board[pick.KindIndex].Kind;
             registry.IpoDay = today + pick.DayOffset;
         }
@@ -642,9 +653,9 @@ namespace FinanceOverhaul.Core
         }
 
         /// <summary>
-        /// The candidate that follows <paramref name="after"/> in its kind's queue (the fixed
-        /// order of <see cref="CandidateBook.Candidates(IpoRules, BusinessKind)"/>, wrapping
-        /// round to the start); false when the kind has no other candidate.
+        /// The candidate that takes <paramref name="after"/>'s place: the largest of its kind's
+        /// shortlist (<see cref="CandidateBook.Shortlist"/>) other than it; false when the kind
+        /// has no other candidate.
         /// </summary>
         private static bool NextInQueue(
             CompanyRegistry registry,
@@ -663,18 +674,7 @@ namespace FinanceOverhaul.Core
                 return false;
             }
 
-            next = queue[0];
-            foreach (BuildingKey b in queue)
-            {
-                bool later =
-                    b.Id > after.Id || (b.Id == after.Id && b.BuildIndex > after.BuildIndex);
-                if (later)
-                {
-                    next = b;
-                    break;
-                }
-            }
-
+            next = candidates.Shortlist(queue, rules)[0];
             return true;
         }
 

@@ -405,7 +405,7 @@ namespace FinanceOverhaul.Core
             { "ipo.card.candidates.other", "{0} candidates" },
             { "ipo.card.note.open", "A listing is likely within one to two years." },
             { "ipo.card.note.waiting", "No business has been healthy long enough yet." },
-            { "ipo.card.note.large", "A business needs {0} jobs and a steady year to list." },
+            { "ipo.card.note.large", "A business needs {0} workers and a steady year to list." },
             {
                 "ipo.card.note.waitingArea",
                 "No industry area or large business has been steady for a year yet."
@@ -524,12 +524,20 @@ namespace FinanceOverhaul.Core
             { "options.ipo.healthyDays", "Healthy days a business needs to go public: {0}" },
             {
                 "options.ipo.topEmployersPercent",
-                "A business must be among the largest {0}% of its kind by jobs"
+                "A business must be among the largest {0}% of its kind by workers"
             },
-            { "options.ipo.minJobs", "Jobs any business needs to go public: {0}" },
+            { "options.ipo.minWorkers", "Workers any business needs to go public: {0}" },
             {
-                "options.ipo.specialisedMinJobs",
-                "Jobs a zoned farm, forest, oil or ore business needs: {0}"
+                "options.ipo.specialisedMinWorkers",
+                "Workers a zoned farm, forest, oil or ore business needs: {0}"
+            },
+            {
+                "options.ipo.shortlistSize",
+                "The draw picks from the {0} largest candidates of each kind"
+            },
+            {
+                "options.ipo.sizeWeightPercent",
+                "How much a candidate's workers count in the draw: {0}%"
             },
             {
                 "options.ipo.maxVacancyPercent",

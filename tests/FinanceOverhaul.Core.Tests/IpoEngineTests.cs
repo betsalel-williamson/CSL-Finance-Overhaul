@@ -60,7 +60,8 @@ namespace FinanceOverhaul.Core.Tests
             TopLevel = true,
             FullyStaffed = true,
             Jobs = 100,
-            JobsFloor = 50,
+            Workers = 100,
+            WorkersFloor = 50,
             LandValue = 60,
         };
 
@@ -240,6 +241,50 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
+        public void OnlyTheLargestEmployersAreDrawnAndTheBiggestMostOften()
+        {
+            // Fifteen offices of 10 to 150 workers: the draw picks from the ten largest only
+            // (60 workers and up), and the largest about two and a half times as often as the
+            // tenth.
+            var picks = new Dictionary<int, int>();
+            for (ulong seed = 1; seed <= 400; seed++)
+            {
+                IpoRules rules = Certain();
+                CandidateBook book = Offices(15, rules);
+                for (ushort id = 1; id <= 15; id++)
+                {
+                    book.SetWorkers(new BuildingKey(id, id), id * 10);
+                }
+
+                var registry = new CompanyRegistry();
+                IpoEngine.Step(
+                    registry,
+                    book,
+                    OfficeKind(10),
+                    6,
+                    0,
+                    rules,
+                    new IpoDice(seed),
+                    new City()
+                );
+                // Scheduled for later in the period, or announced at once.
+                int id0 = registry.IpoScheduled
+                    ? registry.IpoBusiness.Id
+                    : Assert.Single(registry.Companies).Home.Id;
+                Assert.True(id0 >= 6, "a business outside the ten largest was drawn: " + id0);
+                int n;
+                picks.TryGetValue(id0, out n);
+                picks[id0] = n + 1;
+            }
+
+            int largest,
+                tenth;
+            picks.TryGetValue(15, out largest);
+            picks.TryGetValue(6, out tenth);
+            Assert.True(largest > tenth * 3 / 2, "largest " + largest + ", tenth " + tenth);
+        }
+
+        [Fact]
         public void WhenThePickedBusinessStopsQualifyingTheNextCandidateTakesItsPlace()
         {
             IpoRules rules = Certain();
@@ -254,7 +299,9 @@ namespace FinanceOverhaul.Core.Tests
 
             BuildingKey picked = registry.IpoBusiness;
             List<BuildingKey> queue = book.Candidates(rules, BusinessKind.Office);
-            BuildingKey expected = queue[(queue.IndexOf(picked) + 1) % queue.Count];
+            // The largest other candidate takes its place (all the same size here: the older
+            // building).
+            BuildingKey expected = queue.Find(b => !b.Equals(picked));
 
             // The picked business gets a problem icon and loses its streak; the others stay healthy.
             BusinessFacts sick = Healthy;
@@ -276,7 +323,7 @@ namespace FinanceOverhaul.Core.Tests
             IpoEvent announced = Assert.Single(events);
             Assert.Equal(IpoEventKind.Announced, announced.Kind);
             Assert.True(announced.StoodIn);
-            Assert.Equal(expected, announced.Company.Home); // the next in the queue, not a new roll
+            Assert.Equal(expected, announced.Company.Home); // the largest other, not a new roll
             Assert.Single(registry.IpoDays); // it counts towards the year's two like any IPO
         }
 

@@ -33,6 +33,12 @@ namespace FinanceOverhaul
 
         /// <summary>Its average weekly profit over the recent weeks it was read, in cents.</summary>
         public long WeeklyProfitCents;
+
+        /// <summary>
+        /// The people working there today: in every building of an area but its unique
+        /// factories (companies of their own), or in the factory.
+        /// </summary>
+        public int Workers;
     }
 
     /// <summary>
@@ -215,8 +221,9 @@ namespace FinanceOverhaul
             DistrictManager districts = DistrictManager.instance;
             Building[] buffer = BuildingManager.instance.m_buildings.m_buffer;
 
-            // Upkeep of every industry building, by the area it stands in.
+            // Upkeep and workers of every industry building, by the area it stands in.
             var upkeepRate = new Dictionary<byte, long>();
+            var workers = new Dictionary<byte, int>();
             FastList<ushort> service = BuildingManager.instance.GetServiceBuildings(
                 ItemClass.Service.PlayerIndustry
             );
@@ -230,6 +237,9 @@ namespace FinanceOverhaul
                 }
 
                 byte park = districts.GetPark(buffer[id].m_position);
+                int staff;
+                workers.TryGetValue(park, out staff);
+                workers[park] = staff + BuildingStaff.Workers(id);
                 long rate;
                 upkeepRate.TryGetValue(park, out rate);
                 upkeepRate[park] =
@@ -296,6 +306,7 @@ namespace FinanceOverhaul
                         Healthy = IpoIndustry.AreaHealthy(facts, average, rules),
                         AnnualCents = IpoIndustry.AnnualCents(average),
                         WeeklyProfitCents = average,
+                        Workers = workers.ContainsKey((byte)p) ? workers[(byte)p] : 0,
                     }
                 );
             }
@@ -373,6 +384,7 @@ namespace FinanceOverhaul
                         Healthy = IpoIndustry.FactoryHealthy(facts, average, rules),
                         AnnualCents = IpoIndustry.AnnualCents(average),
                         WeeklyProfitCents = average,
+                        Workers = BuildingStaff.Workers(id),
                     }
                 );
             }

@@ -96,7 +96,7 @@ namespace FinanceOverhaul.Core
         /// (ties with it count too). 0 for an empty list.
         /// </summary>
         /// <param name="jobsOfKind">The jobs of every business of the kind in the city.</param>
-        public static int JobsFloor(IList<int> jobsOfKind, int topPercent)
+        public static int WorkersFloor(IList<int> jobsOfKind, int topPercent)
         {
             if (jobsOfKind == null || jobsOfKind.Count == 0)
             {
@@ -128,13 +128,18 @@ namespace FinanceOverhaul.Core
 
         /// <summary>
         /// The jobs floor of a kind in this city: the larger employers of the kind, never fewer
-        /// than <see cref="IpoRules.MinJobs"/>, and for specialised industry never fewer than
-        /// <see cref="IpoRules.SpecialisedMinJobs"/>.
+        /// than <see cref="IpoRules.MinWorkers"/>, and for specialised industry never fewer than
+        /// <see cref="IpoRules.SpecialisedMinWorkers"/>.
         /// </summary>
-        public static int JobsFloor(BusinessKind kind, IList<int> jobsOfKind, IpoRules rules)
+        public static int WorkersFloor(BusinessKind kind, IList<int> jobsOfKind, IpoRules rules)
         {
-            int floor = Math.Max(JobsFloor(jobsOfKind, rules.TopEmployersPercent), rules.MinJobs);
-            return IsSpecialisedIndustry(kind) ? Math.Max(floor, rules.SpecialisedMinJobs) : floor;
+            int floor = Math.Max(
+                WorkersFloor(jobsOfKind, rules.TopEmployersPercent),
+                rules.MinWorkers
+            );
+            return IsSpecialisedIndustry(kind)
+                ? Math.Max(floor, rules.SpecialisedMinWorkers)
+                : floor;
         }
 
         /// <summary>At the top level of its kind.</summary>

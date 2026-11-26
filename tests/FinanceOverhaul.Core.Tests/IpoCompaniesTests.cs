@@ -61,45 +61,53 @@ namespace FinanceOverhaul.Core.Tests
             var rules = new IpoRules();
             var sheds = new List<int> { 1, 1, 2, 3, 5, 8 };
             // A shed with a handful of workers is not a company, even when it is the largest.
-            Assert.Equal(30, BusinessKinds.JobsFloor(BusinessKind.Farming, sheds, rules));
-            Assert.Equal(30, BusinessKinds.JobsFloor(BusinessKind.Oil, sheds, rules));
+            Assert.Equal(50, BusinessKinds.WorkersFloor(BusinessKind.Farming, sheds, rules));
+            Assert.Equal(50, BusinessKinds.WorkersFloor(BusinessKind.Oil, sheds, rules));
             // Large operations: the larger employers among them, as for any kind.
             var large = new List<int> { 40, 60, 120 };
-            Assert.Equal(120, BusinessKinds.JobsFloor(BusinessKind.Forestry, large, rules));
+            Assert.Equal(120, BusinessKinds.WorkersFloor(BusinessKind.Forestry, large, rules));
             // Shops, offices and generic industry: the larger employers, but never a handful
-            // of workers (ten at least), so a one-worker business is never queued.
-            Assert.Equal(10, BusinessKinds.JobsFloor(BusinessKind.Commercial, sheds, rules));
-            Assert.Equal(10, BusinessKinds.JobsFloor(BusinessKind.Industry, sheds, rules));
+            // of workers (45 at least), so a corner shop is never queued.
+            Assert.Equal(45, BusinessKinds.WorkersFloor(BusinessKind.Commercial, sheds, rules));
+            Assert.Equal(45, BusinessKinds.WorkersFloor(BusinessKind.Industry, sheds, rules));
             Assert.Equal(
-                10,
-                BusinessKinds.JobsFloor(BusinessKind.Commercial, new List<int> { 1, 1, 1 }, rules)
+                45,
+                BusinessKinds.WorkersFloor(
+                    BusinessKind.Commercial,
+                    new List<int> { 1, 1, 1 },
+                    rules
+                )
             );
             Assert.Equal(
                 164,
-                BusinessKinds.JobsFloor(BusinessKind.Office, new List<int> { 6, 130, 164 }, rules)
+                BusinessKinds.WorkersFloor(
+                    BusinessKind.Office,
+                    new List<int> { 6, 130, 164 },
+                    rules
+                )
             );
             Assert.False(BusinessKinds.IsSpecialisedIndustry(BusinessKind.Office));
         }
 
         [Fact]
-        public void TheJobsFloorIsTheTopThirdOfTheKindInAnyCity()
+        public void TheWorkersFloorIsTheTopThirdOfTheKindInAnyCity()
         {
             // Nine oil buildings, all small: the three largest (and any tied with them) count.
             var oil = new List<int> { 3, 4, 4, 5, 6, 7, 8, 9, 9 };
-            Assert.Equal(8, BusinessKinds.JobsFloor(oil, 33));
+            Assert.Equal(8, BusinessKinds.WorkersFloor(oil, 33));
             // The same rule in a city of big offices.
             var offices = new List<int> { 40, 80, 120, 200, 260, 300 };
-            Assert.Equal(260, BusinessKinds.JobsFloor(offices, 33));
+            Assert.Equal(260, BusinessKinds.WorkersFloor(offices, 33));
             // Ties with the last one in count too; one business is its own top; none gives 0.
-            Assert.Equal(5, BusinessKinds.JobsFloor(new List<int> { 5, 5, 5, 5 }, 33));
-            Assert.Equal(12, BusinessKinds.JobsFloor(new List<int> { 12 }, 33));
-            Assert.Equal(0, BusinessKinds.JobsFloor(new List<int>(), 33));
-            Assert.Equal(3, BusinessKinds.JobsFloor(oil, 100)); // everyone
+            Assert.Equal(5, BusinessKinds.WorkersFloor(new List<int> { 5, 5, 5, 5 }, 33));
+            Assert.Equal(12, BusinessKinds.WorkersFloor(new List<int> { 12 }, 33));
+            Assert.Equal(0, BusinessKinds.WorkersFloor(new List<int>(), 33));
+            Assert.Equal(3, BusinessKinds.WorkersFloor(oil, 100)); // everyone
             // A larger share never raises the floor.
             int last = int.MaxValue;
             for (int percent = 1; percent <= 100; percent++)
             {
-                int floor = BusinessKinds.JobsFloor(oil, percent);
+                int floor = BusinessKinds.WorkersFloor(oil, percent);
                 Assert.True(floor <= last);
                 last = floor;
             }

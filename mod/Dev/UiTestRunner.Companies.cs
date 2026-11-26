@@ -557,7 +557,7 @@ namespace FinanceOverhaul
                 {
                     // ipo-lose-home [nowhere] — this scenario's newest company loses its
                     // headquarters at today's step, which runs now; with nowhere, every
-                    // candidate of its kind counts as lost too. Only for this scenario: the
+                    // business of its kind counts as lost too, including any that qualifies later in the scenario. Only for this scenario: the
                     // buildings themselves are untouched.
                     if (ctx.TestCompanies.Count == 0)
                     {
@@ -835,6 +835,7 @@ namespace FinanceOverhaul
                     ModLog.Info("uitest: ipo health:" + CompanyDesk.LastHealthBreakdown);
                     ModLog.Info("uitest: ipo areas and factories:" + CompanyDesk.LastSites);
                     ModLog.Info("uitest: ipo jobs:" + CompanyDesk.LastJobSizes);
+                    ModLog.Info("uitest: ipo shortlists (workers):" + CompanyDesk.LastShortlists);
                     ModLog.Info(
                         "uitest: ipo scanned "
                             + CompanyDesk.LastBusinesses

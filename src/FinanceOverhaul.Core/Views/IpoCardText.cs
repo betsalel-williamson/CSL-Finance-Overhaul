@@ -160,7 +160,7 @@ namespace FinanceOverhaul.Core
                         ? Strings.Get("ipo.card.note.waitingArea")
                         : Strings.Format(
                             "ipo.card.note.large",
-                            Number((rules ?? new IpoRules()).SpecialisedMinJobs)
+                            Number((rules ?? new IpoRules()).SpecialisedMinWorkers)
                         );
                 case KindState.Paused:
                     return board.Listed >= board.Cap

@@ -400,25 +400,47 @@ namespace FinanceOverhaul.Core
             );
             Add(
                 list,
-                "minJobs",
+                "minWorkers",
                 P,
                 TuningGroup.Candidates,
                 1,
                 500,
                 1,
-                r => r.MinJobs,
-                (r, v) => r.MinJobs = v
+                r => r.MinWorkers,
+                (r, v) => r.MinWorkers = v
             );
             Add(
                 list,
-                "specialisedMinJobs",
+                "specialisedMinWorkers",
                 P,
                 TuningGroup.Candidates,
                 1,
                 500,
                 1,
-                r => r.SpecialisedMinJobs,
-                (r, v) => r.SpecialisedMinJobs = v
+                r => r.SpecialisedMinWorkers,
+                (r, v) => r.SpecialisedMinWorkers = v
+            );
+            Add(
+                list,
+                "shortlistSize",
+                P,
+                TuningGroup.Candidates,
+                1,
+                50,
+                1,
+                r => r.ShortlistSize,
+                (r, v) => r.ShortlistSize = v
+            );
+            Add(
+                list,
+                "sizeWeightPercent",
+                P,
+                TuningGroup.Candidates,
+                0,
+                100,
+                10,
+                r => r.SizeWeightPercent,
+                (r, v) => r.SizeWeightPercent = v
             );
             Add(
                 list,
@@ -713,8 +735,9 @@ namespace FinanceOverhaul.Core
             // Which businesses can: stricter or easier.
             Preset(list, "healthyDays", 730, 180);
             Preset(list, "topEmployersPercent", 20, 50);
-            Preset(list, "minJobs", 20, 5);
-            Preset(list, "specialisedMinJobs", 50, 20);
+            Preset(list, "minWorkers", 60, 25);
+            Preset(list, "specialisedMinWorkers", 75, 30);
+            Preset(list, "shortlistSize", 5, 20);
             Preset(list, "maxVacancyPercent", 5, 20);
             Preset(list, "landValueFloor", 50, 30);
             Preset(list, "areaMinLevel", 4, 2);

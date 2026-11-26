@@ -101,9 +101,12 @@ City bonds were about the same size. The IPO dialog, its preference and the bell
 - **Healthy for a long time:** no problem icons (`Building.m_problems` is none), staffed (at most
   10% of its jobs unfilled), every day for the required number of days. The game does not count
   healthy days, so the mod does (candidate list).
-- **Among the larger employers of its kind:** in the top third by jobs of its kind in this city.
-  Relative on purpose: an absolute "at least 20 jobs" shut out farming and oil entirely in the first
-  city scanned, and no fixed number can be right for every city.
+- **Among the larger employers of its kind:** in the top third of its kind in this city by the
+  people working there today, and never fewer than 45 workers (50 for a zoned farm, forest, oil or
+  ore plot). Workers, not job slots: a half-empty building is not a large employer. Industry areas
+  and unique factories are judged on their profit instead.
+- **Among the largest candidates when the dice fall:** the draw picks from only the 10 candidates of
+  a kind with the most workers, and a bigger one is likelier (see "When a company goes public").
 - **On land that supports it (shops and offices only):** land value at least 41, the game's own
   threshold for a level-3 building. Not asked of industry, which lowers land value by nature.
 
@@ -493,11 +496,13 @@ Most results fall near the mean, a few far above it, none below zero.
 
 ```text
 healthy today = top level AND no problem icons AND at most 10% of jobs unfilled
-                AND jobs ≥ the jobs floor of its kind
+                AND workers today ≥ the workers floor of its kind
                 AND (industry kinds, or land value ≥ 41)
-jobs floor (a kind) = the jobs of the business that closes the top third of that kind in the
-                city, by jobs (ties with it count too);
-                never under 10 (any kind), never under 30 (zoned farming, forestry, oil, ore)
+workers floor (a kind) = the workers of the business that closes the top third of that kind in
+                the city, by workers today (ties with it count too);
+                never under 45 (any kind), never under 50 (zoned farming, forestry, oil, ore)
+workers today = the people working in the building, alive and not still moving in, as the
+                building's info panel counts them (BuildingStaff)
 healthy days  = min(previous + 1, 365) if healthy today
                 previous − 4 (not below 0) if not healthy today
                 0 if the building is gone or replaced
@@ -510,12 +515,12 @@ job (the largest have 4 and 5), so "the larger employers of the kind" meant a fl
 one-worker farm went public at ₡1 a share. Measured jobs per business that day: commercial median
 13, 90th percentile 49, largest 254 (130 of 1,006 with one job); office median 130, largest 1,161,
 smallest 6; generic industry median 9, 90th percentile 20, largest 88 (44 of 127 with one job). Two
-absolute floors now sit under the relative one: `MinJobs` 10 for every kind, and
-`SpecialisedMinJobs` 30 for zoned farming, forestry, oil and ore, whose plots are small by nature.
-In this city that leaves no zoned farm or oil plot able to list, which is intended: the natural
-companies of those kinds are the industry areas' main buildings and unique factories, which Local
-IPOs does not read yet (see Limits and room for later). The card of such a kind says "Only a large
-operation lists: a business with at least 30 jobs, steady for a year." Both numbers are first
+absolute floors now sit under the relative one: `MinWorkers` 10 for every kind, and
+`SpecialisedMinWorkers` 30 for zoned farming, forestry, oil and ore, whose plots are small by
+nature. In this city that leaves no zoned farm or oil plot able to list, which is intended: the
+natural companies of those kinds are the industry areas' main buildings and unique factories, which
+Local IPOs does not read yet (see Limits and room for later). The card of such a kind says "Only a
+large operation lists: a business with at least 30 jobs, steady for a year." Both numbers are first
 guesses; a city without Realistic Population has different job counts.
 
 **Steady, not perfect (2026-11-18).** The first rule set the count back to 0 on any unhealthy day.
@@ -562,8 +567,23 @@ chance this period = 1 − (1 − slot chance)^fillable slots
 roll = Next();  an IPO this period if roll < chance this period
 which slot (and so which kind) = floor(roll ÷ chance this period × fillable slots)
 which day                      = floor(Next() × 30)
-which candidate of that kind   = floor(Next() × its candidates)
+shortlist (a kind)             = its 10 candidates with the most workers today, largest first
+                                 (ties: the older building)
+chance of a shortlisted one    = (1 − w) ÷ n + w × its workers ÷ the shortlist's workers
+                                 (w = 100%: in proportion to workers; 0%: all the same)
+which candidate of that kind   = where Next() falls among those chances
 ```
+
+**Workers, the largest, and the bigger likelier (2026-11-26).** Until then the floor was job slots
+(top third, never under 10), and the draw picked any candidate of the kind with the same chance, in
+building order: a 19-job shop was as likely to list as a 254-job store. A full count of the test
+city (dev step `ipo-workers`) showed shop job slots 76% filled and zoned farms and oil plots at 1 to
+7 workers. Now the floor is workers today (`MinWorkers` 45, `SpecialisedMinWorkers` 50), the draw
+picks from the kind's 10 largest candidates (`ShortlistSize`), and its chance is in proportion to
+its workers (`SizeWeightPercent` 100). That day: the office shortlist was 10 of 30 candidates with
+216 to 537 workers; Park Oil Group (419 workers) was the oil kind's only candidate; the unique
+factories had 17 and 14 workers. A candidate counted under the old rules keeps its days until bad
+days take them away (four a day).
 
 No roll, and no dice taken, while an IPO is in progress, when pacing forbids one, or when no slot
 can be filled. If the chosen business is no longer a candidate on its day, that IPO does not happen
@@ -581,9 +601,8 @@ can be filled. If the chosen business is no longer a candidate on its day, that 
 2. A scheduled IPO whose day has come:
      still a candidate of that kind → the company is listed at its offering price, the offering
        window opens for 7 days, and the day counts towards pacing
-     otherwise → the next candidate of its kind in the queue lists in its place (the queue is the
-       candidates in their fixed order, by building; the one after the picked business, wrapping
-       round; no dice are used)
+     otherwise → the largest other candidate on its kind's shortlist lists in its place (no
+       dice are used)
      no other candidate of that kind → cancelled (it does not count towards pacing)
 3. A company whose window has closed: first-day price = offering price × (1 + pop); it trades.
 4. Every company that trades (not on its first trading day): its price moves, once a day.
@@ -918,35 +937,37 @@ checks every slider and label; Figma UI Map band 02 has the capture. Local IPOs 
 
 **For every player** (four groups, shown while Local IPOs is on):
 
-| Group                     | Option                                               | Default | Range    |
-| ------------------------- | ---------------------------------------------------- | ------- | -------- |
-| When companies list       | Stock Exchange level before any IPO                  | 2       | 1–5      |
-|                           | Squares of a kind of business to unlock its listings | 200     | 50–2,000 |
-|                           | Top-level buildings for a kind's second listing slot | 20      | 4–200    |
-|                           | Local listings for each map tile the city owns       | 2       | 1–10     |
-|                           | Most local companies listed at once                  | 12      | 1–100    |
-|                           | Most IPOs in a year                                  | 2       | 1–24     |
-|                           | Days an open listing slot waits on average           | 548     | 30–3,650 |
-|                           | Days between the rolls for IPOs and buy-outs         | 30      | 1–365    |
-| Which businesses can list | Healthy days a business needs to go public           | 365     | 1–1,825  |
-|                           | A business must be among the largest N% of its kind  | 33%     | 1–100%   |
-|                           | Jobs any business needs to go public                 | 10      | 1–500    |
-|                           | Jobs a zoned farm, forest, oil or ore business needs | 30      | 1–500    |
-|                           | Most jobs a healthy business may leave unfilled      | 10%     | 0–100%   |
-|                           | Land value a shop or office needs                    | 41      | 0–100    |
-|                           | Industry area level to go public                     | 3       | 1–5      |
-|                           | Production a unique factory needs                    | 100%    | 1–150%   |
-|                           | Weeks an area's or factory's profit is averaged over | 4       | 1–12     |
-| Prices                    | Days the city can buy at the offering price          | 7       | 1–60     |
-|                           | Offering price: earnings × N                         | 20      | 1–100    |
-|                           | The city's 1,000 shares are N% of a company          | 10%     | 1–100%   |
-|                           | First-day jump on average                            | 15%     | −50–200% |
-|                           | How much the first-day jump varies                   | 25%     | 0–200%   |
-| Buy-outs and closing      | A listed company's chance of a buy-out each year     | 4%      | 0–100%   |
-|                           | No buy-out in a company's first N days               | 365     | 0–3,650  |
-|                           | Buy-out premium on average                           | 40%     | 0–300%   |
-|                           | How much the buy-out premium varies                  | 15%     | 0–200%   |
-|                           | Days a company without a headquarters stays listed   | 90      | 1–730    |
+| Group                     | Option                                                         | Default | Range    |
+| ------------------------- | -------------------------------------------------------------- | ------- | -------- |
+| When companies list       | Stock Exchange level before any IPO                            | 2       | 1–5      |
+|                           | Squares of a kind of business to unlock its listings           | 200     | 50–2,000 |
+|                           | Top-level buildings for a kind's second listing slot           | 20      | 4–200    |
+|                           | Local listings for each map tile the city owns                 | 2       | 1–10     |
+|                           | Most local companies listed at once                            | 12      | 1–100    |
+|                           | Most IPOs in a year                                            | 2       | 1–24     |
+|                           | Days an open listing slot waits on average                     | 548     | 30–3,650 |
+|                           | Days between the rolls for IPOs and buy-outs                   | 30      | 1–365    |
+| Which businesses can list | Healthy days a business needs to go public                     | 365     | 1–1,825  |
+|                           | A business must be among the largest N% of its kind by workers | 33%     | 1–100%   |
+|                           | Workers any business needs to go public                        | 45      | 1–500    |
+|                           | Workers a zoned farm, forest, oil or ore business needs        | 50      | 1–500    |
+|                           | The draw picks from the N largest candidates of each kind      | 10      | 1–50     |
+|                           | How much a candidate's workers count in the draw               | 100%    | 0–100%   |
+|                           | Most jobs a healthy business may leave unfilled                | 10%     | 0–100%   |
+|                           | Land value a shop or office needs                              | 41      | 0–100    |
+|                           | Industry area level to go public                               | 3       | 1–5      |
+|                           | Production a unique factory needs                              | 100%    | 1–150%   |
+|                           | Weeks an area's or factory's profit is averaged over           | 4       | 1–12     |
+| Prices                    | Days the city can buy at the offering price                    | 7       | 1–60     |
+|                           | Offering price: earnings × N                                   | 20      | 1–100    |
+|                           | The city's 1,000 shares are N% of a company                    | 10%     | 1–100%   |
+|                           | First-day jump on average                                      | 15%     | −50–200% |
+|                           | How much the first-day jump varies                             | 25%     | 0–200%   |
+| Buy-outs and closing      | A listed company's chance of a buy-out each year               | 4%      | 0–100%   |
+|                           | No buy-out in a company's first N days                         | 365     | 0–3,650  |
+|                           | Buy-out premium on average                                     | 40%     | 0–300%   |
+|                           | How much the buy-out premium varies                            | 15%     | 0–200%   |
+|                           | Days a company without a headquarters stays listed             | 90      | 1–730    |
 
 **Dev builds only** ("the finer workings"): share of the healthy days a candidate must keep (90%),
 healthy days lost for one bad day (4), daily swing (2%), daily pull towards worth (1%), most a price

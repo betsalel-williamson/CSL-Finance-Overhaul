@@ -107,6 +107,9 @@ namespace FinanceOverhaul
         /// <summary>Per kind, how many jobs its businesses have (dev readout of the last scan).</summary>
         public static string LastJobSizes { get; private set; }
 
+        /// <summary>Dev: each kind's shortlist at the last measured scan (workers, largest first).</summary>
+        public static string LastShortlists { get; private set; }
+
         /// <summary>Dev: the next scans also fill <see cref="LastJobSizes"/>.</summary>
         public static bool MeasureJobSizes;
 
@@ -547,7 +550,10 @@ namespace FinanceOverhaul
 
                 lock (Sync)
                 {
-                    if (testLost.Contains(building))
+                    if (
+                        testLost.Contains(building)
+                        || (testLostKind.HasValue && Book().KindOf(building) == testLostKind.Value)
+                    )
                     {
                         return false;
                     }
@@ -573,6 +579,9 @@ namespace FinanceOverhaul
         // Game UI tests: buildings a scenario treats as lost (the city's own are untouched).
         private static readonly HashSet<BuildingKey> testLost = new HashSet<BuildingKey>();
 
+        // Game UI tests: every business of this kind counts as lost, today's and later ones.
+        private static BusinessKind? testLostKind;
+
         /// <summary>
         /// Game UI tests: a company's headquarters counts as lost from the next daily step;
         /// with <paramref name="wholeKind"/>, every candidate of its kind too, so it has nowhere
@@ -591,6 +600,7 @@ namespace FinanceOverhaul
                 testLost.Add(c.Home);
                 if (wholeKind)
                 {
+                    testLostKind = c.Kind;
                     foreach (BuildingKey b in Book().Candidates(Current, c.Kind))
                     {
                         testLost.Add(b);
@@ -607,6 +617,7 @@ namespace FinanceOverhaul
             lock (Sync)
             {
                 testLost.Clear();
+                testLostKind = null;
             }
         }
 
@@ -817,7 +828,7 @@ namespace FinanceOverhaul
                     jobsOfKind[kind] = new List<int>();
                 }
 
-                // Dev readout only: the people working in each business today.
+                // The people working in each business today: the rules judge size by them.
                 var workersOfKind = new Dictionary<BusinessKind, List<int>>();
                 foreach (BusinessKind kind in Enum.GetValues(typeof(BusinessKind)))
                 {
@@ -867,10 +878,8 @@ namespace FinanceOverhaul
                     totals[kind] = total;
                     int jobs = BuildingStaff.Jobs((ushort)i);
                     jobsOfKind[kind].Add(jobs);
-                    if (MeasureJobSizes)
-                    {
-                        workersOfKind[kind].Add(BuildingStaff.Workers((ushort)i));
-                    }
+                    int workers = BuildingStaff.Workers((ushort)i);
+                    workersOfKind[kind].Add(workers);
 
                     int landValue;
                     land.CheckLocalResource(
@@ -893,6 +902,7 @@ namespace FinanceOverhaul
                                         != Notification.Problem2.None,
                                 FullyStaffed = buffer[i].m_allUnemployed <= rules.MaxVacancyPercent,
                                 Jobs = jobs,
+                                Workers = workers,
                                 LandValue = landValue,
                             }
                         )
@@ -903,7 +913,7 @@ namespace FinanceOverhaul
                 var floors = new Dictionary<BusinessKind, int>();
                 foreach (BusinessKind kind in Enum.GetValues(typeof(BusinessKind)))
                 {
-                    floors[kind] = BusinessKinds.JobsFloor(kind, jobsOfKind[kind], rules);
+                    floors[kind] = BusinessKinds.WorkersFloor(kind, workersOfKind[kind], rules);
                 }
 
                 // How large the businesses of each kind are (for choosing the jobs rules).
@@ -965,12 +975,12 @@ namespace FinanceOverhaul
                 foreach (KeyValuePair<BuildingKey, BusinessFacts> one in seen)
                 {
                     BusinessFacts facts = one.Value;
-                    facts.JobsFloor = floors[facts.Kind];
+                    facts.WorkersFloor = floors[facts.Kind];
                     int[] why = failed[facts.Kind];
                     why[0] += facts.TopLevel ? 0 : 1;
                     why[1] += facts.HasProblems ? 1 : 0;
                     why[2] += facts.FullyStaffed ? 0 : 1;
-                    why[3] += facts.Jobs >= facts.JobsFloor ? 0 : 1;
+                    why[3] += facts.Workers >= facts.WorkersFloor ? 0 : 1;
                     why[4] +=
                         !BusinessKinds.LandValueMatters(facts.Kind)
                         || facts.LandValue >= rules.LandValueFloor
@@ -991,6 +1001,7 @@ namespace FinanceOverhaul
                 {
                     read[s.Home] = s;
                     b.Observe(s.Home, s.Kind, s.Healthy, rules, s.Site, s.Ref);
+                    b.SetWorkers(s.Home, s.Workers);
                     KindFacts total = totals[s.Kind];
                     if (s.Site == BusinessSite.Factory || s.Level >= rules.AreaMinLevel)
                     {
@@ -1008,7 +1019,9 @@ namespace FinanceOverhaul
                         .Append(s.Site == BusinessSite.Area ? " level " + s.Level : string.Empty)
                         .Append(s.Healthy ? " healthy " : " not healthy ") // not shown: the log
                         .Append(BondText.WholeMoney(s.AnnualCents))
-                        .Append("/yr (") // not shown: the log
+                        .Append("/yr, ") // not shown: the log
+                        .Append(s.Workers)
+                        .Append(" workers (") // not shown: the log
                         .Append(b.Profits.Count(s.Home))
                         .Append(" day(s) read);");
                 }
@@ -1051,11 +1064,28 @@ namespace FinanceOverhaul
                 }
 
                 var list = new List<KindFacts>();
+                var shortlists = new StringBuilder();
                 foreach (BusinessKind kind in Enum.GetValues(typeof(BusinessKind)))
                 {
                     KindFacts total = totals[kind];
-                    total.Candidates = b.Candidates(rules, kind).Count;
+                    List<BuildingKey> pool = b.Candidates(rules, kind);
+                    total.Candidates = pool.Count;
                     list.Add(total);
+                    if (MeasureJobSizes && pool.Count > 0)
+                    {
+                        shortlists.Append(' ').Append(kind).Append(" of ").Append(pool.Count);
+                        foreach (BuildingKey k in b.Shortlist(pool, rules))
+                        {
+                            shortlists.Append(' ').Append(b.WorkersOf(k));
+                        }
+
+                        shortlists.Append(';');
+                    }
+                }
+
+                if (MeasureJobSizes)
+                {
+                    LastShortlists = shortlists.ToString();
                 }
 
                 var breakdown = new StringBuilder();
@@ -1077,7 +1107,7 @@ namespace FinanceOverhaul
                             .Append(why[3])
                             .Append(" (floor ")
                             .Append(floors[kind])
-                            .Append(" jobs)")
+                            .Append(" workers)")
                             .Append(" lowLand=")
                             .Append(why[4])
                             .Append(" healthy=")
