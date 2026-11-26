@@ -680,6 +680,10 @@ namespace FinanceOverhaul.Core
             { "options.ticker.brightness.bright", "Bright" },
             { "options.ticker.brightness.brightest", "Brightest (daylight)" },
             { "options.orders.lifetime", "Orders stay open for (new orders)" },
+            {
+                "options.investmentList.syncSort",
+                "Investments list: sort and ₡ / % follow the Stock Monitor (off: each keeps its own)"
+            },
             { "options.notices", "Order and bond notices in Chirper" },
             { "options.notices.coupons", "Also chirp every bond coupon" },
             { "options.flags", "Feature flags (dev builds only)" },

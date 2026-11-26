@@ -72,6 +72,21 @@ namespace FinanceOverhaul
                 selected,
                 OnOrderLifetimeChanged
             );
+            // The Investments list (being built): shown while its flag is on, and in dev builds.
+            if (Settings.InvestmentListEnabled || BuildInfo.ShowDevBuildIdentity)
+            {
+                group.AddCheckbox(
+                    Strings.Get("options.investmentList.syncSort"),
+                    Settings.InvestmentListSortSynced,
+                    v =>
+                    {
+                        Settings.InvestmentListSortSynced = v;
+                        Mod.SaveSettings();
+                        ModLog.Info("investment list sort synced=" + v);
+                    }
+                );
+            }
+
             group.AddCheckbox(
                 Strings.Get("options.notices"),
                 Settings.NoticesEnabled,

@@ -79,6 +79,21 @@ namespace FinanceOverhaul.Core
         public bool InvestmentListEnabled { get; set; }
 
         /// <summary>
+        /// Preference: the Investments list uses the Stock Monitor's sort, direction and ₡ / %
+        /// pills instead of its own. Off by default: each window keeps its own.
+        /// </summary>
+        public bool InvestmentListSortSynced { get; set; }
+
+        /// <summary>The Investments list's own sort (when not synced with the Stock Monitor).</summary>
+        public MonitorSort InvestmentListSort { get; set; } = MonitorSort.Change;
+
+        /// <summary>The Investments list's own sort direction (the ▲/▼).</summary>
+        public bool InvestmentListSortReversed { get; set; }
+
+        /// <summary>The Investments list's own pills show the change in ₡ instead of %.</summary>
+        public bool InvestmentListChangeAsCurrency { get; set; }
+
+        /// <summary>
         /// Preference: show the IPO dialog when a local company is announced. The dialog's
         /// "Don't show this for future IPOs" checkbox is this same value, read the other way.
         /// </summary>

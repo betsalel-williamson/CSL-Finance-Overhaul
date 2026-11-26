@@ -90,9 +90,11 @@ Hit-testing runs only while the mouse is over the window.
 ## Opacity and hover
 
 Like City Vitals' "Transparent Unhovered": the whole window sits at the chosen opacity and turns
-fully solid while the mouse is over it (`monitor.transparentUnhovered`, on by default). Background,
-text, pills and charts fade together, as City Vitals' panel does. The window never goes below 15%,
-so it can always be found again.
+fully solid while the mouse is over it (`monitor.transparentUnhovered`, on by default), its dark
+background included, so nothing of the city shows through while reading it (City Vitals' panel is
+opaque under the mouse too; the background was 90% until 2026-11-25). Background, text, pills and
+charts fade together, as City Vitals' panel does. The window never goes below 15%, so it can always
+be found again.
 
 ## Settings popover (shipped)
 

@@ -6,7 +6,7 @@ using System.IO; // Path
 // ColossalFramework.UI: UIButton, UIComponent, UIFont, UIInput, UILabel, UIPanel,
 //   UIScrollablePanel, UISlider, UITextComponent, UIView
 using ColossalFramework.UI;
-using FinanceOverhaul.Core; // DuplicateCopies, InvestmentRow, SliderThumb
+using FinanceOverhaul.Core; // DuplicateCopies, InvestmentRow, MonitorSort, SliderThumb
 using UnityEngine; // Application, GameObject, Mathf, Resources, Vector2, Vector3, WaitForSeconds
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
@@ -155,6 +155,51 @@ namespace FinanceOverhaul
                         a == "restore" ? ctx.InvestmentListBefore.Value : a == "on";
                     yield return null;
                     yield return null;
+                    break;
+                }
+                case "investments-sort":
+                {
+                    // investments-sort sync on|off, or Change|Symbol|Price|ValueHeld [currency] —
+                    // the list's own sort settings (put back when the scenario ends).
+                    if (Mod.Settings == null)
+                    {
+                        r.Error = "no settings loaded";
+                        break;
+                    }
+
+                    if (ctx.ListSortBefore == null)
+                    {
+                        ctx.ListSortBefore = new object[]
+                        {
+                            Mod.Settings.InvestmentListSortSynced,
+                            Mod.Settings.InvestmentListSort,
+                            Mod.Settings.InvestmentListSortReversed,
+                            Mod.Settings.InvestmentListChangeAsCurrency,
+                        };
+                    }
+
+                    if (a == "sync")
+                    {
+                        Mod.Settings.InvestmentListSortSynced = b == "on";
+                    }
+                    else
+                    {
+                        try
+                        {
+                            Mod.Settings.InvestmentListSort = (MonitorSort)
+                                Enum.Parse(typeof(MonitorSort), a);
+                        }
+                        catch (ArgumentException)
+                        {
+                            r.Error = "no sort " + a;
+                            break;
+                        }
+
+                        Mod.Settings.InvestmentListSortReversed = false;
+                        Mod.Settings.InvestmentListChangeAsCurrency = b == "currency";
+                    }
+
+                    yield return new WaitForSeconds(0.5f);
                     break;
                 }
                 case "investments-scroll":

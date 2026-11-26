@@ -7,6 +7,8 @@ name investments list: hover chart, outline, click a line, a purchase, grouping 
 monitor remember
 monitor-sort Change
 monitor-change percent
+investments-sort sync off
+investments-sort Change
 close-economy
 investments-list on
 set-price TST 100

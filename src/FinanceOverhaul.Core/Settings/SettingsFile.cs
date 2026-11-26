@@ -21,6 +21,10 @@ namespace FinanceOverhaul.Core
         private const string LocalIposKey = "localIposEnabled";
         private const string InvestmentListKey = "investmentListEnabled";
         private const string IpoDialogKey = "ipoDialogEnabled";
+        private const string ListSortSyncedKey = "investmentListSortSynced";
+        private const string ListSortKey = "investmentListSort";
+        private const string ListSortReversedKey = "investmentListSortReversed";
+        private const string ListCurrencyKey = "investmentListChangeCurrency";
         private const string TickerShowsKey = "tickerShows";
         private const string TickerBrightnessKey = "tickerBrightness";
         private const string TickerInInfoViewsKey = "tickerInInfoViews";
@@ -131,6 +135,26 @@ namespace FinanceOverhaul.Core
                     continue;
                 }
 
+                if (string.Equals(key, ListSortKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Unknown values keep the default (a newer build's sort).
+                    foreach (MonitorSort sort in StockMonitor.SortCycle)
+                    {
+                        if (
+                            string.Equals(
+                                value,
+                                sort.ToString(),
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
+                        {
+                            settings.InvestmentListSort = sort;
+                        }
+                    }
+
+                    continue;
+                }
+
                 if (string.Equals(key, OrderLifetimeKey, StringComparison.OrdinalIgnoreCase))
                 {
                     int days;
@@ -200,6 +224,20 @@ namespace FinanceOverhaul.Core
                 else if (string.Equals(key, IpoDialogKey, StringComparison.OrdinalIgnoreCase))
                 {
                     settings.IpoDialogEnabled = flag;
+                }
+                else if (string.Equals(key, ListSortSyncedKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.InvestmentListSortSynced = flag;
+                }
+                else if (
+                    string.Equals(key, ListSortReversedKey, StringComparison.OrdinalIgnoreCase)
+                )
+                {
+                    settings.InvestmentListSortReversed = flag;
+                }
+                else if (string.Equals(key, ListCurrencyKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.InvestmentListChangeAsCurrency = flag;
                 }
                 else
                 {
@@ -280,6 +318,19 @@ namespace FinanceOverhaul.Core
             sb.Append(InvestmentListKey)
                 .Append('=')
                 .Append(settings.InvestmentListEnabled ? "true" : "false")
+                .Append('\n');
+            sb.Append(ListSortSyncedKey)
+                .Append('=')
+                .Append(settings.InvestmentListSortSynced ? "true" : "false")
+                .Append('\n');
+            sb.Append(ListSortKey).Append('=').Append(settings.InvestmentListSort).Append('\n');
+            sb.Append(ListSortReversedKey)
+                .Append('=')
+                .Append(settings.InvestmentListSortReversed ? "true" : "false")
+                .Append('\n');
+            sb.Append(ListCurrencyKey)
+                .Append('=')
+                .Append(settings.InvestmentListChangeAsCurrency ? "true" : "false")
                 .Append('\n');
             sb.Append(IpoDialogKey)
                 .Append('=')

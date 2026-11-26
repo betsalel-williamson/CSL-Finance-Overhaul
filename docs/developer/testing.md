@@ -112,7 +112,8 @@ game's zoned building info panel; scenario 71 checks what the mod adds to it for
 `dump (Library) UniqueFactoryWorldInfoPanel` takes any control name with a space in it),
 `ipo-area-panel` (opens the industry area's own panel for the scenario's newest company, an area;
 scenario 78), `investments-list on|off|restore` (the "Investments list and research" flag),
-`investments-scroll PIXELS` (moves that list as the wheel would),
+`investments-sort sync on|off` or `investments-sort SORT [currency]` (the list's own sort settings,
+put back after), `investments-scroll PIXELS` (moves that list as the wheel would),
 `expect-investments SECTION SYMBOL` (the stock is in Portfolio, Local or All, or `none`; logs the
 list; scenarios 79 and 80), `log-modal` (dev: which control holds the game's modal and which is
 under the mouse), `ipo-open-buy` (the game's dialog on Buy for the test company),

@@ -1,4 +1,4 @@
-using FinanceOverhaul.Core; // ModSettings, OrderKind, OrderText, SettingsFile
+using FinanceOverhaul.Core; // ModSettings, MonitorSort, OrderKind, OrderText, SettingsFile
 using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
@@ -11,6 +11,31 @@ namespace FinanceOverhaul.Core.Tests
             var original = new ModSettings { IndexStockEnabled = true };
             ModSettings parsed = SettingsFile.Parse(SettingsFile.Format(original));
             Assert.True(parsed.IndexStockEnabled);
+        }
+
+        [Fact]
+        public void RoundTrip_InvestmentListKeepsItsOwnSortUnlessSynced()
+        {
+            ModSettings fresh = SettingsFile.Parse("");
+            Assert.False(fresh.InvestmentListSortSynced); // each window its own by default
+            Assert.Equal(MonitorSort.Change, fresh.InvestmentListSort);
+
+            var original = new ModSettings
+            {
+                InvestmentListSortSynced = true,
+                InvestmentListSort = MonitorSort.ValueHeld,
+                InvestmentListSortReversed = true,
+                InvestmentListChangeAsCurrency = true,
+            };
+            ModSettings parsed = SettingsFile.Parse(SettingsFile.Format(original));
+            Assert.True(parsed.InvestmentListSortSynced);
+            Assert.Equal(MonitorSort.ValueHeld, parsed.InvestmentListSort);
+            Assert.True(parsed.InvestmentListSortReversed);
+            Assert.True(parsed.InvestmentListChangeAsCurrency);
+            Assert.Equal(
+                MonitorSort.Change,
+                SettingsFile.Parse("investmentListSort=Nonsense").InvestmentListSort
+            );
         }
 
         [Fact]

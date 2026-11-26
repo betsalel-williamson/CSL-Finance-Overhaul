@@ -128,11 +128,13 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
 - **Top bar:** tabs All · Owned · Local · Locked with their counts; **Group** (pressed: "Ungroup")
   splits the stocks shown into Your portfolio (value and gain), Local companies and All stocks; the
   Stock Monitor's sorts and direction. A new tab, grouping or sort starts from the top.
-- **Sort and pills, as in the Stock Monitor (2026-11-25):** the sort is the Monitor's own control (a
-  muted "Sort: Change %" to click through Change, Symbol, Price, Value held, then ▲/▼) and its own
-  saved setting, so the list and the Monitor always sort alike. A click on any change pill shows
-  every change in ₡ or % (the Monitor's setting too), and Sort: Change then sorts by the ₡ amount
-  ("Sort: Change ₡"), as there. Scenarios 79 and 80 set and restore the Monitor's settings.
+- **Sort and pills, as in the Stock Monitor (2026-11-25):** the sort is the Monitor's kind of
+  control (a muted "Sort: Change %" to click through Change, Symbol, Price, Value held, then ▲/▼),
+  and a click on any change pill shows every change in ₡ or %, with Sort: Change then sorting by the
+  ₡ amount ("Sort: Change ₡"), as there. The list keeps its **own** saved sort, direction and unit
+  (`investmentList*` settings), separate from the Monitor's; Options → "Investments list: sort and ₡
+  / % follow the Stock Monitor" (off by default) makes it use and change the Monitor's instead.
+  Scenarios 79 and 80 set and restore both windows' settings.
 - **Rows (Condensed B):** coin, symbol (LOCAL badge for a local company) and name; for a holding a
   third line "500 shares · avg ₡6,616"; the 30-day line; price above the change pill, and for a
   holding the gain under it; Buy (not on a locked stock) and Sell (only when held). A locked stock

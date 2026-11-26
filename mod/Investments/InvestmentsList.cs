@@ -65,25 +65,44 @@ namespace FinanceOverhaul
         private InvestmentFilter filter = InvestmentFilter.All;
         private MonitorSort localSort = MonitorSort.Change;
         private bool localReversed;
+        private bool localCurrency;
 
         /// <summary>
-        /// The sort, its direction and the pills' unit are the Stock Monitor's own settings, so the
-        /// two lists always agree and the choice is kept.
+        /// The list keeps its own saved sort, direction and ₡ / % pills; with Options → "follow the
+        /// Stock Monitor" on, it uses (and changes) the Monitor's instead, so the two agree.
         /// </summary>
-        private static StockMonitorSettings Shared
+        private static bool Synced
+        {
+            get { return Mod.Settings != null && Mod.Settings.InvestmentListSortSynced; }
+        }
+
+        private static StockMonitorSettings Monitor
         {
             get { return Mod.Settings == null ? null : Mod.Settings.Monitor; }
         }
 
         private MonitorSort sort
         {
-            get { return Shared == null ? localSort : Shared.Sort; }
+            get
+            {
+                return Mod.Settings == null ? localSort
+                    : Synced ? Monitor.Sort
+                    : Mod.Settings.InvestmentListSort;
+            }
             set
             {
                 localSort = value;
-                if (Shared != null)
+                if (Mod.Settings != null)
                 {
-                    Shared.Sort = value;
+                    if (Synced)
+                    {
+                        Monitor.Sort = value;
+                    }
+                    else
+                    {
+                        Mod.Settings.InvestmentListSort = value;
+                    }
+
                     Mod.SaveSettings();
                 }
             }
@@ -91,33 +110,65 @@ namespace FinanceOverhaul
 
         private bool reversed
         {
-            get { return Shared == null ? localReversed : Shared.SortReversed; }
+            get
+            {
+                return Mod.Settings == null ? localReversed
+                    : Synced ? Monitor.SortReversed
+                    : Mod.Settings.InvestmentListSortReversed;
+            }
             set
             {
                 localReversed = value;
-                if (Shared != null)
+                if (Mod.Settings != null)
                 {
-                    Shared.SortReversed = value;
+                    if (Synced)
+                    {
+                        Monitor.SortReversed = value;
+                    }
+                    else
+                    {
+                        Mod.Settings.InvestmentListSortReversed = value;
+                    }
+
                     Mod.SaveSettings();
                 }
             }
         }
 
-        private static bool InCurrency
+        private bool InCurrency
         {
-            get { return Shared != null && Shared.ChangeAsCurrency; }
+            get
+            {
+                return Mod.Settings == null ? localCurrency
+                    : Synced ? Monitor.ChangeAsCurrency
+                    : Mod.Settings.InvestmentListChangeAsCurrency;
+            }
+            set
+            {
+                localCurrency = value;
+                if (Mod.Settings != null)
+                {
+                    if (Synced)
+                    {
+                        Monitor.ChangeAsCurrency = value;
+                    }
+                    else
+                    {
+                        Mod.Settings.InvestmentListChangeAsCurrency = value;
+                    }
+
+                    Mod.SaveSettings();
+                }
+            }
         }
 
-        /// <summary>A click on any pill: ₡ ↔ %, here and in the Stock Monitor (Figma pin 6 there).</summary>
+        /// <summary>A click on any pill: ₡ ↔ % for the whole list (and the Stock Monitor when synced).</summary>
+        /// <summary>What the rows' pills show, as of the last read.</summary>
+        private static bool pillsInCurrency;
+
         private void TogglePills()
         {
-            if (Shared == null)
-            {
-                return;
-            }
-
-            Shared.ChangeAsCurrency = !Shared.ChangeAsCurrency;
-            Mod.SaveSettings();
+            InCurrency = !InCurrency;
             Read();
         }
 
@@ -264,6 +315,7 @@ namespace FinanceOverhaul
 
         private void Read()
         {
+            pillsInCurrency = InCurrency;
             quotes = MarketQuotes.Read(true);
             List<InvestmentRow> next = InvestmentList.Rows(
                 quotes,
@@ -961,7 +1013,7 @@ namespace FinanceOverhaul
                 }
 
                 string signature =
-                    InCurrency
+                    pillsInCurrency
                     + "|"
                     + q.Price.ToString("0.##")
                     + "|"
@@ -1016,7 +1068,7 @@ namespace FinanceOverhaul
                     price.text = BondText.WholeMoney((long)Math.Round(q.Price * 100.0));
                     price.relativePosition = new Vector3(PriceRight - price.width, 3f);
                     // One measure in both units: the game's change rate, or that change in ₡.
-                    change.text = InCurrency
+                    change.text = pillsInCurrency
                         ? StockMonitor.ChangeAmountFromRate(q.Price, q.ChangeRate)
                         : StockMonitor.ChangeText(q.ChangeRate);
                     change.color = colour;

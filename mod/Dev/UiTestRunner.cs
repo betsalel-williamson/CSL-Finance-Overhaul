@@ -7,7 +7,9 @@ using System.Globalization; // CultureInfo, NumberStyles
 using System.IO;
 using System.Reflection; // FieldInfo
 using ColossalFramework.UI; // UIButton, UIComponent, UILabel, UITextField
-using FinanceOverhaul.Core; // BuildingKey, IssuedBond, LedBrightness, TickerDisplay, TradeOrder
+// FinanceOverhaul.Core: BuildingKey, IssuedBond, LedBrightness, MonitorSort, TickerDisplay,
+//   TradeOrder
+using FinanceOverhaul.Core;
 using UnityEngine; // Color32, MonoBehaviour, Time, Vector2, Vector3
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
@@ -108,6 +110,9 @@ namespace FinanceOverhaul
             /// <summary>The player's Local IPOs flag, kept while a scenario switches it.</summary>
             public bool? LocalIposBefore;
             public bool? InvestmentListBefore;
+
+            /// <summary>The Investments list's sort settings before the scenario (sync, sort, ▲/▼, ₡).</summary>
+            public object[] ListSortBefore;
             public int Fireworks = IpoFireworks.Launched;
 
             /// <summary>Cents a scenario took out of the city's cash with cash-set, to put back.</summary>
@@ -223,6 +228,15 @@ namespace FinanceOverhaul
             if (ctx.InvestmentListBefore.HasValue && Mod.Settings != null)
             {
                 Mod.Settings.InvestmentListEnabled = ctx.InvestmentListBefore.Value;
+            }
+
+            if (ctx.ListSortBefore != null && Mod.Settings != null)
+            {
+                Mod.Settings.InvestmentListSortSynced = (bool)ctx.ListSortBefore[0];
+                Mod.Settings.InvestmentListSort = (MonitorSort)ctx.ListSortBefore[1];
+                Mod.Settings.InvestmentListSortReversed = (bool)ctx.ListSortBefore[2];
+                Mod.Settings.InvestmentListChangeAsCurrency = (bool)ctx.ListSortBefore[3];
+                ctx.ListSortBefore = null;
             }
 
             RemoveTestCompanies(ctx);

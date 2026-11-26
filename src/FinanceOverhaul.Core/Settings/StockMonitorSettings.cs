@@ -30,8 +30,12 @@ namespace FinanceOverhaul.Core
         /// </summary>
         public bool TransparentUnhovered = true;
 
-        /// <summary>Darkness of the panel behind the content when the window is fully solid.</summary>
-        public const float HoverOpacity = 0.9f;
+        /// <summary>
+        /// The panel behind the content when the window is fully solid (hovered): solid, as City
+        /// Vitals' panel is under the mouse (its MenuPanel art is opaque). At 0.9 the city still
+        /// showed through while reading the window.
+        /// </summary>
+        public const float HoverOpacity = 1f;
 
         /// <summary>Compact rows: one line per stock, names hidden.</summary>
         public bool CompactRows;

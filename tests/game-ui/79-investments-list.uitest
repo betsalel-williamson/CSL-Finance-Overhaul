@@ -4,10 +4,13 @@
 # All is one list sorted as a whole; only the Group button splits it into sections. Assumes
 # nothing about what the city holds. Flag off gives the game's tab back.
 name investments list: one list in place of the two, tabs, group, sort, and back
-# the sort and the pills' unit are the Stock Monitor's settings: set here, put back after
+# the list keeps its own sort and pills' unit, separate from the Stock Monitor unless Options
+# says to follow it: set here, both put back after
 monitor remember
 monitor-sort Change
 monitor-change percent
+investments-sort sync off
+investments-sort Change
 close-economy
 investments-list on
 show-economy
@@ -19,10 +22,17 @@ expect-visible FinanceOverhaulInvestmentsList
 expect-text FinanceOverhaulInvestmentsTab-All All
 expect-text FinanceOverhaulInvestmentsSort Sort: Change %
 capture investments-list-all
-# the Monitor in ₡: the list's pills and its Change sort follow
+# separate: the Monitor in ₡ and sorted by symbol leaves the list as it was
 monitor-change currency
+monitor-sort Symbol
 wait 0.5
-expect-text FinanceOverhaulInvestmentsSort Sort: Change ₡
+expect-text FinanceOverhaulInvestmentsSort Sort: Change %
+# synced (Options): the list follows the Monitor
+investments-sort sync on
+wait 0.5
+expect-text FinanceOverhaulInvestmentsSort Sort: Symbol
+investments-sort sync off
+monitor-sort Change
 monitor-change percent
 wait 0.5
 expect-no-overflow FinanceOverhaulInvestmentsList
