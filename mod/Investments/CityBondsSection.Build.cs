@@ -138,17 +138,30 @@ namespace FinanceOverhaul
             y += 24f;
             Label(section, null, Strings.Get("bond.term"), 0.75f, Muted).relativePosition =
                 new Vector3(left, y + 6f);
-            float x = left + 48f;
-            foreach (
-                BondTerm t in new[] { BondTerm.OneYear, BondTerm.TwoYears, BondTerm.FiveYears }
-            )
+            BondTerm[] terms = { BondTerm.OneYear, BondTerm.TwoYears, BondTerm.FiveYears };
+            termBar = FoToggleTabs.AddEven(
+                section,
+                TermPrefix + "Bar",
+                new[]
+                {
+                    BondText.WeeksText(terms[0]),
+                    BondText.WeeksText(terms[1]),
+                    BondText.WeeksText(terms[2]),
+                },
+                new Vector2(3f * 88f, 28f),
+                0.8f,
+                i => SetTerm(terms[i])
+            );
+            termBar.Panel.relativePosition = new Vector3(left + 48f, y);
+            for (int i = 0; i < terms.Length; i++)
             {
-                BondTerm captured = t;
-                UIButton b = Button(section, TermPrefix + (int)t, BondText.WeeksText(t), 84f);
-                b.relativePosition = new Vector3(x, y);
-                b.eventClick += (c, p) => SetTerm(captured);
-                termButtons[t] = b;
-                x += 90f;
+                termBar[i].name = TermPrefix + (int)terms[i];
+                if (font != null)
+                {
+                    termBar[i].font = font;
+                }
+
+                termButtons[terms[i]] = termBar[i];
             }
 
             y += 30f;

@@ -106,6 +106,7 @@ namespace FinanceOverhaul
         private static UIPanel tabs;
         private static UIPanel sides;
         private static FoToggleTabs sideTabs;
+        private static FoToggleTabs typeTabs;
         private static UIPanel pricePanel;
         private static UILabel caption;
         private static UITextField priceField;
@@ -406,6 +407,7 @@ namespace FinanceOverhaul
             tabs = null;
             sides = null;
             sideTabs = null;
+            typeTabs = null;
             pricePanel = null;
             caption = null;
             priceField = null;

@@ -1,5 +1,5 @@
 using System; // Exception
-using System.Collections.Generic; // Dictionary, KeyValuePair, List
+using System.Collections.Generic; // Dictionary, List
 // ColossalFramework.UI: UIButton, UIComponent, UIFont, UILabel, UIPanel, UIScrollablePanel,
 //   UITextField, UITextureSprite
 using ColossalFramework.UI;
@@ -81,6 +81,7 @@ namespace FinanceOverhaul
         private readonly Dictionary<BondTerm, UIButton> termButtons =
             new Dictionary<BondTerm, UIButton>();
         private BondTerm term = BondTerm.FiveYears;
+        private FoToggleTabs termBar;
         private UIFont font;
         private string shownRows;
         private float nextCheck;
@@ -288,10 +289,13 @@ namespace FinanceOverhaul
                 return;
             }
 
-            foreach (KeyValuePair<BondTerm, UIButton> kv in termButtons)
+            if (termBar != null)
             {
-                bool on = kv.Key == term;
-                kv.Value.normalBgSprite = on ? "ButtonMenuFocused" : "ButtonMenu";
+                termBar.Choose(
+                    term == BondTerm.OneYear ? 0
+                    : term == BondTerm.TwoYears ? 1
+                    : 2
+                );
             }
 
             long debt,

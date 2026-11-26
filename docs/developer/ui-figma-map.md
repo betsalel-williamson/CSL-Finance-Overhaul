@@ -243,12 +243,12 @@ Shown once when a city loads with the mod after days played without it
 | 3   | `welcome.skip`     | Start fresh         | Shipped, the default (scenarios 48, 50)                |
 | 4   | `welcome.index`    | Index shares back   | Shipped (Index copy; also a Brokerage chirp)           |
 
-### Investments list and the Invest dialog's Buy | Sell (band 20, `planned` behind a dev flag)
+### Investments list and tab groups (band 20, `planned` behind a dev flag)
 
 Band 20 holds captures of the one list (dev flag "Investments list and research",
 [design](../features/investments-and-research.md)). Components on the Components page:
 
-| Component              | States                                                                   | Code                                        |
-| ---------------------- | ------------------------------------------------------------------------ | ------------------------------------------- |
-| `FO/InvestmentListRow` | Stock, Held, Local, Locked, Order, Heading; Default and Hover (outlined) | `InvestmentsList` (rules: `InvestmentList`) |
-| `FO/ToggleTabs`        | Buy chosen, Sell chosen, Sell disabled                                   | Kit `FoToggleTabs`, used by `OrderTicket`   |
+| Component              | States                                                                                                         | Code                                                                                                                 |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `FO/InvestmentListRow` | Stock, Held, Local, Locked, Order, Heading; Default and Hover (outlined)                                       | `InvestmentsList` (rules: `InvestmentList`)                                                                          |
+| `FO/ToggleTabs`        | Dialog side (Buy, Sell, Sell disabled), order types, Monitor filters, chart range, Investments tabs, bond term | Kit `FoToggleTabs`: `OrderTicket`, `StockMonitorWindow`, `StockMonitorDetail`, `InvestmentsList`, `CityBondsSection` |

@@ -1,4 +1,4 @@
-using System; // Exception, Math
+using System; // Array, Exception, Math
 using System.Collections.Generic; // Dictionary, IList, KeyValuePair, List
 // ColossalFramework.UI: UIButton, UIComponent, UILabel, UIOrientation, UIPanel, UIScrollbar,
 //   UISlicedSprite, UISprite, UITextureSprite, UIView
@@ -65,6 +65,7 @@ namespace FinanceOverhaul
         private MonitorSort sort = MonitorSort.Change;
         private bool reversed;
         private bool grouped;
+        private FoToggleTabs tabBar;
         private UIButton groupButton;
         private List<MonitorQuote> quotes = new List<MonitorQuote>();
         private List<InvestmentRow> rows = new List<InvestmentRow>();
@@ -163,6 +164,7 @@ namespace FinanceOverhaul
 
             pool.Clear();
             tabs.Clear();
+            tabBar = null;
             if (sortArrow != null && sortArrow.texture != null)
             {
                 Destroy(sortArrow.texture);
@@ -220,8 +222,9 @@ namespace FinanceOverhaul
             foreach (KeyValuePair<InvestmentFilter, UIButton> tab in tabs)
             {
                 tab.Value.text = InvestmentList.FilterLabel(tab.Key, quotes);
-                FoButton.SetSelected(tab.Value, tab.Key == filter);
             }
+
+            tabBar.Choose(Array.IndexOf(InvestmentList.Filters, filter));
 
             sortButton.text = StockMonitor.SortLabel(sort, false);
             groupButton.text = InvestmentList.GroupLabel(grouped);
@@ -356,22 +359,32 @@ namespace FinanceOverhaul
             list.relativePosition = new Vector3(16f, 12f);
             list.size = new Vector2(page.width - 32f, page.height - 59f);
 
-            float x = 0f;
-            foreach (InvestmentFilter f in InvestmentList.Filters)
+            InvestmentFilter[] filters = InvestmentList.Filters;
+            var labels = new string[filters.Length];
+            var widths = new float[filters.Length];
+            for (int i = 0; i < filters.Length; i++)
             {
-                InvestmentFilter which = f;
-                UIButton tab = FoButton.Add(
-                    list,
-                    Prefix + "Tab-" + f,
-                    InvestmentList.FilterLabel(f, quotes),
-                    new Vector2(100f, 26f),
-                    0.8f
-                );
-                tab.relativePosition = new Vector3(x, 2f);
-                tab.eventClick += (c, p) => Pick(which);
-                tabs[f] = tab;
-                x += 104f;
+                labels[i] = InvestmentList.FilterLabel(filters[i], quotes);
+                widths[i] = 100f;
             }
+
+            tabBar = FoToggleTabs.Add(
+                list,
+                Prefix + "Tabs",
+                labels,
+                widths,
+                26f,
+                0.8f,
+                i => Pick(filters[i])
+            );
+            tabBar.Panel.relativePosition = new Vector3(0f, 2f);
+            for (int i = 0; i < filters.Length; i++)
+            {
+                tabBar[i].name = Prefix + "Tab-" + filters[i];
+                tabs[filters[i]] = tabBar[i];
+            }
+
+            float x = tabBar.Panel.width;
 
             // Sections only when asked for: All is one list sorted as a whole.
             groupButton = FoButton.Add(

@@ -15,11 +15,12 @@ a phone stocks app, styled like the City Vitals window players already know.
   then the window, taking its turn before the game's pause menu; while the game's Buy/Sell dialog is
   open Esc closes that first, as in the game (a prefix on `GameKeyShortcuts.Escape`; game UI
   scenario 60).
-- **Filters:** All · Portfolio (stocks the city holds) · Orders (stocks with open orders). **Sort**
-  (click it) cycles Change (biggest gain first) → Symbol → Price → Value held. Change follows what
-  the pills show and names its unit: "Sort: Change %" with % pills; with ₡ pills it orders by that ₡
-  amount and reads "Sort: Change ₡" (a cheap stock with a big % move is a small ₡ move); proved over
-  2,000 random lists, checked in scenario 45.
+- **Filters:** a tab group (`FoToggleTabs`, drawn as the game's tab strip) All · Portfolio (stocks
+  the city holds) · Orders (stocks with open orders). **Sort** (click it) cycles Change (biggest
+  gain first) → Symbol → Price → Value held. Change follows what the pills show and names its unit:
+  "Sort: Change %" with % pills; with ₡ pills it orders by that ₡ amount and reads "Sort: Change ₡"
+  (a cheap stock with a big % move is a small ₡ move); proved over 2,000 random lists, checked in
+  scenario 45.
 - **Sort direction:** a ▼/▲ button right of "Sort: …" flips the order (highest or Z first ↔ lowest
   or A first). Each sort starts in its natural direction (Change, Price, Value held highest first;
   Symbol A→Z); ties stay A→Z. Kept per player (`monitor.sortReversed`). Proved over 2,000 random
@@ -68,8 +69,8 @@ window remembers which view was open).
 
 - **Header:** symbol and name; today's price with its change in ₡ and % — the game's change rate,
   the same measure as the row's pill — and "Today · yesterday ₡…" for reference.
-- **Chart:** **7D** or **30D** (the game keeps 30 daily prices) — line, shaded area, dashed line at
-  yesterday's price, grid with ₡ labels at the high, the low and two steps between.
+- **Chart:** **7D** or **30D** (a tab group) (the game keeps 30 daily prices) — line, shaded area,
+  dashed line at yesterday's price, grid with ₡ labels at the high, the low and two steps between.
 - **Stats:** today, yesterday, the range's high and low; shares held, avg cost / share
   ([Cost basis](./cost-basis.md)), gain or loss like Your Portfolio (current value − you invested;
   "—" with no shares) and current value; then **Open orders** across the full width — one or two

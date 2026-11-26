@@ -1,4 +1,5 @@
 using System; // Func, Math
+using System.Collections.Generic; // List
 
 namespace FinanceOverhaul.Core
 {
@@ -21,7 +22,11 @@ namespace FinanceOverhaul.Core
         private const int DashOn = 3;
         private const int DashOff = 3;
 
-        /// <param name="values">Daily prices, oldest first. Non-finite values are skipped.</param>
+        /// <param name="values">
+        /// Daily prices, oldest first, one column each. A non-finite value is a day with no price
+        /// (a company not yet listed): nothing is drawn there, and the line starts at the first day
+        /// with a price.
+        /// </param>
         /// <param name="thickness">Line thickness in pixels (1 or more).</param>
         public static byte[] Render(
             float[] values,
@@ -37,8 +42,17 @@ namespace FinanceOverhaul.Core
             }
 
             var mask = new byte[width * height];
-            float[] v = FiniteOnly(values);
-            if (v.Length == 0)
+            int n = values == null ? 0 : values.Length;
+            var known = new List<int>();
+            for (int i = 0; i < n; i++)
+            {
+                if (Finite(values[i]))
+                {
+                    known.Add(i);
+                }
+            }
+
+            if (known.Count == 0)
             {
                 return mask;
             }
@@ -46,10 +60,10 @@ namespace FinanceOverhaul.Core
             thickness = Math.Max(1, thickness);
             float lo = float.MaxValue,
                 hi = float.MinValue;
-            foreach (float x in v)
+            foreach (int i in known)
             {
-                lo = Math.Min(lo, x);
-                hi = Math.Max(hi, x);
+                lo = Math.Min(lo, values[i]);
+                hi = Math.Max(hi, values[i]);
             }
 
             int pad = (thickness - 1) / 2;
@@ -59,17 +73,15 @@ namespace FinanceOverhaul.Core
                 hi - lo < 1e-6f
                     ? (top + bottom) / 2
                     : bottom - (int)Math.Round((value - lo) / (hi - lo) * (bottom - top));
-            Func<int, int> colOf = i =>
-                v.Length == 1
-                    ? width - 1
-                    : (int)Math.Round(i * (width - 1) / (double)(v.Length - 1));
+            Func<int, int> colOf = i => (int)ColumnOf(i, width, n);
 
-            if (v.Length >= 2)
+            // Yesterday's price, dashed, across the days the stock has a price.
+            if (known.Count >= 2 && Finite(values[n - 2]))
             {
-                int yb = rowOf(v[v.Length - 2]);
+                int yb = rowOf(values[n - 2]);
                 int on = DashOn * thickness,
                     period = (DashOn + DashOff) * thickness;
-                for (int x = 0; x < width; x++)
+                for (int x = colOf(known[0]); x < width; x++)
                 {
                     if (x % period >= on)
                     {
@@ -87,13 +99,13 @@ namespace FinanceOverhaul.Core
                 }
             }
 
-            int px = colOf(0),
-                py = rowOf(v[0]);
+            int px = colOf(known[0]),
+                py = rowOf(values[known[0]]);
             Plot(mask, width, height, px, py, thickness, Line);
-            for (int i = 1; i < v.Length; i++)
+            for (int k = 1; k < known.Count; k++)
             {
-                int x = colOf(i),
-                    y = rowOf(v[i]);
+                int x = colOf(known[k]),
+                    y = rowOf(values[known[k]]);
                 DrawLine(mask, width, height, px, py, x, y, thickness);
                 px = x;
                 py = y;
@@ -105,6 +117,50 @@ namespace FinanceOverhaul.Core
             }
 
             return mask;
+        }
+
+        /// <summary>
+        /// The days with no price before a stock existed, as a chart shows them: every value
+        /// before <paramref name="firstDay"/> becomes NaN (drawn as nothing). Values are the last
+        /// <c>values.Length</c> days, oldest first, the last one <paramref name="today"/>.
+        /// </summary>
+        public static float[] FromDay(float[] values, int today, int firstDay)
+        {
+            if (values == null)
+            {
+                return null;
+            }
+
+            var masked = (float[])values.Clone();
+            int n = masked.Length;
+            for (int i = 0; i < n; i++)
+            {
+                if (today - (n - 1 - i) < firstDay)
+                {
+                    masked[i] = float.NaN;
+                }
+            }
+
+            return masked;
+        }
+
+        /// <summary>The first day in <paramref name="values"/> with a price, or -1.</summary>
+        public static int FirstKnown(float[] values)
+        {
+            for (int i = 0; values != null && i < values.Length; i++)
+            {
+                if (Finite(values[i]))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private static bool Finite(float x)
+        {
+            return !float.IsNaN(x) && !float.IsInfinity(x);
         }
 
         /// <summary>
@@ -176,35 +232,6 @@ namespace FinanceOverhaul.Core
                     }
                 }
             }
-        }
-
-        private static float[] FiniteOnly(float[] values)
-        {
-            if (values == null)
-            {
-                return new float[0];
-            }
-
-            int n = 0;
-            foreach (float x in values)
-            {
-                if (!float.IsNaN(x) && !float.IsInfinity(x))
-                {
-                    n++;
-                }
-            }
-
-            var v = new float[n];
-            int j = 0;
-            foreach (float x in values)
-            {
-                if (!float.IsNaN(x) && !float.IsInfinity(x))
-                {
-                    v[j++] = x;
-                }
-            }
-
-            return v;
         }
 
         private static void DrawLine(

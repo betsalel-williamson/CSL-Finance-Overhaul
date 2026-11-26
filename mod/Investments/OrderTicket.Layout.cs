@@ -116,7 +116,7 @@ namespace FinanceOverhaul
             sides = dark.AddUIComponent<UIPanel>();
             sides.name = SidesName;
             sides.size = new Vector2(dark.width, 42f);
-            sideTabs = FoToggleTabs.Add(
+            sideTabs = FoToggleTabs.AddEven(
                 sides,
                 TabPrefix + "Side",
                 new[] { Strings.Get("investments.buy"), Strings.Get("investments.sell") },
@@ -132,12 +132,29 @@ namespace FinanceOverhaul
             tabs = dark.AddUIComponent<UIPanel>();
             tabs.name = TabsName;
             tabs.size = new Vector2(dark.width, 38f);
-            foreach (Tab t in AllTabs)
+            var labels = new string[AllTabs.Length];
+            var widths = new float[AllTabs.Length];
+            for (int i = 0; i < AllTabs.Length; i++)
             {
-                Tab tab = t;
-                tab.Button = AddTab(tabs, tab.Label());
+                labels[i] = AllTabs[i].Label();
+                widths[i] = 124f;
+            }
+
+            typeTabs = FoToggleTabs.Add(
+                tabs,
+                TabPrefix + "Types",
+                labels,
+                widths,
+                28f,
+                1f,
+                i => SetKind(AllTabs[i].Kind)
+            );
+            typeTabs.Panel.relativePosition = new Vector3(26f, 6f);
+            for (int i = 0; i < AllTabs.Length; i++)
+            {
+                Tab tab = AllTabs[i];
+                tab.Button = typeTabs[i];
                 tab.Button.name = TabPrefix + tab.Key + (tab.Buy ? string.Empty : "Sell");
-                tab.Button.eventClick += (c, p) => SetKind(tab.Kind);
             }
 
             // Trigger price row under the share amount, field in the share field's column.
@@ -202,21 +219,6 @@ namespace FinanceOverhaul
             ModLog.Info("order ticket: attached (buy and sell order types)");
         }
 
-        private static UIButton AddTab(UIPanel parent, string text)
-        {
-            UIButton tab = parent.AddUIComponent<UIButton>();
-            tab.text = text;
-            tab.size = new Vector2(120f, 28f);
-            tab.textScale = 1f;
-            tab.normalBgSprite = "ButtonMenu";
-            tab.hoveredBgSprite = "ButtonMenuHovered";
-            tab.pressedBgSprite = "ButtonMenuPressed";
-            tab.focusedBgSprite = "ButtonMenu";
-            tab.disabledBgSprite = "ButtonMenuDisabled";
-            tab.textColor = FoTheme.GameText;
-            return tab;
-        }
-
         /// <summary>
         /// A fresh open starts on the vanilla trade. Vanilla labels the button by localeID
         /// and skips re-applying an unchanged id, so always re-apply the localized label
@@ -276,28 +278,25 @@ namespace FinanceOverhaul
                 sideTabs.SetEnabled(1, canSell || !buy, Strings.Get("order.side.sellNone"));
             }
 
-            float x = 26f;
-            foreach (Tab t in AllTabs)
+            if (typeTabs == null)
             {
-                if (t.Button == null)
-                {
-                    continue;
-                }
+                return;
+            }
 
+            int chosen = -1;
+            for (int i = 0; i < AllTabs.Length; i++)
+            {
+                Tab t = AllTabs[i];
                 bool shown =
                     t.Buy == buy && (!t.Kind.HasValue || Mod.OrderKindEnabled(t.Kind.Value));
-                t.Button.isVisible = shown;
-                if (!shown)
+                typeTabs.SetShown(i, shown);
+                if (shown && chosen < 0 && t.Kind == active)
                 {
-                    continue;
+                    chosen = i;
                 }
-
-                t.Button.relativePosition = new Vector3(x, 6f);
-                x += t.Button.width + 8f;
-                bool on = t.Kind == active;
-                t.Button.normalBgSprite = on ? "ButtonMenuPressed" : "ButtonMenu";
-                t.Button.focusedBgSprite = t.Button.normalBgSprite;
             }
+
+            typeTabs.Choose(chosen);
         }
 
         /// <summary>

@@ -205,6 +205,12 @@ namespace FinanceOverhaul
             int w = texture.width,
                 h = texture.height;
             int i = Sparkline.IndexAt(lx * Scale, w, Values.Length);
+            if (float.IsNaN(Values[i]) || float.IsInfinity(Values[i]))
+            {
+                HideHover();
+                return false; // a day before the stock existed: nothing to show
+            }
+
             float x = Sparkline.ColumnOf(i, w, Values.Length) / Scale;
             float y =
                 Sparkline.RowOf(
@@ -399,6 +405,7 @@ namespace FinanceOverhaul
 
                 var history = new float[Investment.kPastValueCount];
                 buffer[id].FillGraphValues(history);
+                history = CompanyListing.ChartDays(buffer[id].Info.m_investmentAI, history);
                 float[] range = StockDetail.Range(history, StockDetail.LongRange);
                 // One rule everywhere: the game's change rate (list, pills, Economy panel, LED).
                 Color32 colour = FoTheme.Change(

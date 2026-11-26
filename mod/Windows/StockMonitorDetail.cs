@@ -41,9 +41,8 @@ namespace FinanceOverhaul
             dYesterday,
             dFromLabel,
             dToLabel;
-        private UIButton dRange7,
-            dRange30,
-            dBuy,
+        private FoToggleTabs dRange;
+        private UIButton dBuy,
             dSell;
         private UITextureSprite dChart;
         private Texture2D dTexture;
@@ -88,9 +87,9 @@ namespace FinanceOverhaul
             sortLabel.isVisible = on;
             sortDirection.isVisible = on; // the ▲/▼ sorts the list: not part of a stock's detail
             empty.isVisible = on && !string.IsNullOrEmpty(empty.text);
-            foreach (UIButton tab in filterTabs.Values)
+            if (filterBar != null)
             {
-                tab.isVisible = on;
+                filterBar.Panel.isVisible = on;
             }
         }
 
@@ -120,8 +119,26 @@ namespace FinanceOverhaul
             dChange = RightLabel(Prefix + "DetailChange", 0.8f, Gain, 50f);
             dYesterday = RightLabel(Prefix + "DetailYesterday", 0.68f, Muted, 68f);
 
-            dRange7 = RangeButton(StockDetail.ShortRange, 12f);
-            dRange30 = RangeButton(StockDetail.LongRange, 62f);
+            dRange = FoToggleTabs.Add(
+                detail,
+                Prefix + "Range",
+                new[]
+                {
+                    StockDetail.RangeChip(StockDetail.ShortRange),
+                    StockDetail.RangeChip(StockDetail.LongRange),
+                },
+                new[] { 44f, 44f },
+                22f,
+                0.75f,
+                i =>
+                {
+                    detailDays = i == 0 ? StockDetail.ShortRange : StockDetail.LongRange;
+                    RefreshDetail(true);
+                }
+            );
+            dRange.Panel.relativePosition = new Vector3(12f, 88f);
+            dRange[0].name = Prefix + "Range-" + StockDetail.ShortRange;
+            dRange[1].name = Prefix + "Range-" + StockDetail.LongRange;
             UILabel note = FoText.Label(
                 detail,
                 Prefix + "DetailNote",
@@ -241,24 +258,6 @@ namespace FinanceOverhaul
             return l;
         }
 
-        private UIButton RangeButton(int days, float x)
-        {
-            UIButton b = FoButton.Add(
-                detail,
-                Prefix + "Range-" + days,
-                StockDetail.RangeChip(days),
-                new Vector2(44f, 22f),
-                0.75f
-            );
-            b.relativePosition = new Vector3(x, 88f);
-            b.eventClick += (c, p) =>
-            {
-                detailDays = days;
-                RefreshDetail(true);
-            };
-            return b;
-        }
-
         private UIButton ActionButton(
             string name,
             string text,
@@ -329,6 +328,7 @@ namespace FinanceOverhaul
             detailSignature = signature;
             var history = new float[Investment.kPastValueCount];
             buffer[detailId].FillGraphValues(history);
+            history = CompanyListing.ChartDays(ai, history);
             float[] range = StockDetail.Range(history, detailDays);
             float? yesterday = StockDetail.Yesterday(history);
 
@@ -348,8 +348,7 @@ namespace FinanceOverhaul
             dChange.textColor = colour;
             dYesterday.text = StockDetail.YesterdayLine(yesterday);
 
-            FoButton.SetSelected(dRange7, detailDays == StockDetail.ShortRange);
-            FoButton.SetSelected(dRange30, detailDays == StockDetail.LongRange);
+            dRange.Choose(detailDays == StockDetail.ShortRange ? 0 : 1);
             dFromLabel.text = Strings.Plural("daysAgo", range.Length, range.Length.ToString());
             dRangeShown = range;
             dSymbolShown = symbol;

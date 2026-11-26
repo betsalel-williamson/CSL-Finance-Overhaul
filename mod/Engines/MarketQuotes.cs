@@ -49,6 +49,7 @@ namespace FinanceOverhaul
 
                 var history = new float[Investment.kPastValueCount];
                 buffer[i].FillGraphValues(history);
+                history = CompanyListing.ChartDays(ai, history);
                 int count;
                 orders.TryGetValue(info.name, out count);
                 int company;

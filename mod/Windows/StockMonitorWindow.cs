@@ -1,5 +1,5 @@
 using System; // Exception
-using System.Collections.Generic; // Dictionary, KeyValuePair, List
+using System.Collections.Generic; // Dictionary, List
 // ColossalFramework.UI: LayoutDirection, UIButton, UIComponent, UIDragHandle,
 //   UIHorizontalAlignment, UILabel, UIOrientation, UIPanel, UIScrollablePanel, UITextureSprite,
 //   UIVerticalAlignment, UIView
@@ -73,6 +73,7 @@ namespace FinanceOverhaul
         private UIButton sortDirection;
         private UITextureSprite sortArrow;
         private bool sortArrowDown;
+        private FoToggleTabs filterBar;
         private readonly Dictionary<MonitorFilter, UIButton> filterTabs =
             new Dictionary<MonitorFilter, UIButton>();
         private readonly List<Row> rows = new List<Row>();
@@ -305,35 +306,33 @@ namespace FinanceOverhaul
             UIButton close = FoWindow.AddClose(window, Prefix + "Close", Width);
             close.eventClick += (c, p) => SetOpen(false, true);
 
-            // Filter tabs + sort.
-            float x = 12f;
-            foreach (
-                MonitorFilter f in new[]
-                {
-                    MonitorFilter.All,
-                    MonitorFilter.Portfolio,
-                    MonitorFilter.Orders,
-                }
-            )
+            // Filter tab group + sort.
+            MonitorFilter[] filters =
             {
-                MonitorFilter filter = f;
+                MonitorFilter.All,
+                MonitorFilter.Portfolio,
+                MonitorFilter.Orders,
+            };
+            filterBar = FoToggleTabs.Add(
+                window,
+                Prefix + "Filters",
+                new[]
+                {
+                    StockMonitor.FilterLabel(MonitorFilter.All),
+                    StockMonitor.FilterLabel(MonitorFilter.Portfolio),
+                    StockMonitor.FilterLabel(MonitorFilter.Orders),
+                },
                 // Orders is wide enough for its count, "Orders (12)".
-                UIButton tab = FoButton.Add(
-                    window,
-                    Prefix + "Filter-" + f,
-                    StockMonitor.FilterLabel(f),
-                    new Vector2(
-                        f == MonitorFilter.All ? 44f
-                            : f == MonitorFilter.Portfolio ? 70f
-                            : 78f,
-                        22f
-                    ),
-                    0.75f
-                );
-                tab.relativePosition = new Vector3(x, TitleHeight + 6f);
-                tab.eventClick += (c, p) => SetFilter(filter);
-                filterTabs[f] = tab;
-                x += tab.width + 4f;
+                new[] { 44f, 70f, 78f },
+                22f,
+                0.75f,
+                i => SetFilter(filters[i])
+            );
+            filterBar.Panel.relativePosition = new Vector3(12f, TitleHeight + 6f);
+            for (int i = 0; i < filters.Length; i++)
+            {
+                filterBar[i].name = Prefix + "Filter-" + filters[i];
+                filterTabs[filters[i]] = filterBar[i];
             }
 
             sortLabel = FoText.Label(window, Prefix + "Sort", "", 0.75f, Muted);
@@ -479,9 +478,9 @@ namespace FinanceOverhaul
 
         private void StyleFilter()
         {
-            foreach (KeyValuePair<MonitorFilter, UIButton> kv in filterTabs)
+            if (filterBar != null)
             {
-                FoButton.SetSelected(kv.Value, kv.Key == Settings.Filter);
+                filterBar.Choose((int)Settings.Filter);
             }
         }
 
@@ -503,6 +502,7 @@ namespace FinanceOverhaul
             hoverLine = null;
             hoverDot = null;
             filterTabs.Clear();
+            filterBar = null;
             if (buttonIcon != null && buttonIcon.texture != null)
             {
                 Destroy(buttonIcon.texture);

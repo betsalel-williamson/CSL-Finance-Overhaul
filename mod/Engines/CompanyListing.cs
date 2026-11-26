@@ -1,7 +1,7 @@
 using System; // Action, Exception
 using System.Collections.Generic; // Dictionary, ICollection, IEnumerable, KeyValuePair, List
 using ColossalFramework.Threading; // Dispatcher, ThreadHelper
-using FinanceOverhaul.Core; // LocalCompany, LocalCompanyNames
+using FinanceOverhaul.Core; // LocalCompany, LocalCompanyNames, Sparkline
 using UnityEngine; // GameObject
 
 // Game classes used without a using (global namespace, Assembly-CSharp): EconomyManager,
@@ -52,6 +52,20 @@ namespace FinanceOverhaul
             return ai != null
                 && ai.m_info != null
                 && LocalCompanyNames.TryId(ai.m_info.m_name, out companyId);
+        }
+
+        /// <summary>
+        /// A stock's daily prices as the mod's charts show them: a local company has no price
+        /// before the day it was announced (the game seeds all 30 days with the offering price),
+        /// so those days become NaN and are drawn empty. Other stocks are returned as they are.
+        /// </summary>
+        public static float[] ChartDays(InvestmentAI ai, float[] history)
+        {
+            int id;
+            LocalCompany company = IsCompany(ai, out id) ? CompanyDesk.CompanyOf(id) : null;
+            return company == null
+                ? history
+                : Sparkline.FromDay(history, OrderDesk.Today, company.AnnouncedDay);
         }
 
         /// <summary>Postfix on SafeCalculateValue: a company's price is the registry's, in ₡.</summary>

@@ -80,6 +80,11 @@ namespace FinanceOverhaul
             int w = (int)chart.width * scale,
                 h = (int)chart.height * scale;
             int i = Sparkline.IndexAt(lx * scale, w, values.Length);
+            if (float.IsNaN(values[i]) || float.IsInfinity(values[i]))
+            {
+                return false; // a day before the stock existed: nothing to show
+            }
+
             float x = Sparkline.ColumnOf(i, w, values.Length) / scale;
             float lo = StockDetail.Low(values),
                 hi = StockDetail.High(values);

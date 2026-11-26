@@ -126,18 +126,19 @@ round-trips and skips what it cannot read.
 
 A **City bonds** section on Economy → Loans, in the help strip plus the gap above the three vanilla
 loan cards (about 1230 × 312 UI units); the strip's "three loans" sentence becomes its header line.
-Left, **sell a bond**: term tabs (52 / 104 / 260 Weeks: 1, 2 or 5 years in the unit the game's loan
-cards use), amount field whose hint shows the most the city can raise before 3× income, a live quote
-(rate as base + premium, weekly cost, total interest, Total = amount + interest as on a loan card,
-repay date) and **Sell bond · receive ₡…**; over the cap the hint turns red with the reason and the
-button is disabled. Right, **bonds you owe** (`FO/BondRow`): each bond is a card in the look of the
-game's loan cards, with a name box on top ("Bond #63" until the player types a name such as the
-project it pays for; saved with the city as its own line, so a build from before names still reads
-the bonds), then Amount, Term, Interest, Total, Weekly Cost, Time Left (weeks) and Repaid On, as a
-loan card lists them; **Pay Now** pays the Total = face + interest accrued this period; footer with
-total owed and leverage vs the 3× cap; more rows scroll with a vertical scrollbar and edge fades
-(shown only on overflow; scenario 44). Shown when the Options flag is on or while the city still
-owes a bond. Pins and catalog ids: [UI Figma map](../developer/ui-figma-map.md).
+Left, **sell a bond**: term tab group (52 / 104 / 260 Weeks, drawn as the game's tab strip: 1, 2 or
+5 years in the unit the game's loan cards use), amount field whose hint shows the most the city can
+raise before 3× income, a live quote (rate as base + premium, weekly cost, total interest, Total =
+amount + interest as on a loan card, repay date) and **Sell bond · receive ₡…**; over the cap the
+hint turns red with the reason and the button is disabled. Right, **bonds you owe** (`FO/BondRow`):
+each bond is a card in the look of the game's loan cards, with a name box on top ("Bond #63" until
+the player types a name such as the project it pays for; saved with the city as its own line, so a
+build from before names still reads the bonds), then Amount, Term, Interest, Total, Weekly Cost,
+Time Left (weeks) and Repaid On, as a loan card lists them; **Pay Now** pays the Total = face +
+interest accrued this period; footer with total owed and leverage vs the 3× cap; more rows scroll
+with a vertical scrollbar and edge fades (shown only on overflow; scenario 44). Shown when the
+Options flag is on or while the city still owes a bond. Pins and catalog ids:
+[UI Figma map](../developer/ui-figma-map.md).
 
 In game it replaces the vanilla help strip (`LoanDesc`, hidden while the section shows and restored
 when it hides or the mod reloads) at 1108 × 271 UI units. The amount accepts whole ₡ with commas or

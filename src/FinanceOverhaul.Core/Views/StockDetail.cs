@@ -1,5 +1,5 @@
-using System; // Math
-using System.Collections.Generic; // IList, List
+using System; // Array, Math
+using System.Collections.Generic; // IList
 using System.Globalization; // CultureInfo
 
 namespace FinanceOverhaul.Core
@@ -13,30 +13,34 @@ namespace FinanceOverhaul.Core
         public const int ShortRange = 7;
         public const int LongRange = 30;
 
-        /// <summary>The last <paramref name="days"/> finite prices (fewer when the game has fewer).</summary>
+        /// <summary>
+        /// The last <paramref name="days"/> daily prices (fewer when the game has fewer), one per
+        /// day: a day with no price (before a company was listed) stays NaN so a chart leaves it
+        /// empty. A range with no price at all is empty.
+        /// </summary>
         public static float[] Range(float[] history, int days)
         {
-            var finite = new List<float>();
-            if (history != null)
+            if (history == null || Sparkline.FirstKnown(history) < 0)
             {
-                foreach (float v in history)
-                {
-                    if (!float.IsNaN(v) && !float.IsInfinity(v))
-                    {
-                        finite.Add(v);
-                    }
-                }
+                return new float[0];
             }
 
-            int n = Math.Max(0, Math.Min(days, finite.Count));
-            return finite.GetRange(finite.Count - n, n).ToArray();
+            int n = Math.Max(0, Math.Min(days, history.Length));
+            var range = new float[n];
+            Array.Copy(history, history.Length - n, range, 0, n);
+            return range;
         }
 
         /// <summary>Yesterday's price: the second-to-last daily price, or null.</summary>
         public static float? Yesterday(float[] history)
         {
             float[] all = Range(history, LongRange);
-            return all.Length >= 2 ? all[all.Length - 2] : (float?)null;
+            return
+                all.Length >= 2
+                && !float.IsNaN(all[all.Length - 2])
+                && !float.IsInfinity(all[all.Length - 2])
+                ? all[all.Length - 2]
+                : (float?)null;
         }
 
         /// <summary>
@@ -79,7 +83,10 @@ namespace FinanceOverhaul.Core
             float h = float.NaN;
             foreach (float v in range ?? new float[0])
             {
-                h = float.IsNaN(h) ? v : Math.Max(h, v);
+                if (!float.IsNaN(v) && !float.IsInfinity(v))
+                {
+                    h = float.IsNaN(h) ? v : Math.Max(h, v);
+                }
             }
 
             return h;
@@ -90,7 +97,10 @@ namespace FinanceOverhaul.Core
             float l = float.NaN;
             foreach (float v in range ?? new float[0])
             {
-                l = float.IsNaN(l) ? v : Math.Min(l, v);
+                if (!float.IsNaN(v) && !float.IsInfinity(v))
+                {
+                    l = float.IsNaN(l) ? v : Math.Min(l, v);
+                }
             }
 
             return l;

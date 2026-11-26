@@ -141,13 +141,18 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
 - **Hover and click:** the stock line under the pointer is outlined in the accent colour; a click
   anywhere on it (not on Buy, Sell or Cancel) opens the game's dialog (Buy, with Buy | Sell tabs to
   turn it). Figma component FO/InvestmentListRow.
-- **Buy | Sell in the dialog:** the Invest dialog has Buy | Sell toggle tabs above the order-type
-  tabs (`OrderTicket`, Kit `FoToggleTabs`, Figma component FO/ToggleTabs): two equal tabs joined
-  across the dialog in the art of the game's own tab strips (as the Economy panel's Taxes · Budget ·
-  Loans · Investments), the chosen side lit. Picking the other turns the open dialog to that side in
-  place, through the game's own set-up for it, with that side's order types (Buy now, Limit / Sell
-  now, Stop-loss, Take-profit, Trailing stop). Sell is disabled, with a tooltip, when the city holds
-  none. This works for the game's own lists too.
+- **Buy | Sell in the dialog:** the Invest dialog has a Buy | Sell tab group above the order types
+  (`OrderTicket`). Picking the other side turns the open dialog to it in place, through the game's
+  own set-up for that side, with that side's order types (Buy now, Limit / Sell now, Stop-loss,
+  Take-profit, Trailing stop). Sell is disabled, with a tooltip, when the city holds none. This
+  works for the game's own lists too.
+- **Tab groups everywhere a choice is one of several (2026-11-25):** Kit `FoToggleTabs`, Figma
+  FO/ToggleTabs: drawn exactly as the game's own tab strip at the top of the Economy panel (Taxes ·
+  Budget · Loans · Investments): tabs joined edge to edge in the game's tab art, white text, the
+  chosen tab lit with dark text, the game's disabled look. Used by the dialog's Buy | Sell and its
+  order types, the Stock Monitor's All | Portfolio | Orders and 7D | 30D, this list's All | Owned |
+  Local | Locked, and the bond term (52 | 104 | 260 weeks). (Two earlier looks were tried and
+  dropped: the tab art with white text on the lit tab, and joined menu buttons.)
 - **Scrolling:** three plain rows a notch, the game's scrollbar; the line at the top of the view
   stays there when the list changes (a purchase, the daily update), and the place is kept when the
   panel is closed and opened.

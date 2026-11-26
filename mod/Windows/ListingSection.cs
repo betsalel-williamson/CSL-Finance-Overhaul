@@ -181,6 +181,7 @@ namespace FinanceOverhaul
                 change.color = colour;
                 var history = new float[Investment.kPastValueCount];
                 buffer[slot].FillGraphValues(history);
+                history = CompanyListing.ChartDays(ai, history);
                 FoSparkline.Draw(sparkTexture, history, colour, SparkScale + 1);
             }
 

@@ -999,12 +999,19 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
   shares · avg ₡432.00" with the gain and a bar towards the cap, and Buy and Sell at the same size.
   Once the city holds shares in the offering week (even all it may hold), Buy (still gold, at the
   offering price) and Sell stand side by side too, so the dialog is always one click away (fixed
-  2026-11-25: the single wide Buy greyed out at the cap and left nothing to click). "Show in
-  Investments" opens Economy → Investments in both. Buy and Sell open the game's own dialog. The mod
-  only adds: the panel grows by the section's height, the game's rows keep their place (the game
-  ties the workers block to the panel's bottom edge, so the mod puts it back), and for any other
-  building, or once the company is gone, the panel is the game's own again. While the company is
-  listed the Historical Building tick is shown ticked and cannot be changed (a tooltip says why); a
+  2026-11-25: the single wide Buy greyed out at the cap and left nothing to click).
+- **Charts start when the company does (fixed 2026-11-25):** the game seeds a new listing's 30 daily
+  prices with its offering price, so every chart showed a flat line back to "30 days ago". The mod's
+  charts (the Invest dialog's Share value chart, the stock tooltip, the Stock Monitor's rows and
+  detail, the Investments list, the building panel) now leave the days before the company was
+  announced empty and draw its line from the announcement on (the offering week at the offering
+  price, then each day's price). `CompanyListing.ChartDays`, `Sparkline.FromDay`; the line drawer
+  keeps each day in its own column and draws nothing on a day without a price. "Show in Investments"
+  opens Economy → Investments in both. Buy and Sell open the game's own dialog. The mod only adds:
+  the panel grows by the section's height, the game's rows keep their place (the game ties the
+  workers block to the panel's bottom edge, so the mod puts it back), and for any other building, or
+  once the company is gone, the panel is the game's own again. While the company is listed the
+  Historical Building tick is shown ticked and cannot be changed (a tooltip says why); a
   headquarters that was unticked before gets its flag back. The coins show the game's own icon for
   the kind of business (the zone icon, or the specialisation's), not the ticker symbol; the Index,
   which has no building, keeps its symbol. The wording and the two states are `CompanyPanelText`;

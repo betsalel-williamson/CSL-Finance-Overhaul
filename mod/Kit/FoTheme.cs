@@ -29,6 +29,12 @@ namespace FinanceOverhaul
         /// <summary>Text of a game button that can't be pressed (Loans tab, "Take").</summary>
         public static readonly Color32 GameDisabledText = new Color32(91, 97, 106, 255);
 
+        /// <summary>Text on the chosen tab of a game tab strip (Economy: Taxes · … · Investments).</summary>
+        public static readonly Color32 GameTabChosenText = new Color32(16, 16, 16, 255);
+
+        /// <summary>Text on a disabled tab of a game tab strip.</summary>
+        public static readonly Color32 GameTabDisabledText = new Color32(111, 111, 111, 255);
+
         /// <summary>A heading or row label on the Loans tab: the game uses its gain colour.</summary>
         public static readonly Color32 GameHeading = GamePositive;
 

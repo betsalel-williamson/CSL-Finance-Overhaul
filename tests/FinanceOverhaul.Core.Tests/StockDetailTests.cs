@@ -20,10 +20,50 @@ namespace FinanceOverhaul.Core.Tests
             Assert.Equal(30, StockDetail.Range(h, 30).Length);
             Assert.Equal(5, StockDetail.Range(Days(5), 7).Length);
             Assert.Empty(StockDetail.Range(null, 7));
-            Assert.Equal(
-                2,
-                StockDetail.Range(new[] { float.NaN, 1f, float.PositiveInfinity, 2f }, 7).Length
-            );
+            // A day with no price keeps its place, so a chart leaves it empty.
+            float[] young = StockDetail.Range(new[] { float.NaN, float.NaN, 1f, 2f }, 7);
+            Assert.Equal(4, young.Length);
+            Assert.True(float.IsNaN(young[0]));
+            Assert.Equal(1f, StockDetail.Low(young));
+            Assert.Equal(2f, StockDetail.High(young));
+            Assert.Empty(StockDetail.Range(new[] { float.NaN, float.NaN }, 7));
+            Assert.Null(StockDetail.Yesterday(new[] { float.NaN, 5f }));
+        }
+
+        [Fact]
+        public void ANewCompanysChartIsEmptyBeforeItWasAnnounced()
+        {
+            // 30 days ending today (day 100); announced on day 95, first trading day 102.
+            float[] seeded = new float[30];
+            for (int i = 0; i < 30; i++)
+            {
+                seeded[i] = 708f;
+            }
+
+            float[] shown = Sparkline.FromDay(seeded, 100, 95);
+            Assert.Equal(24, Sparkline.FirstKnown(shown)); // days 95..100 are the last six
+            Assert.True(float.IsNaN(shown[23]));
+            Assert.Equal(708f, shown[29]);
+            Assert.Equal(seeded.Length, Sparkline.FromDay(seeded, 100, 0).Length);
+            Assert.Equal(0, Sparkline.FirstKnown(Sparkline.FromDay(seeded, 100, 0)));
+
+            // Drawn: nothing in the columns before the first day with a price.
+            byte[] mask = Sparkline.Render(shown, 60, 10, 1, fillArea: true);
+            for (int y = 0; y < 10; y++)
+            {
+                for (int x = 0; x < (int)Sparkline.ColumnOf(24, 60, 30); x++)
+                {
+                    Assert.Equal(0, mask[y * 60 + x]);
+                }
+            }
+
+            int lineAtEnd = 0;
+            for (int y = 0; y < 10; y++)
+            {
+                lineAtEnd += mask[y * 60 + 59] != 0 ? 1 : 0;
+            }
+
+            Assert.True(lineAtEnd > 0);
         }
 
         [Fact]
