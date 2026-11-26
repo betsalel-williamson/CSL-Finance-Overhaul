@@ -137,6 +137,7 @@ namespace FinanceOverhaul
                 }
             );
             dRange.Panel.relativePosition = new Vector3(12f, 88f);
+            dRange.Secondary(); // a sub-choice of the stock's view
             dRange[0].name = Prefix + "Range-" + StockDetail.ShortRange;
             dRange[1].name = Prefix + "Range-" + StockDetail.LongRange;
             UILabel note = FoText.Label(

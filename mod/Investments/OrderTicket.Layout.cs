@@ -150,6 +150,8 @@ namespace FinanceOverhaul
                 i => SetKind(AllTabs[i].Kind)
             );
             typeTabs.Panel.relativePosition = new Vector3(26f, 6f);
+            // Under Buy | Sell: the quieter sub-group.
+            typeTabs.Secondary();
             for (int i = 0; i < AllTabs.Length; i++)
             {
                 Tab tab = AllTabs[i];

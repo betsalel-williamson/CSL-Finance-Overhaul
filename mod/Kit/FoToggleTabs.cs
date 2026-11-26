@@ -10,7 +10,9 @@ namespace FinanceOverhaul
     /// tab strip at the top of the Economy panel (Taxes · Budget · Loans · Investments): tabs
     /// joined edge to edge in the game's tab art, white text; the chosen tab lit with dark text;
     /// the game's hover and disabled looks. For a choice (Buy | Sell, order types, filters, a chart
-    /// range, a bond term), never for actions.
+    /// range, a bond term), never for actions. A group under another (the dialog's order types under
+    /// Buy | Sell, a chart range under filters) is made <see cref="Secondary"/>: the same tab art
+    /// dimmed with grey text, the chosen tab plain with white text and a thin accent line under it.
     /// Segments can be hidden (the bar closes up) and relabelled. Knows no feature: the caller
     /// gives the labels and widths and hears which segment was picked.
     /// </summary>
@@ -20,6 +22,8 @@ namespace FinanceOverhaul
         private const string ChosenSprite = "GenericTabFocused"; // not shown: a game sprite name
 
         private readonly List<UIButton> tabs = new List<UIButton>();
+        private bool secondary;
+        private UIPanel underline;
         private readonly Action<int> picked;
 
         /// <summary>The bar; its width follows the shown segments.</summary>
@@ -62,8 +66,8 @@ namespace FinanceOverhaul
 
         /// <summary>
         /// Segments of the given widths, named <c>name + index</c> (rename through the indexer);
-        /// the first chosen. <paramref name="picked"/> hears a click on a segment that was not
-        /// chosen, after it is shown chosen.
+        /// the first chosen. <paramref name="picked"/> hears every click on an enabled segment, after
+        /// it is shown chosen.
         /// </summary>
         public static FoToggleTabs Add(
             UIComponent parent,
@@ -100,6 +104,23 @@ namespace FinanceOverhaul
             return t;
         }
 
+        /// <summary>The quieter look for a group that sits under another one.</summary>
+        public FoToggleTabs Secondary()
+        {
+            secondary = true;
+            if (underline == null)
+            {
+                underline = Panel.AddUIComponent<UIPanel>();
+                underline.name = Panel.name + "Underline";
+                underline.backgroundSprite = "EmptySprite"; // not shown: a game sprite name
+                underline.color = FoTheme.Accent;
+                underline.isInteractive = false;
+            }
+
+            Choose(Chosen);
+            return this;
+        }
+
         public UIButton this[int index]
         {
             get { return tabs[index]; }
@@ -112,13 +133,48 @@ namespace FinanceOverhaul
             for (int i = 0; i < tabs.Count; i++)
             {
                 bool on = i == index;
-                tabs[i].normalBgSprite = on ? ChosenSprite : Normal;
+                if (secondary)
+                {
+                    // Quieter: no lit tab; idle tabs dimmed with grey text, the chosen one plain.
+                    tabs[i].normalBgSprite = Normal;
+                    tabs[i].color = on ? FoTheme.Untinted : FoTheme.SubTabIdle;
+                    tabs[i].hoveredColor = FoTheme.Untinted;
+                    tabs[i].focusedColor = tabs[i].color;
+                    tabs[i].textColor = on ? FoTheme.GameText : FoTheme.TextMuted;
+                    tabs[i].hoveredTextColor = FoTheme.GameText;
+                }
+                else
+                {
+                    // As the Economy panel's tabs: white, and dark on the lit chosen tab.
+                    tabs[i].normalBgSprite = on ? ChosenSprite : Normal;
+                    tabs[i].textColor = on ? FoTheme.GameTabChosenText : FoTheme.GameText;
+                    tabs[i].hoveredTextColor = on ? FoTheme.GameTabChosenText : FoTheme.GameText;
+                }
+
                 tabs[i].focusedBgSprite = tabs[i].normalBgSprite;
-                // As the Economy panel's tabs: white, and dark on the lit chosen tab.
-                tabs[i].textColor = on ? FoTheme.GameTabChosenText : FoTheme.GameText;
-                tabs[i].hoveredTextColor = on ? FoTheme.GameTabChosenText : FoTheme.GameText;
                 tabs[i].focusedTextColor = tabs[i].textColor;
                 tabs[i].pressedTextColor = tabs[i].textColor;
+            }
+
+            PlaceUnderline();
+        }
+
+        /// <summary>A secondary group's accent line under its chosen tab.</summary>
+        private void PlaceUnderline()
+        {
+            if (underline == null)
+            {
+                return;
+            }
+
+            bool shown = Chosen >= 0 && Chosen < tabs.Count && tabs[Chosen].isVisibleSelf;
+            underline.isVisible = shown;
+            if (shown)
+            {
+                UIButton b = tabs[Chosen];
+                underline.size = new Vector2(b.width - 8f, 2f);
+                underline.relativePosition = new Vector3(b.relativePosition.x + 4f, b.height - 3f);
+                underline.BringToFront();
             }
         }
 
@@ -161,15 +217,18 @@ namespace FinanceOverhaul
             }
 
             Panel.width = Mathf.Max(1f, x);
+            PlaceUnderline();
         }
 
         private void Pick(int index)
         {
-            if (index == Chosen || !tabs[index].isEnabled)
+            if (!tabs[index].isEnabled)
             {
                 return;
             }
 
+            // A click on the chosen tab is still passed on: if the caller's state and the bar
+            // ever disagree, clicking the tab you want always works.
             Choose(index);
             if (picked != null)
             {

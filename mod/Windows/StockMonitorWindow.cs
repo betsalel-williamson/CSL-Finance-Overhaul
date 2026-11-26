@@ -335,6 +335,9 @@ namespace FinanceOverhaul
                 filterTabs[filters[i]] = filterBar[i];
             }
 
+            // The filter the player left it on, not the bar's first tab.
+            StyleFilter();
+
             sortLabel = FoText.Label(window, Prefix + "Sort", "", 0.75f, Muted);
             sortLabel.autoSize = false;
             sortLabel.size = new Vector2(120f, 22f);
