@@ -12,6 +12,9 @@ namespace FinanceOverhaul.Core
         /// <summary>Stocks the city holds.</summary>
         Owned,
 
+        /// <summary>Stocks with an open order (buy limit, sell limit, stop-loss).</summary>
+        Orders,
+
         /// <summary>Local companies (Local IPOs), held or not.</summary>
         Local,
 
@@ -52,6 +55,12 @@ namespace FinanceOverhaul.Core
 
         /// <summary>A heading's stock count.</summary>
         public int Count;
+
+        /// <summary>
+        /// An open order of this stock is the next line: the two are drawn as one card, with no
+        /// gap between them.
+        /// </summary>
+        public bool JoinsNext;
 
         public bool IsHeading
         {
@@ -124,6 +133,7 @@ namespace FinanceOverhaul.Core
         {
             InvestmentFilter.All,
             InvestmentFilter.Owned,
+            InvestmentFilter.Orders,
             InvestmentFilter.Local,
             InvestmentFilter.Locked,
         };
@@ -135,6 +145,8 @@ namespace FinanceOverhaul.Core
             {
                 case InvestmentFilter.Owned:
                     return q.Owned > 0;
+                case InvestmentFilter.Orders:
+                    return q.OpenOrders > 0;
                 case InvestmentFilter.Local:
                     return q.Local;
                 case InvestmentFilter.Locked:
@@ -321,7 +333,7 @@ namespace FinanceOverhaul.Core
             return Clamp(offset, newTops, viewHeight);
         }
 
-        /// <summary>"All 17", "Owned 3", "Local 2", "Locked 3": a filter tab with its count.</summary>
+        /// <summary>"All 17", "Owned 3", "Orders 1", "Local 2", "Locked 3": a filter tab with its count.</summary>
         public static string FilterLabel(InvestmentFilter filter, IEnumerable<MonitorQuote> quotes)
         {
             int n = 0;
@@ -533,6 +545,7 @@ namespace FinanceOverhaul.Core
                 {
                     if (o != null && q.Prefab != null && o.InvestmentKey == q.Prefab)
                     {
+                        rows[rows.Count - 1].JoinsNext = true;
                         rows.Add(
                             new InvestmentRow
                             {

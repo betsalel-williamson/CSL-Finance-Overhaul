@@ -43,6 +43,7 @@ namespace FinanceOverhaul.Core
             { "monitor.filter.all", "All" },
             { "investments.filter.All", "All {0}" },
             { "investments.filter.Owned", "Owned {0}" },
+            { "investments.filter.Orders", "Orders {0}" },
             { "investments.filter.Local", "Local {0}" },
             { "investments.filter.Locked", "Locked {0}" },
             { "investments.group", "Group" },

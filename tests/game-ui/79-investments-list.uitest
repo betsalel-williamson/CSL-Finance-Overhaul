@@ -1,6 +1,6 @@
 # Economy → Investments as one list (Options → Feature flags → "Investments list and research"):
 # the game's two lists, their titles and the Total value bar are hidden and one list takes their
-# place, with filter tabs (All, Owned, Local, Locked), the Stock Monitor's sort and its direction.
+# place, with filter sub tabs (All, Owned, Orders, Local, Locked), the Stock Monitor's sort and its direction.
 # All is one list sorted as a whole; only the Group button splits it into sections. Assumes
 # nothing about what the city holds. Flag off gives the game's tab back.
 name investments list: one list in place of the two, tabs, group, sort, and back
@@ -49,6 +49,10 @@ wait 0.5
 expect-hidden FinanceOverhaulInvestmentsHeading-All
 click FinanceOverhaulInvestmentsTab-Owned
 wait 0.5
+click FinanceOverhaulInvestmentsTab-Orders
+wait 0.5
+expect-text FinanceOverhaulInvestmentsTab-Orders Orders
+capture investments-list-orders
 click FinanceOverhaulInvestmentsTab-Locked
 wait 0.5
 expect-text FinanceOverhaulInvestmentsTab-Locked Locked

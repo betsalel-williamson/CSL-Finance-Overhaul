@@ -125,9 +125,10 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
 - **Flag:** Options → Feature flags → "Investments list and research" (dev builds; pinned off in
   release builds). On, `InvestmentsList` hides the page's five controls and shows the list; off
   again (or a hot reload) shows them again.
-- **Top bar:** tabs All · Owned · Local · Locked with their counts; **Group** (pressed: "Ungroup")
-  splits the stocks shown into Your portfolio (value and gain), Local companies and All stocks; the
-  Stock Monitor's sorts and direction. A new tab, grouping or sort starts from the top.
+- **Top bar:** sub tabs (secondary, under the Economy panel's own tabs) All · Owned · Orders · Local
+  · Locked with their counts (Orders: stocks with an open order, 2026-11-26); **Group** (pressed:
+  "Ungroup") splits the stocks shown into Your portfolio (value and gain), Local companies and All
+  stocks; the Stock Monitor's sorts and direction. A new tab, grouping or sort starts from the top.
 - **Sort and pills, as in the Stock Monitor (2026-11-25):** the sort is the Monitor's kind of
   control (a muted "Sort: Change %" to click through Change, Symbol, Price, Value held, then ▲/▼),
   and a click on any change pill shows every change in ₡ or %, with Sort: Change then sorting by the
@@ -140,7 +141,10 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
   holding the gain under it; Buy (not on a locked stock) and Sell (only when held). A locked stock
   shows "Locked · 30 / 50" and a bar, last in the list. **Open orders** sit under their stock, one
   line each ("Open order · SELL (stop-loss) · 500 shares if the price drops to ₡6,800 · 54 days
-  left") with Cancel.
+  left") with Cancel, as the lower part of the stock's card: the same fill, no gap, a thin rule
+  between (`InvestmentRow.JoinsNext`). Four layouts for the empty space between the price and Buy /
+  Sell (stats column, wider chart, order chip, 30-day range bar) are in Figma band 20, "Row
+  layouts", waiting for a pick.
 - **Hover:** over a stock's 30-day line the game's own stock tooltip opens with its large "Share
   value" chart, beside the line (left of it near the screen edge), as over the game's cards; it
   closes when the pointer leaves. The list reads the mod's pointer each frame, so game UI tests can
@@ -159,17 +163,18 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
   Budget · Loans · Investments): tabs joined edge to edge in the game's tab art, white text, the
   chosen tab lit with dark text, the game's disabled look. Used by the dialog's Buy | Sell and its
   order types, the Stock Monitor's All | Portfolio | Orders and 7D | 30D, this list's All | Owned |
-  Local | Locked, and the bond term (52 | 104 | 260 weeks). A group under another is **secondary**
-  (`FoToggleTabs.Secondary()`): the same tab art dimmed with grey text, the chosen tab plain grey
-  with white text and a thin accent line under it. The dialog's order types (under Buy | Sell) and
-  the Monitor's 7D | 30D (under its filters) are secondary; the rest are primary. A click on the
-  chosen tab is still passed on, and the Monitor's bar shows the filter the player left it on (a
-  first build lit All over the Orders list and ignored the click on All). The group is a real
-  `UITabstrip`, so the game's own state rules drive it: the chosen tab is the Focused state and
-  stays lit under the mouse and while pressed, another tab shows the hover and pressed art, a
-  disabled tab the game's disabled art (an earlier build drew the chosen look as the normal art, so
-  hovering the chosen tab turned it grey). (Two earlier looks were tried and dropped: the tab art
-  with white text on the lit tab, and joined menu buttons.)
+  Orders | Local | Locked, and the bond term (52 | 104 | 260 weeks). A group under another is
+  **secondary** (`FoToggleTabs.Secondary()`): the same tab art dimmed with grey text, the chosen tab
+  plain grey with white text and a thin accent line under it. The dialog's order types (under Buy |
+  Sell) and the Monitor's 7D | 30D (under its filters) and this list's filters (under the Economy
+  panel's tabs) are secondary; the rest are primary. A click on the chosen tab is still passed on,
+  and the Monitor's bar shows the filter the player left it on (a first build lit All over the
+  Orders list and ignored the click on All). The group is a real `UITabstrip`, so the game's own
+  state rules drive it: the chosen tab is the Focused state and stays lit under the mouse and while
+  pressed, another tab shows the hover and pressed art, a disabled tab the game's disabled art (an
+  earlier build drew the chosen look as the normal art, so hovering the chosen tab turned it grey).
+  (Two earlier looks were tried and dropped: the tab art with white text on the lit tab, and joined
+  menu buttons.)
 - **Nothing left to buy (fixed 2026-11-25):** a Buy dialog for a stock the city holds all it may of
   has an empty share range, and the game's slider then puts its thumb at no position at all, where
   it takes every click in the dialog (only Escape closed it). The game never opens one (it greys out

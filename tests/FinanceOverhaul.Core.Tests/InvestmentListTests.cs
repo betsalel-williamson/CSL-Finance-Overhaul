@@ -176,10 +176,28 @@ namespace FinanceOverhaul.Core.Tests
             Assert.Equal(InvestmentList.OrderHeight, rows[3].Height);
             Assert.Equal(InvestmentList.HeldHeight, rows[2].Height);
             Assert.Equal(InvestmentList.RowHeight, rows[4].Height);
+            // A stock and its orders are one card: each line but the last joins the next.
+            Assert.True(rows[2].JoinsNext);
+            Assert.False(rows[3].JoinsNext);
+            Assert.False(rows[1].JoinsNext);
+            Assert.True(rows[6].JoinsNext);
             Assert.Equal(
                 "Open order · SELL (stop-loss) · 500 shares if the price drops to ₡6,800 · 54 days left",
                 InvestmentList.OrderLine(orders[0], 37)
             );
+        }
+
+        [Fact]
+        public void TheOrdersTabShowsOnlyStocksWithAnOpenOrder()
+        {
+            List<MonitorQuote> city = City();
+            city[0].OpenOrders = 1;
+            city[5].OpenOrders = 2;
+            Assert.Equal(
+                "GGI,HS",
+                Keys(InvestmentList.Rows(city, InvestmentFilter.Orders, MonitorSort.Symbol, false))
+            );
+            Assert.Equal("Orders 2", InvestmentList.FilterLabel(InvestmentFilter.Orders, city));
         }
 
         [Fact]

@@ -22,7 +22,7 @@ namespace FinanceOverhaul
     /// UI Map band 20), shown while Options → Feature flags → "Investments list and research" is
     /// on. The game's page has five controls of its own (two titles, two lists, the Total value
     /// bar): they are hidden and this list takes their place; switching the flag off, or a hot
-    /// reload, shows them again. Filter tabs (All, Owned, Local) and the Stock Monitor's sorts;
+    /// reload, shows them again. Filter sub tabs (All, Owned, Orders, Local, Locked) and the Stock Monitor's sorts;
     /// sections Your portfolio, Local companies and All stocks; a fixed pool of rows refilled
     /// from the scroll offset, so any number of stocks scrolls alike and the place is kept
     /// through a purchase, the daily update and closing the panel. Buy and Sell open the game's
@@ -505,6 +505,8 @@ namespace FinanceOverhaul
                 0.8f,
                 i => Pick(filters[i])
             );
+            // Sub tabs: the filters sit under the Economy panel's own tabs.
+            tabBar.Secondary();
             tabBar.Panel.relativePosition = new Vector3(0f, 2f);
             for (int i = 0; i < filters.Length; i++)
             {
@@ -652,6 +654,7 @@ namespace FinanceOverhaul
             private readonly UIPanel lockFill;
             private readonly UILabel orderLine;
             private readonly UIButton cancel;
+            private readonly UIPanel orderRule;
             private readonly UIButton buy;
             private readonly UIButton sell;
             private readonly float width;
@@ -751,6 +754,13 @@ namespace FinanceOverhaul
                 lockFill.size = new Vector2(0f, 4f);
                 lockFill.relativePosition = new Vector3(SparkX, 28f);
 
+                // An order is the lower part of its stock's card: same fill, a thin rule between.
+                orderRule = back.AddUIComponent<UIPanel>();
+                orderRule.backgroundSprite = "EmptySprite"; // not shown: a game sprite name
+                orderRule.color = FoTheme.Divider;
+                orderRule.size = new Vector2(width - 54f - 12f, 1f);
+                orderRule.relativePosition = new Vector3(54f, 0f);
+                orderRule.isInteractive = false;
                 orderLine = FoText.Label(back, "", "", 0.72f, FoTheme.Accent);
                 orderLine.relativePosition = new Vector3(54f, 4f);
                 cancel = FoButton.Add(
@@ -952,11 +962,10 @@ namespace FinanceOverhaul
                 bool isStock = kind == InvestmentRowKind.Stock;
                 bool isOrder = kind == InvestmentRowKind.Order;
                 bool isHeading = kind == InvestmentRowKind.Heading;
-                back.height = row.Height - 4f;
-                back.color =
-                    isHeading ? FoTheme.Header
-                    : isOrder ? FoTheme.PanelAlt
-                    : FoTheme.SectionFill;
+                // A stock and its orders are one card: no gap until the last of them.
+                back.height = row.Height - (row.JoinsNext ? 0f : 4f);
+                back.color = isHeading ? FoTheme.Header : FoTheme.SectionFill;
+                orderRule.isVisible = isOrder;
                 heading.isVisible = isHeading;
                 detail.isVisible = isHeading;
                 orderLine.isVisible = isOrder;
