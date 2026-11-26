@@ -120,6 +120,24 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
+        public void WithPillsInCurrencyChangeSortsByTheAmount()
+        {
+            // As the Stock Monitor: CC moves −1.96% of ₡97,769 (about −₡1,955), the biggest ₡ fall;
+            // GGI's +1.20% of ₡7,595 is the biggest ₡ rise.
+            List<InvestmentRow> rows = InvestmentList.Rows(
+                City(),
+                InvestmentFilter.All,
+                MonitorSort.Change,
+                false,
+                false,
+                null,
+                true
+            );
+            Assert.StartsWith("GGI,", Keys(rows));
+            Assert.Contains(",CC,FoI", Keys(rows));
+        }
+
+        [Fact]
         public void TheSortAndItsDirectionApplyWithinEachSection()
         {
             Assert.Equal(

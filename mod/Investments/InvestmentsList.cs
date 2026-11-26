@@ -1,10 +1,11 @@
-using System; // Array, Exception, Math
+using System; // Action, Array, Exception, Math
 using System.Collections.Generic; // Dictionary, IList, KeyValuePair, List
-// ColossalFramework.UI: UIButton, UIComponent, UILabel, UIOrientation, UIPanel, UIScrollbar,
-//   UISlicedSprite, UISprite, UITextureSprite, UIView
+// ColossalFramework.UI: UIButton, UIComponent, UIHorizontalAlignment, UILabel, UIOrientation,
+//   UIPanel, UIScrollbar, UISlicedSprite, UISprite, UITextureSprite, UIVerticalAlignment, UIView
 using ColossalFramework.UI;
 // FinanceOverhaul.Core: BondText, InvestmentFilter, InvestmentList, InvestmentRow,
-//   InvestmentRowKind, MonitorQuote, MonitorSort, StockMonitor, Strings, TradeOrder
+//   InvestmentRowKind, MonitorQuote, MonitorSort, StockMonitor, StockMonitorSettings, Strings,
+//   TradeOrder
 using FinanceOverhaul.Core;
 // UnityEngine: Color32, FilterMode, Mathf, MonoBehaviour, Screen, Texture2D, TextureFormat,
 //   TextureWrapMode, Time, Vector2, Vector3
@@ -53,7 +54,7 @@ namespace FinanceOverhaul
         private UIPanel view;
         private UIScrollbar bar;
         private UILabel empty;
-        private UIButton sortButton;
+        private UILabel sortLabel;
         private UIButton sortDirection;
         private UITextureSprite sortArrow;
         private bool sortArrowDown;
@@ -62,8 +63,64 @@ namespace FinanceOverhaul
         private readonly List<Row> pool = new List<Row>();
 
         private InvestmentFilter filter = InvestmentFilter.All;
-        private MonitorSort sort = MonitorSort.Change;
-        private bool reversed;
+        private MonitorSort localSort = MonitorSort.Change;
+        private bool localReversed;
+
+        /// <summary>
+        /// The sort, its direction and the pills' unit are the Stock Monitor's own settings, so the
+        /// two lists always agree and the choice is kept.
+        /// </summary>
+        private static StockMonitorSettings Shared
+        {
+            get { return Mod.Settings == null ? null : Mod.Settings.Monitor; }
+        }
+
+        private MonitorSort sort
+        {
+            get { return Shared == null ? localSort : Shared.Sort; }
+            set
+            {
+                localSort = value;
+                if (Shared != null)
+                {
+                    Shared.Sort = value;
+                    Mod.SaveSettings();
+                }
+            }
+        }
+
+        private bool reversed
+        {
+            get { return Shared == null ? localReversed : Shared.SortReversed; }
+            set
+            {
+                localReversed = value;
+                if (Shared != null)
+                {
+                    Shared.SortReversed = value;
+                    Mod.SaveSettings();
+                }
+            }
+        }
+
+        private static bool InCurrency
+        {
+            get { return Shared != null && Shared.ChangeAsCurrency; }
+        }
+
+        /// <summary>A click on any pill: ₡ ↔ %, here and in the Stock Monitor (Figma pin 6 there).</summary>
+        private void TogglePills()
+        {
+            if (Shared == null)
+            {
+                return;
+            }
+
+            Shared.ChangeAsCurrency = !Shared.ChangeAsCurrency;
+            Mod.SaveSettings();
+            Read();
+        }
+
         private bool grouped;
         private FoToggleTabs tabBar;
         private UIButton groupButton;
@@ -214,7 +271,8 @@ namespace FinanceOverhaul
                 sort,
                 reversed,
                 grouped,
-                new List<TradeOrder>(OrderDesk.Snapshot())
+                new List<TradeOrder>(OrderDesk.Snapshot()),
+                InCurrency
             );
             offset = InvestmentList.KeepInView(rows, offset, next, view.height);
             rows = next;
@@ -226,7 +284,7 @@ namespace FinanceOverhaul
 
             tabBar.Choose(Array.IndexOf(InvestmentList.Filters, filter));
 
-            sortButton.text = StockMonitor.SortLabel(sort, false);
+            sortLabel.text = StockMonitor.SortLabel(sort, InCurrency);
             groupButton.text = InvestmentList.GroupLabel(grouped);
             FoButton.SetSelected(groupButton, grouped);
             bool down = StockMonitor.IsDescending(sort, reversed);
@@ -437,15 +495,15 @@ namespace FinanceOverhaul
             sortArrow.size = new Vector2(10f, 6f);
             sortArrow.relativePosition = new Vector3(6f, 8f);
             sortArrow.isInteractive = false;
-            sortButton = FoButton.Add(
-                list,
-                Prefix + "Sort",
-                StockMonitor.SortLabel(sort, false),
-                new Vector2(150f, 26f),
-                0.8f
-            );
-            sortButton.relativePosition = new Vector3(list.width - 22f - 6f - 150f, 2f);
-            sortButton.eventClick += (c, p) =>
+            // As the Stock Monitor: the sort is a muted line of text to click, then ▲/▼.
+            sortLabel = FoText.Label(list, Prefix + "Sort", "", 0.75f, FoTheme.TextMuted);
+            sortLabel.autoSize = false;
+            sortLabel.size = new Vector2(150f, 26f);
+            sortLabel.textAlignment = UIHorizontalAlignment.Right;
+            sortLabel.verticalAlignment = UIVerticalAlignment.Middle;
+            sortLabel.relativePosition = new Vector3(list.width - 22f - 8f - 150f, 2f);
+            sortLabel.isInteractive = true;
+            sortLabel.eventClick += (c, p) =>
             {
                 sort = StockMonitor.NextSort(sort);
                 reversed = false;
@@ -501,7 +559,7 @@ namespace FinanceOverhaul
             float rowWidth = view.width - 2f * Pad - 20f;
             for (int i = 0; i < Pool; i++)
             {
-                pool.Add(new Row(view, i, rowWidth));
+                pool.Add(new Row(view, i, rowWidth, TogglePills));
             }
 
             Current = this;
@@ -556,7 +614,7 @@ namespace FinanceOverhaul
             private readonly UIPanel[] outline;
             private bool outlined;
 
-            public Row(UIComponent parent, int index, float width)
+            public Row(UIComponent parent, int index, float width, Action togglePills)
             {
                 this.width = width;
                 back = parent.AddUIComponent<UIPanel>();
@@ -618,6 +676,14 @@ namespace FinanceOverhaul
                 price = FoText.Label(back, "", "", 1.0f, FoTheme.GameValue);
                 change = FoPill.AddValue(back, new Vector2(66f, 18f), 0.75f, FoTheme.Header);
                 change.relativePosition = new Vector3(PriceRight - 66f, 25f);
+                // As in the Stock Monitor: a click on the pill shows every change in ₡ or %.
+                change.isInteractive = true;
+                change.tooltip = Strings.Get("monitor.pill.tip");
+                change.eventClick += (c, p) =>
+                {
+                    p.Use(); // not the line's own click (the dialog)
+                    togglePills();
+                };
                 gain = FoText.Label(back, "", "", 0.72f, FoTheme.GamePositive);
 
                 lockLine = FoText.Label(back, "", "", 0.75f, FoTheme.GameText);
@@ -895,7 +961,9 @@ namespace FinanceOverhaul
                 }
 
                 string signature =
-                    q.Price.ToString("0.##")
+                    InCurrency
+                    + "|"
+                    + q.Price.ToString("0.##")
                     + "|"
                     + q.ChangeRate.ToString("0.##")
                     + "|"
@@ -947,7 +1015,10 @@ namespace FinanceOverhaul
                     FoSparkline.Draw(sparkTexture, q.History, colour, SparkScale + 1);
                     price.text = BondText.WholeMoney((long)Math.Round(q.Price * 100.0));
                     price.relativePosition = new Vector3(PriceRight - price.width, 3f);
-                    change.text = StockMonitor.ChangeText(q.ChangeRate);
+                    // One measure in both units: the game's change rate, or that change in ₡.
+                    change.text = InCurrency
+                        ? StockMonitor.ChangeAmountFromRate(q.Price, q.ChangeRate)
+                        : StockMonitor.ChangeText(q.ChangeRate);
                     change.color = colour;
                 }
 

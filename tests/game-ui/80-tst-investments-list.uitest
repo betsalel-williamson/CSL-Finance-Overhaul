@@ -4,6 +4,9 @@
 # Sell, and with Group on it moves into Your portfolio; in the dialog Buy | Sell switches sides in
 # place. Selling the shares back in cleanup puts it back.
 name investments list: hover chart, outline, click a line, a purchase, grouping and the Buy | Sell switch
+monitor remember
+monitor-sort Change
+monitor-change percent
 close-economy
 investments-list on
 set-price TST 100
@@ -14,6 +17,17 @@ wait 1.5
 # from the top, whatever an earlier visit left
 investments-scroll -100000
 expect-investments All TST
+# a click on a pill flips every pill (and the Change sort) between % and ₡, as in the Monitor
+investments-scroll-to TST
+expect-text FinanceOverhaulInvestmentsRow-TSTChange %
+click FinanceOverhaulInvestmentsRow-TSTChange
+wait 0.5
+expect-text FinanceOverhaulInvestmentsRow-TSTChange ₡
+expect-text FinanceOverhaulInvestmentsSort Sort: Change ₡
+expect-hidden BuySellInvestmentPanel
+click FinanceOverhaulInvestmentsRow-TSTChange
+wait 0.5
+expect-text FinanceOverhaulInvestmentsRow-TSTChange %
 investments-scroll-to TST
 hover FinanceOverhaulInvestmentsRow-TSTSpark 0.5 0.5
 wait 0.3
@@ -78,6 +92,7 @@ wait 0.5
 expect-visible FinanceOverhaulOrderTab-Limit
 close-dialog
 cleanup:
+monitor restore
 sell-back TST 4
 set-price TST 100
 close-dialog

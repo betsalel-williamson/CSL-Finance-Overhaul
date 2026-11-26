@@ -151,7 +151,7 @@ namespace FinanceOverhaul.Core
             bool reversed
         )
         {
-            return Rows(quotes, filter, sort, reversed, false, null);
+            return Rows(quotes, filter, sort, reversed, false, null, false);
         }
 
         /// <summary>
@@ -170,6 +170,22 @@ namespace FinanceOverhaul.Core
             IList<TradeOrder> orders
         )
         {
+            return Rows(quotes, filter, sort, reversed, grouped, orders, false);
+        }
+
+        /// <param name="changeInCurrency">
+        /// The pills show ₡ (the Stock Monitor's setting): Change sorts by that ₡ amount, as there.
+        /// </param>
+        public static List<InvestmentRow> Rows(
+            IEnumerable<MonitorQuote> quotes,
+            InvestmentFilter filter,
+            MonitorSort sort,
+            bool reversed,
+            bool grouped,
+            IList<TradeOrder> orders,
+            bool changeInCurrency
+        )
+        {
             var shown = new List<MonitorQuote>();
             foreach (MonitorQuote q in quotes ?? new List<MonitorQuote>())
             {
@@ -182,7 +198,13 @@ namespace FinanceOverhaul.Core
             var rows = new List<InvestmentRow>();
             if (!grouped)
             {
-                Add(rows, null, InvestmentSection.All, Ordered(shown, sort, reversed), orders);
+                Add(
+                    rows,
+                    null,
+                    InvestmentSection.All,
+                    Ordered(shown, sort, reversed, changeInCurrency),
+                    orders
+                );
                 return rows;
             }
 
@@ -198,9 +220,24 @@ namespace FinanceOverhaul.Core
                 ).Add(q);
             }
 
-            Add(rows, InvestmentSection.Portfolio, Ordered(portfolio, sort, reversed), orders);
-            Add(rows, InvestmentSection.Local, Ordered(local, sort, reversed), orders);
-            Add(rows, InvestmentSection.All, Ordered(rest, sort, reversed), orders);
+            Add(
+                rows,
+                InvestmentSection.Portfolio,
+                Ordered(portfolio, sort, reversed, changeInCurrency),
+                orders
+            );
+            Add(
+                rows,
+                InvestmentSection.Local,
+                Ordered(local, sort, reversed, changeInCurrency),
+                orders
+            );
+            Add(
+                rows,
+                InvestmentSection.All,
+                Ordered(rest, sort, reversed, changeInCurrency),
+                orders
+            );
             return rows;
         }
 
@@ -431,7 +468,8 @@ namespace FinanceOverhaul.Core
         private static List<MonitorQuote> Ordered(
             List<MonitorQuote> quotes,
             MonitorSort sort,
-            bool reversed
+            bool reversed,
+            bool changeInCurrency
         )
         {
             var open = new List<MonitorQuote>();
@@ -446,7 +484,8 @@ namespace FinanceOverhaul.Core
                 MonitorFilter.All,
                 sort,
                 null,
-                reversed
+                reversed,
+                changeInCurrency
             );
             ordered.AddRange(
                 StockMonitor.Rows(locked, MonitorFilter.All, MonitorSort.Symbol, null)
