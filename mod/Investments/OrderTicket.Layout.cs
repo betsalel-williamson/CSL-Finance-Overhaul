@@ -1,7 +1,7 @@
 // ColossalFramework.UI: UIButton, UIComponent, UIHorizontalAlignment, UILabel, UIPanel,
 //   UITextField
 using ColossalFramework.UI;
-using FinanceOverhaul.Core; // Strings
+using FinanceOverhaul.Core; // IpoDialogText, Strings
 using UnityEngine; // Mathf, RectOffset, Vector2, Vector3
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel
@@ -111,6 +111,23 @@ namespace FinanceOverhaul
             priceText = dark.Find<UILabel>("LabelPriceText");
             buyStats = dark.Find("PanelBuyStats");
             sellStats = dark.Find("PanelSellStats");
+
+            // View headquarters, right of "Current value" (local companies only; see ShowViewHome).
+            UIComponent info = root.Find("PanelInvestmentInfo");
+            if (info != null)
+            {
+                UiCleanup.RemoveChildrenNamed(info, ViewHomeName);
+                viewHome = FoButton.Add(
+                    info,
+                    ViewHomeName,
+                    IpoDialogText.View,
+                    new Vector2(170f, 26f),
+                    0.8f
+                );
+                viewHome.relativePosition = new Vector3(info.width - 7f - 170f, 88f);
+                viewHome.isVisible = false;
+                viewHome.eventClick += (c, p) => OnViewHome();
+            }
 
             // Buy | Sell switch: the side, then the order types for that side.
             sides = dark.AddUIComponent<UIPanel>();

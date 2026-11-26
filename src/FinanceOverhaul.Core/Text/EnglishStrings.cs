@@ -49,6 +49,10 @@ namespace FinanceOverhaul.Core
             { "investments.ungroup", "Ungroup" },
             { "investments.row.order", "{0} · {1}" },
             { "investments.row.local", "LOCAL" },
+            {
+                "order.viewHome.lost",
+                "The headquarters isn't standing right now (lost or being rebuilt)."
+            },
             { "order.side.sellNone", "The city holds no shares of this stock to sell." },
             {
                 "order.side.buyNone",

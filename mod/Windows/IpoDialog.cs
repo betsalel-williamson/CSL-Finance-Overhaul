@@ -3,14 +3,12 @@ using System.Collections.Generic; // Queue
 // ColossalFramework.UI: UIButton, UIComponent, UIHorizontalAlignment, UILabel, UIPanel,
 //   UISlicedSprite, UISprite, UIView
 using ColossalFramework.UI;
-// FinanceOverhaul.Core: BuildingFraming, BuildingKey, CompanyStatus, IpoDialogText, LocalCompany,
-//   ModSettings
-using FinanceOverhaul.Core;
+using FinanceOverhaul.Core; // BuildingKey, CompanyStatus, IpoDialogText, LocalCompany, ModSettings
 using UnityEngine; // AudioClip, Color32, Mathf, MonoBehaviour, RectOffset, Time, Vector2, Vector3
 
 // Game classes used without a using (global namespace, Assembly-CSharp): AudioManager, Building,
-//   BuildingManager, BuySellInvestmentPanel, CameraController, DefaultTool, DistrictManager,
-//   InstanceID, LoadingManager, NetManager, NetSegment, SimulationManager, ToolsModifierControl
+//   BuildingManager, BuySellInvestmentPanel, DistrictManager, LoadingManager, NetManager,
+//   NetSegment, SimulationManager
 
 namespace FinanceOverhaul
 {
@@ -240,30 +238,7 @@ namespace FinanceOverhaul
         {
             LocalCompany company = CompanyDesk.CompanyOf(shownCompany);
             Close();
-            CameraController camera = ToolsModifierControl.cameraController;
-            if (company == null || camera == null)
-            {
-                return;
-            }
-
-            Building home = BuildingManager.instance.m_buildings.m_buffer[company.Home.Id];
-            if (home.m_buildIndex == company.Home.BuildIndex)
-            {
-                var id = new InstanceID { Building = company.Home.Id };
-                camera.SetTarget(id, home.m_position, true);
-                // Near enough to see the building whole, whatever its size.
-                Vector3 size = home.Info == null ? Vector3.zero : home.Info.m_size;
-                camera.m_targetSize = BuildingFraming.Distance(
-                    home.Width * 8f,
-                    home.Length * 8f,
-                    size.y
-                );
-                camera.m_targetAngle.y = BuildingFraming.Pitch(size.y);
-                IpoFireworks.Over(company.Home.Id, company.Home.BuildIndex);
-                // And the building's own info panel, as a click on it would open.
-                DefaultTool.OpenWorldInfoPanel(id, home.m_position);
-                ModLog.Info("ipo dialog: showing headquarters building " + company.Home.Id);
-            }
+            CompanyHome.Show(company, true);
         }
 
         private void Build(LocalCompany company)

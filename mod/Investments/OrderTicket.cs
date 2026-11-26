@@ -1,7 +1,8 @@
 using System; // Exception
 using System.Reflection; // FieldInfo, MethodInfo
 using ColossalFramework.UI; // UIButton, UIComponent, UILabel, UIPanel, UITextField
-using FinanceOverhaul.Core; // OrderKind, OrderText, ShareAmountInput, Strings, TradeOrder
+// FinanceOverhaul.Core: LocalCompany, OrderKind, OrderText, ShareAmountInput, Strings, TradeOrder
+using FinanceOverhaul.Core;
 using UnityEngine; // Color32
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
@@ -24,6 +25,7 @@ namespace FinanceOverhaul
     {
         public const string TabsName = "FinanceOverhaulOrderTabs";
         public const string SidesName = "FinanceOverhaulOrderSides";
+        public const string ViewHomeName = "FinanceOverhaulOrderViewHome";
         public const string PriceName = "FinanceOverhaulLimitPrice";
         public const string TabPrefix = "FinanceOverhaulOrderTab-";
         public const string PriceFieldName = "FinanceOverhaulLimitPriceField";
@@ -107,6 +109,7 @@ namespace FinanceOverhaul
         private static UIPanel sides;
         private static FoToggleTabs sideTabs;
         private static FoToggleTabs typeTabs;
+        private static UIButton viewHome;
         private static UIPanel pricePanel;
         private static UILabel caption;
         private static UITextField priceField;
@@ -191,12 +194,56 @@ namespace FinanceOverhaul
                 }
 
                 ResetForShow();
+                ShowViewHome();
                 NothingToBuy();
             }
             catch (Exception ex)
             {
                 Detach();
                 LogOnce("order ticket: attach failed, vanilla trade kept: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// "View headquarters" beside the current value, for a local company only: closes the
+        /// dialog and shows the company's building with its info panel, as the IPO dialog does.
+        /// </summary>
+        private static void ShowViewHome()
+        {
+            if (viewHome == null || owner == null)
+            {
+                return;
+            }
+
+            byte id = (byte)IdField.GetValue(owner);
+            Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
+            InvestmentAI ai = buffer[id].Info == null ? null : buffer[id].Info.m_investmentAI;
+            int company;
+            LocalCompany local = CompanyListing.IsCompany(ai, out company)
+                ? CompanyDesk.CompanyOf(company)
+                : null;
+            viewHome.isVisible = local != null;
+            viewHome.isEnabled = local != null && CompanyHome.Stands(local);
+            viewHome.tooltip = viewHome.isEnabled
+                ? string.Empty
+                : Strings.Get("order.viewHome.lost");
+        }
+
+        private static void OnViewHome()
+        {
+            if (owner == null)
+            {
+                return;
+            }
+
+            byte id = (byte)IdField.GetValue(owner);
+            Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
+            InvestmentAI ai = buffer[id].Info == null ? null : buffer[id].Info.m_investmentAI;
+            int company;
+            if (CompanyListing.IsCompany(ai, out company))
+            {
+                BuySellInvestmentPanel.HidePanel();
+                CompanyHome.Show(CompanyDesk.CompanyOf(company), false);
             }
         }
 
@@ -439,6 +486,8 @@ namespace FinanceOverhaul
             sides = null;
             sideTabs = null;
             typeTabs = null;
+            Destroy(viewHome);
+            viewHome = null;
             pricePanel = null;
             caption = null;
             priceField = null;
