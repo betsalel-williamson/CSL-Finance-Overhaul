@@ -1,5 +1,7 @@
 # Needs the dev test stock (TST) in a test save.
 name Options flags: a switched-off order type hides its tab, pauses its open orders, and resumes when back on
+# the game's own Investments lists, whatever the "Investments list and research" flag says
+investments-list off
 set-flag all on
 set-price TST 100
 run-days 1
@@ -46,6 +48,7 @@ expect-hidden FinanceOverhaulOrderTabs
 expect-text Button Sell
 capture order-flags-all-sells-off
 cleanup:
+investments-list restore
 set-flag all on
 cancel-new-orders
 set-price TST 100

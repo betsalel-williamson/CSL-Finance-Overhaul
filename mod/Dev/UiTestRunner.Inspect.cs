@@ -122,6 +122,18 @@ namespace FinanceOverhaul
                     yield return null;
                     break;
                 }
+                case "investments-double-click":
+                {
+                    // investments-double-click SYMBOL — as a double click on that stock's name.
+                    InvestmentsList shown = InvestmentsList.Current;
+                    if (shown == null || !shown.TestDoubleClick(a))
+                    {
+                        r.Error = "no row for " + a + " on screen";
+                    }
+
+                    yield return null;
+                    break;
+                }
                 case "expect-investments":
                 {
                     // expect-investments SECTION SYMBOL — that stock is listed in that section

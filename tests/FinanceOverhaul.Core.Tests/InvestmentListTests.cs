@@ -1,7 +1,7 @@
 using System; // Random
 using System.Collections.Generic; // List
-// FinanceOverhaul.Core: InvestmentFilter, InvestmentList, InvestmentRow, InvestmentSection,
-//   MonitorQuote, MonitorSort
+// FinanceOverhaul.Core: InvestmentFilter, InvestmentList, InvestmentRow, InvestmentRowKind,
+//   InvestmentSection, MonitorQuote, MonitorSort, TradeOrder
 using FinanceOverhaul.Core;
 using Xunit; // Assert, FactAttribute
 
@@ -23,6 +23,7 @@ namespace FinanceOverhaul.Core.Tests
             {
                 Symbol = symbol,
                 Name = symbol,
+                Prefab = "prefab-" + symbol,
                 Price = price,
                 ChangeRate = change,
                 Owned = owned,
@@ -60,7 +61,7 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
-        public void AllShowsThreeSectionsAndEachStockOnce()
+        public void AllIsOneListSortedAsAWholeWithLockedStocksLast()
         {
             List<InvestmentRow> rows = InvestmentList.Rows(
                 City(),
@@ -68,22 +69,42 @@ namespace FinanceOverhaul.Core.Tests
                 MonitorSort.Change,
                 false
             );
-            // Held first (a held local company is in Your portfolio), then local, then the rest
-            // by change with the locked stock last.
+            // No sections: held, local and other stocks mix by change; the locked one last.
+            Assert.Equal("DS,FFS,GGI,IDX,WSO,HS,CC,FoI", Keys(rows));
+        }
+
+        [Fact]
+        public void GroupSplitsTheSameStocksIntoSections()
+        {
+            List<InvestmentRow> rows = InvestmentList.Rows(
+                City(),
+                InvestmentFilter.All,
+                MonitorSort.Change,
+                false,
+                true,
+                null
+            );
+            // Held first (a held local company is in Your portfolio), then local, then the rest.
             Assert.Equal("#Portfolio,DS,FFS,GGI,#Local,WSO,#All,IDX,HS,CC,FoI", Keys(rows));
             Assert.Equal(3, rows[0].Count);
         }
 
         [Fact]
-        public void OwnedAndLocalListOneSectionEach()
+        public void EachTabListsItsStocks()
         {
             Assert.Equal(
-                "#Portfolio,DS,FFS,GGI",
+                "DS,FFS,GGI",
                 Keys(InvestmentList.Rows(City(), InvestmentFilter.Owned, MonitorSort.Change, false))
             );
             Assert.Equal(
-                "#Local,FFS,WSO",
+                "FFS,WSO",
                 Keys(InvestmentList.Rows(City(), InvestmentFilter.Local, MonitorSort.Symbol, false))
+            );
+            Assert.Equal(
+                "FoI",
+                Keys(
+                    InvestmentList.Rows(City(), InvestmentFilter.Locked, MonitorSort.Change, false)
+                )
             );
             Assert.Equal(
                 "",
@@ -103,7 +124,43 @@ namespace FinanceOverhaul.Core.Tests
         {
             Assert.Equal(
                 "#Portfolio,GGI,FFS,DS,#Local,WSO,#All,IDX,HS,CC,FoI",
-                Keys(InvestmentList.Rows(City(), InvestmentFilter.All, MonitorSort.Symbol, true))
+                Keys(
+                    InvestmentList.Rows(
+                        City(),
+                        InvestmentFilter.All,
+                        MonitorSort.Symbol,
+                        true,
+                        true,
+                        null
+                    )
+                )
+            );
+        }
+
+        [Fact]
+        public void OpenOrdersSitUnderTheirStock()
+        {
+            var orders = new List<TradeOrder>
+            {
+                TradeOrder.StopLossSell(4, "prefab-GGI", 500, 6800, 1),
+                TradeOrder.LimitBuy(5, "prefab-HS", 10, 300, 1),
+            };
+            List<InvestmentRow> rows = InvestmentList.Rows(
+                City(),
+                InvestmentFilter.All,
+                MonitorSort.Change,
+                false,
+                false,
+                orders
+            );
+            Assert.Equal("DS,FFS,GGI,order:4,IDX,WSO,HS,order:5,CC,FoI", Keys(rows));
+            Assert.Equal(InvestmentRowKind.Order, rows[3].Kind);
+            Assert.Equal(InvestmentList.OrderHeight, rows[3].Height);
+            Assert.Equal(InvestmentList.HeldHeight, rows[2].Height);
+            Assert.Equal(InvestmentList.RowHeight, rows[4].Height);
+            Assert.Equal(
+                "Open order · SELL (stop-loss) · 500 shares if the price drops to ₡6,800 · 54 days left",
+                InvestmentList.OrderLine(orders[0], 37)
             );
         }
 
@@ -114,12 +171,19 @@ namespace FinanceOverhaul.Core.Tests
                 City(),
                 InvestmentFilter.All,
                 MonitorSort.Change,
-                false
+                false,
+                true,
+                null
             );
             float[] tops = InvestmentList.Tops(rows);
             Assert.Equal(0f, tops[0]);
             Assert.Equal(InvestmentList.HeadingHeight, tops[1]);
-            Assert.Equal(3 * InvestmentList.HeadingHeight + 8 * InvestmentList.RowHeight, tops[11]);
+            Assert.Equal(
+                3 * InvestmentList.HeadingHeight
+                    + 3 * InvestmentList.HeldHeight
+                    + 5 * InvestmentList.RowHeight,
+                tops[11]
+            );
             Assert.Equal(0, InvestmentList.FirstVisible(tops, 0f));
             Assert.Equal(0, InvestmentList.FirstVisible(tops, 29f));
             Assert.Equal(1, InvestmentList.FirstVisible(tops, 30f));
@@ -142,7 +206,8 @@ namespace FinanceOverhaul.Core.Tests
             int hs = before.FindIndex(r => r.Key == "HS");
             float offset = tops[hs] + 10f;
 
-            // The city buys IDX: it moves up into Your portfolio, rows above HS change.
+            // The city buys IDX (read afresh, as the mod does): its line grows, HS moves down.
+            city = City();
             city.Find(q => q.Symbol == "IDX").Owned = 10;
             List<InvestmentRow> after = InvestmentList.Rows(
                 city,
@@ -203,11 +268,14 @@ namespace FinanceOverhaul.Core.Tests
         {
             List<MonitorQuote> city = City();
             Assert.Equal("All 8", InvestmentList.FilterLabel(InvestmentFilter.All, city));
+            Assert.Equal("Locked 1", InvestmentList.FilterLabel(InvestmentFilter.Locked, city));
+            Assert.Equal("Group", InvestmentList.GroupLabel(false));
+            Assert.Equal("Ungroup", InvestmentList.GroupLabel(true));
             Assert.Equal("Owned 3", InvestmentList.FilterLabel(InvestmentFilter.Owned, city));
             Assert.Equal("Local 2", InvestmentList.FilterLabel(InvestmentFilter.Local, city));
             Assert.Equal("Your portfolio", InvestmentList.Heading(InvestmentSection.Portfolio));
             MonitorQuote ggi = city[0];
-            Assert.Equal("500 sh · avg ₡6,616", InvestmentList.Holding(ggi));
+            Assert.Equal("500 shares · avg ₡6,616", InvestmentList.Holding(ggi));
             Assert.Equal("+₡489,500 (+14.8%)", InvestmentList.Gain(ggi));
             Assert.Equal(1, InvestmentList.GainSign(ggi));
             Assert.Equal("−₡9,000 (−2.0%)", InvestmentList.Gain(city[1]));
@@ -220,7 +288,9 @@ namespace FinanceOverhaul.Core.Tests
                 city,
                 InvestmentFilter.All,
                 MonitorSort.Change,
-                false
+                false,
+                true,
+                null
             );
             Assert.Equal(
                 "₡4,251,500 · +₡481,000",

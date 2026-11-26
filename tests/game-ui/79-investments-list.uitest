@@ -1,8 +1,9 @@
-# Economy → Investments as one sectioned list (Options → Feature flags → "Investments list and
-# research"): the game's two lists, their titles and the Total value bar are hidden and one list
-# takes their place, with filter tabs (All, Owned, Local), the Stock Monitor's sort and its
-# direction. Assumes nothing about what the city holds. Flag off gives the game's tab back.
-name investments list: one sectioned list in place of the two, filters and sort, and back
+# Economy → Investments as one list (Options → Feature flags → "Investments list and research"):
+# the game's two lists, their titles and the Total value bar are hidden and one list takes their
+# place, with filter tabs (All, Owned, Local, Locked), the Stock Monitor's sort and its direction.
+# All is one list sorted as a whole; only the Group button splits it into sections. Assumes
+# nothing about what the city holds. Flag off gives the game's tab back.
+name investments list: one list in place of the two, tabs, group, sort, and back
 close-economy
 investments-list on
 show-economy
@@ -15,10 +16,22 @@ expect-text FinanceOverhaulInvestmentsTab-All All
 expect-text FinanceOverhaulInvestmentsSort Sort: Change %
 capture investments-list-all
 expect-no-overflow FinanceOverhaulInvestmentsList
-click FinanceOverhaulInvestmentsTab-Owned
+# All is not split into sections until Group is pressed
+expect-hidden FinanceOverhaulInvestmentsHeading-All
+expect-hidden FinanceOverhaulInvestmentsHeading-Portfolio
+expect-text FinanceOverhaulInvestmentsGroup Group
+click FinanceOverhaulInvestmentsGroup
+wait 0.5
+expect-text FinanceOverhaulInvestmentsGroup Ungroup
+capture investments-list-grouped
+click FinanceOverhaulInvestmentsGroup
 wait 0.5
 expect-hidden FinanceOverhaulInvestmentsHeading-All
-expect-hidden FinanceOverhaulInvestmentsHeading-Local
+click FinanceOverhaulInvestmentsTab-Owned
+wait 0.5
+click FinanceOverhaulInvestmentsTab-Locked
+wait 0.5
+expect-text FinanceOverhaulInvestmentsTab-Locked Locked
 click FinanceOverhaulInvestmentsTab-All
 wait 0.5
 click FinanceOverhaulInvestmentsSort

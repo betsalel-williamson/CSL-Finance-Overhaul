@@ -4,7 +4,7 @@ using System.Globalization; // CultureInfo
 
 namespace FinanceOverhaul.Core
 {
-    /// <summary>Which stocks Economy → Investments lists.</summary>
+    /// <summary>Which stocks Economy → Investments lists (the filter tabs).</summary>
     public enum InvestmentFilter
     {
         All,
@@ -14,9 +14,12 @@ namespace FinanceOverhaul.Core
 
         /// <summary>Local companies (Local IPOs), held or not.</summary>
         Local,
+
+        /// <summary>Stocks whose requirement is not met yet.</summary>
+        Locked,
     }
 
-    /// <summary>The list's sections, in the order they are shown.</summary>
+    /// <summary>The sections the Group button splits the list into, in the order shown.</summary>
     public enum InvestmentSection
     {
         Portfolio,
@@ -24,58 +27,123 @@ namespace FinanceOverhaul.Core
         All,
     }
 
-    /// <summary>One line of the list: a section heading or a stock.</summary>
+    /// <summary>What a line of the list is.</summary>
+    public enum InvestmentRowKind
+    {
+        /// <summary>A section heading (only with Group on).</summary>
+        Heading,
+        Stock,
+
+        /// <summary>An open order, tucked under its stock.</summary>
+        Order,
+    }
+
+    /// <summary>One line of the list: a section heading, a stock, or an open order under it.</summary>
     public sealed class InvestmentRow
     {
+        public InvestmentRowKind Kind;
         public InvestmentSection Section;
 
-        /// <summary>Null for a heading.</summary>
+        /// <summary>The stock (an order's stock too); null for a heading.</summary>
         public MonitorQuote Stock;
+
+        /// <summary>An order line's order.</summary>
+        public TradeOrder Order;
 
         /// <summary>A heading's stock count.</summary>
         public int Count;
 
         public bool IsHeading
         {
-            get { return Stock == null; }
+            get { return Kind == InvestmentRowKind.Heading; }
         }
 
-        /// <summary>Stable key: the stock's symbol, or the section for a heading.</summary>
+        /// <summary>Stable key: the section, the stock's symbol, or the order's id.</summary>
         public string Key
         {
-            get { return Stock == null ? "#" + Section : Stock.Symbol; }
+            get
+            {
+                switch (Kind)
+                {
+                    case InvestmentRowKind.Heading:
+                        return "#" + Section;
+                    case InvestmentRowKind.Order:
+                        return "order:" + Order.Id.ToString(CultureInfo.InvariantCulture);
+                    default:
+                        return Stock.Symbol;
+                }
+            }
+        }
+
+        /// <summary>The line's height with its gap: a holding takes a third line.</summary>
+        public float Height
+        {
+            get
+            {
+                switch (Kind)
+                {
+                    case InvestmentRowKind.Heading:
+                        return InvestmentList.HeadingHeight;
+                    case InvestmentRowKind.Order:
+                        return InvestmentList.OrderHeight;
+                    default:
+                        return Stock.Owned > 0
+                            ? InvestmentList.HeldHeight
+                            : InvestmentList.RowHeight;
+                }
+            }
         }
     }
 
     /// <summary>
-    /// The one sectioned list that replaces Economy → Investments' two (design:
-    /// investments-and-research.md): which stocks show for a filter, in which section and order,
-    /// the rows' places for a scroll offset, keeping the same stock in view when the list changes,
-    /// and the list's wording. Cities-free.
+    /// The list that replaces Economy → Investments' two (design: investments-and-research.md,
+    /// Figma band 18 "Condensed B"): which stocks show for a filter tab and in which order; one
+    /// list sorted as a whole unless the player turns Group on, which splits it into Your
+    /// portfolio, Local companies and All stocks; open orders under their stock; the lines'
+    /// places for a scroll offset; keeping the same line in view when the list changes; and the
+    /// list's wording. Cities-free.
     /// </summary>
     public static class InvestmentList
     {
-        /// <summary>Height of a stock row, with its gap.</summary>
-        public const float RowHeight = 44f;
+        /// <summary>Height of a stock line (symbol and name), with its gap.</summary>
+        public const float RowHeight = 48f;
+
+        /// <summary>Height of a held stock's line (a third line: shares and average cost).</summary>
+        public const float HeldHeight = 64f;
+
+        /// <summary>Height of an open order's line under its stock.</summary>
+        public const float OrderHeight = 26f;
 
         /// <summary>Height of a section heading, with its gap.</summary>
         public const float HeadingHeight = 30f;
 
-        /// <summary>Rows a wheel notch moves.</summary>
-        public const int RowsPerNotch = 3;
+        /// <summary>Pixels a wheel notch moves: three plain lines.</summary>
+        public const float NotchPixels = 3f * RowHeight;
 
         public static readonly InvestmentFilter[] Filters =
         {
             InvestmentFilter.All,
             InvestmentFilter.Owned,
             InvestmentFilter.Local,
+            InvestmentFilter.Locked,
         };
 
-        /// <summary>
-        /// The rows for a filter: Your portfolio (held), Local companies (not held), All stocks (the
-        /// rest, locked ones last); a stock sits in one section; empty sections are left out.
-        /// "Owned" and "Local" list one section each. Within a section, the Stock Monitor's sort.
-        /// </summary>
+        /// <summary>Whether a stock shows under a filter tab.</summary>
+        public static bool Matches(MonitorQuote q, InvestmentFilter filter)
+        {
+            switch (filter)
+            {
+                case InvestmentFilter.Owned:
+                    return q.Owned > 0;
+                case InvestmentFilter.Local:
+                    return q.Local;
+                case InvestmentFilter.Locked:
+                    return q.Locked;
+                default:
+                    return true;
+            }
+        }
+
         public static List<InvestmentRow> Rows(
             IEnumerable<MonitorQuote> quotes,
             InvestmentFilter filter,
@@ -83,55 +151,56 @@ namespace FinanceOverhaul.Core
             bool reversed
         )
         {
-            var portfolio = new List<MonitorQuote>();
-            var local = new List<MonitorQuote>();
-            var rest = new List<MonitorQuote>();
-            var locked = new List<MonitorQuote>();
+            return Rows(quotes, filter, sort, reversed, false, null);
+        }
+
+        /// <summary>
+        /// The lines for a filter tab, sorted as one list (locked stocks last, A–Z), each stock
+        /// followed by its open orders. With <paramref name="grouped"/> the same stocks are split
+        /// into Your portfolio (held), Local companies (not held) and All stocks (the rest), each
+        /// under a heading, empty ones left out; the sort applies within each.
+        /// </summary>
+        /// <param name="orders">Open orders; matched to stocks by <see cref="MonitorQuote.Prefab"/>.</param>
+        public static List<InvestmentRow> Rows(
+            IEnumerable<MonitorQuote> quotes,
+            InvestmentFilter filter,
+            MonitorSort sort,
+            bool reversed,
+            bool grouped,
+            IList<TradeOrder> orders
+        )
+        {
+            var shown = new List<MonitorQuote>();
             foreach (MonitorQuote q in quotes ?? new List<MonitorQuote>())
             {
-                if (q == null)
+                if (q != null && Matches(q, filter))
                 {
-                    continue;
-                }
-
-                if (filter == InvestmentFilter.Owned)
-                {
-                    if (q.Owned > 0)
-                    {
-                        portfolio.Add(q);
-                    }
-                }
-                else if (filter == InvestmentFilter.Local)
-                {
-                    if (q.Local)
-                    {
-                        local.Add(q);
-                    }
-                }
-                else if (q.Owned > 0)
-                {
-                    portfolio.Add(q);
-                }
-                else if (q.Local)
-                {
-                    local.Add(q);
-                }
-                else if (q.Locked)
-                {
-                    locked.Add(q);
-                }
-                else
-                {
-                    rest.Add(q);
+                    shown.Add(q);
                 }
             }
 
             var rows = new List<InvestmentRow>();
-            Add(rows, InvestmentSection.Portfolio, Sorted(portfolio, sort, reversed));
-            Add(rows, InvestmentSection.Local, Sorted(local, sort, reversed));
-            List<MonitorQuote> all = Sorted(rest, sort, reversed);
-            all.AddRange(Sorted(locked, MonitorSort.Symbol, false));
-            Add(rows, InvestmentSection.All, all);
+            if (!grouped)
+            {
+                Add(rows, null, InvestmentSection.All, Ordered(shown, sort, reversed), orders);
+                return rows;
+            }
+
+            var portfolio = new List<MonitorQuote>();
+            var local = new List<MonitorQuote>();
+            var rest = new List<MonitorQuote>();
+            foreach (MonitorQuote q in shown)
+            {
+                (
+                    q.Owned > 0 ? portfolio
+                    : q.Local ? local
+                    : rest
+                ).Add(q);
+            }
+
+            Add(rows, InvestmentSection.Portfolio, Ordered(portfolio, sort, reversed), orders);
+            Add(rows, InvestmentSection.Local, Ordered(local, sort, reversed), orders);
+            Add(rows, InvestmentSection.All, Ordered(rest, sort, reversed), orders);
             return rows;
         }
 
@@ -143,7 +212,7 @@ namespace FinanceOverhaul.Core
             for (int i = 0; i < rows.Count; i++)
             {
                 tops[i] = y;
-                y += rows[i].IsHeading ? HeadingHeight : RowHeight;
+                y += rows[i].Height;
             }
 
             tops[rows.Count] = y;
@@ -215,26 +284,35 @@ namespace FinanceOverhaul.Core
             return Clamp(offset, newTops, viewHeight);
         }
 
-        /// <summary>"All 17", "Owned 3", "Local 2": a filter tab with its count.</summary>
+        /// <summary>"All 17", "Owned 3", "Local 2", "Locked 3": a filter tab with its count.</summary>
         public static string FilterLabel(InvestmentFilter filter, IEnumerable<MonitorQuote> quotes)
         {
             int n = 0;
             foreach (MonitorQuote q in quotes ?? new List<MonitorQuote>())
             {
-                if (
-                    q != null
-                    && (
-                        filter == InvestmentFilter.All
-                        || (filter == InvestmentFilter.Owned && q.Owned > 0)
-                        || (filter == InvestmentFilter.Local && q.Local)
-                    )
-                )
+                if (q != null && Matches(q, filter))
                 {
                     n++;
                 }
             }
 
             return Strings.Format("investments.filter." + filter, Number(n));
+        }
+
+        /// <summary>The Group button's text: "Group" or, while grouped, "Ungroup".</summary>
+        public static string GroupLabel(bool grouped)
+        {
+            return Strings.Get(grouped ? "investments.ungroup" : "investments.group");
+        }
+
+        /// <summary>"Stop-loss · sell 500 if the price drops to ₡6,800 · 54 days left": an order line.</summary>
+        public static string OrderLine(TradeOrder order, int today)
+        {
+            return Strings.Format(
+                "investments.row.order",
+                OrderText.CardSide(order.Kind),
+                OrderText.CardDetail(order, today)
+            );
         }
 
         /// <summary>"Your portfolio", "Local companies", "All stocks".</summary>
@@ -254,7 +332,7 @@ namespace FinanceOverhaul.Core
             long spent = 0;
             foreach (InvestmentRow r in rows)
             {
-                if (r.Stock != null && r.Section == section)
+                if (r.Kind == InvestmentRowKind.Stock && r.Section == section)
                 {
                     count++;
                     worth += r.Stock.ValueHeld;
@@ -275,7 +353,7 @@ namespace FinanceOverhaul.Core
             );
         }
 
-        /// <summary>"500 sh · avg ₡6,616" for a holding; null when the city holds none.</summary>
+        /// <summary>"500 shares · avg ₡6,616" for a holding; null when the city holds none.</summary>
         public static string Holding(MonitorQuote q)
         {
             if (q == null || q.Owned == 0)
@@ -283,8 +361,9 @@ namespace FinanceOverhaul.Core
                 return null;
             }
 
-            return Strings.Format(
+            return Strings.Plural(
                 "investments.row.holding",
+                q.Owned,
                 Number((int)Math.Min(int.MaxValue, q.Owned)),
                 BondText.WholeMoney((long)Math.Round(100.0 * q.Spent / q.Owned))
             );
@@ -348,19 +427,40 @@ namespace FinanceOverhaul.Core
                 : whole;
         }
 
-        private static List<MonitorQuote> Sorted(
+        /// <summary>The sort, with locked stocks (no price yet) last in A–Z order.</summary>
+        private static List<MonitorQuote> Ordered(
             List<MonitorQuote> quotes,
             MonitorSort sort,
             bool reversed
         )
         {
-            return StockMonitor.Rows(quotes, MonitorFilter.All, sort, null, reversed);
+            var open = new List<MonitorQuote>();
+            var locked = new List<MonitorQuote>();
+            foreach (MonitorQuote q in quotes)
+            {
+                (q.Locked ? locked : open).Add(q);
+            }
+
+            List<MonitorQuote> ordered = StockMonitor.Rows(
+                open,
+                MonitorFilter.All,
+                sort,
+                null,
+                reversed
+            );
+            ordered.AddRange(
+                StockMonitor.Rows(locked, MonitorFilter.All, MonitorSort.Symbol, null)
+            );
+            return ordered;
         }
 
+        /// <param name="section">Null: no heading (the list is not grouped).</param>
         private static void Add(
             List<InvestmentRow> rows,
-            InvestmentSection section,
-            List<MonitorQuote> stocks
+            InvestmentSection? section,
+            InvestmentSection where,
+            List<MonitorQuote> stocks,
+            IList<TradeOrder> orders
         )
         {
             if (stocks.Count == 0)
@@ -368,11 +468,54 @@ namespace FinanceOverhaul.Core
                 return;
             }
 
-            rows.Add(new InvestmentRow { Section = section, Count = stocks.Count });
+            if (section.HasValue)
+            {
+                rows.Add(
+                    new InvestmentRow
+                    {
+                        Kind = InvestmentRowKind.Heading,
+                        Section = where,
+                        Count = stocks.Count,
+                    }
+                );
+            }
+
             foreach (MonitorQuote q in stocks)
             {
-                rows.Add(new InvestmentRow { Section = section, Stock = q });
+                rows.Add(
+                    new InvestmentRow
+                    {
+                        Kind = InvestmentRowKind.Stock,
+                        Section = where,
+                        Stock = q,
+                    }
+                );
+                foreach (TradeOrder o in orders ?? new List<TradeOrder>())
+                {
+                    if (o != null && q.Prefab != null && o.InvestmentKey == q.Prefab)
+                    {
+                        rows.Add(
+                            new InvestmentRow
+                            {
+                                Kind = InvestmentRowKind.Order,
+                                Section = where,
+                                Stock = q,
+                                Order = o,
+                            }
+                        );
+                    }
+                }
             }
+        }
+
+        private static void Add(
+            List<InvestmentRow> rows,
+            InvestmentSection section,
+            List<MonitorQuote> stocks,
+            IList<TradeOrder> orders
+        )
+        {
+            Add(rows, section, section, stocks, orders);
         }
 
         private static string Number(int value)

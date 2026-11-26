@@ -2,6 +2,8 @@
 # section label, one card per kind of business the city has (its line and its bar), and a line
 # summing up the board. With the flag off they are gone. Reads only; the flag is put back.
 name local ipos: the Investments tab shows a card per kind of business, and none with the flag off
+# the game's own Investments lists, whatever the "Investments list and research" flag says
+investments-list off
 local-ipos on
 ipo-scan
 show-economy
@@ -20,5 +22,6 @@ local-ipos off
 wait 1.5
 expect-hidden FinanceOverhaulCompanyCardSection
 cleanup:
+investments-list restore
 close-economy
 local-ipos restore

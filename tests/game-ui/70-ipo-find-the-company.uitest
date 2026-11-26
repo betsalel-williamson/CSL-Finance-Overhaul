@@ -3,6 +3,8 @@
 # with the camera near enough to see it whole; and fireworks go off over the building once the
 # game runs again. Everything listed is removed in cleanup.
 name local ipos: a new company leads the list; View opens its building with fireworks
+# the game's own Investments lists, whatever the "Investments list and research" flag says
+investments-list off
 local-ipos on
 ipo-healthy-days 1
 ipo-scan
@@ -29,6 +31,7 @@ wait 1.5
 expect-company-first
 capture ipo-company-first
 cleanup:
+investments-list restore
 close-economy
 ipo-dialog close
 ipo-remove-test

@@ -1,17 +1,18 @@
 using System; // Exception, Math
 using System.Collections.Generic; // Dictionary, IList, KeyValuePair, List
 // ColossalFramework.UI: UIButton, UIComponent, UILabel, UIOrientation, UIPanel, UIScrollbar,
-//   UISlicedSprite, UISprite, UITextureSprite
+//   UISlicedSprite, UISprite, UITextureSprite, UIView
 using ColossalFramework.UI;
-// FinanceOverhaul.Core: BondText, InvestmentFilter, InvestmentList, InvestmentRow, MonitorQuote,
-//   MonitorSort, StockMonitor, Strings
+// FinanceOverhaul.Core: BondText, InvestmentFilter, InvestmentList, InvestmentRow,
+//   InvestmentRowKind, MonitorQuote, MonitorSort, StockMonitor, Strings, TradeOrder
 using FinanceOverhaul.Core;
-// UnityEngine: Color32, FilterMode, Mathf, MonoBehaviour, Texture2D, TextureFormat,
+// UnityEngine: Color32, FilterMode, Mathf, MonoBehaviour, Screen, Texture2D, TextureFormat,
 //   TextureWrapMode, Time, Vector2, Vector3
 using UnityEngine;
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
-//   EconomyManager, EconomyPanel, Investment, InvestmentAI, ToolsModifierControl
+//   EconomyManager, EconomyPanel, Investment, InvestmentAI, InvestmentTooltip,
+//   ToolsModifierControl
 
 namespace FinanceOverhaul
 {
@@ -63,6 +64,8 @@ namespace FinanceOverhaul
         private InvestmentFilter filter = InvestmentFilter.All;
         private MonitorSort sort = MonitorSort.Change;
         private bool reversed;
+        private bool grouped;
+        private UIButton groupButton;
         private List<MonitorQuote> quotes = new List<MonitorQuote>();
         private List<InvestmentRow> rows = new List<InvestmentRow>();
         private float[] tops = { 0f };
@@ -109,6 +112,7 @@ namespace FinanceOverhaul
 
                 // The game shows its own controls again when it lays the tab out.
                 HideGameControls();
+                Hover();
                 if (Time.unscaledTime >= nextRead)
                 {
                     nextRead = Time.unscaledTime + 0.25f;
@@ -164,6 +168,8 @@ namespace FinanceOverhaul
                 Destroy(sortArrow.texture);
             }
 
+            Row.HideChart();
+            hovered = null;
             list = null;
             page = null;
             if (Current == this)
@@ -200,7 +206,14 @@ namespace FinanceOverhaul
         private void Read()
         {
             quotes = MarketQuotes.Read(true);
-            List<InvestmentRow> next = InvestmentList.Rows(quotes, filter, sort, reversed);
+            List<InvestmentRow> next = InvestmentList.Rows(
+                quotes,
+                filter,
+                sort,
+                reversed,
+                grouped,
+                new List<TradeOrder>(OrderDesk.Snapshot())
+            );
             offset = InvestmentList.KeepInView(rows, offset, next, view.height);
             rows = next;
             tops = InvestmentList.Tops(rows);
@@ -211,6 +224,8 @@ namespace FinanceOverhaul
             }
 
             sortButton.text = StockMonitor.SortLabel(sort, false);
+            groupButton.text = InvestmentList.GroupLabel(grouped);
+            FoButton.SetSelected(groupButton, grouped);
             bool down = StockMonitor.IsDescending(sort, reversed);
             if (sortArrow.texture == null || down != sortArrowDown)
             {
@@ -236,6 +251,57 @@ namespace FinanceOverhaul
             Fill();
         }
 
+        private Row hovered;
+
+        /// <summary>
+        /// Over a stock's 30-day line the game's stock tooltip opens with its large chart, as
+        /// over the game's own cards; it closes when the pointer leaves. Reads the pointer each
+        /// frame (<see cref="FoPointer"/>, which game UI tests can stand in for).
+        /// </summary>
+        private void Hover()
+        {
+            Vector2 at = FoPointer.Position;
+            Row over = null;
+            foreach (Row r in pool)
+            {
+                if (r.OverLine(at, view))
+                {
+                    over = r;
+                    break;
+                }
+            }
+
+            if (over == hovered)
+            {
+                return;
+            }
+
+            hovered = over;
+            if (over == null)
+            {
+                Row.HideChart();
+            }
+            else
+            {
+                over.ShowChart();
+            }
+        }
+
+        /// <summary>As a double click on that stock's name; false if its row is not on screen.</summary>
+        internal bool TestDoubleClick(string symbol)
+        {
+            foreach (Row r in pool)
+            {
+                if (r.Key == symbol)
+                {
+                    r.DoubleClick();
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>Moves the list by that many pixels (the wheel, game UI tests).</summary>
         internal void ScrollBy(float pixels)
         {
@@ -250,6 +316,12 @@ namespace FinanceOverhaul
         internal void Pick(InvestmentFilter f)
         {
             filter = f;
+            Top();
+        }
+
+        /// <summary>A new tab, grouping or order starts from the top of the list.</summary>
+        private void Top()
+        {
             offset = 0f;
             rows = new List<InvestmentRow>();
             Read();
@@ -300,6 +372,21 @@ namespace FinanceOverhaul
                 x += 104f;
             }
 
+            // Sections only when asked for: All is one list sorted as a whole.
+            groupButton = FoButton.Add(
+                list,
+                Prefix + "Group",
+                InvestmentList.GroupLabel(grouped),
+                new Vector2(100f, 26f),
+                0.8f
+            );
+            groupButton.relativePosition = new Vector3(x + 16f, 2f);
+            groupButton.eventClick += (c, p) =>
+            {
+                grouped = !grouped;
+                Top();
+            };
+
             sortDirection = FoButton.Add(
                 list,
                 Prefix + "SortDirection",
@@ -311,7 +398,7 @@ namespace FinanceOverhaul
             sortDirection.eventClick += (c, p) =>
             {
                 reversed = !reversed;
-                Read();
+                Top();
             };
             sortArrow = sortDirection.AddUIComponent<UITextureSprite>();
             sortArrow.name = Prefix + "SortArrow";
@@ -330,7 +417,7 @@ namespace FinanceOverhaul
             {
                 sort = StockMonitor.NextSort(sort);
                 reversed = false;
-                Read();
+                Top();
             };
 
             view = list.AddUIComponent<UIPanel>();
@@ -342,11 +429,7 @@ namespace FinanceOverhaul
             view.clipChildren = true;
             list.eventMouseWheel += (c, p) =>
             {
-                ScrollBy(
-                    -Mathf.Sign(p.wheelDelta)
-                        * InvestmentList.RowsPerNotch
-                        * InvestmentList.RowHeight
-                );
+                ScrollBy(-Mathf.Sign(p.wheelDelta) * InvestmentList.NotchPixels);
                 p.Use();
             };
 
@@ -395,35 +478,46 @@ namespace FinanceOverhaul
             return true;
         }
 
-        /// <summary>One pooled line: a section heading or a stock, renamed for what it shows.</summary>
+        /// <summary>
+        /// One pooled line, renamed for what it shows (a test finds "…Row-GGIBuy" wherever it
+        /// scrolled): a section heading, a stock (Figma band 18, Condensed B), or an open order
+        /// tucked under its stock.
+        /// </summary>
         private sealed class Row
         {
-            private const int SparkW = 110,
-                SparkH = 24,
+            private const int SparkW = 120,
+                SparkH = 28,
                 SparkScale = 2;
+            private const float SparkX = 430f;
+            private const float PriceRight = 720f;
+            private const float LockWidth = 280f;
 
             private readonly UIPanel back;
             private readonly UISprite coin;
             private readonly UILabel symbol;
+            private readonly UILabel badge;
             private readonly UILabel name;
+            private readonly UILabel holding;
             private readonly UILabel heading;
             private readonly UILabel detail;
             private readonly UITextureSprite spark;
             private readonly Texture2D sparkTexture;
             private readonly UILabel price;
             private readonly UILabel change;
-            private readonly UILabel holding;
             private readonly UILabel gain;
-            private readonly UILabel orders;
             private readonly UILabel lockLine;
             private readonly UIPanel lockTrack;
             private readonly UIPanel lockFill;
+            private readonly UILabel orderLine;
+            private readonly UIButton cancel;
             private readonly UIButton buy;
             private readonly UIButton sell;
             private readonly float width;
             private string key;
             private string drawn;
             private int slot;
+            private int orderId;
+            private bool locked;
 
             public Row(UIComponent parent, int index, float width)
             {
@@ -435,12 +529,23 @@ namespace FinanceOverhaul
                 back.isVisible = false;
 
                 coin = back.AddUIComponent<UISprite>();
-                coin.size = new Vector2(30f, 30f);
+                coin.size = new Vector2(36f, 36f);
                 coin.relativePosition = new Vector3(8f, 5f);
-                symbol = FoText.Label(back, "", "", 0.9f, FoTheme.GameText);
-                symbol.relativePosition = new Vector3(46f, 3f);
-                name = FoText.Label(back, "", "", 0.7f, FoTheme.TextMuted);
-                name.relativePosition = new Vector3(46f, 22f);
+                symbol = FoText.Label(back, "", "", 1.0f, FoTheme.GameText);
+                symbol.relativePosition = new Vector3(54f, 3f);
+                badge = FoPill.AddBadge(back, 0.6f, FoTheme.Header, FoTheme.Accent);
+                badge.text = Strings.Get("investments.row.local");
+                name = FoText.Label(back, "", "", 0.72f, FoTheme.TextMuted);
+                name.relativePosition = new Vector3(54f, 24f);
+                holding = FoText.Label(back, "", "", 0.72f, FoTheme.TextMuted);
+                holding.relativePosition = new Vector3(54f, 40f);
+                // A double click on the stock's name opens the game's dialog, as Buy does.
+                foreach (UIComponent c in new UIComponent[] { coin, symbol, name })
+                {
+                    c.isInteractive = true;
+                    c.eventDoubleClick += (cc, p) => Open(BuySellInvestmentPanel.Mode.Buy);
+                }
+
                 heading = FoText.Label(back, "", "", 0.85f, FoTheme.GameText);
                 heading.relativePosition = new Vector3(12f, 6f);
                 detail = FoText.Label(back, "", "", 0.8f, FoTheme.GameValue);
@@ -456,51 +561,59 @@ namespace FinanceOverhaul
                 spark = back.AddUIComponent<UITextureSprite>();
                 spark.texture = sparkTexture;
                 spark.size = new Vector2(SparkW, SparkH);
-                spark.relativePosition = new Vector3(290f, 8f);
+                spark.relativePosition = new Vector3(SparkX, 9f);
+                // Over the line: the game's own stock tooltip with its large chart (the list
+                // checks the pointer each frame, see Hover).
+                spark.isInteractive = false;
 
-                price = FoText.Label(back, "", "", 0.9f, FoTheme.GameValue);
-                change = FoPill.AddValue(back, new Vector2(64f, 18f), 0.75f, FoTheme.Header);
-                change.relativePosition = new Vector3(510f, 11f);
-                holding = FoText.Label(back, "", "", 0.75f, FoTheme.GameText);
-                holding.relativePosition = new Vector3(592f, 4f);
-                gain = FoText.Label(back, "", "", 0.75f, FoTheme.GamePositive);
-                gain.relativePosition = new Vector3(592f, 21f);
-                orders = FoPill.AddBadge(back, 0.65f, FoTheme.OfferGoldText, FoTheme.OfferGold);
-                orders.relativePosition = new Vector3(790f, 12f);
+                price = FoText.Label(back, "", "", 1.0f, FoTheme.GameValue);
+                change = FoPill.AddValue(back, new Vector2(66f, 18f), 0.75f, FoTheme.Header);
+                change.relativePosition = new Vector3(PriceRight - 66f, 25f);
+                gain = FoText.Label(back, "", "", 0.72f, FoTheme.GamePositive);
 
                 lockLine = FoText.Label(back, "", "", 0.75f, FoTheme.GameText);
-                lockLine.relativePosition = new Vector3(290f, 5f);
+                lockLine.relativePosition = new Vector3(SparkX, 6f);
                 lockTrack = back.AddUIComponent<UIPanel>();
                 lockTrack.backgroundSprite = "EmptySprite";
                 lockTrack.color = FoTheme.BarTrack;
-                lockTrack.size = new Vector2(280f, 4f);
-                lockTrack.relativePosition = new Vector3(290f, 26f);
+                lockTrack.size = new Vector2(LockWidth, 4f);
+                lockTrack.relativePosition = new Vector3(SparkX, 28f);
                 lockFill = back.AddUIComponent<UIPanel>();
                 lockFill.backgroundSprite = "EmptySprite";
                 lockFill.color = FoTheme.OfferGold;
                 lockFill.size = new Vector2(0f, 4f);
-                lockFill.relativePosition = new Vector3(290f, 26f);
+                lockFill.relativePosition = new Vector3(SparkX, 28f);
+
+                orderLine = FoText.Label(back, "", "", 0.72f, FoTheme.Accent);
+                orderLine.relativePosition = new Vector3(54f, 4f);
+                cancel = FoButton.Add(
+                    back,
+                    "",
+                    Strings.Get("order.card.cancel"),
+                    new Vector2(70f, 18f),
+                    0.65f
+                );
+                cancel.relativePosition = new Vector3(width - 82f, 2f);
+                cancel.eventClick += (c, p) => OrderDesk.Cancel(orderId);
 
                 buy = FoButton.Add(
                     back,
                     "",
                     Strings.Get("investments.buy"),
-                    new Vector2(64f, 26f),
-                    0.8f
+                    new Vector2(70f, 28f),
+                    0.85f
                 );
-                buy.relativePosition = new Vector3(width - 140f, 7f);
-                buy.eventClick += (c, p) =>
-                    BuySellInvestmentPanel.ShowPanel((byte)slot, BuySellInvestmentPanel.Mode.Buy);
+                buy.relativePosition = new Vector3(width - 160f, 9f);
+                buy.eventClick += (c, p) => Open(BuySellInvestmentPanel.Mode.Buy);
                 sell = FoButton.Add(
                     back,
                     "",
                     Strings.Get("investments.sell"),
-                    new Vector2(64f, 26f),
-                    0.8f
+                    new Vector2(70f, 28f),
+                    0.85f
                 );
-                sell.relativePosition = new Vector3(width - 70f, 7f);
-                sell.eventClick += (c, p) =>
-                    BuySellInvestmentPanel.ShowPanel((byte)slot, BuySellInvestmentPanel.Mode.Sell);
+                sell.relativePosition = new Vector3(width - 82f, 9f);
+                sell.eventClick += (c, p) => Open(BuySellInvestmentPanel.Mode.Sell);
             }
 
             public void Destroy()
@@ -508,6 +621,83 @@ namespace FinanceOverhaul
                 if (sparkTexture != null)
                 {
                     UnityEngine.Object.Destroy(sparkTexture);
+                }
+            }
+
+            public string Key
+            {
+                get { return key; }
+            }
+
+            /// <summary>The pointer is over this stock's 30-day line (inside the view).</summary>
+            public bool OverLine(Vector2 at, UIComponent view)
+            {
+                if (!back.isVisible || !spark.isVisible || slot <= 0 || locked)
+                {
+                    return false;
+                }
+
+                Vector3 p = spark.absolutePosition;
+                Vector3 v = view.absolutePosition;
+                return at.x >= p.x
+                    && at.x <= p.x + spark.width
+                    && at.y >= Mathf.Max(p.y, v.y)
+                    && at.y <= Mathf.Min(p.y + spark.height, v.y + view.height);
+            }
+
+            /// <summary>As a double click on the stock's name (game UI tests).</summary>
+            public void DoubleClick()
+            {
+                Open(BuySellInvestmentPanel.Mode.Buy);
+            }
+
+            private void Open(BuySellInvestmentPanel.Mode mode)
+            {
+                if (slot > 0 && !locked)
+                {
+                    HideChart();
+                    BuySellInvestmentPanel.ShowPanel((byte)slot, mode);
+                }
+            }
+
+            private static UIComponent Tooltip()
+            {
+                EconomyPanel economy = ToolsModifierControl.economyPanel;
+                return economy == null ? null : economy.component.Find("InvestmentTooltip");
+            }
+
+            public void ShowChart()
+            {
+                UIComponent tip = Tooltip();
+                InvestmentTooltip shows =
+                    tip == null ? null : tip.GetComponent<InvestmentTooltip>();
+                if (shows == null || slot <= 0 || locked)
+                {
+                    return;
+                }
+
+                shows.SetInvestment((byte)slot);
+                // Beside the line, as the game puts it beside a card; on the left near the edge.
+                Vector3 at = spark.absolutePosition;
+                float x = at.x + spark.width + 12f;
+                UIView view = back.GetUIView();
+                float screen = view == null ? Screen.width : view.fixedWidth;
+                if (x + tip.width > screen)
+                {
+                    x = at.x - 12f - tip.width;
+                }
+
+                tip.absolutePosition = new Vector3(x, back.absolutePosition.y);
+                tip.Show();
+                tip.BringToFront();
+            }
+
+            public static void HideChart()
+            {
+                UIComponent tip = Tooltip();
+                if (tip != null)
+                {
+                    tip.Hide();
                 }
             }
 
@@ -527,34 +717,41 @@ namespace FinanceOverhaul
                     Rename(row);
                 }
 
-                bool isHeading = row.IsHeading;
-                back.height =
-                    (isHeading ? InvestmentList.HeadingHeight : InvestmentList.RowHeight) - 4f;
-                back.color = isHeading ? FoTheme.Header : FoTheme.SectionFill;
+                InvestmentRowKind kind = row.Kind;
+                bool isStock = kind == InvestmentRowKind.Stock;
+                bool isOrder = kind == InvestmentRowKind.Order;
+                bool isHeading = kind == InvestmentRowKind.Heading;
+                back.height = row.Height - 4f;
+                back.color =
+                    isHeading ? FoTheme.Header
+                    : isOrder ? FoTheme.PanelAlt
+                    : FoTheme.SectionFill;
                 heading.isVisible = isHeading;
                 detail.isVisible = isHeading;
+                orderLine.isVisible = isOrder;
+                cancel.isVisible = isOrder;
                 foreach (UIComponent c in new UIComponent[] { coin, symbol, name })
                 {
-                    c.isVisible = !isHeading;
+                    c.isVisible = isStock;
                 }
 
+                MonitorQuote q = row.Stock;
+                slot = q == null ? 0 : q.Id;
+                locked = q != null && q.Locked;
                 // Every time: the "nothing changed" return below skips the rest.
-                buy.isVisible = !isHeading && !row.Stock.Locked;
-                sell.isVisible = !isHeading && row.Stock.Owned > 0;
-                if (isHeading)
+                buy.isVisible = isStock && !locked;
+                sell.isVisible = isStock && q.Owned > 0;
+                if (!isStock)
                 {
-                    heading.text = InvestmentList.Heading(row.Section);
-                    detail.text = InvestmentList.HeadingDetail(row.Section, all);
-                    detail.relativePosition = new Vector3(width - 12f - detail.width, 7f);
                     foreach (
                         UIComponent c in new UIComponent[]
                         {
+                            badge,
+                            holding,
                             spark,
                             price,
                             change,
-                            holding,
                             gain,
-                            orders,
                             lockLine,
                             lockTrack,
                             lockFill,
@@ -563,12 +760,23 @@ namespace FinanceOverhaul
                     {
                         c.isVisible = false;
                     }
+                }
 
+                if (isHeading)
+                {
+                    heading.text = InvestmentList.Heading(row.Section);
+                    detail.text = InvestmentList.HeadingDetail(row.Section, all);
+                    detail.relativePosition = new Vector3(width - 12f - detail.width, 7f);
                     return;
                 }
 
-                MonitorQuote q = row.Stock;
-                slot = q.Id;
+                if (isOrder)
+                {
+                    orderId = row.Order.Id;
+                    orderLine.text = InvestmentList.OrderLine(row.Order, OrderDesk.Today);
+                    return;
+                }
+
                 string signature =
                     q.Price.ToString("0.##")
                     + "|"
@@ -577,8 +785,6 @@ namespace FinanceOverhaul
                     + q.Owned
                     + "|"
                     + q.Spent
-                    + "|"
-                    + q.OpenOrders
                     + "|"
                     + q.Locked
                     + "|"
@@ -602,7 +808,11 @@ namespace FinanceOverhaul
 
                 symbol.text = q.Symbol;
                 name.text = q.Name;
-                bool locked = q.Locked;
+                badge.isVisible = q.Local;
+                badge.relativePosition = new Vector3(
+                    symbol.relativePosition.x + symbol.width + 8f,
+                    6f
+                );
                 lockLine.isVisible = locked;
                 lockTrack.isVisible = locked;
                 lockFill.isVisible = locked;
@@ -612,14 +822,14 @@ namespace FinanceOverhaul
                 if (locked)
                 {
                     lockLine.text = InvestmentList.LockLine(q);
-                    lockFill.width = 280f * Mathf.Clamp01(q.UnlockProgress);
+                    lockFill.width = LockWidth * Mathf.Clamp01(q.UnlockProgress);
                 }
                 else
                 {
                     Color32 colour = FoTheme.Change(StockMonitor.ChangeColour(q.ChangeRate));
                     FoSparkline.Draw(sparkTexture, q.History, colour, SparkScale + 1);
                     price.text = BondText.WholeMoney((long)Math.Round(q.Price * 100.0));
-                    price.relativePosition = new Vector3(500f - price.width, 11f);
+                    price.relativePosition = new Vector3(PriceRight - price.width, 3f);
                     change.text = StockMonitor.ChangeText(q.ChangeRate);
                     change.color = colour;
                 }
@@ -636,33 +846,30 @@ namespace FinanceOverhaul
                         sign > 0 ? FoTheme.GamePositive
                         : sign < 0 ? FoTheme.GameNegative
                         : FoTheme.GameValue;
-                }
-
-                string open = InvestmentList.Orders(q);
-                orders.isVisible = open != null;
-                if (open != null)
-                {
-                    orders.text = open;
+                    gain.relativePosition = new Vector3(PriceRight - gain.width, 45f);
                 }
             }
 
-            /// <summary>Names follow what the row shows, so a test finds "…Row-GGIBuy" wherever it scrolled.</summary>
             private void Rename(InvestmentRow row)
             {
-                string n = row.IsHeading
-                    ? Prefix + "Heading-" + row.Section
+                string n =
+                    row.Kind == InvestmentRowKind.Heading ? Prefix + "Heading-" + row.Section
+                    : row.Kind == InvestmentRowKind.Order ? Prefix + "Order-" + row.Order.Id
                     : Prefix + "Row-" + row.Stock.Symbol;
                 back.name = n;
                 symbol.name = n + "Symbol";
+                badge.name = n + "Badge";
                 name.name = n + "Name";
+                holding.name = n + "Holding";
                 heading.name = n + "Title";
                 detail.name = n + "Detail";
+                spark.name = n + "Spark";
                 price.name = n + "Price";
                 change.name = n + "Change";
-                holding.name = n + "Holding";
                 gain.name = n + "Gain";
-                orders.name = n + "Orders";
                 lockLine.name = n + "Lock";
+                orderLine.name = n + "Text";
+                cancel.name = n + "Cancel";
                 buy.name = n + "Buy";
                 sell.name = n + "Sell";
             }

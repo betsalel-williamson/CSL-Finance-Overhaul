@@ -1,8 +1,8 @@
 # Investments list and research (design)
 
 Status: **step 1 built 2026-11-25** behind the dev flag "Investments list and research" (see
-[Step 1 as built](#step-1-as-built-2026-11-25)); steps 2–6 not built. Figma UI Map band 20; band 18
-holds the earlier condensed-row sketches this grows from.
+[Step 1 as built](#step-1-as-built-2026-11-25-reworked-after-a-first-try)); steps 2–6 not built.
+Figma UI Map band 20; band 18 holds the earlier condensed-row sketches this grows from.
 
 ## Why
 
@@ -116,32 +116,47 @@ A throwaway dev spike put one list in place of the two in a running game (not ke
   purchase and a reopen, Buy and Sell open the dialog, a locked stock shows its bar, flag off gives
   the game's tab back.
 
-## Step 1 as built (2026-11-25)
+## Step 1 as built (2026-11-25, reworked after a first try)
 
-- **Flag:** Options → Feature flags → "Investments list and research" (dev builds; off and pinned
-  off in release builds). Off, the game's two lists are untouched; on, `InvestmentsList` hides the
-  page's five controls and shows the list; off again (or a hot reload) shows them again.
-- **Top bar:** All · Owned · Local tabs with their counts; the Stock Monitor's sorts (Change %,
-  Symbol, Price, Value held) and its direction button. The sort is kept for the session.
-- **Sections:** Your portfolio (its value and gain, "₡3,869,000 · +₡74,500"), Local companies (local
-  companies the city does not hold), All stocks (the rest, locked stocks last in A–Z order). A held
-  local company is in Your portfolio. Empty sections are left out.
-- **Rows:** the stock's coin, symbol and name (the game's description is the name's tooltip), the
-  30-day line, price, the change pill; for a holding "500 sh · avg ₡6,616" and the gain with its
-  percentage; an orders badge ("2 orders"); Buy (hidden on a locked stock) and Sell (only when held)
-  open the game's dialog. A locked stock shows "Locked · 30 / 50" and a bar towards it.
-- **Scrolling:** three rows a notch, the game's scrollbar; the stock at the top of the view stays
-  there when the list changes (a purchase, the daily update), and the place is kept when the panel
-  is closed and opened.
-- **Library:** `InvestmentList` (sections, filters, row places, keeping the place, wording) with
-  `InvestmentListTests`; `MarketQuotes` reads every stock for both the Monitor and this list.
-- **Checked:** game UI scenario 79 (the list replaces the two, filters, sort and direction, a
-  reopen, flag off); scenario 80 (TST: a purchase moves the stock into Your portfolio); the same
-  purchase checked on Oil in a city without TST. Scenarios 27, 52, 68 and 69 still pass.
-- **Not in step 1 (later steps):** the Watchlist and News tabs and the ★; a click on a row opening
-  the Stock Monitor (step 2, with Research); the OFFERING / LOCAL badges and the kinds' unlock bars
-  in Local companies (the game's cards keep them while the flag is off); measuring what the game's
-  hidden cards cost a frame with many stocks.
+The first version split All into Your portfolio and All stocks. Tried in game, that read as if the
+list were two lists again: the player decided **All is one list**, sorted as a whole, and sections
+appear only when asked for. Rows follow Figma band 18, "Condensed B".
+
+- **Flag:** Options → Feature flags → "Investments list and research" (dev builds; pinned off in
+  release builds). On, `InvestmentsList` hides the page's five controls and shows the list; off
+  again (or a hot reload) shows them again.
+- **Top bar:** tabs All · Owned · Local · Locked with their counts; **Group** (pressed: "Ungroup")
+  splits the stocks shown into Your portfolio (value and gain), Local companies and All stocks; the
+  Stock Monitor's sorts and direction. A new tab, grouping or sort starts from the top.
+- **Rows (Condensed B):** coin, symbol (LOCAL badge for a local company) and name; for a holding a
+  third line "500 shares · avg ₡6,616"; the 30-day line; price above the change pill, and for a
+  holding the gain under it; Buy (not on a locked stock) and Sell (only when held). A locked stock
+  shows "Locked · 30 / 50" and a bar, last in the list. **Open orders** sit under their stock, one
+  line each ("Open order · SELL (stop-loss) · 500 shares if the price drops to ₡6,800 · 54 days
+  left") with Cancel.
+- **Hover:** over a stock's 30-day line the game's own stock tooltip opens with its large "Share
+  value" chart, beside the line (left of it near the screen edge), as over the game's cards; it
+  closes when the pointer leaves. The list reads the mod's pointer each frame, so game UI tests can
+  hover.
+- **Double click** on a stock's name, symbol or coin opens the game's dialog (Buy).
+- **Buy | Sell in the dialog:** the Invest dialog has a Buy | Sell switch above the order-type tabs
+  (`OrderTicket`): it turns the open dialog to the other side in place, through the game's own
+  set-up for that side, with that side's order types (Buy now, Limit / Sell now, Stop-loss,
+  Take-profit, Trailing stop). Sell is off, with a tooltip, when the city holds none. This works for
+  the game's own lists too.
+- **Scrolling:** three plain rows a notch, the game's scrollbar; the line at the top of the view
+  stays there when the list changes (a purchase, the daily update), and the place is kept when the
+  panel is closed and opened.
+- **Library:** `InvestmentList` (tabs, grouping, order lines, line heights, places, keeping the
+  place, wording) with `InvestmentListTests`; `MarketQuotes` reads every stock for both the Monitor
+  and this list.
+- **Checked:** game UI scenario 79 (the list replaces the two, tabs, Group / Ungroup, sort and
+  direction, a reopen, flag off); scenario 80 (TST: hover chart, double click, a purchase, grouping,
+  the Buy | Sell switch), the same steps run on Oil in a city without TST. The scenarios that check
+  the game's own lists switch the new list off for their run and put it back.
+- **Not yet:** the Watchlist and News tabs and the ★; a click on a row opening the Stock Monitor
+  (step 2, with Research); the kinds' unlock bars in Local companies (the game's cards keep them
+  while the flag is off); measuring what the game's hidden cards cost a frame with many stocks.
 
 ## Open questions
 

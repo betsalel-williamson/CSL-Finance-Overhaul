@@ -1,6 +1,8 @@
 # Needs the dev test stock (TST). Trades 10 TST and places orders but advances no days (nothing
 # fills); cleanup cancels them, sells back and restores the player's monitor settings.
 name with open buy and sell orders, the Stock Monitor list, detail and Your Portfolio cards keep every text inside its box
+# the game's own Investments lists, whatever the "Investments list and research" flag says
+investments-list off
 monitor remember
 set-price TST 100
 show-buy TST
@@ -51,6 +53,7 @@ wait 1
 scroll-into-view FinanceOverhaulOpenOrderRow-$order
 expect-no-overflow FinanceOverhaulOpenOrderRow-$order
 cleanup:
+investments-list restore
 cancel-new-orders
 sell-back TST 10
 set-price TST 100

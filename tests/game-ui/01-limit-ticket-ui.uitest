@@ -19,7 +19,7 @@ expect-no-overflow
 # Long numbers must still fit inside the window.
 type FinanceOverhaulShareAmountField 99999
 type FinanceOverhaulLimitPriceField 9999999
-expect-text FinanceOverhaulLimitPriceField 9999999
+expect-text FinanceOverhaulLimitPriceField 9,999,999
 expect-no-overflow
 capture limit-ticket
 click FinanceOverhaulOrderTab-Market

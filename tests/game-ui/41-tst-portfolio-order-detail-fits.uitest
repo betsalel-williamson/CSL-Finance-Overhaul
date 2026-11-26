@@ -1,6 +1,8 @@
 # Needs the dev test stock (TST). Trades 10 TST and places sell orders but advances no days
 # (nothing fills); cleanup cancels them and sells back.
 name every Your Portfolio order card shows its whole detail line (long prices, trailing stop) clear of its Cancel button
+# the game's own Investments lists, whatever the "Investments list and research" flag says
+investments-list off
 set-price TST 100
 show-buy TST
 type FinanceOverhaulShareAmountField 10
@@ -44,6 +46,7 @@ expect-no-overflow FinanceOverhaulOpenOrderRow-$order
 expect-no-overlap FinanceOverhaulOpenOrderDetail-$order FinanceOverhaulOpenOrderCancel-$order
 capture portfolio-order-detail-cards
 cleanup:
+investments-list restore
 cancel-new-orders
 sell-back TST 10
 set-price TST 100

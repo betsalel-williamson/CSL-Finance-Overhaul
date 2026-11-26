@@ -2,6 +2,8 @@
 # with a slot open say so; at level 2 they say what they said before. The level is only what this
 # scenario's IPOs see: the city's own Stock Exchange is untouched (both are logged).
 name local ipos: below Stock Exchange level 2 the cards say it must grow; at level 2 they do not
+# the game's own Investments lists, whatever the "Investments list and research" flag says
+investments-list off
 local-ipos on
 ipo-scan
 ipo-exchange-level 1
@@ -19,6 +21,7 @@ ipo-exchange-level 2
 wait 1.5
 expect-exchange-note off
 cleanup:
+investments-list restore
 close-economy
 ipo-exchange-level real
 local-ipos restore

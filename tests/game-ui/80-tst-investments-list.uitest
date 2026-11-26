@@ -1,8 +1,9 @@
-# Needs the dev test stock (TST) in a test save. The one sectioned list in Economy → Investments:
-# a purchase moves TST from All stocks into Your portfolio with its holding and gain, Buy on its
-# row opens the game's dialog, and the stock at the top of the view stays there through the
-# purchase. Selling the shares back moves it out again.
-name investments list: a purchase moves the stock into Your portfolio and the list keeps its place
+# Needs the dev test stock (TST) in a test save. The one list in Economy → Investments: over a
+# stock's 30-day line the game's stock tooltip opens with its large chart; a double click on its
+# name opens the game's dialog; a purchase gives its line the holding (shares, avg cost, gain) and
+# Sell, and with Group on it moves into Your portfolio; in the dialog Buy | Sell switches sides in
+# place. Selling the shares back in cleanup puts it back.
+name investments list: hover chart, double click, a purchase, grouping and the Buy | Sell switch
 close-economy
 investments-list on
 set-price TST 100
@@ -13,17 +14,48 @@ wait 1.5
 # from the top, whatever an earlier visit left
 investments-scroll -100000
 expect-investments All TST
+hover FinanceOverhaulInvestmentsRow-TSTSpark 0.5 0.5
+wait 0.3
+expect-visible InvestmentTooltip
+capture investments-list-hover-chart
+hover off
+wait 0.3
+expect-hidden InvestmentTooltip
+investments-double-click TST
+wait 1
+expect-visible FinanceOverhaulOrderTab-SideBuy
+expect-visible FinanceOverhaulOrderTab-Limit
+close-dialog
+wait 0.5
 click FinanceOverhaulInvestmentsRow-TSTBuy
 wait 1
 type FinanceOverhaulShareAmountField 4
 click Button
 wait 1.5
 expect-owned-delta TST 4
-expect-investments Portfolio TST
-expect-text FinanceOverhaulInvestmentsRow-TSTHolding 4 sh · avg ₡100
+expect-investments All TST
+expect-text FinanceOverhaulInvestmentsRow-TSTHolding 4 shares · avg ₡100
 expect-visible FinanceOverhaulInvestmentsRow-TSTSell
-expect-visible FinanceOverhaulInvestmentsHeading-Portfolio
 capture investments-list-tst-held
+click FinanceOverhaulInvestmentsGroup
+wait 0.5
+investments-scroll -100000
+expect-investments Portfolio TST
+expect-visible FinanceOverhaulInvestmentsHeading-Portfolio
+click FinanceOverhaulInvestmentsGroup
+wait 0.5
+# the dialog turns from Buy to Sell and back without closing
+click FinanceOverhaulInvestmentsRow-TSTBuy
+wait 1
+click FinanceOverhaulOrderTab-SideSell
+wait 0.5
+expect-visible FinanceOverhaulOrderTab-StopLossSell
+expect-hidden FinanceOverhaulOrderTab-Limit
+capture invest-dialog-sell-side
+click FinanceOverhaulOrderTab-SideBuy
+wait 0.5
+expect-visible FinanceOverhaulOrderTab-Limit
+close-dialog
 cleanup:
 sell-back TST 4
 set-price TST 100

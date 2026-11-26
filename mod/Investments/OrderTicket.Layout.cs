@@ -112,6 +112,19 @@ namespace FinanceOverhaul
             buyStats = dark.Find("PanelBuyStats");
             sellStats = dark.Find("PanelSellStats");
 
+            // Buy | Sell switch: the side, then the order types for that side.
+            sides = dark.AddUIComponent<UIPanel>();
+            sides.name = SidesName;
+            sides.size = new Vector2(dark.width, 38f);
+            sideBuy = AddTab(sides, Strings.Get("investments.buy"));
+            sideBuy.name = TabPrefix + "SideBuy";
+            sideBuy.relativePosition = new Vector3(26f, 6f);
+            sideBuy.eventClick += (c, p) => SwitchSide(true);
+            sideSell = AddTab(sides, Strings.Get("investments.sell"));
+            sideSell.name = TabPrefix + "SideSell";
+            sideSell.relativePosition = new Vector3(26f + 120f + 8f, 6f);
+            sideSell.eventClick += (c, p) => SwitchSide(false);
+
             // Tabs row above the share amount; one button per (mode, kind).
             tabs = dark.AddUIComponent<UIPanel>();
             tabs.name = TabsName;
@@ -181,6 +194,7 @@ namespace FinanceOverhaul
 
             // Place both just around the slider block (autoLayout follows zOrder).
             tabs.zOrder = slider.zOrder;
+            sides.zOrder = tabs.zOrder;
             pricePanel.zOrder = slider.zOrder + 1;
             ModLog.Info("order ticket: attached (buy and sell order types)");
         }
@@ -252,6 +266,18 @@ namespace FinanceOverhaul
             }
 
             bool buy = IsBuyMode(owner);
+            if (sideBuy != null && sideSell != null)
+            {
+                bool canSell = Owned((byte)IdField.GetValue(owner)) > 0;
+                sideBuy.normalBgSprite = buy ? "ButtonMenuPressed" : "ButtonMenu";
+                sideBuy.focusedBgSprite = sideBuy.normalBgSprite;
+                sideSell.normalBgSprite = buy ? "ButtonMenu" : "ButtonMenuPressed";
+                sideSell.focusedBgSprite = sideSell.normalBgSprite;
+                sideSell.isEnabled = canSell || !buy;
+                sideSell.tooltip =
+                    canSell || !buy ? string.Empty : Strings.Get("order.side.sellNone");
+            }
+
             float x = 26f;
             foreach (Tab t in AllTabs)
             {
@@ -293,7 +319,8 @@ namespace FinanceOverhaul
             // no tabs row, the dialog is the vanilla one.
             tabs.isVisible = AnyOrderTab(buy);
             pricePanel.isVisible = active.HasValue;
-            float wanted = tabs.isVisible ? tabs.height : 0f;
+            float wanted =
+                (tabs.isVisible ? tabs.height : 0f) + (sides == null ? 0f : sides.height);
             if (active.HasValue)
             {
                 wanted += pricePanel.height;
@@ -356,7 +383,7 @@ namespace FinanceOverhaul
 
         private static void RemoveStale(UIComponent parent)
         {
-            UiCleanup.RemoveChildrenNamed(parent, TabsName, PriceName);
+            UiCleanup.RemoveChildrenNamed(parent, TabsName, SidesName, PriceName);
         }
 
         private static void Destroy(UIComponent c)

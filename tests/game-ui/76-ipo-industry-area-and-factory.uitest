@@ -6,6 +6,8 @@
 # profit is fixed at ₡5,000 a week for the scenario (ipo-site-profit), whatever the city's week was.
 # Nothing in the city is touched: lost buildings are only treated as lost.
 name local ipos: an industry area and a unique factory list; a lost area waits and gets its home back
+# the game's own Investments lists, whatever the "Investments list and research" flag says
+investments-list off
 local-ipos on
 # the city's own counts are set aside and put back at the end: the fixed profit must not count
 ipo-forget
@@ -38,6 +40,7 @@ wait 1.5
 expect-company-first
 capture ipo-factory-company
 cleanup:
+investments-list restore
 close-economy
 ipo-dialog close
 ipo-site-profit real

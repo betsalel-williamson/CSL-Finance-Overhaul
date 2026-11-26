@@ -99,6 +99,8 @@ namespace FinanceOverhaul
             public static readonly MethodInfo GetMaximumShareCount = Method("GetMaximumShareCount");
             public static readonly MethodInfo OnClosed = Method("OnClosed");
             public static readonly MethodInfo UpdatePriceNumbers = Method("UpdatePriceNumbers");
+            public static readonly MethodInfo SetInvestment = Method("SetInvestment");
+            public static readonly FieldInfo VerticalLayout = Field("m_verticalLayoutPanel");
 
             private static FieldInfo Field(string name)
             {

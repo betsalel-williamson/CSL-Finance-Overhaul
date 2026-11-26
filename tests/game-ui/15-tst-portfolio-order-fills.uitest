@@ -1,5 +1,7 @@
 # Needs the dev test stock (TST) in a test save.
 name a filled order leaves Open orders and the shares appear in Your Portfolio
+# the game's own Investments lists, whatever the "Investments list and research" flag says
+investments-list off
 set-price TST 100
 run-days 1
 remember TST
@@ -20,6 +22,7 @@ expect-hidden FinanceOverhaulOpenOrderRow-$order
 expect-owned-delta TST 6
 capture portfolio-after-fill
 cleanup:
+investments-list restore
 cancel-new-orders
 sell-back TST 6
 set-price TST 100

@@ -1,4 +1,6 @@
 name Your Portfolio stays at the end of its list when the day changes and the order cards are redrawn
+# the game's own Investments lists, whatever the "Investments list and research" flag says
+investments-list off
 show-buy Oil
 click FinanceOverhaulOrderTab-Limit
 type FinanceOverhaulShareAmountField 1
@@ -32,6 +34,7 @@ click FinanceOverhaulOpenOrderCancel-$order
 wait 1
 expect-at-bottom OwnedInvestmentsScrollablePanel
 cleanup:
+investments-list restore
 cancel-new-orders
 close-dialog
 close-economy

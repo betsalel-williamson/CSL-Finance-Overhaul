@@ -5,7 +5,7 @@ using FinanceOverhaul.Core; // OrderKind, OrderText, ShareAmountInput, Strings, 
 using UnityEngine; // Color32
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
-//   EconomyManager
+//   EconomyManager, Investment, InvestmentAI
 
 namespace FinanceOverhaul
 {
@@ -23,6 +23,7 @@ namespace FinanceOverhaul
     public static partial class OrderTicket
     {
         public const string TabsName = "FinanceOverhaulOrderTabs";
+        public const string SidesName = "FinanceOverhaulOrderSides";
         public const string PriceName = "FinanceOverhaulLimitPrice";
         public const string TabPrefix = "FinanceOverhaulOrderTab-";
         public const string PriceFieldName = "FinanceOverhaulLimitPriceField";
@@ -103,6 +104,9 @@ namespace FinanceOverhaul
         private static BuySellInvestmentPanel owner;
         private static UIPanel dark;
         private static UIPanel tabs;
+        private static UIPanel sides;
+        private static UIButton sideBuy;
+        private static UIButton sideSell;
         private static UIPanel pricePanel;
         private static UILabel caption;
         private static UITextField priceField;
@@ -123,6 +127,8 @@ namespace FinanceOverhaul
             get
             {
                 return ModeField != null
+                    && GameInternals.BuySell.SetInvestment != null
+                    && GameInternals.BuySell.VerticalLayout != null
                     && IdField != null
                     && ButtonField != null
                     && SliderValueField != null
@@ -391,6 +397,7 @@ namespace FinanceOverhaul
             }
 
             Destroy(tabs);
+            Destroy(sides);
             Destroy(pricePanel);
             foreach (Tab t in AllTabs)
             {
@@ -398,6 +405,9 @@ namespace FinanceOverhaul
             }
 
             tabs = null;
+            sides = null;
+            sideBuy = null;
+            sideSell = null;
             pricePanel = null;
             caption = null;
             priceField = null;
@@ -448,6 +458,53 @@ namespace FinanceOverhaul
 
             Relayout();
             Refresh();
+        }
+
+        /// <summary>
+        /// The Buy | Sell switch: the open dialog turns to the other side in place, as the game
+        /// would open it for that side (its own SetInvestment and layout), then the ticket is
+        /// laid out again. Sell needs shares to sell.
+        /// </summary>
+        private static void SwitchSide(bool buy)
+        {
+            try
+            {
+                if (owner == null || IsBuyMode(owner) == buy)
+                {
+                    return;
+                }
+
+                byte id = (byte)IdField.GetValue(owner);
+                if (!buy && Owned(id) == 0)
+                {
+                    return;
+                }
+
+                ModeField.SetValue(
+                    owner,
+                    buy ? BuySellInvestmentPanel.Mode.Buy : BuySellInvestmentPanel.Mode.Sell
+                );
+                GameInternals.BuySell.SetInvestment.Invoke(owner, new object[] { id });
+                var layout = GameInternals.BuySell.VerticalLayout.GetValue(owner) as UIPanel;
+                if (layout != null)
+                {
+                    layout.FitChildrenVertically();
+                }
+
+                owner.component.FitChildrenVertically();
+                Attach(owner);
+            }
+            catch (Exception ex)
+            {
+                LogOnce("order ticket: buy / sell switch failed: " + ex.Message);
+            }
+        }
+
+        private static uint Owned(byte id)
+        {
+            Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
+            InvestmentAI ai = buffer[id].Info == null ? null : buffer[id].Info.m_investmentAI;
+            return ai == null ? 0u : ai.OwnedCount(ref buffer[id]);
         }
 
         private static bool IsBuyMode(BuySellInvestmentPanel panel)

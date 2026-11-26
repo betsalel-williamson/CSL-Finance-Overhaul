@@ -1,4 +1,6 @@
 name an open order is an entry of Your Portfolio, under its holding, and can be cancelled there
+# the game's own Investments lists, whatever the "Investments list and research" flag says
+investments-list off
 # The card goes under its holding, so hold one share whatever the city owned before.
 remember Oil
 show-buy Oil
@@ -31,6 +33,7 @@ wait 1
 expect-orders-delta 0
 expect-hidden FinanceOverhaulOpenOrderRow-$order
 cleanup:
+investments-list restore
 cancel-new-orders
 sell-back Oil 1
 close-dialog
