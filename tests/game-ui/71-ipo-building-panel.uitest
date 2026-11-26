@@ -46,6 +46,11 @@ expect-visible FinanceOverhaulBuildingSell
 expect-visible FinanceOverhaulBuildingGain
 expect-no-overflow FinanceOverhaulBuildingListing
 capture building-panel-trading
+# a click anywhere on the listing (not its buttons) opens the Invest dialog with the stock's stats
+click FinanceOverhaulBuildingListing
+wait 1
+expect-visible FinanceOverhaulOrderInfo
+close-dialog
 # the Invest dialog of a local company has View headquarters: it closes the dialog and shows the
 # building with its info panel, as the IPO dialog does; the Economy window closes too
 show-economy

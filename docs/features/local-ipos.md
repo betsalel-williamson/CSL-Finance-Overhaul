@@ -1034,6 +1034,16 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
   building with its info panel, as the IPO dialog's button does (without the fireworks). It is
   disabled with a tooltip while the headquarters is lost or being rebuilt, and hidden for the game's
   own stocks. Both dialogs use `CompanyHome.Show`. Scenario 71 opens it from Economy and clicks it.
+- **Prices froze with Local IPOs off (fixed 2026-11-26):** companies already listed stay listed
+  whatever the Options flag says, but the daily step (scan, draw, prices) only ran with the flag on,
+  so with it off their prices never moved: a 30-day chart of one flat line. Now, with the flag off
+  and a company listed, the step still runs with new listings off
+  (`IpoEngine.Step(…, newListings: false)`): no IPO is drawn and a scheduled one is cancelled, but
+  prices move, offerings open, headquarters are followed and buy-outs happen (`IpoEngineTests`).
+- **The listing section opens the Invest dialog (2026-11-26):** a click anywhere on a building
+  panel's listing section (not its Buy, Sell or Show in Investments) opens the game's Invest dialog
+  on Buy (turning to Sell when there is nothing to buy), with the chart, change and stats; the
+  section lightens under the mouse (`FoTheme.SectionFillHover`). Scenario 71 clicks it.
 - **Farming area missed (fixed 2026-11-26):** the game can leave an industry area's main-gate note
   at 0 while its main building stands (seen on a level 5 farming area), and the scan skipped such
   areas, so they never went public. `IndustrySites.MainBuilding` now searches the area's buildings

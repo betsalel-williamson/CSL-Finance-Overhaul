@@ -241,6 +241,53 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
+        public void WithLocalIposSwitchedOffListedCompaniesKeepTradingAndNoneIsDrawn()
+        {
+            // A company already trading; then Local IPOs is switched off in Options.
+            IpoRules rules = Certain();
+            var registry = new CompanyRegistry();
+            CandidateBook book = Offices(5, rules);
+            var dice = new IpoDice(11UL);
+            var city = new City();
+            int day = 100;
+            for (; day < 200 && registry.Companies.Count < 1; day++)
+            {
+                IpoEngine.Step(registry, book, OfficeKind(10), 6, day, rules, dice, city);
+            }
+
+            LocalCompany company = Assert.Single(registry.Companies);
+            for (; company.Status != CompanyStatus.Trading; day++)
+            {
+                IpoEngine.Step(registry, book, OfficeKind(10), 6, day, rules, dice, city);
+            }
+
+            // Thirty days with new listings off: the price moves (not one flat line), and no
+            // second company is drawn although every slot is open and the draw is certain.
+            var prices = new HashSet<long>();
+            for (int end = day + 30; day < end; day++)
+            {
+                List<IpoEvent> events = IpoEngine.Step(
+                    registry,
+                    book,
+                    OfficeKind(10),
+                    6,
+                    day,
+                    rules,
+                    dice,
+                    city,
+                    IpoEngine.MaxExchangeLevel,
+                    newListings: false
+                );
+                Assert.DoesNotContain(events, e => e.Kind == IpoEventKind.Announced);
+                prices.Add(company.PriceCents);
+            }
+
+            Assert.Single(registry.Companies);
+            Assert.False(registry.IpoScheduled);
+            Assert.True(prices.Count > 20, "the price moved on " + prices.Count + " of 30 days");
+        }
+
+        [Fact]
         public void OnlyTheLargestEmployersAreDrawnAndTheBiggestMostOften()
         {
             // Fifteen offices of 10 to 150 workers: the draw picks from the ten largest only

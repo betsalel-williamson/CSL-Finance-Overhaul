@@ -137,9 +137,14 @@ namespace FinanceOverhaul
         }
 
         /// <summary>Postfix target: EconomyManager.SimulationStepInvestments (simulation thread).</summary>
+        /// <remarks>
+        /// With Local IPOs switched off no IPO is drawn, but the companies already listed (they
+        /// stay listed whatever the flag says) keep trading: their prices move every day.
+        /// </remarks>
         public static void OnInvestmentsStepped()
         {
-            if (!Enabled)
+            bool newListings = Enabled;
+            if (!newListings && !AnyListed())
             {
                 return;
             }
@@ -152,7 +157,16 @@ namespace FinanceOverhaul
 
             lastScanDay = today;
             Scan();
-            Step(today);
+            Step(today, newListings);
+        }
+
+        private static bool AnyListed()
+        {
+            lock (Sync)
+            {
+                Book();
+                return registry.Companies.Count > 0;
+            }
         }
 
         /// <summary>The whole local board as of the last scan, for Economy → Investments.</summary>
@@ -233,7 +247,7 @@ namespace FinanceOverhaul
         }
 
         /// <summary>Simulation thread: one day of the library's engine, then its events.</summary>
-        private static void Step(int today)
+        private static void Step(int today, bool newListings = true)
         {
             List<IpoEvent> events;
             lock (Sync)
@@ -248,7 +262,8 @@ namespace FinanceOverhaul
                     Current,
                     dice,
                     Source,
-                    ExchangeLevel()
+                    ExchangeLevel(),
+                    newListings
                 );
             }
 

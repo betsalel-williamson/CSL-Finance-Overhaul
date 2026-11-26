@@ -273,6 +273,9 @@ namespace FinanceOverhaul.Core
     /// 6. A company whose grace period is over closes: the city is paid the price.
     /// 7. A scheduled buy-out whose day has come pays the premium and delists the company.
     /// Pure: the game side lists, pays and announces from the returned events.
+    /// With <c>newListings</c> false (Local IPOs switched off in Options) no IPO is drawn and a
+    /// scheduled one is cancelled, but the companies already listed carry on: their prices
+    /// move, their offerings open, they move or close and can be bought out.
     /// </summary>
     public static class IpoEngine
     {
@@ -291,11 +294,12 @@ namespace FinanceOverhaul.Core
             IpoRules rules,
             IpoDice dice,
             IBusinessSource source,
-            int exchangeLevel = MaxExchangeLevel
+            int exchangeLevel = MaxExchangeLevel,
+            bool newListings = true
         )
         {
             var events = new List<IpoEvent>();
-            bool exchangeAllows = IpoBoard.ExchangeAllows(exchangeLevel, rules);
+            bool exchangeAllows = IpoBoard.ExchangeAllows(exchangeLevel, rules) && newListings;
             if (today >= registry.NextDrawDay)
             {
                 registry.NextDrawDay = today + IpoCalendar.PeriodDays(rules);

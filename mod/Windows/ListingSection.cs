@@ -1,5 +1,7 @@
 using System; // DateTime
-using ColossalFramework.UI; // UIButton, UIComponent, UILabel, UIPanel, UISprite, UITextureSprite
+// ColossalFramework.UI: UIButton, UIComponent, UILabel, UIMouseEventParameter, UIPanel, UISprite,
+//   UITextureSprite
+using ColossalFramework.UI;
 using FinanceOverhaul.Core; // CompanyPanelText, LocalCompany, StockMonitor, Strings
 // UnityEngine: Color32, FilterMode, Mathf, Texture2D, TextureFormat, TextureWrapMode, Vector2,
 //   Vector3
@@ -15,7 +17,8 @@ namespace FinanceOverhaul
     /// The listing section a listed company's info panel shows (Figma UI Map band 19, designs
     /// B and C): the coin, symbol and badge, the price with its change and sparkline (or the
     /// offering note in the first week), the city's stake with its bar, and Buy, Sell and Show
-    /// in Investments. The host panel says where it goes; every control is named
+    /// in Investments; a click anywhere else on it opens the Invest dialog. The host panel says
+    /// where it goes; every control is named
     /// <c>prefix + part</c> ("…Badge", "…Stake") so game UI tests find it.
     /// </summary>
     public sealed class ListingSection
@@ -61,7 +64,25 @@ namespace FinanceOverhaul
             section.color = FoTheme.SectionFill;
             section.size = new Vector2(width, CompanyPanelText.SectionHeight);
             section.isVisible = false;
+            // A click anywhere on the stock (not on its own buttons) opens the Invest dialog,
+            // with its chart, stats and orders; it lights up under the mouse to say so. The
+            // game sends a quick second click as a double click: that opens it too.
+            section.eventClick += (c, p) => OnSectionClick(p);
+            section.eventDoubleClick += (c, p) => OnSectionClick(p);
+            section.eventMouseEnter += (c, p) => section.color = FoTheme.SectionFillHover;
+            section.eventMouseLeave += (c, p) => section.color = FoTheme.SectionFill;
             Build(prefix);
+        }
+
+        private void OnSectionClick(UIMouseEventParameter p)
+        {
+            if (p.source is UIButton)
+            {
+                return; // Buy, Sell and Show in Investments do their own thing
+            }
+
+            // On Buy; a dialog with nothing left to buy turns to Sell (OrderTicket).
+            Trade(BuySellInvestmentPanel.Mode.Buy);
         }
 
         /// <summary>The section itself, for the host to place.</summary>

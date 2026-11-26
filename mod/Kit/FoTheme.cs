@@ -189,6 +189,9 @@ namespace FinanceOverhaul
         /// <summary>A section inside the building panel.</summary>
         public static readonly Color32 SectionFill = new Color32(30, 36, 44, 255);
 
+        /// <summary>A section that opens something when clicked, under the mouse.</summary>
+        public static readonly Color32 SectionFillHover = new Color32(40, 48, 58, 255);
+
         // The Stock Exchange's LED boards (dot colours: LedPalette in the library).
 
         /// <summary>The board face behind the dots. Figma: color/ticker/board.</summary>
