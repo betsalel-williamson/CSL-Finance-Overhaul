@@ -139,11 +139,13 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
   closes when the pointer leaves. The list reads the mod's pointer each frame, so game UI tests can
   hover.
 - **Double click** on a stock's name, symbol or coin opens the game's dialog (Buy).
-- **Buy | Sell in the dialog:** the Invest dialog has a Buy | Sell switch above the order-type tabs
-  (`OrderTicket`): it turns the open dialog to the other side in place, through the game's own
-  set-up for that side, with that side's order types (Buy now, Limit / Sell now, Stop-loss,
-  Take-profit, Trailing stop). Sell is off, with a tooltip, when the city holds none. This works for
-  the game's own lists too.
+- **Buy | Sell in the dialog:** the Invest dialog has Buy | Sell toggle tabs above the order-type
+  tabs (`OrderTicket`, Kit `FoToggleTabs`, Figma component FO/ToggleTabs): two equal tabs joined
+  across the dialog in the art of the game's own tab strips (as the Economy panel's Taxes · Budget ·
+  Loans · Investments), the chosen side lit. Picking the other turns the open dialog to that side in
+  place, through the game's own set-up for it, with that side's order types (Buy now, Limit / Sell
+  now, Stop-loss, Take-profit, Trailing stop). Sell is disabled, with a tooltip, when the city holds
+  none. This works for the game's own lists too.
 - **Scrolling:** three plain rows a notch, the game's scrollbar; the line at the top of the view
   stays there when the list changes (a purchase, the daily update), and the place is kept when the
   panel is closed and opened.

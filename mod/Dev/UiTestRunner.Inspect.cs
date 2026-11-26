@@ -122,6 +122,18 @@ namespace FinanceOverhaul
                     yield return null;
                     break;
                 }
+                case "investments-scroll-to":
+                {
+                    // investments-scroll-to SYMBOL — that stock's line at the top of the list.
+                    InvestmentsList shown = InvestmentsList.Current;
+                    if (shown == null || !shown.ScrollTo(a))
+                    {
+                        r.Error = a + " is not in the investments list";
+                    }
+
+                    yield return null;
+                    break;
+                }
                 case "investments-double-click":
                 {
                     // investments-double-click SYMBOL — as a double click on that stock's name.

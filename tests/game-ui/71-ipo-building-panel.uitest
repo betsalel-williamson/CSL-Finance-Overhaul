@@ -31,6 +31,12 @@ expect-headquarters historical
 expect-headquarters locked
 capture building-panel-offering
 ipo-buy 250
+wait 1.5
+# bought into the offering: Buy and Sell side by side, so the dialog is always one click away
+expect-text FinanceOverhaulBuildingBadge OFFERING
+expect-visible FinanceOverhaulBuildingSell
+expect-no-overflow FinanceOverhaulBuildingListing
+capture building-panel-offering-held
 ipo-first-day
 wait 1.5
 expect-text FinanceOverhaulBuildingBadge TRADING

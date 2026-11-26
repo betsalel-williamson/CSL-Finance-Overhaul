@@ -235,9 +235,11 @@ namespace FinanceOverhaul
             barFill.width = Mathf.Max(0f, (width - 16f) * CompanyPanelText.StakeFraction(owned));
             barFill.isVisible = owned > 0;
 
-            // Offering: one wide gold Buy. Trading: Buy and Sell at the same size.
-            buy.text = CompanyPanelText.Buy(company, today);
-            buy.width = offering ? 200f : 96f;
+            // Offering, none held yet: one wide gold Buy. Otherwise Buy and Sell at the same size
+            // (gold while offering), so a city that bought in can always get back to the dialog.
+            buy.text = CompanyPanelText.Buy(company, today, owned);
+            bool wide = CompanyPanelText.WideBuy(company, today, owned);
+            buy.width = wide ? 200f : 96f;
             // Gold needs the game's white button art: its dark menu button turns gold to mud.
             string art = offering ? "ButtonWhite" : "ButtonMenu";
             buy.normalBgSprite = art;
@@ -254,7 +256,7 @@ namespace FinanceOverhaul
             buy.pressedTextColor = buy.textColor;
             buy.focusedTextColor = buy.textColor;
             buy.isEnabled = ai.AvailableForBuyingCount(ref buffer[slot]) > 0;
-            sell.isVisible = !offering;
+            sell.isVisible = !wide;
             sell.isEnabled = owned > 0;
             sell.relativePosition = new Vector3(8f + 96f + 6f, 88f);
         }

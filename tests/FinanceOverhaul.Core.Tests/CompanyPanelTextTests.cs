@@ -39,6 +39,11 @@ namespace FinanceOverhaul.Core.Tests
             );
             Assert.Null(CompanyPanelText.Gain(0, 0, 0));
             Assert.Equal("Buy at the offering price", CompanyPanelText.Buy(c, 102));
+            Assert.True(CompanyPanelText.WideBuy(c, 102, 0));
+            // Bought into the offering: Buy and Sell side by side, still at the offering price.
+            Assert.Equal("Buy", CompanyPanelText.Buy(c, 102, 1000));
+            Assert.False(CompanyPanelText.WideBuy(c, 102, 1000));
+            Assert.False(CompanyPanelText.WideBuy(c, 107, 0));
         }
 
         [Fact]

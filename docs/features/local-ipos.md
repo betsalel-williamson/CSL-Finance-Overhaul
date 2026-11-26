@@ -997,15 +997,18 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
   buy, and one gold "Buy at the offering price". From the first trading day it shows a TRADING
   badge, the listing date, the price with its change and 30-day line, "City holds 250 of 1,000
   shares · avg ₡432.00" with the gain and a bar towards the cap, and Buy and Sell at the same size.
-  "Show in Investments" opens Economy → Investments in both. Buy and Sell open the game's own
-  dialog. The mod only adds: the panel grows by the section's height, the game's rows keep their
-  place (the game ties the workers block to the panel's bottom edge, so the mod puts it back), and
-  for any other building, or once the company is gone, the panel is the game's own again. While the
-  company is listed the Historical Building tick is shown ticked and cannot be changed (a tooltip
-  says why); a headquarters that was unticked before gets its flag back. The coins show the game's
-  own icon for the kind of business (the zone icon, or the specialisation's), not the ticker symbol;
-  the Index, which has no building, keeps its symbol. The wording and the two states are
-  `CompanyPanelText`; scenario 71 checks both states and the way back.
+  Once the city holds shares in the offering week (even all it may hold), Buy (still gold, at the
+  offering price) and Sell stand side by side too, so the dialog is always one click away (fixed
+  2026-11-25: the single wide Buy greyed out at the cap and left nothing to click). "Show in
+  Investments" opens Economy → Investments in both. Buy and Sell open the game's own dialog. The mod
+  only adds: the panel grows by the section's height, the game's rows keep their place (the game
+  ties the workers block to the panel's bottom edge, so the mod puts it back), and for any other
+  building, or once the company is gone, the panel is the game's own again. While the company is
+  listed the Historical Building tick is shown ticked and cannot be changed (a tooltip says why); a
+  headquarters that was unticked before gets its flag back. The coins show the game's own icon for
+  the kind of business (the zone icon, or the specialisation's), not the ticker symbol; the Index,
+  which has no building, keeps its symbol. The wording and the two states are `CompanyPanelText`;
+  scenario 71 checks both states and the way back.
 - **The area's main building and the factory's panels (built 2026-11-25, `CompanySitePanels`; Figma
   UI Map band 19):** a listed industry area's main building (the game's service-building panel,
   which View headquarters opens) and a listed unique factory show the same listing section

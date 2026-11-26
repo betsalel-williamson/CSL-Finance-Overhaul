@@ -14,6 +14,7 @@ wait 1.5
 # from the top, whatever an earlier visit left
 investments-scroll -100000
 expect-investments All TST
+investments-scroll-to TST
 hover FinanceOverhaulInvestmentsRow-TSTSpark 0.5 0.5
 wait 0.3
 expect-visible InvestmentTooltip
@@ -27,11 +28,13 @@ expect-visible FinanceOverhaulOrderTab-SideBuy
 expect-visible FinanceOverhaulOrderTab-Limit
 close-dialog
 wait 0.5
+investments-scroll-to TST
 click FinanceOverhaulInvestmentsRow-TSTBuy
 wait 1
 type FinanceOverhaulShareAmountField 4
 click Button
 wait 1.5
+investments-scroll-to TST
 expect-owned-delta TST 4
 expect-investments All TST
 expect-text FinanceOverhaulInvestmentsRow-TSTHolding 4 shares · avg ₡100
@@ -45,6 +48,7 @@ expect-visible FinanceOverhaulInvestmentsHeading-Portfolio
 click FinanceOverhaulInvestmentsGroup
 wait 0.5
 # the dialog turns from Buy to Sell and back without closing
+investments-scroll-to TST
 click FinanceOverhaulInvestmentsRow-TSTBuy
 wait 1
 click FinanceOverhaulOrderTab-SideSell

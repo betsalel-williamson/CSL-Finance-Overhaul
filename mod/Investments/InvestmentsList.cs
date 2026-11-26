@@ -302,6 +302,21 @@ namespace FinanceOverhaul
             return false;
         }
 
+        /// <summary>Scrolls so that stock's line is at the top (game UI tests); false if not listed.</summary>
+        internal bool ScrollTo(string symbol)
+        {
+            for (int i = 0; i < rows.Count; i++)
+            {
+                if (rows[i].Kind == InvestmentRowKind.Stock && rows[i].Key == symbol)
+                {
+                    ScrollBy(tops[i] - offset);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>Moves the list by that many pixels (the wheel, game UI tests).</summary>
         internal void ScrollBy(float pixels)
         {

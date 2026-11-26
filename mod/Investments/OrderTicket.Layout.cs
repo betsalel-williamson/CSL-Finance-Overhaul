@@ -115,15 +115,18 @@ namespace FinanceOverhaul
             // Buy | Sell switch: the side, then the order types for that side.
             sides = dark.AddUIComponent<UIPanel>();
             sides.name = SidesName;
-            sides.size = new Vector2(dark.width, 38f);
-            sideBuy = AddTab(sides, Strings.Get("investments.buy"));
-            sideBuy.name = TabPrefix + "SideBuy";
-            sideBuy.relativePosition = new Vector3(26f, 6f);
-            sideBuy.eventClick += (c, p) => SwitchSide(true);
-            sideSell = AddTab(sides, Strings.Get("investments.sell"));
-            sideSell.name = TabPrefix + "SideSell";
-            sideSell.relativePosition = new Vector3(26f + 120f + 8f, 6f);
-            sideSell.eventClick += (c, p) => SwitchSide(false);
+            sides.size = new Vector2(dark.width, 42f);
+            sideTabs = FoToggleTabs.Add(
+                sides,
+                TabPrefix + "Side",
+                new[] { Strings.Get("investments.buy"), Strings.Get("investments.sell") },
+                new Vector2(dark.width - 52f, 34f),
+                1f,
+                i => SwitchSide(i == 0)
+            );
+            sideTabs.Panel.relativePosition = new Vector3(26f, 6f);
+            sideTabs[0].name = TabPrefix + "SideBuy";
+            sideTabs[1].name = TabPrefix + "SideSell";
 
             // Tabs row above the share amount; one button per (mode, kind).
             tabs = dark.AddUIComponent<UIPanel>();
@@ -266,16 +269,11 @@ namespace FinanceOverhaul
             }
 
             bool buy = IsBuyMode(owner);
-            if (sideBuy != null && sideSell != null)
+            if (sideTabs != null)
             {
                 bool canSell = Owned((byte)IdField.GetValue(owner)) > 0;
-                sideBuy.normalBgSprite = buy ? "ButtonMenuPressed" : "ButtonMenu";
-                sideBuy.focusedBgSprite = sideBuy.normalBgSprite;
-                sideSell.normalBgSprite = buy ? "ButtonMenu" : "ButtonMenuPressed";
-                sideSell.focusedBgSprite = sideSell.normalBgSprite;
-                sideSell.isEnabled = canSell || !buy;
-                sideSell.tooltip =
-                    canSell || !buy ? string.Empty : Strings.Get("order.side.sellNone");
+                sideTabs.Choose(buy ? 0 : 1);
+                sideTabs.SetEnabled(1, canSell || !buy, Strings.Get("order.side.sellNone"));
             }
 
             float x = 26f;

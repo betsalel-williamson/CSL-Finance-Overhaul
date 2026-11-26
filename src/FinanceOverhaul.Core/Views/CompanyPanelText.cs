@@ -150,7 +150,28 @@ namespace FinanceOverhaul.Core
         /// <summary>"Buy at the offering price" in the window, "Buy" after.</summary>
         public static string Buy(LocalCompany company, int today)
         {
-            return Offering(company, today) ? IpoDialogText.Buy : Strings.Get("investments.buy");
+            return Buy(company, today, 0);
+        }
+
+        /// <summary>
+        /// "Buy at the offering price" while the city holds none in the offering week, else "Buy"
+        /// (once it holds shares, Sell stands beside it).
+        /// </summary>
+        public static string Buy(LocalCompany company, int today, uint owned)
+        {
+            return WideBuy(company, today, owned)
+                ? IpoDialogText.Buy
+                : Strings.Get("investments.buy");
+        }
+
+        /// <summary>
+        /// One wide gold Buy and no Sell: the offering week, before the city holds any shares.
+        /// With shares (even all it may hold) Buy and Sell stand side by side, so the player can
+        /// always get back to the dialog.
+        /// </summary>
+        public static bool WideBuy(LocalCompany company, int today, uint owned)
+        {
+            return Offering(company, today) && owned == 0;
         }
 
         public static string Sell
