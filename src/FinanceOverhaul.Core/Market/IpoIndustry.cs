@@ -26,6 +26,9 @@ namespace FinanceOverhaul.Core
 
         /// <summary>The upkeep of its buildings this week.</summary>
         public long WeeklyUpkeepCents;
+
+        /// <summary>The people working in its buildings today (not its unique factories).</summary>
+        public int Workers;
     }
 
     /// <summary>What the mod reads from the game about one unique factory on one day.</summary>
@@ -48,6 +51,9 @@ namespace FinanceOverhaul.Core
 
         /// <summary>Its upkeep this week.</summary>
         public long WeeklyUpkeepCents;
+
+        /// <summary>The people working in it today.</summary>
+        public int Workers;
     }
 
     /// <summary>
@@ -62,13 +68,15 @@ namespace FinanceOverhaul.Core
     {
         /// <summary>
         /// Healthy today: at <see cref="IpoRules.AreaMinLevel"/> or higher, its main building
-        /// switched on, and profitable this week.
+        /// switched on, at least <see cref="IpoRules.MinWorkers"/> people working in it, and
+        /// profitable this week.
         /// </summary>
         public static bool AreaHealthy(AreaFacts facts, IpoRules rules)
         {
             return BusinessKinds.IsSpecialisedIndustry(facts.Kind)
                 && facts.Level >= rules.AreaMinLevel
                 && facts.MainBuildingActive
+                && facts.Workers >= rules.MinWorkers
                 && WeeklyProfitCents(
                     facts.WeeklySalesCents,
                     facts.WeeklyBoughtCents,
@@ -78,13 +86,15 @@ namespace FinanceOverhaul.Core
 
         /// <summary>
         /// Healthy today: switched on, no problem icons, its production slider at
-        /// <see cref="IpoRules.FactoryMinProductionPercent"/> or higher, and profitable this week.
+        /// <see cref="IpoRules.FactoryMinProductionPercent"/> or higher, at least
+        /// <see cref="IpoRules.MinWorkers"/> people working in it, and profitable this week.
         /// </summary>
         public static bool FactoryHealthy(FactoryFacts facts, IpoRules rules)
         {
             return facts.Active
                 && !facts.HasProblems
                 && facts.ProductionPercent >= rules.FactoryMinProductionPercent
+                && facts.Workers >= rules.MinWorkers
                 && WeeklyProfitCents(
                     facts.WeeklySalesCents,
                     facts.WeeklyBoughtCents,
@@ -155,6 +165,7 @@ namespace FinanceOverhaul.Core
             return BusinessKinds.IsSpecialisedIndustry(facts.Kind)
                 && facts.Level >= rules.AreaMinLevel
                 && facts.MainBuildingActive
+                && facts.Workers >= rules.MinWorkers
                 && averageWeeklyProfitCents > 0;
         }
 
@@ -168,6 +179,7 @@ namespace FinanceOverhaul.Core
             return facts.Active
                 && !facts.HasProblems
                 && facts.ProductionPercent >= rules.FactoryMinProductionPercent
+                && facts.Workers >= rules.MinWorkers
                 && averageWeeklyProfitCents > 0;
         }
 

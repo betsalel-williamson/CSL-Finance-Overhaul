@@ -1037,11 +1037,14 @@ namespace FinanceOverhaul
 
                     Vector3 p1 = c1.absolutePosition,
                         p2 = c2.absolutePosition;
+                    // Under half a pixel is a shared edge (layouts at half-pixel positions add
+                    // float noise), not an overlap anyone could see.
+                    const float Edge = 0.5f;
                     bool overlap =
-                        p1.x < p2.x + c2.width
-                        && p2.x < p1.x + c1.width
-                        && p1.y < p2.y + c2.height
-                        && p2.y < p1.y + c1.height;
+                        p1.x + Edge < p2.x + c2.width
+                        && p2.x + Edge < p1.x + c1.width
+                        && p1.y + Edge < p2.y + c2.height
+                        && p2.y + Edge < p1.y + c1.height;
                     if (overlap)
                     {
                         r.Error =

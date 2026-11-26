@@ -381,6 +381,14 @@ namespace FinanceOverhaul
                         a == "real" ? (long?)null : (long)ParseFloat(a, 0f);
                     break;
                 }
+                case "ipo-site-workers":
+                {
+                    // ipo-site-workers N|real — the workers every industry area and unique
+                    // factory reports until the scenario ends; real: the game's. A scenario
+                    // never assumes how many work at the city's areas and factories.
+                    IndustrySites.TestWorkers = a == "real" ? (int?)null : (int)ParseFloat(a, 0f);
+                    break;
+                }
                 case "ipo-credit-sites-again":
                 {
                     // ipo-credit-sites-again — dev: industry areas and unique factories are

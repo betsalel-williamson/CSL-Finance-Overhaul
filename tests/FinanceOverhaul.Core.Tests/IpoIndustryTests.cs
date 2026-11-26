@@ -21,6 +21,7 @@ namespace FinanceOverhaul.Core.Tests
                 WeeklySalesCents = 1_584_000,
                 WeeklyBoughtCents = 192_000,
                 WeeklyUpkeepCents = 496_000,
+                Workers = 419,
             };
         }
 
@@ -33,6 +34,7 @@ namespace FinanceOverhaul.Core.Tests
                 WeeklySalesCents = 384_000,
                 WeeklyBoughtCents = 100_000,
                 WeeklyUpkeepCents = 80_000,
+                Workers = 60,
             };
         }
 
@@ -66,6 +68,10 @@ namespace FinanceOverhaul.Core.Tests
             Assert.False(IpoIndustry.AreaHealthy(loss, rules));
             Assert.Equal(0L, IpoIndustry.AnnualCents(loss)); // a loss is no earnings, not negative
 
+            AreaFacts few = OilArea();
+            few.Workers = rules.MinWorkers - 1; // as large as any company must be
+            Assert.False(IpoIndustry.AreaHealthy(few, rules));
+
             AreaFacts zone = OilArea();
             zone.Kind = BusinessKind.Office; // only farming, forestry, oil and ore have areas
             Assert.False(IpoIndustry.AreaHealthy(zone, rules));
@@ -89,6 +95,13 @@ namespace FinanceOverhaul.Core.Tests
             FactoryFacts off = Bakery();
             off.Active = false;
             Assert.False(IpoIndustry.FactoryHealthy(off, rules));
+
+            // A factory of 14 workers is a workshop, not a listed company.
+            FactoryFacts small = Bakery();
+            small.Workers = 14;
+            Assert.False(IpoIndustry.FactoryHealthy(small, rules));
+            small.Workers = rules.MinWorkers;
+            Assert.True(IpoIndustry.FactoryHealthy(small, rules));
 
             FactoryFacts loss = Bakery();
             loss.WeeklyBoughtCents = 400_000;
@@ -365,7 +378,7 @@ namespace FinanceOverhaul.Core.Tests
             };
             BoardView board = IpoCardText.View(kinds, new CompanyRegistry(), 9, 0, rules);
             Assert.Equal(
-                "No factory has been healthy for a year yet.",
+                "A factory needs 45 workers and a steady year to list.",
                 IpoCardText.Note(board.Kinds[0], board, "-")
             );
             Assert.False(IpoCardText.HasBar(board.Kinds[0]));

@@ -147,7 +147,10 @@ namespace FinanceOverhaul.Core
                 case KindState.Waiting:
                     if (status.Kind == BusinessKind.UniqueFactory)
                     {
-                        return Strings.Get("ipo.card.note.waitingFactory");
+                        return Strings.Format(
+                            "ipo.card.note.waitingFactory",
+                            Number((rules ?? new IpoRules()).MinWorkers)
+                        );
                     }
 
                     if (!BusinessKinds.IsSpecialisedIndustry(status.Kind))

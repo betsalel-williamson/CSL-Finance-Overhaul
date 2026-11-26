@@ -104,7 +104,8 @@ City bonds were about the same size. The IPO dialog, its preference and the bell
 - **Among the larger employers of its kind:** in the top third of its kind in this city by the
   people working there today, and never fewer than 45 workers (50 for a zoned farm, forest, oil or
   ore plot). Workers, not job slots: a half-empty building is not a large employer. Industry areas
-  and unique factories are judged on their profit instead.
+  (all their buildings but their unique factories) and unique factories need the same 45, on top of
+  their own rules (level, profit).
 - **Among the largest candidates when the dice fall:** the draw picks from only the 10 candidates of
   a kind with the most workers, and a bigger one is likelier (see "When a company goes public").
 - **On land that supports it (shops and offices only):** land value at least 41, the game's own
@@ -584,6 +585,12 @@ its workers (`SizeWeightPercent` 100). That day: the office shortlist was 10 of 
 216 to 537 workers; Park Oil Group (419 workers) was the oil kind's only candidate; the unique
 factories had 17 and 14 workers. A candidate counted under the old rules keeps its days until bad
 days take them away (four a day).
+
+**Factories and areas too (2026-11-26).** A unique factory of 14 to 19 workers was a candidate on
+its profit alone. Now an area or factory also needs `MinWorkers` (45) to count as healthy: the test
+city's three factories (14, 18 and 19 workers) no longer qualify, its two areas (416 and 717) do.
+The cards say "A factory needs 45 workers and a steady year to list." Scenarios set the workers of
+areas and factories with `ipo-site-workers`.
 
 No roll, and no dice taken, while an IPO is in progress, when pacing forbids one, or when no slot
 can be filled. If the chosen business is no longer a candidate on its day, that IPO does not happen

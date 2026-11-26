@@ -2,14 +2,16 @@
 # factory show the same listing section as a zoned headquarters' panel (gold title bar, listing,
 # stake, Buy / Sell / Show in Investments), at the bottom; the game's rows keep their place. With
 # the company gone the panel is the game's own again. Needs a city with an industry area at level
-# 3+ and a unique factory; their profit is fixed for the scenario (ipo-site-profit) and the city's
-# own counts are set aside (ipo-forget). Everything listed is removed in cleanup.
+# 3+ and a unique factory; their profit and workers are fixed for the scenario (ipo-site-profit,
+# ipo-site-workers) and the city's own counts are set aside
+# (ipo-forget). Everything listed is removed in cleanup.
 name local ipos: an area's main building and a unique factory show the listing on their panels
 close-economy
 local-ipos on
 ipo-forget
 ipo-healthy-days 1
 ipo-site-profit 500000
+ipo-site-workers 120
 ipo-scan
 ipo-dialog on
 ipo-list-now area
@@ -71,5 +73,6 @@ expect-hidden FinanceOverhaulAreaTabButton
 cleanup:
 ipo-dialog close
 ipo-site-profit real
+ipo-site-workers real
 ipo-remove-test
 local-ipos restore

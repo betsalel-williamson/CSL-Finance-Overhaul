@@ -3,8 +3,9 @@
 # industry area; it is never moved into another building when its main building is lost, and takes
 # it back when it stands again. The factory's card in Investments has the factory icon. Needs a
 # city with an industry area at level 3+ and a unique factory: the scan logs what it read. Their
-# profit is fixed at ₡5,000 a week for the scenario (ipo-site-profit), whatever the city's week was.
-# Nothing in the city is touched: lost buildings are only treated as lost.
+# profit is fixed at ₡5,000 a week for the scenario (ipo-site-profit), whatever the city's week
+# was, and their workers at 120 (ipo-site-workers, above the 45 any company needs). Nothing in the
+# city is touched: lost buildings are only treated as lost.
 name local ipos: an industry area and a unique factory list; a lost area waits and gets its home back
 # the game's own Investments lists, whatever the "Investments list and research" flag says
 investments-list off
@@ -13,6 +14,7 @@ local-ipos on
 ipo-forget
 ipo-healthy-days 1
 ipo-site-profit 500000
+ipo-site-workers 120
 ipo-scan
 ipo-dialog on
 ipo-list-now area
@@ -44,5 +46,6 @@ investments-list restore
 close-economy
 ipo-dialog close
 ipo-site-profit real
+ipo-site-workers real
 ipo-remove-test
 local-ipos restore

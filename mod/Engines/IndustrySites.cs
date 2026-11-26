@@ -192,6 +192,12 @@ namespace FinanceOverhaul
         /// </summary>
         internal static long? TestWeeklyProfitCents;
 
+        /// <summary>
+        /// Game UI tests: the workers every industry area and unique factory reports until the
+        /// scenario ends (null: the game's).
+        /// </summary>
+        internal static int? TestWorkers;
+
         private static long Average(
             SiteProfits profits,
             BuildingKey home,
@@ -277,6 +283,7 @@ namespace FinanceOverhaul
                 {
                     Kind = kind,
                     Level = (int)park.m_parkLevel,
+                    Workers = TestWorkers ?? (workers.ContainsKey((byte)p) ? workers[(byte)p] : 0),
                     MainBuildingActive = Stands(gate) && SwitchedOn(gate),
                     WeeklySalesCents = sales,
                     WeeklyBoughtCents = bought,
@@ -306,7 +313,7 @@ namespace FinanceOverhaul
                         Healthy = IpoIndustry.AreaHealthy(facts, average, rules),
                         AnnualCents = IpoIndustry.AnnualCents(average),
                         WeeklyProfitCents = average,
-                        Workers = workers.ContainsKey((byte)p) ? workers[(byte)p] : 0,
+                        Workers = facts.Workers,
                     }
                 );
             }
@@ -350,6 +357,7 @@ namespace FinanceOverhaul
                 var facts = new FactoryFacts
                 {
                     Active = Stands(id) && SwitchedOn(id),
+                    Workers = TestWorkers ?? BuildingStaff.Workers(id),
                     HasProblems =
                         buffer[id].m_problems.m_Problems1 != Notification.Problem1.None
                         || buffer[id].m_problems.m_Problems2 != Notification.Problem2.None,
@@ -384,7 +392,7 @@ namespace FinanceOverhaul
                         Healthy = IpoIndustry.FactoryHealthy(facts, average, rules),
                         AnnualCents = IpoIndustry.AnnualCents(average),
                         WeeklyProfitCents = average,
-                        Workers = BuildingStaff.Workers(id),
+                        Workers = facts.Workers,
                     }
                 );
             }

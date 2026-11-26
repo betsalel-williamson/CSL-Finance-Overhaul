@@ -82,8 +82,9 @@ money, as the game's panels work them out), `ipo-grace N` (days a company with n
 listed, until the scenario ends), `ipo-list-now area|factory` (lists the first industry area or
 unique factory candidate), `sprites PATTERN` (logs the game's sprite names that contain PATTERN),
 `ipo-site-profit CENTS|real` (the weekly profit every area and factory reports until the scenario
-ends, not recorded), `ipo-credit-sites-again` (dev: the areas' one-time credit starts again, as for
-a city updating to 0.2.0), `ipo-home-back` (buildings the scenario treated as lost stand again;
+ends, not recorded), `ipo-site-workers N|real` (the workers every area and factory reports until the
+scenario ends), `ipo-credit-sites-again` (dev: the areas' one-time credit starts again, as for a
+city updating to 0.2.0), `ipo-home-back` (buildings the scenario treated as lost stand again;
 today's step runs), `expect-company-site area|factory|zoned`, `options-preview on|off` (builds the
 Options page into a panel over the game), `expect-ipo-options N` (N Local IPOs sliders, each with
 its number field and a label saying its value), `ipo-option-type KEY TEXT|restore` (types into an

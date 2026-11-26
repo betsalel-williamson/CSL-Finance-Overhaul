@@ -43,11 +43,11 @@ namespace FinanceOverhaul.Core
         public int SpecialisedMinWorkers = 50;
 
         /// <summary>
-        /// People any zoned business must have working in it today before it can go public,
+        /// People any business, area or factory must have working in it today before it can go public,
         /// whatever its kind and whatever its neighbours have: a corner shop is never a listed
         /// company, even in a city where it is among the larger of its kind. Workers, not job
-        /// slots: a half-empty building is not a large employer. Industry areas and unique
-        /// factories are judged on their profit instead.
+        /// slots: a half-empty building is not a large employer. Industry areas (all their
+        /// buildings) and unique factories need as many.
         /// </summary>
         public int MinWorkers = 45;
 

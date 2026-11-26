@@ -410,7 +410,10 @@ namespace FinanceOverhaul.Core
                 "ipo.card.note.waitingArea",
                 "No industry area or large business has been steady for a year yet."
             },
-            { "ipo.card.note.waitingFactory", "No factory has been healthy for a year yet." },
+            {
+                "ipo.card.note.waitingFactory",
+                "A factory needs {0} workers and a steady year to list."
+            },
             { "ipo.card.note.pacing", "Next listing possible from {0}." },
             { "ipo.card.note.exchange", "Needs the Stock Exchange at level {0}." },
             { "ipo.card.note.boardFull", "The local board is full ({0} of {1})." },
