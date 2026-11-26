@@ -3,8 +3,8 @@ using System.Collections; // IEnumerator
 using System.Collections.Generic; // List
 using System.Globalization; // CultureInfo
 using System.IO; // Path
-// ColossalFramework.UI: UIButton, UIComponent, UIFont, UILabel, UIPanel, UIScrollablePanel,
-//   UISlider, UITextComponent, UIView
+// ColossalFramework.UI: UIButton, UIComponent, UIFont, UIInput, UILabel, UIPanel,
+//   UIScrollablePanel, UISlider, UITextComponent, UIView
 using ColossalFramework.UI;
 using FinanceOverhaul.Core; // DuplicateCopies, InvestmentRow, SliderThumb
 using UnityEngine; // Application, GameObject, Mathf, Resources, Vector2, Vector3, WaitForSeconds
@@ -85,6 +85,29 @@ namespace FinanceOverhaul
                     }
 
                     ModLog.Info("ui: " + n + " control(s) named " + a); // not shown: dev log
+                    break;
+                }
+                case "log-modal":
+                {
+                    // log-modal — dev: the component that holds the game's modal (the only one
+                    // that takes mouse clicks), and what the mouse input thinks is pressed.
+                    UIComponent modal = UIView.GetModalComponent();
+                    ModLog.Info(
+                        "uitest: modal "
+                            + (modal == null ? "none" : modal.name + " visible=" + modal.isVisible)
+                            + " active="
+                            + (
+                                UIView.activeComponent == null
+                                    ? "none"
+                                    : UIView.activeComponent.name
+                            )
+                            + " hovered="
+                            + (
+                                UIInput.hoveredComponent == null
+                                    ? "none"
+                                    : UIInput.hoveredComponent.name
+                            )
+                    );
                     break;
                 }
                 case "button-state":

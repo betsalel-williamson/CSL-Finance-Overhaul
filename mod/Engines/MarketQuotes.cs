@@ -67,6 +67,7 @@ namespace FinanceOverhaul
                     ),
                     History = history,
                     Owned = ai.OwnedCount(ref buffer[i]),
+                    Available = available ? ai.AvailableForBuyingCount(ref buffer[i]) : 0u,
                     OpenOrders = count,
                     Spent = buffer[i].m_playerSpentMoney,
                     Local = CompanyListing.IsCompany(ai, out company),

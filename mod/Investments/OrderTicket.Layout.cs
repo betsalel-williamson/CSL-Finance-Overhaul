@@ -275,8 +275,11 @@ namespace FinanceOverhaul
             bool buy = IsBuyMode(owner);
             if (sideTabs != null)
             {
-                bool canSell = Owned((byte)IdField.GetValue(owner)) > 0;
+                byte shown = (byte)IdField.GetValue(owner);
+                bool canSell = Owned(shown) > 0;
+                bool canBuy = Available(shown) > 0;
                 sideTabs.Choose(buy ? 0 : 1);
+                sideTabs.SetEnabled(0, canBuy || buy, Strings.Get("order.side.buyNone"));
                 sideTabs.SetEnabled(1, canSell || !buy, Strings.Get("order.side.sellNone"));
             }
 

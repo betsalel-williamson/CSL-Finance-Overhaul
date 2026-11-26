@@ -32,6 +32,7 @@ namespace FinanceOverhaul
         private UITabstrip strip;
         private UIPanel underline;
         private bool secondary;
+        private bool choosing;
 
         /// <summary>The group's frame (the strip, and a secondary group's line); place this.</summary>
         public UIPanel Panel { get; private set; }
@@ -75,8 +76,9 @@ namespace FinanceOverhaul
 
         /// <summary>
         /// Tabs of the given widths, named <c>name + index</c> (rename through the indexer); the
-        /// first chosen. <paramref name="picked"/> hears every click on an enabled tab, the
-        /// chosen one included, after it is shown chosen.
+        /// first chosen. <paramref name="picked"/> hears every change of tab the player makes (a
+        /// press, click or double click on another enabled tab), after it is shown chosen; not
+        /// <see cref="Choose"/>.
         /// </summary>
         public static FoToggleTabs Add(
             UIComponent parent,
@@ -107,19 +109,34 @@ namespace FinanceOverhaul
                 b.text = labels[i];
                 b.textScale = textScale;
                 b.size = new Vector2(widths[i], height);
-                b.eventClick += (c, p) =>
+                // The game sends a second click soon after any other click (even elsewhere)
+                // as a double click: it still picks the tab.
+                b.eventDoubleClick += (c, p) =>
                 {
                     if (b.isEnabled)
                     {
-                        t.Choose(index);
-                        if (t.picked != null)
-                        {
-                            t.picked(index);
-                        }
+                        t.strip.selectedIndex = index;
                     }
                 };
                 t.tabs.Add(b);
             }
+
+            // The strip picks a tab on press (focus), click or double click, as the game's own
+            // tab strips do; the caller hears every change the player makes.
+            t.strip.eventSelectedIndexChanged += (c, index) =>
+            {
+                t.PlaceUnderline();
+                if (
+                    !t.choosing
+                    && index >= 0
+                    && index < t.tabs.Count
+                    && t.tabs[index].isEnabled
+                    && t.picked != null
+                )
+                {
+                    t.picked(index);
+                }
+            };
 
             t.Style();
             t.Layout();
@@ -153,9 +170,17 @@ namespace FinanceOverhaul
         /// <summary>Shows that tab chosen (no event); -1 chooses none.</summary>
         public void Choose(int index)
         {
-            if (strip.selectedIndex != index)
+            choosing = true;
+            try
             {
-                strip.selectedIndex = index;
+                if (strip.selectedIndex != index)
+                {
+                    strip.selectedIndex = index;
+                }
+            }
+            finally
+            {
+                choosing = false;
             }
 
             PlaceUnderline();

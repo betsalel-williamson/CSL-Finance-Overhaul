@@ -163,6 +163,14 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
   disabled tab the game's disabled art (an earlier build drew the chosen look as the normal art, so
   hovering the chosen tab turned it grey). (Two earlier looks were tried and dropped: the tab art
   with white text on the lit tab, and joined menu buttons.)
+- **Nothing left to buy (fixed 2026-11-25):** a Buy dialog for a stock the city holds all it may of
+  has an empty share range, and the game's slider then puts its thumb at no position at all, where
+  it takes every click in the dialog (only Escape closed it). The game never opens one (it greys out
+  Buy); the mod's Buy buttons could. Now Buy is greyed out with a tooltip in the list and the Stock
+  Monitor, a click on such a line opens Sell, the dialog's Buy tab is disabled, and a Buy dialog
+  opened anyway turns to Sell or closes (`OrderTicket`; scenario 71). The tab group also follows the
+  strip's own change of tab, so a quick second click, which the game sends as a double click, still
+  switches.
 - **Scrolling:** three plain rows a notch, the game's scrollbar; the line at the top of the view
   stays there when the list changes (a purchase, the daily update), and the place is kept when the
   panel is closed and opened.

@@ -46,12 +46,24 @@ expect-visible FinanceOverhaulBuildingSell
 expect-visible FinanceOverhaulBuildingGain
 expect-no-overflow FinanceOverhaulBuildingListing
 capture building-panel-trading
+# all the city may hold: Buy is greyed out, and a dialog opened on Buy turns to Sell (an empty
+# share range would leave the game's slider thumb taking every click in the dialog)
+ipo-buy 750
+wait 1.5
+expect-text FinanceOverhaulBuildingStake City holds 1,000 of 1,000 shares
+ipo-open-buy
+wait 1
+expect-visible FinanceOverhaulOrderTab-StopLossSell
+expect-log nothing left to buy, the dialog opens on Sell
+close-dialog
+wait 0.5
 ipo-remove-test
 wait 1.5
 expect-hidden FinanceOverhaulBuildingListing
 expect-hidden FinanceOverhaulBuildingGold
 expect-visible MakeHistoricalPanel
 cleanup:
+close-dialog
 ipo-dialog close
 ipo-remove-test
 local-ipos restore

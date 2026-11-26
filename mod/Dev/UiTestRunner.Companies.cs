@@ -11,10 +11,11 @@ using FinanceOverhaul.Core;
 using UnityEngine; // Mathf, Object, RectOffset, Vector2, Vector3, WaitForSeconds
 
 // Game classes used without a using (global namespace, Assembly-CSharp): Building, BuildingInfo,
-//   BuildingManager, CameraController, DefaultTool, District, DistrictAreaResourceData,
-//   DistrictManager, DistrictPark, EconomyManager, FastList, GameAreaManager, IndustryBuildingAI,
-//   InstanceID, Investment, ItemClass, LocaleFormatter, PrivateBuildingAI, SimulationManager,
-//   ToolsModifierControl, TransferManager, UIHelper, UniqueFactoryAI
+//   BuildingManager, BuySellInvestmentPanel, CameraController, DefaultTool, District,
+//   DistrictAreaResourceData, DistrictManager, DistrictPark, EconomyManager, FastList,
+//   GameAreaManager, IndustryBuildingAI, InstanceID, Investment, ItemClass, LocaleFormatter,
+//   PrivateBuildingAI, SimulationManager, ToolsModifierControl, TransferManager, UIHelper,
+//   UniqueFactoryAI
 
 namespace FinanceOverhaul
 {
@@ -433,6 +434,27 @@ namespace FinanceOverhaul
                     }
 
                     DefaultTool.OpenWorldInfoPanel(new InstanceID { Park = park }, at);
+                    yield return null;
+                    break;
+                }
+                case "ipo-open-buy":
+                {
+                    // ipo-open-buy — opens the game's dialog on Buy for this scenario's newest
+                    // company, as any caller might (the dialog itself must cope with nothing
+                    // left to buy).
+                    int slot =
+                        ctx.TestCompanies.Count == 0
+                            ? 0
+                            : CompanyListing.SlotOf(
+                                ctx.TestCompanies[ctx.TestCompanies.Count - 1].Id
+                            );
+                    if (slot <= 0)
+                    {
+                        r.Error = "no listed test company";
+                        break;
+                    }
+
+                    BuySellInvestmentPanel.ShowPanel((byte)slot, BuySellInvestmentPanel.Mode.Buy);
                     yield return null;
                     break;
                 }

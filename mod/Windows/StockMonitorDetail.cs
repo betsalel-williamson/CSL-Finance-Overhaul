@@ -414,6 +414,9 @@ namespace FinanceOverhaul
                 orders.Count > 0 ? Gold : Muted
             );
 
+            uint left = ai.AvailableForBuyingCount(ref buffer[detailId]);
+            dBuy.isEnabled = left > 0;
+            dBuy.tooltip = left > 0 ? "" : Strings.Get("order.side.buyNone");
             dSell.isEnabled = owned > 0;
             dSell.tooltip = owned > 0 ? "" : Strings.Format("detail.sell.none", symbol);
 

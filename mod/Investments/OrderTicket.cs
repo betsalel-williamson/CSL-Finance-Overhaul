@@ -191,11 +191,42 @@ namespace FinanceOverhaul
                 }
 
                 ResetForShow();
+                NothingToBuy();
             }
             catch (Exception ex)
             {
                 Detach();
                 LogOnce("order ticket: attach failed, vanilla trade kept: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// A Buy dialog with no shares left to buy (the city holds all it may) has an empty share
+        /// range, and the game's slider then puts its thumb at no position at all, where it takes
+        /// every click in the dialog. So it turns to Sell when the city holds shares, or closes.
+        /// </summary>
+        private static void NothingToBuy()
+        {
+            if (owner == null || !IsBuyMode(owner))
+            {
+                return;
+            }
+
+            byte id = (byte)IdField.GetValue(owner);
+            if (Available(id) > 0)
+            {
+                return;
+            }
+
+            if (Owned(id) > 0)
+            {
+                ModLog.Info("order ticket: nothing left to buy, the dialog opens on Sell");
+                SwitchSide(false);
+            }
+            else
+            {
+                ModLog.Info("order ticket: nothing to buy or sell, the dialog closes");
+                BuySellInvestmentPanel.HidePanel();
             }
         }
 
@@ -498,6 +529,13 @@ namespace FinanceOverhaul
             {
                 LogOnce("order ticket: buy / sell switch failed: " + ex.Message);
             }
+        }
+
+        private static uint Available(byte id)
+        {
+            Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
+            InvestmentAI ai = buffer[id].Info == null ? null : buffer[id].Info.m_investmentAI;
+            return ai == null ? 0u : ai.AvailableForBuyingCount(ref buffer[id]);
         }
 
         private static uint Owned(byte id)

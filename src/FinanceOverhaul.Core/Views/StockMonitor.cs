@@ -56,6 +56,9 @@ namespace FinanceOverhaul.Core
         /// <summary>What the city paid for the shares it holds (the game's "You invested").</summary>
         public long Spent;
 
+        /// <summary>Shares the city may still buy (0: it holds all it may, or none are on sale).</summary>
+        public uint Available;
+
         /// <summary>A local company the city grew (Local IPOs), not one of the game's stocks.</summary>
         public bool Local;
 

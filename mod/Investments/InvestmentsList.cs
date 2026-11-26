@@ -550,6 +550,8 @@ namespace FinanceOverhaul
             private int slot;
             private int orderId;
             private bool locked;
+            private uint available;
+            private uint owned;
             private InvestmentRowKind kind;
             private readonly UIPanel[] outline;
             private bool outlined;
@@ -752,6 +754,18 @@ namespace FinanceOverhaul
 
             private void Open(BuySellInvestmentPanel.Mode mode)
             {
+                // Nothing left to buy: the line opens Sell when the city holds some, else nothing
+                // (the game's dialog would open on an empty share range).
+                if (mode == BuySellInvestmentPanel.Mode.Buy && available == 0)
+                {
+                    if (owned == 0)
+                    {
+                        return;
+                    }
+
+                    mode = BuySellInvestmentPanel.Mode.Sell;
+                }
+
                 if (slot > 0 && !locked)
                 {
                     HideChart();
@@ -837,6 +851,10 @@ namespace FinanceOverhaul
                 MonitorQuote q = row.Stock;
                 slot = q == null ? 0 : q.Id;
                 locked = q != null && q.Locked;
+                available = q == null ? 0u : q.Available;
+                owned = q == null ? 0u : q.Owned;
+                buy.isEnabled = available > 0;
+                buy.tooltip = available > 0 ? string.Empty : Strings.Get("order.side.buyNone");
                 // Every time: the "nothing changed" return below skips the rest.
                 buy.isVisible = isStock && !locked;
                 sell.isVisible = isStock && q.Owned > 0;

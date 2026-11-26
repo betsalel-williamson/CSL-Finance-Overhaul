@@ -50,6 +50,10 @@ namespace FinanceOverhaul.Core
             { "investments.row.order", "{0} · {1}" },
             { "investments.row.local", "LOCAL" },
             { "order.side.sellNone", "The city holds no shares of this stock to sell." },
+            {
+                "order.side.buyNone",
+                "No shares left to buy: the city holds all it may of this stock."
+            },
             { "investments.section.Portfolio", "Your portfolio" },
             { "investments.section.Local", "Local companies" },
             { "investments.section.All", "All stocks" },
