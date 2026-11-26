@@ -76,6 +76,45 @@ delays, levels and how long news is kept are options.
 5. Rumour mill, Chirper and the Monitor's news markers.
 6. Tuning in a city left alone; options, docs, changeset.
 
+## Spike: replacing the two lists (2026-11-25)
+
+A throwaway dev spike put one list in place of the two in a running game (not kept in the code).
+
+- **The page is easy to take over.** Economy → Investments is one panel (`Investments`, 1110 × 599)
+  with five controls of its own: the two titles (`LabelPurchasable`, `LabelPortfolio`), the two
+  lists with their scrollbars (`InvestmentsPanel`, `OwnedInvestmentsPanel`) and the Total value bar
+  (`OwnedInvestmentsSummaryPanel`). Hiding those five and adding one panel at (16, 12) gives a 1078
+  × 540 list in the game's frame. Showing them again gives the game's tab back. Nothing is patched
+  to do it.
+- **The game keeps building its cards, hidden.** It rebuilds them when the panel opens and updates
+  them every frame while the tab is open (`EconomyPanel.UpdateInvestments`). That does no harm but
+  costs time with many stocks; step 1 measures it and, if needed, skips the card loop while the new
+  list is shown.
+- **Buy and Sell need nothing new.** A row's button calls the game's
+  `BuySellInvestmentPanel.ShowPanel`, and the mod's Buy now / Limit tabs come with it. The game
+  closes the Buy dialog at once for a locked stock, so rows must show the lock (requirement and bar)
+  as the game's cards do.
+- **A virtual list scrolls well.** A fixed set of about 13 row controls is refilled from the scroll
+  offset: three rows a notch, a scrollbar, and the place is kept when the panel is closed and opened
+  again. Refreshing 13 rows a frame is cheap at any number of stocks.
+- **What moves into the new list:** the mod's add-ons now tied to the game's cards (local company
+  cards, open-order cards, avg cost, the wheel step) become sections and parts of rows. With the
+  flag off they keep working on the game's cards as today.
+- **For tests:** rows are named by stock symbol (`…Row-GGI`), not by pool position, so a scenario
+  can find a stock wherever it has scrolled to.
+
+### How step 1 is built
+
+- **Library:** the list model (sections, filters, sort, which rows are visible for an offset, and
+  keeping the same stock at the top when the list changes) in `FinanceOverhaul.Core`, unit tested.
+- **Mod:** `InvestmentsList` on the overlay root: hides the five controls, draws the pooled rows,
+  hands Buy and Sell to the game's dialog, puts everything back when the flag is off or the mod
+  unloads (hot reload).
+- **Flag:** Options → Feature flags → "Investments list and research", on in dev builds only.
+- **Game UI scenario:** the list replaces the two, filters, sort, scroll keeps its place through a
+  purchase and a reopen, Buy and Sell open the dialog, a locked stock shows its bar, flag off gives
+  the game's tab back.
+
 ## Open questions
 
 - Watchlist and search: both in step 1, or watchlist later?
