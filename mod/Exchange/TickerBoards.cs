@@ -40,6 +40,7 @@ namespace FinanceOverhaul
                 root.AddComponent<IpoFireworks>();
                 root.AddComponent<CompanyBuildingPanel>();
                 root.AddComponent<CompanySitePanels>();
+                root.AddComponent<CompanyAreaTab>();
                 root.AddComponent<ChirpNoticePoster>();
                 root.AddComponent<StockMonitorHost>();
                 if (BuildInfo.ShowDevBuildIdentity)

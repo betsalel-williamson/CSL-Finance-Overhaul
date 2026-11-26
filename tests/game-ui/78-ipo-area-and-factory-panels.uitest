@@ -26,6 +26,20 @@ expect-hidden FinanceOverhaulAreaBuildingSell
 expect-no-overflow FinanceOverhaulAreaBuildingListing
 expect-no-overlap MainSectionPanel FinanceOverhaulAreaBuildingListing
 capture area-building-panel
+# the area's own panel gets a Shares tab with the same section
+ipo-area-panel
+wait 1.5
+capture area-info-tab
+# the Info tab stays the game's own until Shares is picked
+expect-hidden FinanceOverhaulAreaTabPage
+expect-visible FinanceOverhaulAreaTabButton
+expect-text FinanceOverhaulAreaTabButton Shares
+click FinanceOverhaulAreaTabButton
+wait 1
+expect-visible FinanceOverhaulAreaTabListing
+expect-text FinanceOverhaulAreaTabBadge OFFERING
+expect-no-overflow FinanceOverhaulAreaTabListing
+capture area-shares-tab
 ipo-dialog on
 ipo-list-now factory
 wait 1
@@ -43,6 +57,17 @@ ipo-remove-test
 wait 1.5
 expect-hidden FinanceOverhaulFactoryListing
 expect-hidden FinanceOverhaulFactoryGold
+# the area is gone too: its panel loses the tab
+ipo-dialog on
+ipo-list-now area
+wait 1
+ipo-dialog close
+ipo-area-panel
+wait 1
+expect-visible FinanceOverhaulAreaTabButton
+ipo-remove-test
+wait 1
+expect-hidden FinanceOverhaulAreaTabButton
 cleanup:
 ipo-dialog close
 ipo-site-profit real

@@ -11,9 +11,9 @@ using FinanceOverhaul.Core;
 using UnityEngine; // Mathf, Object, RectOffset, Vector2, Vector3, WaitForSeconds
 
 // Game classes used without a using (global namespace, Assembly-CSharp): Building, BuildingInfo,
-//   BuildingManager, CameraController, District, DistrictAreaResourceData, DistrictManager,
-//   DistrictPark, EconomyManager, FastList, GameAreaManager, IndustryBuildingAI, InstanceID,
-//   Investment, ItemClass, LocaleFormatter, PrivateBuildingAI, SimulationManager,
+//   BuildingManager, CameraController, DefaultTool, District, DistrictAreaResourceData,
+//   DistrictManager, DistrictPark, EconomyManager, FastList, GameAreaManager, IndustryBuildingAI,
+//   InstanceID, Investment, ItemClass, LocaleFormatter, PrivateBuildingAI, SimulationManager,
 //   ToolsModifierControl, TransferManager, UIHelper, UniqueFactoryAI
 
 namespace FinanceOverhaul
@@ -402,6 +402,38 @@ namespace FinanceOverhaul
                     CompanyDesk.TestStepToday();
                     sim.SimulationPaused = paused;
                     yield return new WaitForSeconds(1f);
+                    break;
+                }
+                case "ipo-area-panel":
+                {
+                    // ipo-area-panel — opens the industry area's own panel (Info, Policies and,
+                    // listed, Shares) for this scenario's newest company, an area.
+                    LocalCompany c =
+                        ctx.TestCompanies.Count == 0
+                            ? null
+                            : CompanyDesk.CompanyOf(
+                                ctx.TestCompanies[ctx.TestCompanies.Count - 1].Id
+                            );
+                    if (c == null || c.Site != BusinessSite.Area)
+                    {
+                        r.Error = "ipo-list-now area first";
+                        break;
+                    }
+
+                    Vector3 at = BuildingManager
+                        .instance
+                        .m_buildings
+                        .m_buffer[c.Home.Id]
+                        .m_position;
+                    byte park = DistrictManager.instance.GetPark(at);
+                    if (park == 0)
+                    {
+                        r.Error = "the area's main building stands in no area";
+                        break;
+                    }
+
+                    DefaultTool.OpenWorldInfoPanel(new InstanceID { Park = park }, at);
+                    yield return null;
                     break;
                 }
                 case "expect-company-site":

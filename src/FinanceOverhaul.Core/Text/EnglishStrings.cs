@@ -333,6 +333,7 @@ namespace FinanceOverhaul.Core
             { "company.kind.Ore", "Ore" },
             { "company.kind.UniqueFactory", "Unique factory" },
             { "company.panel.offering", "OFFERING" },
+            { "company.panel.sharesTab", "Shares" },
             { "company.panel.trading", "TRADING" },
             { "company.panel.line.offering", "{0} · First trading day {1}" },
             { "company.panel.line.trading", "{0} · Listed {1}" },

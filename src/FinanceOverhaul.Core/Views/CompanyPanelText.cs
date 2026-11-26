@@ -164,6 +164,12 @@ namespace FinanceOverhaul.Core
             get { return Strings.Get("company.panel.historical.tip"); }
         }
 
+        /// <summary>"Shares": the tab a listed industry area's own panel gets.</summary>
+        public static string SharesTab
+        {
+            get { return Strings.Get("company.panel.sharesTab"); }
+        }
+
         public static string ShowInInvestments
         {
             get { return Strings.Get("company.panel.show"); }

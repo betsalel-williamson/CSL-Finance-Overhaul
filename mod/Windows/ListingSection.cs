@@ -211,15 +211,15 @@ namespace FinanceOverhaul
                 );
             }
 
+            string gained = CompanyPanelText.Gain(owned, spent, worth);
             FoText.Fit(
                 stake,
                 CompanyPanelText.Stake(company, CompanyDesk.Current, today, owned, spent),
                 0.75f,
                 0.6f,
-                width - 16f - 90f,
+                width - 16f - (gained == null ? 0f : 90f),
                 15f
             );
-            string gained = CompanyPanelText.Gain(owned, spent, worth);
             gain.isVisible = gained != null;
             if (gained != null)
             {

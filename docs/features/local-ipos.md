@@ -1015,7 +1015,12 @@ investment update: it scans the businesses, runs `IpoEngine.Step`, and carries o
   them, so the section is one more row; the factory's panel places its rows by hand, so it grows by
   the section and every row is put back where it was. Where the row under the symbol is too narrow
   for "Oil industry area · First trading day …", it drops the kind ("First trading day …"): the
-  panel names the building. Scenario 78 checks both panels and the way back.
+  panel names the building. The area's own panel (production diagram, Info and Policies tabs;
+  "Industry Area Info" opens it) gets a **Shares** tab with the same section (`CompanyAreaTab`),
+  made with the game's tab strip from its Info tab: the Info page has no room left. The tab shows
+  only while the area is listed; if it was open when the company goes, the panel goes back to Info.
+  The stake line takes the whole row when there is no gain to show. Scenario 78 checks all three and
+  the way back.
 - **Fireworks (built, `IpoFireworks`):** the game's own event fireworks ("Event Firework Particles
   1" to "3", else "FireworksComplexIngame") go off from the headquarters' roof when the company is
   announced, on its first trading day, and when the player views the headquarters: eight bursts, 0.8
