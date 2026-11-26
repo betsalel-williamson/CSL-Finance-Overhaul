@@ -115,8 +115,7 @@ scenario 78), `investments-list on|off|restore` (the "Investments list and resea
 `investments-scroll PIXELS` (moves that list as the wheel would),
 `expect-investments SECTION SYMBOL` (the stock is in Portfolio, Local or All, or `none`; logs the
 list; scenarios 79 and 80), `investments-scroll-to SYMBOL` (that stock's line at the top of the
-list), `investments-double-click SYMBOL` (as a double click on that stock's name in the list;
-scenarios that check the game's own Investments lists start with `investments-list off` and restore
+list), scenarios that check the game's own Investments lists start with `investments-list off` and restore
 it), `dump-all NAME` (every control with that name, shown or not, with its parents: finds copies
 another loaded copy of the mod or an old build left; a text field's dump shows its text, focus and
 hover), `share-charts on|off` (the share chart flag, for before/after captures) — and checks

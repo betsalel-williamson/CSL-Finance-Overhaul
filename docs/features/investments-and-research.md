@@ -138,7 +138,9 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
   value" chart, beside the line (left of it near the screen edge), as over the game's cards; it
   closes when the pointer leaves. The list reads the mod's pointer each frame, so game UI tests can
   hover.
-- **Double click** on a stock's name, symbol or coin opens the game's dialog (Buy).
+- **Hover and click:** the stock line under the pointer is outlined in the accent colour; a click
+  anywhere on it (not on Buy, Sell or Cancel) opens the game's dialog (Buy, with Buy | Sell tabs to
+  turn it). Figma component FO/InvestmentListRow.
 - **Buy | Sell in the dialog:** the Invest dialog has Buy | Sell toggle tabs above the order-type
   tabs (`OrderTicket`, Kit `FoToggleTabs`, Figma component FO/ToggleTabs): two equal tabs joined
   across the dialog in the art of the game's own tab strips (as the Economy panel's Taxes · Budget ·
@@ -153,9 +155,10 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
   place, wording) with `InvestmentListTests`; `MarketQuotes` reads every stock for both the Monitor
   and this list.
 - **Checked:** game UI scenario 79 (the list replaces the two, tabs, Group / Ungroup, sort and
-  direction, a reopen, flag off); scenario 80 (TST: hover chart, double click, a purchase, grouping,
-  the Buy | Sell switch), the same steps run on Oil in a city without TST. The scenarios that check
-  the game's own lists switch the new list off for their run and put it back.
+  direction, a reopen, flag off); scenario 80 (TST: hover chart, outline, a click on a line, a
+  purchase, grouping, the Buy | Sell switch), the same steps run on Oil in a city without TST, with
+  the outline and a click on a line. The scenarios that check the game's own lists switch the new
+  list off for their run and put it back.
 - **Not yet:** the Watchlist and News tabs and the ★; a click on a row opening the Stock Monitor
   (step 2, with Research); the kinds' unlock bars in Local companies (the game's cards keep them
   while the flag is off); measuring what the game's hidden cards cost a frame with many stocks.

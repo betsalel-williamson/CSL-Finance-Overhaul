@@ -1,9 +1,9 @@
 # Needs the dev test stock (TST) in a test save. The one list in Economy → Investments: over a
-# stock's 30-day line the game's stock tooltip opens with its large chart; a double click on its
-# name opens the game's dialog; a purchase gives its line the holding (shares, avg cost, gain) and
+# stock's 30-day line the game's stock tooltip opens with its large chart; the line under the pointer is outlined and a
+# click anywhere on it opens the game's dialog; a purchase gives its line the holding (shares, avg cost, gain) and
 # Sell, and with Group on it moves into Your portfolio; in the dialog Buy | Sell switches sides in
 # place. Selling the shares back in cleanup puts it back.
-name investments list: hover chart, double click, a purchase, grouping and the Buy | Sell switch
+name investments list: hover chart, outline, click a line, a purchase, grouping and the Buy | Sell switch
 close-economy
 investments-list on
 set-price TST 100
@@ -22,7 +22,14 @@ capture investments-list-hover-chart
 hover off
 wait 0.3
 expect-hidden InvestmentTooltip
-investments-double-click TST
+# the stock under the pointer is outlined; a click anywhere on its line opens the dialog
+hover FinanceOverhaulInvestmentsRow-TST 0.3 0.5
+wait 0.3
+expect-visible FinanceOverhaulInvestmentsRow-TSTOutline
+hover off
+wait 0.3
+expect-hidden FinanceOverhaulInvestmentsRow-TSTOutline
+click FinanceOverhaulInvestmentsRow-TST
 wait 1
 expect-visible FinanceOverhaulOrderTab-SideBuy
 expect-visible FinanceOverhaulOrderTab-Limit

@@ -264,10 +264,11 @@ namespace FinanceOverhaul
             Row over = null;
             foreach (Row r in pool)
             {
+                // The stock under the pointer is outlined: a click on it opens the dialog.
+                r.Outline(r.OverStock(at, view));
                 if (r.OverLine(at, view))
                 {
                     over = r;
-                    break;
                 }
             }
 
@@ -285,21 +286,6 @@ namespace FinanceOverhaul
             {
                 over.ShowChart();
             }
-        }
-
-        /// <summary>As a double click on that stock's name; false if its row is not on screen.</summary>
-        internal bool TestDoubleClick(string symbol)
-        {
-            foreach (Row r in pool)
-            {
-                if (r.Key == symbol)
-                {
-                    r.DoubleClick();
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         /// <summary>Scrolls so that stock's line is at the top (game UI tests); false if not listed.</summary>
@@ -533,6 +519,9 @@ namespace FinanceOverhaul
             private int slot;
             private int orderId;
             private bool locked;
+            private InvestmentRowKind kind;
+            private readonly UIPanel[] outline;
+            private bool outlined;
 
             public Row(UIComponent parent, int index, float width)
             {
@@ -554,11 +543,23 @@ namespace FinanceOverhaul
                 name.relativePosition = new Vector3(54f, 24f);
                 holding = FoText.Label(back, "", "", 0.72f, FoTheme.TextMuted);
                 holding.relativePosition = new Vector3(54f, 40f);
-                // A double click on the stock's name opens the game's dialog, as Buy does.
-                foreach (UIComponent c in new UIComponent[] { coin, symbol, name })
+                // A click anywhere on a stock's line (not on its buttons) opens the game's
+                // dialog, as Buy does; the line is outlined while the pointer is over it.
+                back.eventClick += (c, p) =>
                 {
-                    c.isInteractive = true;
-                    c.eventDoubleClick += (cc, p) => Open(BuySellInvestmentPanel.Mode.Buy);
+                    if (kind == InvestmentRowKind.Stock)
+                    {
+                        Open(BuySellInvestmentPanel.Mode.Buy);
+                    }
+                };
+                outline = new UIPanel[4];
+                for (int i = 0; i < outline.Length; i++)
+                {
+                    outline[i] = back.AddUIComponent<UIPanel>();
+                    outline[i].backgroundSprite = "EmptySprite";
+                    outline[i].color = FoTheme.Accent;
+                    outline[i].isInteractive = false;
+                    outline[i].isVisible = false;
                 }
 
                 heading = FoText.Label(back, "", "", 0.85f, FoTheme.GameText);
@@ -609,7 +610,11 @@ namespace FinanceOverhaul
                     0.65f
                 );
                 cancel.relativePosition = new Vector3(width - 82f, 2f);
-                cancel.eventClick += (c, p) => OrderDesk.Cancel(orderId);
+                cancel.eventClick += (c, p) =>
+                {
+                    p.Use(); // the line's own click must not open the dialog too
+                    OrderDesk.Cancel(orderId);
+                };
 
                 buy = FoButton.Add(
                     back,
@@ -619,7 +624,11 @@ namespace FinanceOverhaul
                     0.85f
                 );
                 buy.relativePosition = new Vector3(width - 160f, 9f);
-                buy.eventClick += (c, p) => Open(BuySellInvestmentPanel.Mode.Buy);
+                buy.eventClick += (c, p) =>
+                {
+                    p.Use();
+                    Open(BuySellInvestmentPanel.Mode.Buy);
+                };
                 sell = FoButton.Add(
                     back,
                     "",
@@ -628,7 +637,11 @@ namespace FinanceOverhaul
                     0.85f
                 );
                 sell.relativePosition = new Vector3(width - 82f, 9f);
-                sell.eventClick += (c, p) => Open(BuySellInvestmentPanel.Mode.Sell);
+                sell.eventClick += (c, p) =>
+                {
+                    p.Use();
+                    Open(BuySellInvestmentPanel.Mode.Sell);
+                };
             }
 
             public void Destroy()
@@ -660,10 +673,50 @@ namespace FinanceOverhaul
                     && at.y <= Mathf.Min(p.y + spark.height, v.y + view.height);
             }
 
-            /// <summary>As a double click on the stock's name (game UI tests).</summary>
-            public void DoubleClick()
+            /// <summary>The pointer is over this stock's line (inside the view), not a heading or order.</summary>
+            public bool OverStock(Vector2 at, UIComponent view)
             {
-                Open(BuySellInvestmentPanel.Mode.Buy);
+                if (!back.isVisible || kind != InvestmentRowKind.Stock || locked)
+                {
+                    return false;
+                }
+
+                Vector3 p = back.absolutePosition;
+                Vector3 v = view.absolutePosition;
+                return at.x >= p.x
+                    && at.x <= p.x + back.width
+                    && at.y >= Mathf.Max(p.y, v.y)
+                    && at.y <= Mathf.Min(p.y + back.height, v.y + view.height);
+            }
+
+            /// <summary>A 2-pixel accent outline around the line, or none.</summary>
+            public void Outline(bool on)
+            {
+                if (
+                    on == outlined
+                    && (!on || (outline[0].width == back.width && outline[2].height == back.height))
+                )
+                {
+                    return;
+                }
+
+                outlined = on;
+                const float t = 2f;
+                float w = back.width,
+                    h = back.height;
+                outline[0].size = new Vector2(w, t);
+                outline[0].relativePosition = Vector3.zero;
+                outline[1].size = new Vector2(w, t);
+                outline[1].relativePosition = new Vector3(0f, h - t);
+                outline[2].size = new Vector2(t, h);
+                outline[2].relativePosition = Vector3.zero;
+                outline[3].size = new Vector2(t, h);
+                outline[3].relativePosition = new Vector3(w - t, 0f);
+                foreach (UIPanel edge in outline)
+                {
+                    edge.isVisible = on;
+                    edge.BringToFront();
+                }
             }
 
             private void Open(BuySellInvestmentPanel.Mode mode)
@@ -732,7 +785,7 @@ namespace FinanceOverhaul
                     Rename(row);
                 }
 
-                InvestmentRowKind kind = row.Kind;
+                kind = row.Kind;
                 bool isStock = kind == InvestmentRowKind.Stock;
                 bool isOrder = kind == InvestmentRowKind.Order;
                 bool isHeading = kind == InvestmentRowKind.Heading;
@@ -887,6 +940,10 @@ namespace FinanceOverhaul
                 cancel.name = n + "Cancel";
                 buy.name = n + "Buy";
                 sell.name = n + "Sell";
+                for (int i = 0; i < outline.Length; i++)
+                {
+                    outline[i].name = n + "Outline" + (i == 0 ? string.Empty : i.ToString());
+                }
             }
         }
     }
