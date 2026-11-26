@@ -11,6 +11,7 @@ Product and architecture contracts for Finance Overhaul.
 - [Stock Monitor](./stock-monitor.md)
 - [Notices in Chirper](./notices.md)
 - [Local IPOs (design)](./local-ipos.md)
+- [Investments list and research (design)](./investments-and-research.md)
 - [Bonds and treasury instruments](./bonds.md)
 - [Save compatibility](./save-compatibility.md)
 - [Known issues](./known-issues.md)

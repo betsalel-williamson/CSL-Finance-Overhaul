@@ -6,32 +6,32 @@ Status as of 2026-11-15. Figma: UI Map band 04 "Roadmap — status" shows the sa
 
 ## Original ideas: 8 of 24 shipped, 1 partly, 15 not started
 
-| #   | Idea                                                       | Group      | Status                                                                                |
-| --- | ---------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------- |
-| 1   | City index fund                                            | Funds      | **Shipped** (experimental flag): Index stock, geometric (Jevons) average, rebased     |
-| 2   | Sector ETFs (e.g. Industrial & Cargo, Civic & Utilities)   | Funds      | Not started                                                                           |
-| 3   | High-dividend funds (periodic cash into the budget)        | Funds      | Not started (treasury piece 3, "dividend investments")                                |
-| 4   | Issue city bonds (raise money)                             | Bonds      | **Shipped** (flag): math, pricing, daily engine, Economy → Loans section              |
-| 5   | Buy / hold bonds (lend surplus for interest)               | Bonds      | Not started: **next treasury piece**; the schedule maths already works for both sides |
-| 6   | Infrastructure bond series (transit, utilities, education) | Bonds      | Not started                                                                           |
-| 7   | Resource commodities (oil, ore, forestry, farm)            | Commodity  | Not started                                                                           |
-| 8   | Utility commodities (power, water)                         | Commodity  | Not started                                                                           |
-| 9   | Cargo / freight basket                                     | Commodity  | Not started                                                                           |
-| 10  | Company listings and IPOs                                  | Listings   | Not started                                                                           |
-| 11  | Local IPOs (companies grown in the city list)              | Listings   | In progress, target 0.2.0 ([list](./local-ipos.md#road-to-020-list-of-2026-11-25))    |
-| 12  | Dividend shares (and dividend reinvestment orders)         | Listings   | Not started                                                                           |
-| 13  | Other exchanges (neighbour / regional boards)              | Listings   | Not started                                                                           |
-| 14  | Interface for many companies (search, group, watchlist)    | Listings   | Partly: Stock Monitor filters, sort and direction; Investments panel unchanged        |
-| 15  | Limit buy orders                                           | Automation | **Shipped**                                                                           |
-| 16  | Stop-loss sells                                            | Automation | **Shipped**                                                                           |
-| 17  | Take-profit sells                                          | Automation | **Shipped**                                                                           |
-| 18  | Trailing stop sells                                        | Automation | **Shipped**                                                                           |
-| 19  | Dollar-cost averaging (recurring monthly buys)             | Automation | Not started                                                                           |
-| 20  | Fill notifications                                         | Automation | **Shipped**: [Notices in Chirper](./notices.md), orders and bonds                     |
-| 21  | Ordinary market cycle (booms, corrections)                 | World      | Not started                                                                           |
-| 22  | Black swan events                                          | World      | Not started                                                                           |
-| 23  | External world pressure (demand spikes, rate shocks)       | World      | Not started                                                                           |
-| 24  | Live Stock Exchange ticker (stretch goal)                  | Facade     | **Shipped**: LED boards, % or price and ₡, brightness, info views, full at start      |
+| #   | Idea                                                       | Group      | Status                                                                                                                           |
+| --- | ---------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | City index fund                                            | Funds      | **Shipped** (experimental flag): Index stock, geometric (Jevons) average, rebased                                                |
+| 2   | Sector ETFs (e.g. Industrial & Cargo, Civic & Utilities)   | Funds      | Not started                                                                                                                      |
+| 3   | High-dividend funds (periodic cash into the budget)        | Funds      | Not started (treasury piece 3, "dividend investments")                                                                           |
+| 4   | Issue city bonds (raise money)                             | Bonds      | **Shipped** (flag): math, pricing, daily engine, Economy → Loans section                                                         |
+| 5   | Buy / hold bonds (lend surplus for interest)               | Bonds      | Not started: **next treasury piece**; the schedule maths already works for both sides                                            |
+| 6   | Infrastructure bond series (transit, utilities, education) | Bonds      | Not started                                                                                                                      |
+| 7   | Resource commodities (oil, ore, forestry, farm)            | Commodity  | Not started                                                                                                                      |
+| 8   | Utility commodities (power, water)                         | Commodity  | Not started                                                                                                                      |
+| 9   | Cargo / freight basket                                     | Commodity  | Not started                                                                                                                      |
+| 10  | Company listings and IPOs                                  | Listings   | Not started                                                                                                                      |
+| 11  | Local IPOs (companies grown in the city list)              | Listings   | In progress, target 0.2.0 ([list](./local-ipos.md#road-to-020-list-of-2026-11-25))                                               |
+| 12  | Dividend shares (and dividend reinvestment orders)         | Listings   | Not started                                                                                                                      |
+| 13  | Other exchanges (neighbour / regional boards)              | Listings   | Not started                                                                                                                      |
+| 14  | Interface for many companies (search, group, watchlist)    | Listings   | Partly: Stock Monitor filters, sort and direction; Investments panel redesign proposed ([design](./investments-and-research.md)) |
+| 15  | Limit buy orders                                           | Automation | **Shipped**                                                                                                                      |
+| 16  | Stop-loss sells                                            | Automation | **Shipped**                                                                                                                      |
+| 17  | Take-profit sells                                          | Automation | **Shipped**                                                                                                                      |
+| 18  | Trailing stop sells                                        | Automation | **Shipped**                                                                                                                      |
+| 19  | Dollar-cost averaging (recurring monthly buys)             | Automation | Not started                                                                                                                      |
+| 20  | Fill notifications                                         | Automation | **Shipped**: [Notices in Chirper](./notices.md), orders and bonds                                                                |
+| 21  | Ordinary market cycle (booms, corrections)                 | World      | Not started                                                                                                                      |
+| 22  | Black swan events                                          | World      | Not started                                                                                                                      |
+| 23  | External world pressure (demand spikes, rate shocks)       | World      | Not started                                                                                                                      |
+| 24  | Live Stock Exchange ticker (stretch goal)                  | Facade     | **Shipped**: LED boards, % or price and ₡, brightness, info views, full at start                                                 |
 
 Shipped: 1, 4, 15–18, 20, 24. Partly: 14. Everything else is not started.
 
