@@ -8,7 +8,8 @@ using FinanceOverhaul.Core;
 //   Vector3
 using UnityEngine;
 
-// Game classes used without a using (global namespace, Assembly-CSharp): SimulationManager
+// Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
+//   SimulationManager
 
 namespace FinanceOverhaul
 {
@@ -19,12 +20,6 @@ namespace FinanceOverhaul
         {
             if (window == null || !window.isVisible)
             {
-                return;
-            }
-
-            if (detailId >= 0)
-            {
-                RefreshDetail(force);
                 return;
             }
 
@@ -176,18 +171,24 @@ namespace FinanceOverhaul
 
         // ---------- rows ----------
 
+        private static void OpenDialog(int id)
+        {
+            if (id >= 0)
+            {
+                BuySellInvestmentPanel.ShowPanel((byte)id, BuySellInvestmentPanel.Mode.Buy);
+            }
+        }
+
         private Row BuildRow()
         {
             var r = new Row();
             r.Panel = list.AddUIComponent<UIPanel>();
             r.Panel.size = new Vector2(Width, RowHeight);
-            r.Panel.eventClick += (c, p) =>
-            {
-                if (r.Id >= 0)
-                {
-                    ShowDetail(r.Id);
-                }
-            };
+            // A stock opens the game's Invest dialog, which shows its chart, stats and orders
+            // (a Buy dialog with nothing left to buy turns to Sell). The game sends a quick
+            // second click as a double click: it opens the dialog too.
+            r.Panel.eventClick += (c, p) => OpenDialog(r.Id);
+            r.Panel.eventDoubleClick += (c, p) => OpenDialog(r.Id);
 
             UIPanel line = r.Line = r.Panel.AddUIComponent<UIPanel>();
             line.backgroundSprite = "EmptySprite"; // borderless: a true 1 px line

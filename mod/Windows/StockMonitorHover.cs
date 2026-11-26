@@ -28,16 +28,6 @@ namespace FinanceOverhaul
             }
 
             Vector2 mouse = FoPointer.Position;
-            if (detailId >= 0 && detail != null && detail.isVisible)
-            {
-                if (!HoverOver(dChart, mouse, dRangeShown, dSymbolShown, 4, ChartScale))
-                {
-                    HideHover();
-                }
-
-                return;
-            }
-
             foreach (Row r in rows)
             {
                 if (

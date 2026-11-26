@@ -59,6 +59,7 @@ namespace FinanceOverhaul
         private static readonly Color32 Loss = FoTheme.Loss;
         private static readonly Color32 Flat = FoTheme.TickerFlat;
         private static readonly Color32 Divider = FoTheme.Divider;
+        private static readonly Color32 Accent = FoTheme.Accent;
 
         public static StockMonitorHost Current { get; private set; }
 
@@ -192,16 +193,10 @@ namespace FinanceOverhaul
         // ---------- open / close ----------
 
         /// <summary>
-        /// Open or close outright (game UI tests; never toggles a player's window). Closing also
-        /// returns to the list, so a scenario starts from a known view.
+        /// Open or close outright (game UI tests; never toggles a player's window).
         /// </summary>
         public void SetOpen(bool open)
         {
-            if (!open && detailId >= 0)
-            {
-                ShowList();
-            }
-
             SetOpen(open, true);
         }
 
@@ -502,7 +497,6 @@ namespace FinanceOverhaul
             }
 
             rows.Clear();
-            DestroyDetail();
             hoverTip = null; // destroyed with the window
             hoverLine = null;
             hoverDot = null;

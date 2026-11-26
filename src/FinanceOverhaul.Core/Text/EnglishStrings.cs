@@ -132,7 +132,6 @@ namespace FinanceOverhaul.Core
             { "orders.compact", "{0} · {1} · {2}" },
             { "orders.summary.many", "{0} open (see Your Portfolio)" },
             // Stock Monitor: detail view
-            { "detail.back", "« All stocks" },
             { "detail.today", "Today" },
             { "detail.todayYesterday", "Today · yesterday {0}" },
             { "detail.yesterday", "Yesterday" },
@@ -143,13 +142,10 @@ namespace FinanceOverhaul.Core
             { "detail.noShares", "none" },
             { "detail.youOwn", "You own" },
             { "detail.avgCost", "Avg cost / share" },
-            { "detail.currentValue", "Current value" },
             { "detail.openOrders", "Open orders" },
+            { "order.info.held", "Value held" },
             { "detail.buy", "Buy" },
             { "detail.sell", "Sell" },
-            { "detail.trade.tip", "Buy / Sell open the game's Invest dialog (with order tabs)" },
-            { "detail.sell.none", "The city holds no shares of {0}" },
-            { "detail.history.limit", "the game keeps 30 daily prices" },
             // Stock Exchange LED ticker: the boards draw Latin letters, digits and ₡ only.
             { "ticker.waiting", "Waiting for market data" },
             // More than one copy of the mod switched on. The game's Yes / No dialog shows about

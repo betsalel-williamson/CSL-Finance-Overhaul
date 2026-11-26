@@ -163,13 +163,13 @@ geometry (40 px bar, 24 px gear beside a 32 px close button flush right).
 | 1   | `monitor.window`         | Window                 | Shipped; solid on hover (City Vitals); Esc planned                               |
 | 2   | `monitor.settings`       | Settings (⚙)           | Shipped: popover (`StockMonitorPopover`)                                         |
 | 3   | `monitor.filter`         | Filter + sort          | Shipped                                                                          |
-| 4   | `monitor.row`            | Row                    | Shipped; click → detail                                                          |
+| 4   | `monitor.row`            | Row                    | Shipped; click → the game's Invest dialog (2026-11-26)                           |
 | 5   | `monitor.sparkline`      | Sparkline              | Shipped (`Sparkline`, 30 game days)                                              |
 | 6   | `monitor.change`         | Change pill            | Shipped (black text; click flips ₡ / %)                                          |
 | 7   | `monitor.hover`          | Hover                  | Shipped (`StockMonitorHover`)                                                    |
-| 8   | `monitor.detail`         | Detail                 | Shipped (7D / 30D, `StockMonitorDetail`)                                         |
-| 9   | `monitor.stats`          | Stats                  | Shipped (`StockDetail`)                                                          |
-| 10  | `monitor.trade`          | Buy / Sell             | Shipped: game's Invest dialog                                                    |
+| 8   | `monitor.detail`         | Detail                 | Retired 2026-11-26: moved into the Invest dialog (`OrderTicket.Info`)            |
+| 9   | `monitor.stats`          | Stats                  | In the Invest dialog (`FO/StatGrid`, `StockDetail`)                              |
+| 10  | `monitor.trade`          | Buy / Sell             | The row click opens the game's Invest dialog                                     |
 | 11  | `monitor.open`           | Toolbar button         | Shipped (top-left mod row, right-drag to move)                                   |
 | 12  | `monitor.flag`           | Options flag           | Shipped: Stock Monitor window (testing)                                          |
 | 13  | `monitor.tabs`           | Tabs + order count     | Shipped (`MonitorOrders.TabLabel`)                                               |

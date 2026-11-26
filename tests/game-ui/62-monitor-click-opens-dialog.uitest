@@ -1,0 +1,26 @@
+# A click on a stock in the Stock Monitor opens the game's Invest dialog for it (with the chart,
+# 7D/30D tabs and the stats the Monitor's own detail view used to show); the Monitor keeps its list,
+# sort and filters as they were. Uses Oil, which every city has. UI only; the player's monitor
+# settings are put back.
+name Stock Monitor: a click on a stock opens its Invest dialog; the list stays as it was
+monitor remember
+monitor close
+click FinanceOverhaulStockMonitorButton
+wait 1
+click FinanceOverhaulStockMonitorFilter-All
+click FinanceOverhaulStockMonitorRow-Oil
+wait 1
+expect-visible FinanceOverhaulOrderInfo
+expect-text FinanceOverhaulOrderInfoStatKey-0-0 Yesterday
+expect-text FinanceOverhaulOrderInfoStatKey-0-1 30-day high
+expect-text FinanceOverhaulOrderInfoStatKey-2-1 Open orders
+expect-no-overflow FinanceOverhaulOrderInfo
+expect-visible FinanceOverhaulStockMonitorRows
+expect-visible FinanceOverhaulStockMonitorSort
+expect-visible FinanceOverhaulStockMonitorSortDirection
+expect-visible FinanceOverhaulStockMonitorFilter-All
+capture monitor-click-opens-dialog
+cleanup:
+close-dialog
+monitor close
+monitor restore

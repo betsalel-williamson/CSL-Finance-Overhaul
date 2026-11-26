@@ -1,5 +1,5 @@
 # Needs the dev test stock (TST). UI only: no days advanced, no trades.
-name hovering a Stock Monitor sparkline or the detail chart shows a crosshair and that day's price
+name hovering a Stock Monitor sparkline shows a crosshair and that day's price (the Invest dialog's chart: scenario 32)
 monitor remember
 monitor close
 monitor open
@@ -7,21 +7,9 @@ hover FinanceOverhaulStockMonitorSpark-TST 0.99 0.5
 expect-text FinanceOverhaulStockMonitorHoverTip TST · today · ₡
 hover FinanceOverhaulStockMonitorRow-TST 0.03 0.5
 expect-hidden FinanceOverhaulStockMonitorHoverTip
-click FinanceOverhaulStockMonitorRow-TST
-wait 1
-hover FinanceOverhaulStockMonitorDetailChart 0.99 0.5
-expect-text FinanceOverhaulStockMonitorHoverTip TST · today · ₡
-expect-visible FinanceOverhaulStockMonitorHoverLine
-hover FinanceOverhaulStockMonitorDetailChart 0.01 0.5
-expect-text FinanceOverhaulStockMonitorHoverTip TST · 29 days ago
 expect-no-overflow FinanceOverhaulStockMonitor
 capture stock-monitor-hover
-click FinanceOverhaulStockMonitorRange-7
-wait 1
-hover FinanceOverhaulStockMonitorDetailChart 0.01 0.5
-expect-text FinanceOverhaulStockMonitorHoverTip TST · 6 days ago
 cleanup:
 hover off
-click FinanceOverhaulStockMonitorRange-30
 monitor close
 monitor restore

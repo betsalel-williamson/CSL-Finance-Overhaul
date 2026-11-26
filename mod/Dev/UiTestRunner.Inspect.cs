@@ -32,11 +32,13 @@ namespace FinanceOverhaul
             {
                 case "dump":
                 {
-                    // "dump building-panel": the game's zoned building info panel. "dump
+                    // "dump building-panel": the game's zoned building info panel; "dump
+                    // invest-dialog": the game's Buy / Sell dialog. "dump
                     // (Library) X": any control whose name has a space in it.
                     string whole = line.Substring(cmd.Length).Trim();
                     UIComponent c =
                         a == "building-panel" ? UIView.GetAView().FindUIComponent(BuildingPanelName)
+                        : a == "invest-dialog" ? BuySellInvestmentPanel.instance.component
                         : whole.IndexOf(' ') > 0 ? UIView.GetAView().FindUIComponent(whole)
                         : FindControl(a, includeHidden: true);
                     if (c == null)

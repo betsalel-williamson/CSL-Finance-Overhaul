@@ -194,8 +194,10 @@ namespace FinanceOverhaul
                 }
 
                 ResetForShow();
+                infoSignature = null;
                 ShowViewHome();
                 NothingToBuy();
+                CenterDialog();
             }
             catch (Exception ex)
             {
@@ -354,6 +356,7 @@ namespace FinanceOverhaul
         /// <summary>Once a frame while the dialog is open: keeps the typed price grouped.</summary>
         public static void Tick()
         {
+            RefreshInfo();
             if (priceGrouping != null && priceField != null && priceField.isVisible)
             {
                 priceGrouping.Tick();
@@ -471,6 +474,7 @@ namespace FinanceOverhaul
         {
             try
             {
+                DetachInfo();
                 SetKind(null);
                 if (dark != null && addedHeight != 0f)
                 {

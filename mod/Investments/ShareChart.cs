@@ -40,12 +40,14 @@ namespace FinanceOverhaul
         /// <summary>Builds the chart filling <paramref name="size"/> inside <paramref name="parent"/>.</summary>
         /// <param name="opaque">Draw our own background (false inside the game's chart panel,
         /// whose sprite then shows exactly as the game draws it).</param>
+        /// <param name="top">Room kept free above the plot (for controls over the chart).</param>
         public static ShareChartView Create(
             UIComponent parent,
             string name,
             Vector2 size,
             float labelScale,
-            bool opaque = true
+            bool opaque = true,
+            float top = 0f
         )
         {
             var v = new ShareChartView();
@@ -62,7 +64,7 @@ namespace FinanceOverhaul
 
             float axisW = 56f * labelScale / 0.7f,
                 footer = 18f * labelScale / 0.7f;
-            var plot = new Vector2(size.x - axisW - 12f, size.y - footer - 12f);
+            var plot = new Vector2(size.x - axisW - 12f, size.y - footer - 12f - top);
             v.texture = new Texture2D(
                 (int)plot.x * Scale,
                 (int)plot.y * Scale,
@@ -74,7 +76,7 @@ namespace FinanceOverhaul
             v.Sprite = v.Root.AddUIComponent<UITextureSprite>();
             v.Sprite.name = name + "Plot";
             v.Sprite.size = plot;
-            v.Sprite.relativePosition = new Vector3(8f, 6f);
+            v.Sprite.relativePosition = new Vector3(8f, 6f + top);
             v.Sprite.texture = v.texture;
             v.Sprite.isInteractive = false;
 
@@ -92,7 +94,7 @@ namespace FinanceOverhaul
             }
 
             v.from = FoText.Label(v.Root, name + "From", "", labelScale, FoTheme.ChartLabel);
-            v.from.relativePosition = new Vector3(8f, 6f + plot.y + 3f);
+            v.from.relativePosition = new Vector3(8f, 6f + top + plot.y + 3f);
             v.from.isInteractive = false;
             v.to = FoText.Label(
                 v.Root,
@@ -104,7 +106,7 @@ namespace FinanceOverhaul
             v.to.isInteractive = false;
             v.to.relativePosition = new Vector3(
                 8f + plot.x - 30f * labelScale / 0.7f,
-                6f + plot.y + 3f
+                6f + top + plot.y + 3f
             );
             return v;
         }
@@ -332,12 +334,23 @@ namespace FinanceOverhaul
             }
         }
 
+        /// <summary>
+        /// Days the Invest dialog's chart shows (its 7D | 30D tabs); the stock tooltip always
+        /// shows all the game keeps.
+        /// </summary>
+        public static int DialogDays = StockDetail.LongRange;
+
+        /// <summary>Room above the dialog's plot for its 7D | 30D tabs.</summary>
+        private const float DialogTabsRoom = 26f;
+
         public static void OnDialogBindings(BuySellInvestmentPanel panel)
         {
             Apply(
                 panel == null ? null : DialogGraph.GetValue(panel) as UIGraph,
                 panel == null ? -1 : (byte)DialogId.GetValue(panel),
-                0.7f
+                0.7f,
+                DialogDays,
+                DialogTabsRoom
             );
         }
 
@@ -346,11 +359,13 @@ namespace FinanceOverhaul
             Apply(
                 tip == null ? null : TipGraph.GetValue(tip) as UIGraph,
                 tip == null ? -1 : (byte)TipId.GetValue(tip),
-                0.7f
+                0.7f,
+                StockDetail.LongRange,
+                0f
             );
         }
 
-        private static void Apply(UIGraph graph, int id, float labelScale)
+        private static void Apply(UIGraph graph, int id, float labelScale, int days, float top)
         {
             if (graph == null || id < 0)
             {
@@ -398,7 +413,8 @@ namespace FinanceOverhaul
                         ShareChartView.Prefix,
                         new Vector2(graph.width, graph.height - PanelBottomInset),
                         labelScale,
-                        opaque: false
+                        opaque: false,
+                        top: top
                     );
                     Views[graph] = view;
                 }
@@ -406,7 +422,7 @@ namespace FinanceOverhaul
                 var history = new float[Investment.kPastValueCount];
                 buffer[id].FillGraphValues(history);
                 history = CompanyListing.ChartDays(buffer[id].Info.m_investmentAI, history);
-                float[] range = StockDetail.Range(history, StockDetail.LongRange);
+                float[] range = StockDetail.Range(history, days);
                 // One rule everywhere: the game's change rate (list, pills, Economy panel, LED).
                 Color32 colour = FoTheme.Change(
                     StockMonitor.ChangeColour(

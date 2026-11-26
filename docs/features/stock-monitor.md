@@ -24,9 +24,7 @@ a phone stocks app, styled like the City Vitals window players already know.
 - **Sort direction:** a ▼/▲ button right of "Sort: …" flips the order (highest or Z first ↔ lowest
   or A first). Each sort starts in its natural direction (Change, Price, Value held highest first;
   Symbol A→Z); ties stay A→Z. Kept per player (`monitor.sortReversed`). Proved over 2,000 random
-  lists for every sort (`MonitorSortDirectionTests`); game UI scenario 45 flips it in game. The
-  sort, its direction button and the filter tabs belong to the list and are hidden in a stock's
-  detail view (scenario 62).
+  lists for every sort (`MonitorSortDirectionTests`); game UI scenario 45 flips it in game.
 - **Rows:** ticker symbol (same as the LED board; unique per stock, see
   [Brokerage mechanics map](./brokerage-mechanics-map.md)) and name; a cyan dot when the city holds
   it and a gold "N orders" badge for open orders; a sparkline of the game's 30 daily prices with a
@@ -62,30 +60,35 @@ shows how many are open on the stocks listed, "Orders (6)", on every tab.
   changes either.
 - Rules and wording: `MonitorOrders` (`MonitorOrdersTests`); game UI scenario 54.
 
-## Detail view (shipped)
+## A click opens the Invest dialog (2026-11-26)
 
-Click a row: the window shows that stock in place of the list (**« All stocks** goes back; the
-window remembers which view was open).
+Click a row (or click it twice quickly): the game's Invest dialog opens for that stock, on Buy, or
+on Sell when the city may buy no more (`OrderTicket.NothingToBuy`). The Monitor keeps its list, sort
+and filters as they were (scenario 62). The dialog shows what the Monitor's own detail view used to,
+so there is one place to look at a stock and trade it:
 
-- **Header:** symbol and name; today's price with its change in ₡ and % — the game's change rate,
-  the same measure as the row's pill — and "Today · yesterday ₡…" for reference.
-- **Chart:** **7D** or **30D** (a tab group) (the game keeps 30 daily prices) — line, shaded area,
-  dashed line at yesterday's price, grid with ₡ labels at the high, the low and two steps between.
-- **Stats:** today, yesterday, the range's high and low; shares held, avg cost / share
-  ([Cost basis](./cost-basis.md)), gain or loss like Your Portfolio (current value − you invested;
-  "—" with no shares) and current value; then **Open orders** across the full width — one or two
-  orders in short form ("BUY ≤ ₡95 · SELL ≥ ₡125 (target)"), or "3 open (see Your Portfolio)". Each
-  value is right-aligned in the space its label leaves and shrinks slightly (never below 0.6) rather
-  than being cut off; scenario `33-tst-monitor-orders-fit` checks the list, detail and Your
-  Portfolio cards with three open orders.
-- **Buy / Sell** open the game's Invest dialog for that stock (with the order tabs). Sell is
-  disabled when the city holds none.
+- **Chart:** **7D** or **30D** tabs (a secondary tab group) on the game's chart, in the Monitor's
+  style (`ShareChartView`): line, shaded area, dashed line at yesterday's price, ₡ grid, hover. The
+  range is remembered while the game runs (`ShareChartOverlay.DialogDays`).
+- **Change:** beside "Current value: ₡X / share", the change in ₡ and % — the game's change rate,
+  the same measure as the row's pill.
+- **Stats** (`FO/StatGrid`, three rows between the description and the trade): yesterday, the
+  range's high and low; shares held, avg cost / share ([Cost basis](./cost-basis.md)), the value
+  held; gain or loss like Your Portfolio ("—" with no shares) and **Open orders** across two cells
+  ("BUY ≤ ₡95 · SELL ≥ ₡125 (target)", or "3 open (see Your Portfolio)"). Each value is
+  right-aligned in the space its label leaves and shrinks slightly (never below 0.6) rather than
+  being cut off; scenario `33-tst-monitor-orders-fit` checks it with three open orders.
+- The dialog grows by the stats' height and is centred again whenever it grows, so it stays on
+  screen.
+
+The Monitor's detail view (« All stocks, its own chart, stats and Buy / Sell buttons) is gone: it
+showed the same stock in a second place and needed a second click to trade.
 
 ## Hover (shipped)
 
-Over any row sparkline or the detail chart: a crosshair, a dot on the line and a bubble with that
-day's price ("Oil · 8 days ago · ₡925", "today", "yesterday"), like City Vitals' value bubble.
-Hit-testing runs only while the mouse is over the window.
+Over any row sparkline (and the Invest dialog's chart): a crosshair, a dot on the line and a bubble
+with that day's price ("Oil · 8 days ago · ₡925", "today", "yesterday"), like City Vitals' value
+bubble. Hit-testing runs only while the mouse is over the window.
 
 ## Opacity and hover
 
@@ -119,7 +122,7 @@ All of it is kept per player in the settings file (`monitor.compact`, `monitor.s
 ## Share value charts (shipped)
 
 The game's own "Share value" charts — in the Invest dialog and in the Economy panel's hover tooltip
-— are drawn in the same style as the detail view (`ShareChartView`): line and shaded area coloured
+— are drawn in the same style as the Monitor (`ShareChartView`): line and shaded area coloured
 by the change rate, dashed line at yesterday's price, ₡ grid on the right, "30 days ago … today",
 and the same hover (crosshair, dot, "Oil · 8 days ago · ₡925").
 
@@ -136,17 +139,17 @@ and the same hover (crosshair, dot, "Oil · 8 days ago · ₡925").
 
 ## One colour rule
 
-Green, red and grey everywhere — row pills (% and ₡), row sparklines, the detail header and chart,
+Green, red and grey everywhere — row pills (% and ₡), row sparklines, the dialog's change and chart,
 and the Invest dialog / tooltip charts — follow **one measure: the game's change rate**, the number
 the Economy panel shows as "Change rate" and the LED board shows (`CalculateChangeRate(…, 5)`, a
 short trend over the last few days, not just since yesterday). 0.00 is grey, as on the LED. The
 dashed line marks yesterday's price as a reference only. **One ₡-change rule everywhere:** every ₡
-change (Monitor pills, the detail header, the LED "price and ₡ change" mode, the ₡ sort) comes from
+change (Monitor pills, the dialog's change, the LED "price and ₡ change" mode, the ₡ sort) comes from
 `StockMonitor.ChangeAmount` = price × r / (1 + r), shown with cents up to ₡9.99 and whole ₡ from ₡10
 (decided on the rounded value, so never "₡10.00"); proved over 5,000 quotes in
 `OneCurrencyChangeRuleTests`. The dashed line is drawn as thick as the price line (dash and gap 3×
 that thickness), stays on top of the shaded area and of the grid lines, so it survives the chart
-being scaled down in every view (sparklines, detail, share charts; `SparklineTests`).
+being scaled down in every view (sparklines, share charts; `SparklineTests`).
 
 ## History limit
 
@@ -171,8 +174,9 @@ is removed by name. Prices move once per game day, so rows are rebuilt only when
 
 - Rules: `StockMonitor`, `Sparkline`, `StockMonitorSettings` in the Market library (unit tested).
 - Host: `StockMonitorHost` (`mod/Windows/StockMonitorWindow.cs`), added to the ticker root.
-- Game UI scenarios `27-stock-monitor-list` and `29-tst-stock-monitor-detail` (UI only: no days
-  advanced, no trades).
-- Detail numbers and wording: `StockDetail` (Market, unit tested); host `StockMonitorDetail.cs`.
+- Game UI scenarios `27-stock-monitor-list`, `29-tst-stock-monitor-detail` and
+  `62-monitor-click-opens-dialog` (UI only: no days advanced, no trades).
+- Dialog numbers and wording: `StockDetail` (Market, unit tested); host
+  `mod/Investments/OrderTicket.Info.cs`, grid `mod/Kit/FoStatGrid.cs`.
 - Share charts: `mod/Investments/ShareChart.cs`; scenario `32-tst-share-chart-dialog`.
 - Figma: UI Map band 10; component `FO/ShareChart` restyled to match.

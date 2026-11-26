@@ -1,6 +1,6 @@
 # Needs the dev test stock (TST). Trades 10 TST and places orders but advances no days (nothing
 # fills); cleanup cancels them, sells back and restores the player's monitor settings.
-name with open buy and sell orders, the Stock Monitor list, detail and Your Portfolio cards keep every text inside its box
+name with open buy and sell orders, the Stock Monitor list, the Invest dialog's stats and Your Portfolio cards keep every text inside its box
 # the game's own Investments lists, whatever the "Investments list and research" flag says
 investments-list off
 monitor remember
@@ -27,19 +27,21 @@ expect-text FinanceOverhaulStockMonitorOrders-TST 2 orders
 expect-no-overflow FinanceOverhaulStockMonitor
 click FinanceOverhaulStockMonitorRow-TST
 wait 1
-expect-text FinanceOverhaulStockMonitorDetailStat-4-0 BUY ≤ ₡95 · SELL ≥ ₡125 (target)
-expect-no-overflow FinanceOverhaulStockMonitor
-capture monitor-detail-two-orders
+expect-text FinanceOverhaulOrderInfoStat-2-1 BUY ≤ ₡95 · SELL ≥ ₡125 (target)
+expect-no-overflow FinanceOverhaulOrderInfo
+capture dialog-stats-two-orders
+close-dialog
 show-sell TST
 click FinanceOverhaulOrderTab-StopLossSell
 type FinanceOverhaulShareAmountField 10
 type FinanceOverhaulLimitPriceField 80
 click Button
 expect-orders-delta 3
+show-buy TST
 wait 1
-expect-text FinanceOverhaulStockMonitorDetailStat-4-0 3 open (see Your Portfolio)
-expect-no-overflow FinanceOverhaulStockMonitor
-click FinanceOverhaulStockMonitorBack
+expect-text FinanceOverhaulOrderInfoStat-2-1 3 open (see Your Portfolio)
+expect-no-overflow FinanceOverhaulOrderInfo
+close-dialog
 wait 1
 click FinanceOverhaulStockMonitorSettings
 click FinanceOverhaulStockMonitorOpt-Compact

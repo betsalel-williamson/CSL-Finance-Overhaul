@@ -235,6 +235,7 @@ namespace FinanceOverhaul
             tabs.zOrder = slider.zOrder;
             sides.zOrder = tabs.zOrder;
             pricePanel.zOrder = slider.zOrder + 1;
+            BuildInfo(root);
             ModLog.Info("order ticket: attached (buy and sell order types)");
         }
 
@@ -352,6 +353,19 @@ namespace FinanceOverhaul
 
             Grow(wanted - addedHeight);
             addedHeight = wanted;
+            CenterDialog();
+        }
+
+        /// <summary>
+        /// The dialog grows with what the mod adds (stats, tabs, price fields): kept centred on
+        /// the screen, as the game centres it when it opens, so it never runs off the bottom.
+        /// </summary>
+        private static void CenterDialog()
+        {
+            if (owner != null && owner.component != null && owner.component.isVisible)
+            {
+                owner.component.CenterToParent();
+            }
         }
 
         private static bool AnyOrderTab(bool buy)
