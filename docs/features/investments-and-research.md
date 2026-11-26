@@ -1,7 +1,8 @@
 # Investments list and research (design)
 
-Status: **proposal, nothing built** (decided 2026-11-25). Figma UI Map band 20; band 18 holds the
-earlier condensed-row sketches this grows from.
+Status: **step 1 built 2026-11-25** behind the dev flag "Investments list and research" (see
+[Step 1 as built](#step-1-as-built-2026-11-25)); steps 2–6 not built. Figma UI Map band 20; band 18
+holds the earlier condensed-row sketches this grows from.
 
 ## Why
 
@@ -114,6 +115,33 @@ A throwaway dev spike put one list in place of the two in a running game (not ke
 - **Game UI scenario:** the list replaces the two, filters, sort, scroll keeps its place through a
   purchase and a reopen, Buy and Sell open the dialog, a locked stock shows its bar, flag off gives
   the game's tab back.
+
+## Step 1 as built (2026-11-25)
+
+- **Flag:** Options → Feature flags → "Investments list and research" (dev builds; off and pinned
+  off in release builds). Off, the game's two lists are untouched; on, `InvestmentsList` hides the
+  page's five controls and shows the list; off again (or a hot reload) shows them again.
+- **Top bar:** All · Owned · Local tabs with their counts; the Stock Monitor's sorts (Change %,
+  Symbol, Price, Value held) and its direction button. The sort is kept for the session.
+- **Sections:** Your portfolio (its value and gain, "₡3,869,000 · +₡74,500"), Local companies (local
+  companies the city does not hold), All stocks (the rest, locked stocks last in A–Z order). A held
+  local company is in Your portfolio. Empty sections are left out.
+- **Rows:** the stock's coin, symbol and name (the game's description is the name's tooltip), the
+  30-day line, price, the change pill; for a holding "500 sh · avg ₡6,616" and the gain with its
+  percentage; an orders badge ("2 orders"); Buy (hidden on a locked stock) and Sell (only when held)
+  open the game's dialog. A locked stock shows "Locked · 30 / 50" and a bar towards it.
+- **Scrolling:** three rows a notch, the game's scrollbar; the stock at the top of the view stays
+  there when the list changes (a purchase, the daily update), and the place is kept when the panel
+  is closed and opened.
+- **Library:** `InvestmentList` (sections, filters, row places, keeping the place, wording) with
+  `InvestmentListTests`; `MarketQuotes` reads every stock for both the Monitor and this list.
+- **Checked:** game UI scenario 79 (the list replaces the two, filters, sort and direction, a
+  reopen, flag off); scenario 80 (TST: a purchase moves the stock into Your portfolio); the same
+  purchase checked on Oil in a city without TST. Scenarios 27, 52, 68 and 69 still pass.
+- **Not in step 1 (later steps):** the Watchlist and News tabs and the ★; a click on a row opening
+  the Stock Monitor (step 2, with Research); the OFFERING / LOCAL badges and the kinds' unlock bars
+  in Local companies (the game's cards keep them while the flag is off); measuring what the game's
+  hidden cards cost a frame with many stocks.
 
 ## Open questions
 

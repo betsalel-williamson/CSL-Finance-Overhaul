@@ -1,0 +1,47 @@
+# Economy → Investments as one sectioned list (Options → Feature flags → "Investments list and
+# research"): the game's two lists, their titles and the Total value bar are hidden and one list
+# takes their place, with filter tabs (All, Owned, Local), the Stock Monitor's sort and its
+# direction. Assumes nothing about what the city holds. Flag off gives the game's tab back.
+name investments list: one sectioned list in place of the two, filters and sort, and back
+close-economy
+investments-list on
+show-economy
+wait 1.5
+expect-hidden InvestmentsPanel
+expect-hidden OwnedInvestmentsPanel
+expect-hidden OwnedInvestmentsSummaryPanel
+expect-visible FinanceOverhaulInvestmentsList
+expect-text FinanceOverhaulInvestmentsTab-All All
+expect-text FinanceOverhaulInvestmentsSort Sort: Change %
+capture investments-list-all
+expect-no-overflow FinanceOverhaulInvestmentsList
+click FinanceOverhaulInvestmentsTab-Owned
+wait 0.5
+expect-hidden FinanceOverhaulInvestmentsHeading-All
+expect-hidden FinanceOverhaulInvestmentsHeading-Local
+click FinanceOverhaulInvestmentsTab-All
+wait 0.5
+click FinanceOverhaulInvestmentsSort
+wait 0.5
+expect-text FinanceOverhaulInvestmentsSort Sort: Symbol
+click FinanceOverhaulInvestmentsSortDirection
+wait 0.5
+investments-scroll 400
+wait 0.5
+capture investments-list-scrolled
+# closing and opening the panel keeps the list where it was
+close-economy
+wait 0.5
+show-economy
+wait 1.5
+expect-visible FinanceOverhaulInvestmentsList
+expect-hidden InvestmentsPanel
+investments-list off
+wait 1
+expect-visible InvestmentsPanel
+expect-visible OwnedInvestmentsPanel
+expect-visible OwnedInvestmentsSummaryPanel
+expect-hidden FinanceOverhaulInvestmentsList
+cleanup:
+investments-list restore
+close-economy

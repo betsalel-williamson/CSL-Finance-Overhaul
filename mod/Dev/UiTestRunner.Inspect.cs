@@ -6,7 +6,7 @@ using System.IO; // Path
 // ColossalFramework.UI: UIComponent, UIFont, UILabel, UIPanel, UIScrollablePanel, UISlider,
 //   UITextComponent, UIView
 using ColossalFramework.UI;
-using FinanceOverhaul.Core; // DuplicateCopies, SliderThumb
+using FinanceOverhaul.Core; // DuplicateCopies, InvestmentRow, SliderThumb
 using UnityEngine; // Application, GameObject, Mathf, Resources, Vector2, Vector3, WaitForSeconds
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
@@ -85,6 +85,71 @@ namespace FinanceOverhaul
                     }
 
                     ModLog.Info("ui: " + n + " control(s) named " + a); // not shown: dev log
+                    break;
+                }
+                case "investments-list":
+                {
+                    // investments-list on|off|restore — the Options flag for the one sectioned
+                    // list in Economy → Investments (restore: as the player had it).
+                    if (Mod.Settings == null)
+                    {
+                        r.Error = "no settings loaded";
+                        break;
+                    }
+
+                    if (!ctx.InvestmentListBefore.HasValue)
+                    {
+                        ctx.InvestmentListBefore = Mod.Settings.InvestmentListEnabled;
+                    }
+
+                    Mod.Settings.InvestmentListEnabled =
+                        a == "restore" ? ctx.InvestmentListBefore.Value : a == "on";
+                    yield return null;
+                    yield return null;
+                    break;
+                }
+                case "investments-scroll":
+                {
+                    // investments-scroll PIXELS — moves the list as the wheel would.
+                    InvestmentsList shown = InvestmentsList.Current;
+                    if (shown == null)
+                    {
+                        r.Error = "the investments list is not shown";
+                        break;
+                    }
+
+                    shown.ScrollBy(float.Parse(a, CultureInfo.InvariantCulture));
+                    yield return null;
+                    break;
+                }
+                case "expect-investments":
+                {
+                    // expect-investments SECTION SYMBOL — that stock is listed in that section
+                    // (Portfolio, Local, All); logs the whole list first. SECTION "none": not listed.
+                    InvestmentsList shown = InvestmentsList.Current;
+                    if (shown == null)
+                    {
+                        r.Error = "the investments list is not shown";
+                        break;
+                    }
+
+                    var sb = new System.Text.StringBuilder();
+                    string found = "none";
+                    foreach (InvestmentRow row in shown.Rows)
+                    {
+                        sb.Append(row.Key).Append(' ');
+                        if (row.Stock != null && row.Stock.Symbol == b)
+                        {
+                            found = row.Section.ToString();
+                        }
+                    }
+
+                    ModLog.Info("uitest: investments list " + sb + "offset " + shown.Offset);
+                    if (!string.Equals(found, a, StringComparison.OrdinalIgnoreCase))
+                    {
+                        r.Error = b + " is in " + found + ", expected " + a;
+                    }
+
                     break;
                 }
                 case "share-charts":

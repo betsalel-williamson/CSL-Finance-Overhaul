@@ -41,6 +41,21 @@ namespace FinanceOverhaul.Core
             { "monitor.footer.date", "d MMM yyyy" },
             // Stock Monitor: tabs
             { "monitor.filter.all", "All" },
+            { "investments.filter.All", "All {0}" },
+            { "investments.filter.Owned", "Owned {0}" },
+            { "investments.filter.Local", "Local {0}" },
+            { "investments.section.Portfolio", "Your portfolio" },
+            { "investments.section.Local", "Local companies" },
+            { "investments.section.All", "All stocks" },
+            { "investments.section.count.one", "{0} stock" },
+            { "investments.section.count.other", "{0} stocks" },
+            { "investments.section.portfolioDetail", "{0} · {1}" },
+            { "investments.row.holding", "{0} sh · avg {1}" },
+            { "investments.row.gainPercent", "{0} ({1}%)" },
+            { "investments.row.orders.one", "{0} order" },
+            { "investments.row.orders.other", "{0} orders" },
+            { "investments.row.locked", "Locked · {0}" },
+            { "investments.empty", "Nothing to show here yet." },
             { "monitor.filter.portfolio", "Portfolio" },
             { "monitor.filter.orders", "Orders" },
             { "monitor.filter.ordersCount", "Orders ({0})" },
@@ -668,6 +683,10 @@ namespace FinanceOverhaul.Core
             {
                 "options.flag.localIpos",
                 "Local IPOs (being built: counts healthy businesses; adds mod save data)"
+            },
+            {
+                "options.flag.investmentList",
+                "Investments list and research (being built: one list in place of the two)"
             },
             {
                 "options.flag.testStock",

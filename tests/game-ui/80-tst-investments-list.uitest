@@ -1,0 +1,32 @@
+# Needs the dev test stock (TST) in a test save. The one sectioned list in Economy → Investments:
+# a purchase moves TST from All stocks into Your portfolio with its holding and gain, Buy on its
+# row opens the game's dialog, and the stock at the top of the view stays there through the
+# purchase. Selling the shares back moves it out again.
+name investments list: a purchase moves the stock into Your portfolio and the list keeps its place
+close-economy
+investments-list on
+set-price TST 100
+run-days 1
+remember TST
+show-economy
+wait 1.5
+# from the top, whatever an earlier visit left
+investments-scroll -100000
+expect-investments All TST
+click FinanceOverhaulInvestmentsRow-TSTBuy
+wait 1
+type FinanceOverhaulShareAmountField 4
+click Button
+wait 1.5
+expect-owned-delta TST 4
+expect-investments Portfolio TST
+expect-text FinanceOverhaulInvestmentsRow-TSTHolding 4 sh · avg ₡100
+expect-visible FinanceOverhaulInvestmentsRow-TSTSell
+expect-visible FinanceOverhaulInvestmentsHeading-Portfolio
+capture investments-list-tst-held
+cleanup:
+sell-back TST 4
+set-price TST 100
+close-dialog
+investments-list restore
+close-economy

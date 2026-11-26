@@ -19,6 +19,7 @@ namespace FinanceOverhaul.Core
         private const string ShareChartsKey = "shareChartsEnabled";
         private const string CityBondsKey = "cityBondsEnabled";
         private const string LocalIposKey = "localIposEnabled";
+        private const string InvestmentListKey = "investmentListEnabled";
         private const string IpoDialogKey = "ipoDialogEnabled";
         private const string TickerShowsKey = "tickerShows";
         private const string TickerBrightnessKey = "tickerBrightness";
@@ -192,6 +193,10 @@ namespace FinanceOverhaul.Core
                 {
                     settings.LocalIposEnabled = flag;
                 }
+                else if (string.Equals(key, InvestmentListKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.InvestmentListEnabled = flag;
+                }
                 else if (string.Equals(key, IpoDialogKey, StringComparison.OrdinalIgnoreCase))
                 {
                     settings.IpoDialogEnabled = flag;
@@ -271,6 +276,10 @@ namespace FinanceOverhaul.Core
             sb.Append(LocalIposKey)
                 .Append('=')
                 .Append(settings.LocalIposEnabled ? "true" : "false")
+                .Append('\n');
+            sb.Append(InvestmentListKey)
+                .Append('=')
+                .Append(settings.InvestmentListEnabled ? "true" : "false")
                 .Append('\n');
             sb.Append(IpoDialogKey)
                 .Append('=')

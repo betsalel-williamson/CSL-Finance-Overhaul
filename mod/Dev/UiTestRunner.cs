@@ -107,6 +107,7 @@ namespace FinanceOverhaul
 
             /// <summary>The player's Local IPOs flag, kept while a scenario switches it.</summary>
             public bool? LocalIposBefore;
+            public bool? InvestmentListBefore;
             public int Fireworks = IpoFireworks.Launched;
 
             /// <summary>Cents a scenario took out of the city's cash with cash-set, to put back.</summary>
@@ -217,6 +218,11 @@ namespace FinanceOverhaul
             if (ctx.LocalIposBefore.HasValue && Mod.Settings != null)
             {
                 Mod.Settings.LocalIposEnabled = ctx.LocalIposBefore.Value;
+            }
+
+            if (ctx.InvestmentListBefore.HasValue && Mod.Settings != null)
+            {
+                Mod.Settings.InvestmentListEnabled = ctx.InvestmentListBefore.Value;
             }
 
             RemoveTestCompanies(ctx);

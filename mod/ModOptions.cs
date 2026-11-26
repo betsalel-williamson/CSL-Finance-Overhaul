@@ -152,6 +152,11 @@ namespace FinanceOverhaul
                     OnLocalIposChanged
                 );
                 flags.AddCheckbox(
+                    Strings.Get("options.flag.investmentList"),
+                    Settings.InvestmentListEnabled,
+                    OnInvestmentListChanged
+                );
+                flags.AddCheckbox(
                     Strings.Get("options.flag.testStock"),
                     Settings.DevTestStockEnabled,
                     OnDevTestStockChanged
@@ -316,6 +321,14 @@ namespace FinanceOverhaul
             Settings.LocalIposEnabled = enabled;
             Mod.SaveSettings();
             ModLog.Info("local ipos enabled=" + enabled);
+        }
+
+        private static void OnInvestmentListChanged(bool enabled)
+        {
+            ModSettings Settings = Mod.EnsureSettings();
+            Settings.InvestmentListEnabled = enabled;
+            Mod.SaveSettings();
+            ModLog.Info("investment list enabled=" + enabled);
         }
 
         private static void OnStockMonitorChanged(bool enabled)

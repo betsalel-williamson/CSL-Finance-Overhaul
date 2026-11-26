@@ -53,6 +53,21 @@ namespace FinanceOverhaul.Core
         /// <summary>Game investment id (host use only).</summary>
         public int Id;
 
+        /// <summary>What the city paid for the shares it holds (the game's "You invested").</summary>
+        public long Spent;
+
+        /// <summary>A local company the city grew (Local IPOs), not one of the game's stocks.</summary>
+        public bool Local;
+
+        /// <summary>Not yet on sale: the game's requirement is not met.</summary>
+        public bool Locked;
+
+        /// <summary>Towards the requirement, 0 to 1 (locked stocks).</summary>
+        public float UnlockProgress;
+
+        /// <summary>The game's requirement text, e.g. "64 / 200" (locked stocks).</summary>
+        public string UnlockText;
+
         public double ValueHeld
         {
             get { return (double)Price * Owned; }

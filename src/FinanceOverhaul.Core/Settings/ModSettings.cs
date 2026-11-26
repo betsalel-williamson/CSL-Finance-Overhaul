@@ -27,6 +27,7 @@ namespace FinanceOverhaul.Core
 
             // Not ready for players: still being built.
             LocalIposEnabled = false;
+            InvestmentListEnabled = false;
 
             // Dev only.
             DevTestStockEnabled = false;
@@ -69,6 +70,13 @@ namespace FinanceOverhaul.Core
         /// that count to the save's mod data.
         /// </summary>
         public bool LocalIposEnabled { get; set; }
+
+        /// <summary>
+        /// Feature flag, off by default and off in release builds while it is being built: one
+        /// sectioned list in place of Economy → Investments' two (design:
+        /// investments-and-research.md). UI only and save-neutral; off gives the game's tab back.
+        /// </summary>
+        public bool InvestmentListEnabled { get; set; }
 
         /// <summary>
         /// Preference: show the IPO dialog when a local company is announced. The dialog's

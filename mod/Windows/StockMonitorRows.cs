@@ -1,4 +1,4 @@
-using System.Collections.Generic; // Dictionary, List
+using System.Collections.Generic; // List
 // ColossalFramework.UI: UIButton, UIComponent, UIHorizontalAlignment, UIPanel, UITextureSprite
 using ColossalFramework.UI;
 // FinanceOverhaul.Core: MonitorFilter, MonitorOrderGroup, MonitorOrderLine, MonitorOrders,
@@ -8,8 +8,7 @@ using FinanceOverhaul.Core;
 //   Vector3
 using UnityEngine;
 
-// Game classes used without a using (global namespace, Assembly-CSharp): EconomyManager,
-//   Investment, InvestmentAI, InvestmentInfo, SimulationManager
+// Game classes used without a using (global namespace, Assembly-CSharp): SimulationManager
 
 namespace FinanceOverhaul
 {
@@ -172,56 +171,7 @@ namespace FinanceOverhaul
 
         private static List<MonitorQuote> Quotes()
         {
-            var quotes = new List<MonitorQuote>();
-            var orders = new Dictionary<string, int>();
-            foreach (TradeOrder o in OrderDesk.Snapshot())
-            {
-                int n;
-                orders.TryGetValue(o.InvestmentKey, out n);
-                orders[o.InvestmentKey] = n + 1;
-            }
-
-            Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
-            for (int i = 0; i < buffer.Length; i++)
-            {
-                if ((buffer[i].m_flags & Investment.Flags.Created) == 0)
-                {
-                    continue;
-                }
-
-                InvestmentInfo info = buffer[i].Info;
-                InvestmentAI ai = info == null ? null : info.m_investmentAI;
-                if (ai == null || !ai.IsAvailable((byte)i, ref buffer[i]))
-                {
-                    continue;
-                }
-
-                string name = ai.GetLocalizedName();
-                var history = new float[Investment.kPastValueCount];
-                buffer[i].FillGraphValues(history);
-                int count;
-                orders.TryGetValue(info.name, out count);
-                quotes.Add(
-                    new MonitorQuote
-                    {
-                        Id = i,
-                        Prefab = info.name,
-                        Symbol = StockSymbols.For(info),
-                        Name = name,
-                        Price = buffer[i].value,
-                        ChangeRate = ai.CalculateChangeRate(
-                            (byte)i,
-                            ref buffer[i],
-                            TickerFeed.PanelChangeRateWindow
-                        ),
-                        History = history,
-                        Owned = ai.OwnedCount(ref buffer[i]),
-                        OpenOrders = count,
-                    }
-                );
-            }
-
-            return quotes;
+            return MarketQuotes.Read(false);
         }
 
         // ---------- rows ----------
