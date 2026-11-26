@@ -89,8 +89,11 @@ Hit-testing runs only while the mouse is over the window.
 
 ## Opacity and hover
 
+The window is drawn on the game's own window art (`MenuPanel`: grey, with its title band), as City
+Vitals and the game's panels are; until 2026-11-25 it was a near-black fill.
+
 Like City Vitals' "Transparent Unhovered": the whole window sits at the chosen opacity and turns
-fully solid while the mouse is over it (`monitor.transparentUnhovered`, on by default), its dark
+fully solid while the mouse is over it (`monitor.transparentUnhovered`, on by default), its
 background included, so nothing of the city shows through while reading it (City Vitals' panel is
 opaque under the mouse too; the background was 90% until 2026-11-25). Background, text, pills and
 charts fade together, as City Vitals' panel does. The window never goes below 15%, so it can always

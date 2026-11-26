@@ -282,8 +282,10 @@ namespace FinanceOverhaul
 
             background = window.AddUIComponent<UIPanel>();
             background.name = Prefix + "Background";
-            background.backgroundSprite = "GenericPanelWhite";
-            background.color = FoTheme.Window;
+            // The game's own window art, as City Vitals and the game's panels use: grey, with the
+            // title band at the top (a black fill read as foreign beside them).
+            background.backgroundSprite = "MenuPanel"; // not shown: a game sprite name
+            background.color = FoTheme.Untinted;
             background.size = window.size;
             background.relativePosition = Vector3.zero;
             background.isInteractive = false;
