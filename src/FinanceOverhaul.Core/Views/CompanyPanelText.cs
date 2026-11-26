@@ -36,10 +36,26 @@ namespace FinanceOverhaul.Core
         /// </summary>
         public static string Line(LocalCompany company, int today, string firstDay, string listed)
         {
-            string kind = IpoDialogText.KindName(company.Kind);
+            string kind = IpoDialogText.KindLabel(company);
             return Offering(company, today)
                 ? Strings.Format("company.panel.line.offering", kind, firstDay)
                 : Strings.Format("company.panel.line.trading", kind, listed);
+        }
+
+        /// <summary>
+        /// <see cref="Line"/> without the kind, for a row too narrow for both: "First trading
+        /// day 21/08/2116", then "Listed 14/08/2116".
+        /// </summary>
+        public static string ShortLine(
+            LocalCompany company,
+            int today,
+            string firstDay,
+            string listed
+        )
+        {
+            return Offering(company, today)
+                ? Strings.Format("company.panel.line.offering.short", firstDay)
+                : Strings.Format("company.panel.line.trading.short", listed);
         }
 
         /// <summary>"₡432": the price a share now.</summary>

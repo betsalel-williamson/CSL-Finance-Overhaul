@@ -336,6 +336,8 @@ namespace FinanceOverhaul.Core
             { "company.panel.trading", "TRADING" },
             { "company.panel.line.offering", "{0} · First trading day {1}" },
             { "company.panel.line.trading", "{0} · Listed {1}" },
+            { "company.panel.line.offering.short", "First trading day {0}" },
+            { "company.panel.line.trading.short", "Listed {0}" },
             { "company.panel.offeringNote.one", "Offering price · {0} day left" },
             { "company.panel.offeringNote.other", "Offering price · {0} days left" },
             { "company.panel.canBuy", "The city can buy up to {0} shares (a {1}% stake, {2})" },

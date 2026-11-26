@@ -1,15 +1,10 @@
-using System; // DateTime, Exception
-// ColossalFramework.UI: UIButton, UICheckBox, UIComponent, UILabel, UIPanel, UISprite, UITextField,
-//   UITextureSprite, UIView
-using ColossalFramework.UI;
-using FinanceOverhaul.Core; // CompanyPanelText, LocalCompany, StockMonitor, Strings
-// UnityEngine: Color32, FilterMode, Mathf, MonoBehaviour, Texture2D, TextureFormat,
-//   TextureWrapMode, Time, Vector2, Vector3
-using UnityEngine;
+using System; // Exception
+using ColossalFramework.UI; // UICheckBox, UIComponent, UIPanel, UISprite, UITextField, UIView
+using FinanceOverhaul.Core; // CompanyPanelText, LocalCompany
+using UnityEngine; // Color32, MonoBehaviour, Time, Vector2, Vector3
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuildingManager,
-//   BuySellInvestmentPanel, EconomyManager, Investment, InvestmentAI, InvestmentInfo,
-//   SimulationManager, ToolsModifierControl, WorldInfoPanel
+//   EconomyManager, Investment, InvestmentInfo, WorldInfoPanel
 
 namespace FinanceOverhaul
 {
@@ -31,39 +26,13 @@ namespace FinanceOverhaul
         private const string GamePanel = "(Library) ZonedBuildingWorldInfoPanel"; // not shown: a game control name
 
         private const float Pad = 12f;
-        private const float BarHeight = 4f;
-        private const int SparkW = 84,
-            SparkH = 24,
-            SparkScale = 2;
-
         private static readonly Color32 Gold = FoTheme.OfferGold;
-        private static readonly Color32 GoldHover = FoTheme.OfferGoldHover;
         private static readonly Color32 GoldText = FoTheme.OfferGoldText;
-        private static readonly Color32 SectionFill = FoTheme.SectionFill;
-        private static readonly Color32 Track = FoTheme.BarTrack;
-        private static readonly Color32 White = FoTheme.TextPrimary;
-        private static readonly Color32 Muted = FoTheme.TextMuted;
-        private static readonly Color32 Note = FoTheme.TickerSymbol;
 
         private UIPanel panel;
         private UIPanel gold;
         private UISprite coin;
-        private UIPanel section;
-        private UISprite sectionCoin;
-        private UILabel symbol;
-        private UILabel badge;
-        private UILabel line;
-        private UILabel price;
-        private UILabel note;
-        private UILabel change;
-        private UITextureSprite spark;
-        private Texture2D sparkTexture;
-        private UILabel stake;
-        private UILabel gain;
-        private UIPanel barFill;
-        private UIButton buy;
-        private UIButton sell;
-        private UIButton show;
+        private ListingSection listing;
 
         private bool decorated;
         private Color32 nameColour;
@@ -72,7 +41,6 @@ namespace FinanceOverhaul
         private float panelHeight;
         private int shownCompany = -1;
         private int slot;
-        private string shown;
         private float nextCheck;
 
         private void Update()
@@ -118,7 +86,7 @@ namespace FinanceOverhaul
             try
             {
                 Undecorate();
-                foreach (UIComponent c in new UIComponent[] { gold, coin, section })
+                foreach (UIComponent c in new UIComponent[] { gold, coin })
                 {
                     if (c != null)
                     {
@@ -126,9 +94,9 @@ namespace FinanceOverhaul
                     }
                 }
 
-                if (sparkTexture != null)
+                if (listing != null)
                 {
-                    Destroy(sparkTexture);
+                    listing.Destroy();
                 }
             }
             catch
@@ -138,7 +106,7 @@ namespace FinanceOverhaul
         }
 
         /// <summary>The listed company whose headquarters is that building, or null.</summary>
-        private static LocalCompany CompanyAt(ushort building)
+        internal static LocalCompany CompanyAt(ushort building)
         {
             if (building == 0)
             {
@@ -166,10 +134,9 @@ namespace FinanceOverhaul
 
             decorated = false;
             shownCompany = -1;
-            shown = null;
             gold.isVisible = false;
             coin.isVisible = false;
-            section.isVisible = false;
+            listing.Hide();
             UIComponent zone = panel.Find("Zone");
             if (zone != null)
             {
@@ -246,7 +213,6 @@ namespace FinanceOverhaul
             // player picks another building.
             gold.isVisible = true;
             coin.isVisible = true;
-            section.isVisible = true;
             if (zone != null)
             {
                 zone.isVisible = false;
@@ -257,7 +223,7 @@ namespace FinanceOverhaul
                 name.textColor = GoldText;
             }
 
-            section.relativePosition = new Vector3(Pad, historicalY);
+            listing.Panel.relativePosition = new Vector3(Pad, historicalY);
             historical.relativePosition = new Vector3(
                 historical.relativePosition.x,
                 historicalY + CompanyPanelText.SectionSpace
@@ -289,143 +255,17 @@ namespace FinanceOverhaul
 
         private void Fill(LocalCompany company)
         {
-            int today = OrderDesk.Today;
-            Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
-            InvestmentInfo info = buffer[slot].Info;
-            InvestmentAI ai = info == null ? null : info.m_investmentAI;
-            if (ai == null)
-            {
-                return;
-            }
-
-            uint owned = ai.OwnedCount(ref buffer[slot]);
-            long spent = buffer[slot].m_playerSpentMoney;
-            long worth = owned == 0 ? 0 : ai.CalculatePrice(ref buffer[slot], owned);
-            float rate = ai.CalculateChangeRate((byte)slot, ref buffer[slot], 5);
-            string signature =
-                company.Id
-                + "|"
-                + company.FirstTradingDay
-                + "|"
-                + today
-                + "|"
-                + company.PriceCents
-                + "|"
-                + owned
-                + "|"
-                + spent
-                + "|"
-                + worth
-                + "|"
-                + rate.ToString("0.##")
-                + "|"
-                + Strings.Language;
-            if (signature == shown)
-            {
-                return;
-            }
-
-            shown = signature;
+            listing.Show(company, slot);
             if (shownCompany != company.Id)
             {
-                shownCompany = company.Id;
-                ai.SetSpriteName(coin);
-                ai.SetSpriteName(sectionCoin);
+                Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
+                InvestmentInfo info = buffer[slot].Info;
+                if (info != null && info.m_investmentAI != null)
+                {
+                    shownCompany = company.Id;
+                    info.m_investmentAI.SetSpriteName(coin);
+                }
             }
-
-            bool offering = CompanyPanelText.Offering(company, today);
-            DateTime now = SimulationManager.instance.m_currentGameTime;
-            string firstDay = now.AddDays(company.FirstTradingDay - today).ToString("dd/MM/yyyy");
-            string listed = now.AddDays(company.AnnouncedDay - today).ToString("dd/MM/yyyy");
-            float width = section.width;
-
-            symbol.text = StockSymbols.For(info);
-            badge.text = CompanyPanelText.Badge(company, today);
-            badge.color = offering ? Gold : (Color32)FoTheme.TickerGain;
-            badge.relativePosition = new Vector3(
-                symbol.relativePosition.x + symbol.width + 8f,
-                10f
-            );
-
-            price.text = CompanyPanelText.Price(company);
-            price.relativePosition = new Vector3(width - 8f - price.width, 6f);
-            string offeringNote = CompanyPanelText.OfferingNote(company, today);
-            note.isVisible = offeringNote != null;
-            change.isVisible = offeringNote == null;
-            spark.isVisible = offeringNote == null;
-            if (offeringNote != null)
-            {
-                note.text = offeringNote;
-                note.relativePosition = new Vector3(width - 8f - note.width, 28f);
-            }
-            else
-            {
-                Color32 colour = FoTheme.Change(StockMonitor.ChangeColour(rate));
-                change.text = StockMonitor.ChangeText(rate);
-                change.color = colour;
-                var history = new float[Investment.kPastValueCount];
-                buffer[slot].FillGraphValues(history);
-                FoSparkline.Draw(sparkTexture, history, colour, SparkScale + 1);
-            }
-
-            // The line under the symbol ends before whatever stands at the right of its row.
-            float lineEnd =
-                offeringNote != null ? note.relativePosition.x : spark.relativePosition.x;
-            FoText.Fit(
-                line,
-                CompanyPanelText.Line(company, today, firstDay, listed),
-                0.7f,
-                0.5f,
-                lineEnd - 10f - 52f,
-                14f
-            );
-
-            FoText.Fit(
-                stake,
-                CompanyPanelText.Stake(company, CompanyDesk.Rules, today, owned, spent),
-                0.75f,
-                0.6f,
-                width - 16f - 90f,
-                15f
-            );
-            string gained = CompanyPanelText.Gain(owned, spent, worth);
-            gain.isVisible = gained != null;
-            if (gained != null)
-            {
-                int sign = CompanyPanelText.GainSign(spent, worth);
-                gain.text = gained;
-                gain.textColor =
-                    sign > 0 ? FoTheme.GamePositive
-                    : sign < 0 ? FoTheme.GameNegative
-                    : FoTheme.GameValue;
-                gain.relativePosition = new Vector3(width - 8f - gain.width, 54f);
-            }
-
-            barFill.width = Mathf.Max(0f, (width - 16f) * CompanyPanelText.StakeFraction(owned));
-            barFill.isVisible = owned > 0;
-
-            // Offering: one wide gold Buy. Trading: Buy and Sell at the same size.
-            buy.text = CompanyPanelText.Buy(company, today);
-            buy.width = offering ? 200f : 96f;
-            // Gold needs the game's white button art: its dark menu button turns gold to mud.
-            string art = offering ? "ButtonWhite" : "ButtonMenu";
-            buy.normalBgSprite = art;
-            buy.hoveredBgSprite = offering ? art : "ButtonMenuHovered";
-            buy.pressedBgSprite = offering ? art : "ButtonMenuPressed";
-            buy.disabledBgSprite = offering ? art : "ButtonMenuDisabled";
-            buy.focusedBgSprite = art;
-            buy.hoveredColor = offering ? GoldHover : FoTheme.Untinted;
-            buy.pressedColor = offering ? Gold : FoTheme.Untinted;
-            buy.focusedColor = offering ? Gold : FoTheme.Untinted;
-            buy.color = offering ? Gold : FoTheme.Untinted;
-            buy.textColor = offering ? GoldText : White;
-            buy.hoveredTextColor = buy.textColor;
-            buy.pressedTextColor = buy.textColor;
-            buy.focusedTextColor = buy.textColor;
-            buy.isEnabled = ai.AvailableForBuyingCount(ref buffer[slot]) > 0;
-            sell.isVisible = !offering;
-            sell.isEnabled = owned > 0;
-            sell.relativePosition = new Vector3(8f + 96f + 6f, 88f);
         }
 
         private void Build()
@@ -448,93 +288,7 @@ namespace FinanceOverhaul
             coin.relativePosition = new Vector3(-8f, -8f);
             coin.isInteractive = false;
 
-            section = panel.AddUIComponent<UIPanel>();
-            section.name = SectionName;
-            section.backgroundSprite = "GenericPanelWhite";
-            section.color = SectionFill;
-            section.size = new Vector2(width - 2f * Pad, CompanyPanelText.SectionHeight);
-            float w = section.width;
-
-            sectionCoin = section.AddUIComponent<UISprite>();
-            sectionCoin.name = Prefix + "ListingCoin";
-            sectionCoin.size = new Vector2(40f, 40f);
-            sectionCoin.relativePosition = new Vector3(6f, 5f);
-
-            symbol = FoText.Label(section, Prefix + "Symbol", "", 1.0f, White);
-            symbol.relativePosition = new Vector3(52f, 6f);
-            badge = FoPill.AddBadge(section, 0.6f, GoldText, Gold);
-            badge.name = Prefix + "Badge";
-            badge.useDropShadow = false;
-            line = FoText.Label(section, Prefix + "Line", "", 0.7f, Muted);
-            line.relativePosition = new Vector3(52f, 28f);
-
-            price = FoText.Label(section, Prefix + "Price", "", 1.0f, FoTheme.GameValue);
-            note = FoText.Label(section, Prefix + "Note", "", 0.7f, Note);
-            change = FoPill.AddValue(section, new Vector2(62f, 16f), 0.7f, FoTheme.Header);
-            change.name = Prefix + "Change";
-            change.relativePosition = new Vector3(w - 8f - 62f, 27f);
-
-            sparkTexture = new Texture2D(
-                SparkW * SparkScale,
-                SparkH * SparkScale,
-                TextureFormat.ARGB32,
-                false
-            );
-            sparkTexture.filterMode = FilterMode.Bilinear;
-            sparkTexture.wrapMode = TextureWrapMode.Clamp;
-            spark = section.AddUIComponent<UITextureSprite>();
-            spark.name = Prefix + "Spark";
-            spark.texture = sparkTexture;
-            spark.size = new Vector2(SparkW, SparkH);
-            spark.relativePosition = new Vector3(w - 8f - 62f - 70f - SparkW, 10f);
-
-            stake = FoText.Label(section, Prefix + "Stake", "", 0.75f, White);
-            stake.relativePosition = new Vector3(8f, 54f);
-            gain = FoText.Label(section, Prefix + "Gain", "", 0.75f, FoTheme.GamePositive);
-
-            UIPanel track = section.AddUIComponent<UIPanel>();
-            track.backgroundSprite = "EmptySprite";
-            track.color = Track;
-            track.size = new Vector2(w - 16f, BarHeight);
-            track.relativePosition = new Vector3(8f, 74f);
-            barFill = section.AddUIComponent<UIPanel>();
-            barFill.name = Prefix + "StakeBar";
-            barFill.backgroundSprite = "EmptySprite";
-            barFill.color = Gold;
-            barFill.size = new Vector2(0f, BarHeight);
-            barFill.relativePosition = new Vector3(8f, 74f);
-
-            buy = FoButton.Add(section, Prefix + "Buy", "", new Vector2(96f, 30f), 0.8f);
-            buy.relativePosition = new Vector3(8f, 88f);
-            buy.eventClick += (c, p) => Trade(BuySellInvestmentPanel.Mode.Buy);
-            sell = FoButton.Add(
-                section,
-                Prefix + "Sell",
-                CompanyPanelText.Sell,
-                new Vector2(96f, 30f),
-                0.8f
-            );
-            sell.eventClick += (c, p) => Trade(BuySellInvestmentPanel.Mode.Sell);
-            show = FoButton.Add(
-                section,
-                Prefix + "Show",
-                CompanyPanelText.ShowInInvestments,
-                new Vector2(160f, 30f),
-                0.8f
-            );
-            show.relativePosition = new Vector3(w - 8f - 160f, 88f);
-            show.eventClick += (c, p) =>
-                ToolsModifierControl.mainToolbar.ShowEconomyPanel(
-                    GameInternals.Economy.TabIndex(GameInternals.Economy.InvestmentTab)
-                );
-        }
-
-        private void Trade(BuySellInvestmentPanel.Mode mode)
-        {
-            if (slot > 0)
-            {
-                BuySellInvestmentPanel.ShowPanel((byte)slot, mode);
-            }
+            listing = new ListingSection(panel, Prefix, width - 2f * Pad);
         }
     }
 }

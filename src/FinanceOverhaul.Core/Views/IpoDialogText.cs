@@ -26,6 +26,14 @@ namespace FinanceOverhaul.Core
             return Strings.Get("company.kind." + kind);
         }
 
+        /// <summary>The company's kind as a label: "IT cluster", "Oil industry area".</summary>
+        public static string KindLabel(LocalCompany company)
+        {
+            return company.Site == BusinessSite.Area
+                ? Strings.Format("company.kind.area", KindName(company.Kind))
+                : KindName(company.Kind);
+        }
+
         /// <summary>
         /// Where the headquarters stands, with its kind: "IT cluster · on Green Avenue at Pearl
         /// Street, Tech Park". The street, the cross street and the district are each left out
@@ -39,10 +47,7 @@ namespace FinanceOverhaul.Core
             string district
         )
         {
-            string kind =
-                company.Site == BusinessSite.Area
-                    ? Strings.Format("company.kind.area", KindName(company.Kind))
-                    : KindName(company.Kind);
+            string kind = KindLabel(company);
             bool hasStreet = !string.IsNullOrEmpty(street);
             bool hasCross = hasStreet && !string.IsNullOrEmpty(cross) && cross != street;
             bool hasDistrict = !string.IsNullOrEmpty(district);

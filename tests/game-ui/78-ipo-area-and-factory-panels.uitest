@@ -1,0 +1,50 @@
+# Local IPOs: the info panels of a listed industry area's main building and of a listed unique
+# factory show the same listing section as a zoned headquarters' panel (gold title bar, listing,
+# stake, Buy / Sell / Show in Investments), at the bottom; the game's rows keep their place. With
+# the company gone the panel is the game's own again. Needs a city with an industry area at level
+# 3+ and a unique factory; their profit is fixed for the scenario (ipo-site-profit) and the city's
+# own counts are set aside (ipo-forget). Everything listed is removed in cleanup.
+name local ipos: an area's main building and a unique factory show the listing on their panels
+close-economy
+local-ipos on
+ipo-forget
+ipo-healthy-days 1
+ipo-site-profit 500000
+ipo-scan
+ipo-dialog on
+ipo-list-now area
+wait 1
+ipo-view
+wait 1.5
+expect-no-overflow CaptionPanel
+expect-visible FinanceOverhaulAreaBuildingListing
+expect-text FinanceOverhaulAreaBuildingBadge OFFERING
+# too narrow for "Oil industry area · …": the line drops the kind, the panel names it
+expect-text FinanceOverhaulAreaBuildingLine First trading day
+expect-text FinanceOverhaulAreaBuildingBuy Buy at the offering price
+expect-hidden FinanceOverhaulAreaBuildingSell
+expect-no-overflow FinanceOverhaulAreaBuildingListing
+expect-no-overlap MainSectionPanel FinanceOverhaulAreaBuildingListing
+capture area-building-panel
+ipo-dialog on
+ipo-list-now factory
+wait 1
+ipo-view
+wait 1.5
+expect-hidden FinanceOverhaulAreaBuildingListing
+expect-visible FinanceOverhaulFactoryGold
+expect-visible FinanceOverhaulFactoryListing
+expect-text FinanceOverhaulFactoryLine Unique factory · First trading day
+expect-no-overflow FinanceOverhaulFactoryListing
+expect-no-overlap IncomeExpensesSection FinanceOverhaulFactoryListing
+expect-no-overlap Misc FinanceOverhaulFactoryListing
+capture factory-panel
+ipo-remove-test
+wait 1.5
+expect-hidden FinanceOverhaulFactoryListing
+expect-hidden FinanceOverhaulFactoryGold
+cleanup:
+ipo-dialog close
+ipo-site-profit real
+ipo-remove-test
+local-ipos restore

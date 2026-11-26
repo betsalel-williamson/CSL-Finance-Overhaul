@@ -1,4 +1,4 @@
-using FinanceOverhaul.Core; // BusinessKind, CompanyPanelText, IpoRules, LocalCompany
+using FinanceOverhaul.Core; // BusinessKind, BusinessSite, CompanyPanelText, IpoRules, LocalCompany
 using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
@@ -39,6 +39,33 @@ namespace FinanceOverhaul.Core.Tests
             );
             Assert.Null(CompanyPanelText.Gain(0, 0, 0));
             Assert.Equal("Buy at the offering price", CompanyPanelText.Buy(c, 102));
+        }
+
+        [Fact]
+        public void AnIndustryAreaAndAUniqueFactorySayWhatTheyAre()
+        {
+            LocalCompany area = Goldwoman();
+            area.Kind = BusinessKind.Oil;
+            area.Site = BusinessSite.Area;
+            Assert.Equal(
+                "Oil industry area · First trading day 21/08/2116",
+                CompanyPanelText.Line(area, 102, "21/08/2116", "14/08/2116")
+            );
+            LocalCompany factory = Goldwoman();
+            factory.Kind = BusinessKind.UniqueFactory;
+            factory.Site = BusinessSite.Factory;
+            Assert.Equal(
+                "Unique factory · Listed 14/08/2116",
+                CompanyPanelText.Line(factory, 107, "21/08/2116", "14/08/2116")
+            );
+            Assert.Equal(
+                "First trading day 21/08/2116",
+                CompanyPanelText.ShortLine(area, 102, "21/08/2116", "14/08/2116")
+            );
+            Assert.Equal(
+                "Listed 14/08/2116",
+                CompanyPanelText.ShortLine(factory, 107, "21/08/2116", "14/08/2116")
+            );
         }
 
         [Fact]
