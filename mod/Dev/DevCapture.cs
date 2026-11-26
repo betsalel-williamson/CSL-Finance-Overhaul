@@ -277,7 +277,31 @@ namespace FinanceOverhaul
                     + " disabledText=#"
                     + d.r.ToString("X2")
                     + d.g.ToString("X2")
-                    + d.b.ToString("X2");
+                    + d.b.ToString("X2")
+                    + " pressedBg='"
+                    + button.pressedBgSprite
+                    + "' disabledBg='"
+                    + button.disabledBgSprite
+                    + "' pressedText="
+                    + Hex(button.pressedTextColor)
+                    + " tint n/h/p/f/d="
+                    + Hex(button.color)
+                    + "/"
+                    + Hex(button.hoveredColor)
+                    + "/"
+                    + Hex(button.pressedColor)
+                    + "/"
+                    + Hex(button.focusedColor)
+                    + "/"
+                    + Hex(button.disabledColor)
+                    + " tabStrip="
+                    + button.tabStrip
+                    + " state="
+                    + button.state
+                    + " group="
+                    + (button.group == null ? "-" : button.group.name)
+                    + " textScale="
+                    + button.textScale;
             }
 
             var lbl = c as ColossalFramework.UI.UILabel;
@@ -415,6 +439,15 @@ namespace FinanceOverhaul
                     + aim
             );
             return true;
+        }
+
+        private static string Hex(UnityEngine.Color32 c)
+        {
+            return "#"
+                + c.r.ToString("X2")
+                + c.g.ToString("X2")
+                + c.b.ToString("X2")
+                + c.a.ToString("X2"); // not shown: dev log
         }
     }
 }

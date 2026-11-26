@@ -156,8 +156,12 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
   with white text and a thin accent line under it. The dialog's order types (under Buy | Sell) and
   the Monitor's 7D | 30D (under its filters) are secondary; the rest are primary. A click on the
   chosen tab is still passed on, and the Monitor's bar shows the filter the player left it on (a
-  first build lit All over the Orders list and ignored the click on All). (Two earlier looks were
-  tried and dropped: the tab art with white text on the lit tab, and joined menu buttons.)
+  first build lit All over the Orders list and ignored the click on All). The group is a real
+  `UITabstrip`, so the game's own state rules drive it: the chosen tab is the Focused state and
+  stays lit under the mouse and while pressed, another tab shows the hover and pressed art, a
+  disabled tab the game's disabled art (an earlier build drew the chosen look as the normal art, so
+  hovering the chosen tab turned it grey). (Two earlier looks were tried and dropped: the tab art
+  with white text on the lit tab, and joined menu buttons.)
 - **Scrolling:** three plain rows a notch, the game's scrollbar; the line at the top of the view
   stays there when the list changes (a purchase, the daily update), and the place is kept when the
   panel is closed and opened.

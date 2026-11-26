@@ -1,10 +1,10 @@
-using System; // Exception, StringComparison
+using System; // ArgumentException, Enum, Exception, StringComparison
 using System.Collections; // IEnumerator
 using System.Collections.Generic; // List
 using System.Globalization; // CultureInfo
 using System.IO; // Path
-// ColossalFramework.UI: UIComponent, UIFont, UILabel, UIPanel, UIScrollablePanel, UISlider,
-//   UITextComponent, UIView
+// ColossalFramework.UI: UIButton, UIComponent, UIFont, UILabel, UIPanel, UIScrollablePanel,
+//   UISlider, UITextComponent, UIView
 using ColossalFramework.UI;
 using FinanceOverhaul.Core; // DuplicateCopies, InvestmentRow, SliderThumb
 using UnityEngine; // Application, GameObject, Mathf, Resources, Vector2, Vector3, WaitForSeconds
@@ -85,6 +85,32 @@ namespace FinanceOverhaul
                     }
 
                     ModLog.Info("ui: " + n + " control(s) named " + a); // not shown: dev log
+                    break;
+                }
+                case "button-state":
+                {
+                    // button-state NAME Normal|Hovered|Pressed|Focused|Disabled — dev: puts a
+                    // button in that state, to capture its art (the real mouse sets it in play).
+                    var button = FindControl(a, includeHidden: true) as UIButton;
+                    UIButton.ButtonState state;
+                    try
+                    {
+                        state = (UIButton.ButtonState)Enum.Parse(typeof(UIButton.ButtonState), b);
+                    }
+                    catch (ArgumentException)
+                    {
+                        r.Error = "no button state " + b;
+                        break;
+                    }
+
+                    if (button == null)
+                    {
+                        r.Error = "no button " + a;
+                        break;
+                    }
+
+                    button.state = state;
+                    yield return null;
                     break;
                 }
                 case "investments-list":
