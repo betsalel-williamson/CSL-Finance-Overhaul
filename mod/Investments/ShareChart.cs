@@ -3,9 +3,7 @@ using System.Collections.Generic; // Dictionary, KeyValuePair, List
 using System.Reflection; // FieldInfo
 using ColossalFramework.UI; // UIComponent, UIGraph, UILabel, UIPanel, UITextureSprite, UIView
 using FinanceOverhaul.Core; // Sparkline, StockDetail, StockMonitor, Strings
-// UnityEngine: Color32, FilterMode, GameObject, Mathf, RectOffset, Texture2D, TextureFormat,
-//   TextureWrapMode, Vector2, Vector3
-using UnityEngine;
+using UnityEngine; // Color32, GameObject, Mathf, RectOffset, Texture2D, Vector2, Vector3
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
 //   EconomyManager, Investment, InvestmentTooltip
@@ -65,14 +63,7 @@ namespace FinanceOverhaul
             float axisW = 56f * labelScale / 0.7f,
                 footer = 18f * labelScale / 0.7f;
             var plot = new Vector2(size.x - axisW - 12f, size.y - footer - 12f - top);
-            v.texture = new Texture2D(
-                (int)plot.x * Scale,
-                (int)plot.y * Scale,
-                TextureFormat.ARGB32,
-                false
-            );
-            v.texture.filterMode = FilterMode.Bilinear;
-            v.texture.wrapMode = TextureWrapMode.Clamp;
+            v.texture = FoTexture.Canvas((int)plot.x * Scale, (int)plot.y * Scale);
             v.Sprite = v.Root.AddUIComponent<UITextureSprite>();
             v.Sprite.name = name + "Plot";
             v.Sprite.size = plot;

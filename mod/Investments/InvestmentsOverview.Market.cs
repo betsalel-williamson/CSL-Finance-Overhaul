@@ -190,15 +190,13 @@ namespace FinanceOverhaul
             )
             {
                 this.width = width;
-                back = parent.AddUIComponent<UIPanel>();
-                back.name = name;
-                back.backgroundSprite = "GenericPanelWhite";
-                back.color = FoTheme.SectionFill;
-                back.size = new Vector2(width, MoverH - 3f);
-                back.relativePosition = new Vector3(x, y);
-                back.eventMouseEnter += (c, p) => back.color = FoTheme.SectionFillHover;
-                back.eventMouseLeave += (c, p) => back.color = FoTheme.SectionFill;
-                back.eventClick += (c, p) => OpenDialog(quote);
+                back = FoRow.Add(
+                    parent,
+                    name,
+                    new Vector2(width, MoverH - 3f),
+                    new Vector3(x, y),
+                    p => OpenDialog(quote)
+                );
                 symbol = FoText.Label(back, name + "Symbol", "", 0.85f, FoTheme.GameText);
                 symbol.relativePosition = new Vector3(8f, 4f);
                 symbol.isInteractive = false;

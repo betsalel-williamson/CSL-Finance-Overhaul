@@ -5,8 +5,7 @@ using ColossalFramework.UI; // UIComponent, UILabel, UIPanel, UITextureSprite
 // FinanceOverhaul.Core: LocalCompany, MonitorQuote, OverviewPage, OverviewPages, StockDetail,
 //   Strings, TradeOrder
 using FinanceOverhaul.Core;
-// UnityEngine: Color32, FilterMode, Texture2D, TextureFormat, TextureWrapMode, Vector2, Vector3
-using UnityEngine;
+using UnityEngine; // Color32, Texture2D, Vector2, Vector3
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel
 
@@ -363,14 +362,10 @@ namespace FinanceOverhaul
                 back.size = new Vector2(width, height);
                 back.relativePosition = new Vector3(x, y);
                 back.isInteractive = false;
-                texture = new Texture2D(
+                texture = FoTexture.Canvas(
                     (int)(width - 16f) * ChartScale,
-                    (int)(height - 24f) * ChartScale,
-                    TextureFormat.ARGB32,
-                    false
+                    (int)(height - 24f) * ChartScale
                 );
-                texture.filterMode = FilterMode.Bilinear;
-                texture.wrapMode = TextureWrapMode.Clamp;
                 owned.Add(texture);
                 UITextureSprite line = back.AddUIComponent<UITextureSprite>();
                 line.name = name + "Chart";

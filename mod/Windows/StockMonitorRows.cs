@@ -4,9 +4,7 @@ using ColossalFramework.UI;
 // FinanceOverhaul.Core: MonitorFilter, MonitorOrderGroup, MonitorOrderLine, MonitorOrders,
 //   MonitorQuote, StockDetail, StockMonitor, Strings, TradeOrder
 using FinanceOverhaul.Core;
-// UnityEngine: Color32, FilterMode, Mathf, Texture2D, TextureFormat, TextureWrapMode, Vector2,
-//   Vector3
-using UnityEngine;
+using UnityEngine; // Color32, Mathf, Vector2, Vector3
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
 //   SimulationManager
@@ -211,14 +209,7 @@ namespace FinanceOverhaul
             r.Name = FoText.Label(r.Panel, null, "", 0.7f, Muted);
             r.Name.relativePosition = new Vector3(12f, 29f);
 
-            r.Texture = new Texture2D(
-                SparkW * SparkScale,
-                SparkH * SparkScale,
-                TextureFormat.ARGB32,
-                false
-            );
-            r.Texture.filterMode = FilterMode.Bilinear;
-            r.Texture.wrapMode = TextureWrapMode.Clamp;
+            r.Texture = FoTexture.Canvas(SparkW * SparkScale, SparkH * SparkScale);
             r.Spark = r.Panel.AddUIComponent<UITextureSprite>();
             r.Spark.size = new Vector2(SparkW, SparkH);
             r.Spark.relativePosition = new Vector3(186f, (RowHeight - SparkH) / 2f);

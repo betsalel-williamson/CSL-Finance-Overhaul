@@ -173,20 +173,15 @@ namespace FinanceOverhaul
             {
                 this.width = width;
                 string name = Name + "Feed-" + index;
-                back = parent.AddUIComponent<UIPanel>();
-                back.name = name;
-                back.backgroundSprite = "GenericPanelWhite";
-                back.color = FoTheme.SectionFill;
-                back.size = new Vector2(width, 26f);
-                back.eventMouseEnter += (c, p) =>
-                {
-                    if (quote != null)
-                    {
-                        back.color = FoTheme.SectionFillHover;
-                    }
-                };
-                back.eventMouseLeave += (c, p) => back.color = FoTheme.SectionFill;
-                back.eventClick += (c, p) => OpenDialog(quote);
+                // Lights up only for an item about a stock (a click opens it).
+                back = FoRow.Add(
+                    parent,
+                    name,
+                    new Vector2(width, 26f),
+                    Vector3.zero,
+                    p => OpenDialog(quote),
+                    () => quote != null
+                );
                 bar = back.AddUIComponent<UIPanel>();
                 bar.name = name + "Tone";
                 bar.backgroundSprite = "EmptySprite"; // not shown: a game sprite name

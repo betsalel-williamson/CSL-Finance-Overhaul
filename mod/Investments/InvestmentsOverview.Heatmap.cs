@@ -3,9 +3,7 @@ using System.Collections.Generic; // List
 using ColossalFramework.UI; // UIComponent, UILabel, UIPanel, UITextureSprite
 // FinanceOverhaul.Core: HeatRect, HeatTile, HeatmapOverview, MonitorQuote, StockMonitor, Strings
 using FinanceOverhaul.Core;
-// UnityEngine: Color32, FilterMode, Mathf, Texture2D, TextureFormat, TextureWrapMode, Vector2,
-//   Vector3
-using UnityEngine;
+using UnityEngine; // Color32, Mathf, Texture2D, Vector2, Vector3
 
 namespace FinanceOverhaul
 {
@@ -120,9 +118,7 @@ namespace FinanceOverhaul
             float legendY = heatmap.height - Pad - LegendH + 6f;
             scaleLow = FoText.Label(heatmap, Name + "HeatmapLow", "", 0.65f, FoTheme.ChartLabel);
             scaleLow.relativePosition = new Vector3(Pad, legendY);
-            scaleTexture = new Texture2D(ScaleWidth, 1, TextureFormat.ARGB32, false);
-            scaleTexture.filterMode = FilterMode.Bilinear;
-            scaleTexture.wrapMode = TextureWrapMode.Clamp;
+            scaleTexture = FoTexture.Canvas(ScaleWidth, 1);
             for (int x = 0; x < ScaleWidth; x++)
             {
                 scaleTexture.SetPixel(x, 0, FoTheme.Heat(x / (float)(ScaleWidth - 1) * 2f - 1f));

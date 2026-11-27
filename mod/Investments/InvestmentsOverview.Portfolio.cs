@@ -3,9 +3,7 @@ using ColossalFramework.UI; // UIButton, UIComponent, UILabel, UIPanel, UITextur
 // FinanceOverhaul.Core: MonitorQuote, PortfolioOverview, PortfolioSlice, StockDetail, StockMonitor,
 //   Strings, TradeOrder
 using FinanceOverhaul.Core;
-// UnityEngine: Color32, FilterMode, Mathf, Texture2D, TextureFormat, TextureWrapMode, Vector2,
-//   Vector3
-using UnityEngine;
+using UnityEngine; // Color32, Mathf, Texture2D, Vector2, Vector3
 
 namespace FinanceOverhaul
 {
@@ -91,14 +89,10 @@ namespace FinanceOverhaul
             Heading(portfolio, Strings.Get("overview.portfolio.holdings"), Pad, lowerY);
             Heading(portfolio, Strings.Get("overview.portfolio.orders"), Pad + half + Pad, lowerY);
 
-            donutTexture = new Texture2D(
+            donutTexture = FoTexture.Canvas(
                 (int)DonutSize * ChartScale,
-                (int)DonutSize * ChartScale,
-                TextureFormat.ARGB32,
-                false
+                (int)DonutSize * ChartScale
             );
-            donutTexture.filterMode = FilterMode.Bilinear;
-            donutTexture.wrapMode = TextureWrapMode.Clamp;
             textures.Add(donutTexture);
             donut = portfolio.AddUIComponent<UITextureSprite>();
             donut.name = Name + "PortfolioDonut";
@@ -345,12 +339,7 @@ namespace FinanceOverhaul
             public OrderRow(UIComponent parent, string name, float x, float y, float width)
             {
                 this.width = width;
-                back = parent.AddUIComponent<UIPanel>();
-                back.name = name;
-                back.backgroundSprite = "GenericPanelWhite";
-                back.color = FoTheme.SectionFill;
-                back.size = new Vector2(width, 36f);
-                back.relativePosition = new Vector3(x, y);
+                back = FoRow.Add(parent, name, new Vector2(width, 36f), new Vector3(x, y), null);
                 symbol = FoText.Label(back, name + "Symbol", "", 0.8f, FoTheme.GameText);
                 symbol.relativePosition = new Vector3(8f, 3f);
                 side = FoText.Label(back, name + "Side", "", 0.7f, FoTheme.Accent);

@@ -3,9 +3,7 @@ using System; // Exception
 //   UIVerticalAlignment, UIView
 using ColossalFramework.UI;
 using FinanceOverhaul.Core; // BusinessKind, CoinIcon, LocalCompany
-// UnityEngine: Color32, FilterMode, Mathf, Rect, ScriptableObject, Texture2D, TextureFormat,
-//   TextureWrapMode, Vector2, Vector3
-using UnityEngine;
+using UnityEngine; // Color32, Mathf, Rect, ScriptableObject, Texture2D, Vector2, Vector3
 
 // Game classes used without a using (global namespace, Assembly-CSharp): EconomyManager,
 //   EconomyPanel, Investment, InvestmentAI, InvestmentInfo
@@ -284,10 +282,8 @@ namespace FinanceOverhaul
                 }
             }
 
-            var texture = new Texture2D(TextureSize, TextureSize, TextureFormat.ARGB32, false);
+            Texture2D texture = FoTexture.Canvas(TextureSize, TextureSize);
             texture.name = SpriteName;
-            texture.filterMode = FilterMode.Bilinear;
-            texture.wrapMode = TextureWrapMode.Clamp;
             texture.SetPixels32(pixels);
             texture.Apply();
 

@@ -3,9 +3,7 @@ using System; // DateTime
 //   UITextureSprite
 using ColossalFramework.UI;
 using FinanceOverhaul.Core; // CompanyPanelText, LocalCompany, StockMonitor, Strings
-// UnityEngine: Color32, FilterMode, Mathf, Texture2D, TextureFormat, TextureWrapMode, Vector2,
-//   Vector3
-using UnityEngine;
+using UnityEngine; // Color32, Mathf, Texture2D, Vector2, Vector3
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
 //   EconomyManager, Investment, InvestmentAI, InvestmentInfo, SimulationManager,
@@ -58,19 +56,18 @@ namespace FinanceOverhaul
         /// <summary>Adds the section to <paramref name="parent"/>, hidden, named <c>prefix + "Listing"</c>.</summary>
         public ListingSection(UIComponent parent, string prefix, float width)
         {
-            section = parent.AddUIComponent<UIPanel>();
-            section.name = prefix + "Listing";
-            section.backgroundSprite = "GenericPanelWhite";
-            section.color = FoTheme.SectionFill;
-            section.size = new Vector2(width, CompanyPanelText.SectionHeight);
-            section.isVisible = false;
             // A click anywhere on the stock (not on its own buttons) opens the Invest dialog,
             // with its chart, stats and orders; it lights up under the mouse to say so. The
             // game sends a quick second click as a double click: that opens it too.
-            section.eventClick += (c, p) => OnSectionClick(p);
+            section = FoRow.Add(
+                parent,
+                prefix + "Listing",
+                new Vector2(width, CompanyPanelText.SectionHeight),
+                Vector3.zero,
+                OnSectionClick
+            );
+            section.isVisible = false;
             section.eventDoubleClick += (c, p) => OnSectionClick(p);
-            section.eventMouseEnter += (c, p) => section.color = FoTheme.SectionFillHover;
-            section.eventMouseLeave += (c, p) => section.color = FoTheme.SectionFill;
             Build(prefix);
         }
 
@@ -303,14 +300,7 @@ namespace FinanceOverhaul
             change.name = prefix + "Change";
             change.relativePosition = new Vector3(w - 8f - 62f, 27f);
 
-            sparkTexture = new Texture2D(
-                SparkW * SparkScale,
-                SparkH * SparkScale,
-                TextureFormat.ARGB32,
-                false
-            );
-            sparkTexture.filterMode = FilterMode.Bilinear;
-            sparkTexture.wrapMode = TextureWrapMode.Clamp;
+            sparkTexture = FoTexture.Canvas(SparkW * SparkScale, SparkH * SparkScale);
             spark = section.AddUIComponent<UITextureSprite>();
             spark.name = prefix + "Spark";
             spark.texture = sparkTexture;

@@ -7,9 +7,7 @@ using ColossalFramework.UI;
 //   InvestmentRowKind, MonitorQuote, MonitorSort, StockMonitor, StockMonitorSettings, Strings,
 //   TradeOrder
 using FinanceOverhaul.Core;
-// UnityEngine: Color32, FilterMode, Mathf, MonoBehaviour, Screen, Texture2D, TextureFormat,
-//   TextureWrapMode, Time, Vector2, Vector3
-using UnityEngine;
+using UnityEngine; // Color32, Mathf, MonoBehaviour, Screen, Texture2D, Time, Vector2, Vector3
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
 //   EconomyManager, EconomyPanel, Investment, InvestmentAI, InvestmentTooltip,
@@ -436,15 +434,8 @@ namespace FinanceOverhaul
             Texture2D tex;
             if (!sparks.TryGetValue(q.Symbol, out tex) || tex == null)
             {
-                tex = new Texture2D(
-                    Row.SparkTextureWidth,
-                    Row.SparkTextureHeight,
-                    TextureFormat.ARGB32,
-                    false
-                );
+                tex = FoTexture.Canvas(Row.SparkTextureWidth, Row.SparkTextureHeight);
                 tex.name = Prefix + "Spark-" + q.Symbol;
-                tex.filterMode = FilterMode.Bilinear;
-                tex.wrapMode = TextureWrapMode.Clamp;
                 sparks[q.Symbol] = tex;
                 sparksDrawn.Remove(q.Symbol);
             }
