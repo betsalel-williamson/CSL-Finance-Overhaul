@@ -194,16 +194,18 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
      industry productivity and area, city health and care, deathcare, vehicles, traffic flow, crime,
      plane and ship passengers; a local company shows its kind and annual earnings, the fund how
      many stocks it follows, a coin "No city figure". Under it, what moves it ("Rises with crime")
-     and its 7D | 30D change pill. Grouped industry first (`CityOverview.Rows`); the rows scroll
-     with the mouse wheel and a game-style scrollbar (Kit `FoScrollbar`, hidden while they fit; the
-     Feed has one too).
-  5. **Feed** (built): "Coming up": local companies in their offering window, orders within 5% of
-     their trigger or ending within 7 days, locked stocks at least 75% unlocked. "Lately" (30 days):
-     today's big moves (a change rate of 10% or more), 30-day highs and lows (with at least 10 days
-     of prices), companies that began trading, and the notices the mod posted this session (fills,
-     expiries, bonds, company news; `ChirpNotices.Log`, a `FeedLog` of 40, not saved, kept even with
-     notices off). Each item has a tone bar and when it happens; a click on one about a stock opens
-     its dialog (`FeedOverview`).
+     and its 7D | 30D change pill. In the list's order: its sort and direction
+     (`CityOverview.Rows`); the rows scroll with the mouse wheel and a game-style scrollbar (Kit
+     `FoScrollbar`, hidden while they fit; the Feed has one too).
+  5. **Feed** (built): "Coming up" (shown only when something is coming): local companies in their
+     offering window, orders within 5% of their trigger or ending within 7 days, locked stocks at
+     least 75% unlocked. "Lately" (30 days): today's big moves (a change rate of 10% or more),
+     30-day highs and lows (with at least 10 days of prices), companies that began trading, and the
+     notices the mod posted this session (fills, expiries, bonds, company news; `ChirpNotices.Log`,
+     a `FeedLog` of 40, not saved, kept even with notices off). Each item has a tone bar and when it
+     happens; a click on a chirp the mod posted opens the Chirper on it, over the Economy window
+     (posted again, quietly, when the Chirper's last 16 no longer hold it; `ChirpNotices.Show`), and
+     a click on an item the feed worked out about a stock opens its dialog (`FeedOverview`).
 
   Later, a click on a stock shows its trade in this column instead of the dialog.
 

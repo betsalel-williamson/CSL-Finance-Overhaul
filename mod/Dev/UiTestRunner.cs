@@ -84,6 +84,9 @@ namespace FinanceOverhaul
             public int OrdersAtStart;
             public HashSet<int> OrdersBefore = new HashSet<int>();
 
+            /// <summary>Notices this scenario put in the Feed's log (taken out at the end).</summary>
+            public List<string> FeedNotices = new List<string>();
+
             /// <summary>Bonds this scenario sold (cleanup redeems them).</summary>
             public readonly List<int> Bonds = new List<int>();
 
@@ -240,6 +243,11 @@ namespace FinanceOverhaul
             }
 
             RemoveTestCompanies(ctx);
+            foreach (string notice in ctx.FeedNotices)
+            {
+                ChirpNotices.Log.Remove(notice);
+            }
+
             CompanyDesk.Rules = null; // back to the real rules
             CompanyDesk.TestExchangeLevel = -1; // the city's own Stock Exchange
             IndustrySites.TestWeeklyProfitCents = null; // the areas' and factories' own profit

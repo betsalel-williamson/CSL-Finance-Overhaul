@@ -1,4 +1,4 @@
-using System; // Math, StringComparison
+using System; // Math
 using System.Collections.Generic; // IEnumerable, List
 using System.Globalization; // CultureInfo
 
@@ -97,43 +97,48 @@ namespace FinanceOverhaul.Core
     public static class CityOverview
     {
         /// <summary>
-        /// The stocks grouped by what drives them (industry first, the fund and coins last),
-        /// A–Z within a group; the locked ones too, as their figure already applies.
+        /// The stocks in the Investments list's order: its sort and direction, with the pills'
+        /// unit for Change (<see cref="StockMonitor.Rows(IEnumerable{MonitorQuote}, MonitorFilter, MonitorSort, ICollection{string}, bool, bool)"/>);
+        /// the locked ones too, as their figure already applies.
         /// </summary>
-        public static List<CityRow> Rows(IEnumerable<MonitorQuote> quotes, int days)
+        public static List<CityRow> Rows(
+            IEnumerable<MonitorQuote> quotes,
+            int days,
+            MonitorSort sort,
+            bool reversed,
+            bool changeInCurrency
+        )
         {
             var rows = new List<CityRow>();
-            foreach (MonitorQuote q in quotes ?? new List<MonitorQuote>())
+            foreach (
+                MonitorQuote q in StockMonitor.Rows(
+                    quotes,
+                    MonitorFilter.All,
+                    sort,
+                    null,
+                    reversed,
+                    changeInCurrency
+                )
+            )
             {
-                if (q == null)
-                {
-                    continue;
-                }
-
-                CityFigure f = q.Figure ?? new CityFigure();
-                rows.Add(
-                    new CityRow
-                    {
-                        Quote = q,
-                        Driver = f.Driver,
-                        Name = DriverName(f),
-                        Figure = FigureText(f),
-                        Rule = Rule(f.Driver),
-                        Change = HeatmapOverview.Change(q, days),
-                    }
-                );
+                rows.Add(Row(q, days));
             }
 
-            rows.Sort(
-                (a, b) =>
-                {
-                    int byDriver = a.Driver.CompareTo(b.Driver);
-                    return byDriver != 0
-                        ? byDriver
-                        : string.Compare(a.Quote.Symbol, b.Quote.Symbol, StringComparison.Ordinal);
-                }
-            );
             return rows;
+        }
+
+        private static CityRow Row(MonitorQuote q, int days)
+        {
+            CityFigure f = q.Figure ?? new CityFigure();
+            return new CityRow
+            {
+                Quote = q,
+                Driver = f.Driver,
+                Name = DriverName(f),
+                Figure = FigureText(f),
+                Rule = Rule(f.Driver),
+                Change = HeatmapOverview.Change(q, days),
+            };
         }
 
         /// <summary>"Oil industry", "Healthcare", "Local company".</summary>

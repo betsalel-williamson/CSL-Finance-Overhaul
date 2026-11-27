@@ -4,8 +4,8 @@ using System.Text; // StringBuilder
 // ColossalFramework.UI: UIComponent, UILabel, UIOrientation, UIPanel, UIScrollablePanel,
 //   UITextureSprite
 using ColossalFramework.UI;
-// FinanceOverhaul.Core: MonitorQuote, OverviewPage, OverviewPages, StockDetail, Strings,
-//   TradeOrder
+// FinanceOverhaul.Core: MonitorQuote, MonitorSort, OverviewPage, OverviewPages, StockDetail,
+//   Strings, TradeOrder
 using FinanceOverhaul.Core;
 using UnityEngine; // Color32, Texture2D, Vector2, Vector3
 
@@ -35,6 +35,12 @@ namespace FinanceOverhaul
 
         /// <summary>The pills show ₡ (points), not % (one switch for all, the list's too).</summary>
         public bool InPoints;
+
+        /// <summary>The Investments list's sort, for a view that lists every stock (City).</summary>
+        public MonitorSort Sort;
+
+        /// <summary>The list's sort runs the other way (its ▲/▼).</summary>
+        public bool Reversed;
     }
 
     /// <summary>
@@ -57,6 +63,8 @@ namespace FinanceOverhaul
         private readonly UIPanel root;
         private readonly FoToggleTabs tabs;
         private readonly Func<bool> pillsInPoints;
+        private readonly Func<MonitorSort> listSort;
+        private readonly Func<bool> listReversed;
         private readonly Dictionary<OverviewPage, IOverviewView> views =
             new Dictionary<OverviewPage, IOverviewView>();
 
@@ -116,15 +124,21 @@ namespace FinanceOverhaul
 
         /// <param name="inPoints">The list's pills show ₡ (points), not % (one switch for all).</param>
         /// <param name="toggle">A click on any pill: flips every pill, the list's too.</param>
+        /// <param name="sort">The list's sort (City lists the stocks in the same order).</param>
+        /// <param name="reversed">The list's sort direction.</param>
         public InvestmentsOverview(
             UIComponent parent,
             Vector3 at,
             Vector2 size,
             Func<bool> inPoints,
-            Action toggle
+            Action toggle,
+            Func<MonitorSort> sort,
+            Func<bool> reversed
         )
         {
             pillsInPoints = inPoints;
+            listSort = sort;
+            listReversed = reversed;
             TogglePills = toggle;
             root = parent.AddUIComponent<UIPanel>();
             root.name = Name;
@@ -234,6 +248,8 @@ namespace FinanceOverhaul
                 Quotes = quotes,
                 Days = Days,
                 InPoints = pillsInPoints(),
+                Sort = listSort(),
+                Reversed = listReversed(),
             };
             var sig = new StringBuilder();
             sig.Append(page)
@@ -243,6 +259,9 @@ namespace FinanceOverhaul
                 .Append(Strings.Language)
                 .Append('|')
                 .Append(frame.InPoints)
+                .Append('|')
+                .Append(frame.Sort)
+                .Append(frame.Reversed)
                 .Append('|')
                 .Append(OrderDesk.Today);
             foreach (MonitorQuote q in quotes)

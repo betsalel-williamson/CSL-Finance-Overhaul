@@ -3,7 +3,8 @@ using ColossalFramework.UI; // UIComponent, UIKeyEventParameter, UISlider, UITex
 using HarmonyLib; // AccessTools
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
-//   EconomyManager, EconomyPanel, GameKeyShortcuts, InvestmentTooltip, OptionsMainPanel
+//   ChirpPanel, EconomyManager, EconomyPanel, GameKeyShortcuts, InvestmentTooltip,
+//   OptionsMainPanel
 
 namespace FinanceOverhaul
 {
@@ -175,6 +176,16 @@ namespace FinanceOverhaul
         }
 
         /// <summary>The game's UI toolkit (ColossalFramework.UI).</summary>
+        /// <summary>The Chirper (ChirpPanel).</summary>
+        internal static class Chirper
+        {
+            /// <summary>The scrolling list of chirps the panel shows (its last 16).</summary>
+            public static readonly FieldInfo Container = AccessTools.Field(
+                typeof(ChirpPanel),
+                "m_Container"
+            );
+        }
+
         internal static class Ui
         {
             /// <summary>The mouse wheel as the game delivers it: to a control, then up its parents.</summary>

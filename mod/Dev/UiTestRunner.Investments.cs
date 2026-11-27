@@ -1,11 +1,15 @@
 using System; // ArgumentException, Enum, StringComparison
 using System.Collections; // IEnumerator
 using System.Globalization; // CultureInfo
-// ColossalFramework.UI: UIComponent, UIMouseButton, UIMouseEventParameter, UIScrollablePanel,
-//   UITextureSprite
+// ColossalFramework.UI: UIComponent, UILabel, UIMouseButton, UIMouseEventParameter,
+//   UIScrollablePanel, UITextureSprite, UIView
 using ColossalFramework.UI;
-using FinanceOverhaul.Core; // InvestmentRow, MonitorSort, PortfolioOverview
+// FinanceOverhaul.Core: InvestmentRow, MonitorSort, Notice, NoticeKind, NoticeText,
+//   PortfolioOverview
+using FinanceOverhaul.Core;
 using UnityEngine; // Mathf, Ray, Time, Vector2, Vector3, WaitForSeconds
+
+// Game classes used without a using (global namespace, Assembly-CSharp): ChirpPanel
 
 namespace FinanceOverhaul
 {
@@ -281,6 +285,85 @@ namespace FinanceOverhaul
                             + at.ToString("0.0", CultureInfo.InvariantCulture)
                             + ", expected "
                             + b;
+                    }
+
+                    break;
+                }
+                case "feed-notice":
+                {
+                    // feed-notice SYMBOL TEXT — a notice in the Feed's log as if the Brokerage had
+                    // chirped it today (not chirped: notices are muted in tests). Taken out after.
+                    ChirpNotices.Log.Add(
+                        OrderDesk.Today,
+                        new Notice
+                        {
+                            Kind = NoticeKind.Filled,
+                            Sender = NoticeText.Brokerage,
+                            Symbol = a,
+                            Text = b,
+                        }
+                    );
+                    ctx.FeedNotices.Add(b);
+                    break;
+                }
+                case "feed-click":
+                {
+                    // feed-click TEXT — clicks the Feed item that reads TEXT.
+                    string text = (a + " " + (b ?? string.Empty)).Trim();
+                    UIComponent row = null;
+                    foreach (UILabel l in UIView.GetAView().GetComponentsInChildren<UILabel>())
+                    {
+                        if (
+                            l.isVisible
+                            && l.name.StartsWith(InvestmentsOverview.Name + "Feed-")
+                            && l.name.EndsWith("Text")
+                            && l.text == text
+                        )
+                        {
+                            row = l.parent;
+                        }
+                    }
+
+                    if (row == null)
+                    {
+                        r.Error = "no Feed item reads '" + text + "'";
+                        break;
+                    }
+
+                    row.SimulateClick();
+                    yield return null;
+                    break;
+                }
+                case "chirper":
+                {
+                    // chirper close — folds the Chirper away again.
+                    if (ChirpPanel.instance != null)
+                    {
+                        ChirpPanel.instance.Collapse();
+                    }
+
+                    break;
+                }
+                case "expect-chirper":
+                {
+                    // expect-chirper TEXT — the Chirper is open and holds a chirp that reads TEXT.
+                    string text = (a + " " + (b ?? string.Empty)).Trim();
+                    ChirpPanel panel = ChirpPanel.instance;
+                    if (panel == null || !panel.isShowing)
+                    {
+                        r.Error = "the Chirper is not open";
+                        break;
+                    }
+
+                    bool holds = false;
+                    foreach (UILabel l in panel.component.GetComponentsInChildren<UILabel>())
+                    {
+                        holds |= l.name == "Content" && l.text == text;
+                    }
+
+                    if (!holds)
+                    {
+                        r.Error = "the Chirper does not hold '" + text + "'";
                     }
 
                     break;

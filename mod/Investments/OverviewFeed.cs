@@ -42,7 +42,6 @@ namespace FinanceOverhaul
         private UIScrollablePanel feedList;
         private UILabel upcomingHeading;
         private UILabel latelyHeading;
-        private UILabel nothingUpcoming;
         private UILabel nothingLately;
         private readonly List<FeedRowView> feedRows = new List<FeedRowView>();
 
@@ -70,13 +69,6 @@ namespace FinanceOverhaul
                 0f
             );
             latelyHeading.name = Name + "FeedLately";
-            nothingUpcoming = FoText.Label(
-                feedList,
-                Name + "FeedNothingUpcoming",
-                Strings.Get("overview.feed.nothingUpcoming"),
-                0.75f,
-                FoTheme.TextMuted
-            );
             nothingLately = FoText.Label(
                 feedList,
                 Name + "FeedNothingLately",
@@ -116,17 +108,18 @@ namespace FinanceOverhaul
             float width = feedList.width;
             int used = 0;
             float y = 0f;
-            upcomingHeading.relativePosition = new Vector3(0f, y);
-            y += 20f;
-            nothingUpcoming.isVisible = upcoming.Count == 0;
-            if (upcoming.Count == 0)
+            // "Coming up" only when something is: an offering, an order near its trigger or
+            // its end, a stock about to unlock. Otherwise the feed starts at "Lately".
+            bool anyUpcoming = upcoming.Count > 0;
+            upcomingHeading.isVisible = anyUpcoming;
+            if (anyUpcoming)
             {
-                nothingUpcoming.relativePosition = new Vector3(0f, y);
-                y += 22f;
+                upcomingHeading.relativePosition = new Vector3(0f, y);
+                y += 20f;
+                y = Items(upcoming, y, width, ref used);
+                y += 8f;
             }
 
-            y = Items(upcoming, y, width, ref used);
-            y += 8f;
             latelyHeading.relativePosition = new Vector3(0f, y);
             y += 20f;
             nothingLately.isVisible = lately.Count == 0;
@@ -209,18 +202,34 @@ namespace FinanceOverhaul
             private readonly float width;
             private MonitorQuote quote;
 
+            private string chirpSender;
+            private string chirpText;
+
+            private void Open()
+            {
+                if (chirpSender != null)
+                {
+                    ChirpNotices.Show(chirpSender, chirpText);
+                }
+                else
+                {
+                    InvestmentsOverview.OpenDialog(quote);
+                }
+            }
+
             public FeedRowView(UIComponent parent, int index, float width)
             {
                 this.width = width;
                 string name = Name + "Feed-" + index;
-                // Lights up only for an item about a stock (a click opens it).
+                // A chirp opens in the Chirper; an item the feed worked out about a stock opens
+                // the stock. It lights up when a click does either.
                 back = FoRow.Add(
                     parent,
                     name,
                     new Vector2(width, 26f),
                     Vector3.zero,
-                    p => InvestmentsOverview.OpenDialog(quote),
-                    () => quote != null
+                    p => Open(),
+                    () => chirpSender != null || quote != null
                 );
                 bar = back.AddUIComponent<UIPanel>();
                 bar.name = name + "Tone";
@@ -239,6 +248,8 @@ namespace FinanceOverhaul
             public float Show(FeedItem item, MonitorQuote q, float y)
             {
                 quote = q;
+                chirpSender = item.ChirpSender;
+                chirpText = item.Text;
                 back.isVisible = true;
                 back.relativePosition = new Vector3(0f, y);
                 bar.color = ToneColour(item.Tone);
@@ -248,7 +259,10 @@ namespace FinanceOverhaul
                 float height = Mathf.Max(26f, h + 10f);
                 back.height = height;
                 bar.height = height;
-                back.tooltip = q == null ? null : q.Name;
+                back.tooltip =
+                    chirpSender != null ? Strings.Get("overview.feed.openChirp")
+                    : q == null ? null
+                    : q.Name;
                 return height;
             }
 

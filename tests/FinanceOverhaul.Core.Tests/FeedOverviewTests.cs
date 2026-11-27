@@ -113,6 +113,7 @@ namespace FinanceOverhaul.Core.Tests
                     Kind = NoticeKind.Filled,
                     Symbol = "CALM",
                     Text = "Bought 10 CALM",
+                    Sender = "City Brokerage",
                 }
             );
             log.Add(99, new Notice { Kind = NoticeKind.IpoFirstDay, Text = "skipped" });
@@ -145,6 +146,9 @@ namespace FinanceOverhaul.Core.Tests
             Assert.Equal("1 day ago", items[4].When);
             Assert.Equal("2 days ago", items[5].When);
             Assert.Equal(FeedTone.Accent, items[5].Tone);
+            // A notice is a chirp (a click opens it in the Chirper); a move is not.
+            Assert.Equal("City Brokerage", items[5].ChirpSender);
+            Assert.Null(items[0].ChirpSender);
             Assert.Equal(2, items[5].Days);
         }
 
@@ -162,6 +166,9 @@ namespace FinanceOverhaul.Core.Tests
             List<FeedEntry> kept = log.Snapshot();
             Assert.Equal(FeedLog.Capacity, kept.Count);
             Assert.Equal("n5", kept[0].Text);
+            log.Remove("n6");
+            Assert.Equal(FeedLog.Capacity - 1, log.Snapshot().Count);
+            Assert.DoesNotContain(log.Snapshot(), e => e.Text == "n6");
             log.Clear();
             Assert.Empty(log.Snapshot());
         }

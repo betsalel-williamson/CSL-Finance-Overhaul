@@ -1,5 +1,6 @@
 using System.Collections.Generic; // List
-// FinanceOverhaul.Core: BusinessKind, CityDriver, CityFigure, CityOverview, CityRow, MonitorQuote
+// FinanceOverhaul.Core: BusinessKind, CityDriver, CityFigure, CityOverview, CityRow, MonitorQuote,
+//   MonitorSort
 using FinanceOverhaul.Core;
 using Xunit; // Assert, FactAttribute
 
@@ -7,7 +8,7 @@ namespace FinanceOverhaul.Core.Tests
 {
     public class CityOverviewTests
     {
-        private static MonitorQuote Q(string symbol, CityFigure figure)
+        private static MonitorQuote Q(string symbol, CityFigure figure, float rate = 0f)
         {
             return new MonitorQuote
             {
@@ -15,15 +16,16 @@ namespace FinanceOverhaul.Core.Tests
                 Figure = figure,
                 History = new[] { 100f, 105f },
                 Price = 105f,
+                ChangeRate = rate,
             };
         }
 
         [Fact]
-        public void RowsGroupByDriverIndustryFirst()
+        public void RowsFollowTheListsSort()
         {
             var quotes = new List<MonitorQuote>
             {
-                Q("VLC", new CityFigure { Driver = CityDriver.Crime, A = 12 }),
+                Q("VLC", new CityFigure { Driver = CityDriver.Crime, A = 12 }, 2f),
                 Q(
                     "OIL",
                     new CityFigure
@@ -31,7 +33,8 @@ namespace FinanceOverhaul.Core.Tests
                         Driver = CityDriver.Oil,
                         A = 72.4,
                         B = 3400,
-                    }
+                    },
+                    9f
                 ),
                 Q(
                     "FRM",
@@ -40,23 +43,39 @@ namespace FinanceOverhaul.Core.Tests
                         Driver = CityDriver.Farming,
                         A = 50,
                         B = 10,
-                    }
+                    },
+                    5f
                 ),
-                Q("XXX", null),
-                Q("IDX", new CityFigure { Driver = CityDriver.Index, A = 14 }),
+                Q("XXX", null, 1f),
+                Q("IDX", new CityFigure { Driver = CityDriver.Index, A = 14 }, 0.5f),
             };
-            List<CityRow> rows = CityOverview.Rows(quotes, 7);
             Assert.Equal(
-                new[] { "FRM", "OIL", "VLC", "IDX", "XXX" },
+                new[] { "OIL", "FRM", "VLC", "XXX", "IDX" },
+                CityOverview
+                    .Rows(quotes, 7, MonitorSort.Change, false, false)
+                    .ConvertAll(r => r.Quote.Symbol)
+                    .ToArray()
+            );
+            Assert.Equal(
+                new[] { "IDX", "XXX", "VLC", "FRM", "OIL" },
+                CityOverview
+                    .Rows(quotes, 7, MonitorSort.Change, true, false)
+                    .ConvertAll(r => r.Quote.Symbol)
+                    .ToArray()
+            );
+
+            List<CityRow> rows = CityOverview.Rows(quotes, 7, MonitorSort.Symbol, false, false);
+            Assert.Equal(
+                new[] { "FRM", "IDX", "OIL", "VLC", "XXX" },
                 rows.ConvertAll(r => r.Quote.Symbol).ToArray()
             );
-            Assert.Equal("Oil industry", rows[1].Name);
-            Assert.Equal("72% productive · area 3,400", rows[1].Figure);
-            Assert.Equal("Rises with productivity and more industry", rows[1].Rule);
-            Assert.Equal(5f, rows[1].Change, 3);
-            Assert.Equal("Crime rate 12%", rows[2].Figure);
-            Assert.Equal("Rises with crime", rows[2].Rule);
-            Assert.Equal("Follows 14 stocks equally", rows[3].Figure);
+            Assert.Equal("Oil industry", rows[2].Name);
+            Assert.Equal("72% productive · area 3,400", rows[2].Figure);
+            Assert.Equal("Rises with productivity and more industry", rows[2].Rule);
+            Assert.Equal(5f, rows[2].Change, 3);
+            Assert.Equal("Crime rate 12%", rows[3].Figure);
+            Assert.Equal("Rises with crime", rows[3].Rule);
+            Assert.Equal("Follows 14 stocks equally", rows[1].Figure);
             Assert.Equal("No city figure", rows[4].Figure);
             Assert.Equal("Other", rows[4].Name);
         }

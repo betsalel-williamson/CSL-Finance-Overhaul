@@ -127,10 +127,17 @@ capture investments-overview-city
 click FinanceOverhaulInvestmentsOverviewTab-Feed
 wait 0.5
 expect-visible FinanceOverhaulInvestmentsOverviewFeed
-expect-visible FinanceOverhaulInvestmentsOverviewFeedUpcoming
 expect-visible FinanceOverhaulInvestmentsOverviewFeedLately
 expect-hidden FinanceOverhaulInvestmentsOverviewCity
 capture investments-overview-feed
+# an item that was a chirp opens it in the Chirper (posted again when the Chirper no longer has it)
+feed-notice FOTEST Test fill: bought 10 FOTEST
+wait 0.5
+feed-click Test fill: bought 10 FOTEST
+wait 1
+expect-chirper Test fill: bought 10 FOTEST
+capture investments-overview-feed-chirp
+chirper close
 click FinanceOverhaulInvestmentsOverviewTab-Market
 wait 0.5
 expect-visible FinanceOverhaulInvestmentsOverviewMarket
@@ -198,6 +205,7 @@ expect-visible OwnedInvestmentsPanel
 expect-visible OwnedInvestmentsSummaryPanel
 expect-hidden FinanceOverhaulInvestmentsList
 cleanup:
+chirper close
 overview-orders off
 monitor restore
 investments-list restore

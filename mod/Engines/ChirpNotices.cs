@@ -1,5 +1,6 @@
 using System; // Exception
 using System.Collections.Generic; // List, Queue
+using ColossalFramework.UI; // UIComponent, UILabel, UIScrollablePanel
 using FinanceOverhaul.Core; // FeedLog, Notice, NoticeBatch
 using ICities; // IChirperMessage
 using UnityEngine; // MonoBehaviour
@@ -95,6 +96,54 @@ namespace FinanceOverhaul
                 {
                     ModLog.Warn("notices: chirp failed: " + ex.Message);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Opens the Chirper on a chirp the mod posted (a click on it in the Investments Feed):
+        /// scrolled to it while the Chirper still holds it (its last 16), else posted again,
+        /// quietly, so it is there to read. Main thread.
+        /// </summary>
+        public static void Show(string sender, string text)
+        {
+            ChirpPanel panel = ChirpPanel.instance;
+            if (panel == null || string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            UIScrollablePanel list =
+                GameInternals.Chirper.Container == null
+                    ? null
+                    : GameInternals.Chirper.Container.GetValue(panel) as UIScrollablePanel;
+            UIComponent found = null;
+            if (list != null)
+            {
+                foreach (UIComponent chirp in list.components)
+                {
+                    UILabel content = chirp.Find<UILabel>("Content");
+                    if (content != null && content.text == text)
+                    {
+                        found = chirp; // the newest copy wins: the list runs oldest first
+                    }
+                }
+            }
+
+            if (found == null)
+            {
+                panel.AddEntry(new FinanceChirp(sender, text), true);
+                found =
+                    list != null && list.components.Count > 0
+                        ? list.components[list.components.Count - 1]
+                        : null;
+            }
+
+            panel.Expand();
+            // Over the Economy window it was opened from (the Chirper drops down behind it).
+            panel.component.BringToFront();
+            if (list != null && found != null)
+            {
+                list.ScrollIntoView(found);
             }
         }
 

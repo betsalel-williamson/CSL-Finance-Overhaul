@@ -11,6 +11,9 @@ namespace FinanceOverhaul.Core
         public NoticeKind Kind;
         public string Symbol;
         public string Text;
+
+        /// <summary>Who chirped it (City Brokerage, City Treasury…).</summary>
+        public string Sender;
     }
 
     /// <summary>
@@ -41,6 +44,7 @@ namespace FinanceOverhaul.Core
                         Kind = notice.Kind,
                         Symbol = notice.Symbol,
                         Text = notice.Text,
+                        Sender = notice.Sender,
                     }
                 );
                 if (entries.Count > Capacity)
@@ -55,6 +59,15 @@ namespace FinanceOverhaul.Core
             lock (sync)
             {
                 return new List<FeedEntry>(entries);
+            }
+        }
+
+        /// <summary>Takes out every entry with this text (game UI tests: their own notice).</summary>
+        public void Remove(string text)
+        {
+            lock (sync)
+            {
+                entries.RemoveAll(e => e.Text == text);
             }
         }
 
@@ -91,6 +104,12 @@ namespace FinanceOverhaul.Core
 
         /// <summary>Sort key: days from today (upcoming), or days ago (lately).</summary>
         public int Days;
+
+        /// <summary>
+        /// Who chirped it, when the item is a chirp the mod posted (a click opens it in the
+        /// Chirper); null for an item the feed worked out itself (a click opens the stock).
+        /// </summary>
+        public string ChirpSender;
 
         /// <summary>On one day: big moves first, then highs and lows, listings, notices.</summary>
         public int Rank;
@@ -368,6 +387,7 @@ namespace FinanceOverhaul.Core
                         Symbol = e.Symbol,
                         Tone = e.Kind == NoticeKind.Filled ? FeedTone.Accent : FeedTone.Neutral,
                         Days = ago,
+                        ChirpSender = e.Sender ?? string.Empty,
                         Rank = 3,
                     }
                 );

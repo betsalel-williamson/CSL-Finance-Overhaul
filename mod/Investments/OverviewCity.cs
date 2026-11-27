@@ -66,7 +66,14 @@ namespace FinanceOverhaul
             int days = frame.Days;
             cityRange.Choose(days == StockDetail.ShortRange ? 0 : 1);
             CityFigures.Fill(quotes);
-            List<CityRow> rows = CityOverview.Rows(quotes, days);
+            // In the list's order: its sort and direction (Change by ₡ with the pills in points).
+            List<CityRow> rows = CityOverview.Rows(
+                quotes,
+                days,
+                frame.Sort,
+                frame.Reversed,
+                frame.InPoints
+            );
             bool inPoints = frame.InPoints;
             while (cityRows.Count < rows.Count)
             {

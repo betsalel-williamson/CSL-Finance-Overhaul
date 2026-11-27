@@ -154,7 +154,7 @@ namespace FinanceOverhaul.Core
             { "overview.city.rule.None", "Set by its own rules" },
             { "overview.feed.upcoming", "Coming up" },
             { "overview.feed.lately", "Lately" },
-            { "overview.feed.nothingUpcoming", "Nothing coming up" },
+            { "overview.feed.openChirp", "Click: open it in the Chirper" },
             {
                 "overview.feed.nothingLately",
                 "Nothing yet. Big moves, new listings and filled orders show here."

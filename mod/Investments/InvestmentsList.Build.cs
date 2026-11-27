@@ -169,7 +169,9 @@ namespace FinanceOverhaul
                 new Vector3(left + ColumnGap, 0f),
                 new Vector2(list.width - left - ColumnGap, list.height),
                 () => pillsInCurrency,
-                TogglePills
+                TogglePills,
+                () => sort,
+                () => reversed
             );
             Current = this;
             ModLog.Info(

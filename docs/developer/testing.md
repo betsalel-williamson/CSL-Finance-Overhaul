@@ -133,8 +133,10 @@ scenarios that check the game's own Investments lists start with `investments-li
 it), `dump-all NAME` (every control with that name, shown or not, with its parents: finds copies
 another loaded copy of the mod or an old build left; a text field's dump shows its text, focus and
 hover), `share-charts on|off` (the share chart flag, for before/after captures) — and checks
-`expect-visible`, `expect-text`, `wheel CONTROL NOTCHES` (the mouse wheel over a control as the game
-delivers it; negative is down), `expect-scroll LIST top|moved` (a scrolling list, or
+`expect-visible`, `expect-text`, `feed-notice SYMBOL TEXT` (a test notice in the Feed, taken out
+after), `feed-click TEXT` (clicks the Feed item that reads it), `expect-chirper TEXT` (the Chirper
+is open and holds it), `chirper close`, `wheel CONTROL NOTCHES` (the mouse wheel over a control as
+the game delivers it; negative is down), `expect-scroll LIST top|moved` (a scrolling list, or
 `FinanceOverhaulInvestmentsView`, is at its top or has moved), `expect-text-fits CONTROL` (a label's
 text is no wider than the label, measured with the game's font), `expect-slider CONTROL [max]` (the
 slider's thumb is drawn where its value is; with `max`, the value is the maximum),
