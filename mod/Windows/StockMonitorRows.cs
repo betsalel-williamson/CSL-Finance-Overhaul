@@ -1,13 +1,12 @@
 using System.Collections.Generic; // List
 // ColossalFramework.UI: UIButton, UIComponent, UIHorizontalAlignment, UIPanel, UITextureSprite
 using ColossalFramework.UI;
-// FinanceOverhaul.Core: MonitorFilter, MonitorOrderGroup, MonitorOrderLine, MonitorOrders,
-//   MonitorQuote, StockDetail, StockMonitor, Strings, TradeOrder
+// FinanceOverhaul.Core: DialogSide, MonitorFilter, MonitorOrderGroup, MonitorOrderLine,
+//   MonitorOrders, MonitorQuote, StockDetail, StockMonitor, Strings, TradeOrder
 using FinanceOverhaul.Core;
 using UnityEngine; // Color32, Mathf, Vector2, Vector3
 
-// Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
-//   SimulationManager
+// Game classes used without a using (global namespace, Assembly-CSharp): SimulationManager
 
 namespace FinanceOverhaul
 {
@@ -173,7 +172,7 @@ namespace FinanceOverhaul
         {
             if (id >= 0)
             {
-                BuySellInvestmentPanel.ShowPanel((byte)id, BuySellInvestmentPanel.Mode.Buy);
+                TradeDialog.Show(id, DialogSide.Buy);
             }
         }
 

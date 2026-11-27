@@ -3,7 +3,9 @@ using System.Collections.Generic; // Queue
 // ColossalFramework.UI: UIButton, UIComponent, UIHorizontalAlignment, UILabel, UIPanel,
 //   UISlicedSprite, UISprite, UIView
 using ColossalFramework.UI;
-using FinanceOverhaul.Core; // BuildingKey, CompanyStatus, IpoDialogText, LocalCompany, ModSettings
+// FinanceOverhaul.Core: BuildingKey, CompanyStatus, DialogSide, IpoDialogText, LocalCompany,
+//   ModSettings
+using FinanceOverhaul.Core;
 using UnityEngine; // AudioClip, Color32, Mathf, MonoBehaviour, RectOffset, Time, Vector2, Vector3
 
 // Game classes used without a using (global namespace, Assembly-CSharp): AudioManager, Building,
@@ -218,7 +220,7 @@ namespace FinanceOverhaul
             int slot = CompanyListing.SlotOf(company);
             if (slot > 0)
             {
-                BuySellInvestmentPanel.ShowPanel((byte)slot, BuySellInvestmentPanel.Mode.Buy);
+                TradeDialog.Show(slot, DialogSide.Buy);
             }
         }
 

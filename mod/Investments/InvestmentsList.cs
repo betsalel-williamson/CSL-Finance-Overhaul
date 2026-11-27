@@ -3,15 +3,14 @@ using System.Collections.Generic; // Dictionary, HashSet, IList, KeyValuePair, L
 // ColossalFramework.UI: UIButton, UIComponent, UIHorizontalAlignment, UILabel, UIOrientation,
 //   UIPanel, UIScrollbar, UISlicedSprite, UISprite, UITextureSprite, UIVerticalAlignment, UIView
 using ColossalFramework.UI;
-// FinanceOverhaul.Core: BondText, InvestmentFilter, InvestmentList, InvestmentRow,
-//   InvestmentRowKind, MonitorQuote, MonitorSort, StockMonitor, StockMonitorSettings, Strings,
-//   TradeOrder
+// FinanceOverhaul.Core: BondText, DialogSide, DialogSides, InvestmentFilter, InvestmentList,
+//   InvestmentRow, InvestmentRowKind, MonitorQuote, MonitorSort, StockMonitor,
+//   StockMonitorSettings, Strings, TradeOrder
 using FinanceOverhaul.Core;
 using UnityEngine; // Color32, Mathf, MonoBehaviour, Screen, Texture2D, Time, Vector2, Vector3
 
-// Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
-//   EconomyManager, EconomyPanel, Investment, InvestmentAI, InvestmentTooltip,
-//   ToolsModifierControl
+// Game classes used without a using (global namespace, Assembly-CSharp): EconomyManager,
+//   EconomyPanel, Investment, InvestmentAI, InvestmentTooltip, ToolsModifierControl
 
 namespace FinanceOverhaul
 {
@@ -843,7 +842,7 @@ namespace FinanceOverhaul
                 {
                     if (kind == InvestmentRowKind.Stock)
                     {
-                        Open(BuySellInvestmentPanel.Mode.Buy);
+                        Open();
                     }
                 };
                 outline = new UIPanel[4];
@@ -991,24 +990,17 @@ namespace FinanceOverhaul
                 }
             }
 
-            private void Open(BuySellInvestmentPanel.Mode mode)
+            /// <summary>
+            /// The line's click: Buy, or Sell when nothing is left to buy, else nothing
+            /// (<see cref="DialogSides.ForLine"/>); the hover chart goes first.
+            /// </summary>
+            private void Open()
             {
-                // Nothing left to buy: the line opens Sell when the city holds some, else nothing
-                // (the game's dialog would open on an empty share range).
-                if (mode == BuySellInvestmentPanel.Mode.Buy && available == 0)
-                {
-                    if (owned == 0)
-                    {
-                        return;
-                    }
-
-                    mode = BuySellInvestmentPanel.Mode.Sell;
-                }
-
-                if (slot > 0 && !locked)
+                DialogSide side = DialogSides.ForLine(slot, locked, available, owned);
+                if (side != DialogSide.None)
                 {
                     HideChart();
-                    BuySellInvestmentPanel.ShowPanel((byte)slot, mode);
+                    TradeDialog.Show(slot, side);
                 }
             }
 

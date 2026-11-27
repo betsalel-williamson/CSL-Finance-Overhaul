@@ -7,8 +7,6 @@ using ColossalFramework.UI; // UIComponent, UILabel, UIPanel, UITextureSprite
 using FinanceOverhaul.Core;
 using UnityEngine; // Color32, Texture2D, Vector2, Vector3
 
-// Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel
-
 namespace FinanceOverhaul
 {
     /// <summary>
@@ -313,23 +311,10 @@ namespace FinanceOverhaul
         /// <summary>Opens the game's dialog on a stock, as a click on its line in the list does.</summary>
         private static void OpenDialog(MonitorQuote q)
         {
-            if (q == null || q.Locked || q.Id <= 0)
+            if (q != null)
             {
-                return;
+                TradeDialog.ShowForLine(q.Id, q.Locked, q.Available, q.Owned);
             }
-
-            BuySellInvestmentPanel.Mode mode = BuySellInvestmentPanel.Mode.Buy;
-            if (q.Available == 0)
-            {
-                if (q.Owned == 0)
-                {
-                    return;
-                }
-
-                mode = BuySellInvestmentPanel.Mode.Sell;
-            }
-
-            BuySellInvestmentPanel.ShowPanel((byte)q.Id, mode);
         }
 
         /// <summary>

@@ -2,12 +2,11 @@ using System; // DateTime
 // ColossalFramework.UI: UIButton, UIComponent, UILabel, UIMouseEventParameter, UIPanel, UISprite,
 //   UITextureSprite
 using ColossalFramework.UI;
-using FinanceOverhaul.Core; // CompanyPanelText, LocalCompany, StockMonitor, Strings
+using FinanceOverhaul.Core; // CompanyPanelText, DialogSide, LocalCompany, StockMonitor, Strings
 using UnityEngine; // Color32, Mathf, Texture2D, Vector2, Vector3
 
-// Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
-//   EconomyManager, Investment, InvestmentAI, InvestmentInfo, SimulationManager,
-//   ToolsModifierControl
+// Game classes used without a using (global namespace, Assembly-CSharp): EconomyManager,
+//   Investment, InvestmentAI, InvestmentInfo, SimulationManager, ToolsModifierControl
 
 namespace FinanceOverhaul
 {
@@ -79,7 +78,7 @@ namespace FinanceOverhaul
             }
 
             // On Buy; a dialog with nothing left to buy turns to Sell (OrderTicket).
-            Trade(BuySellInvestmentPanel.Mode.Buy);
+            Trade(DialogSide.Buy);
         }
 
         /// <summary>The section itself, for the host to place.</summary>
@@ -325,7 +324,7 @@ namespace FinanceOverhaul
 
             buy = FoButton.Add(section, prefix + "Buy", "", new Vector2(96f, 30f), 0.8f);
             buy.relativePosition = new Vector3(8f, 88f);
-            buy.eventClick += (c, p) => Trade(BuySellInvestmentPanel.Mode.Buy);
+            buy.eventClick += (c, p) => Trade(DialogSide.Buy);
             sell = FoButton.Add(
                 section,
                 prefix + "Sell",
@@ -333,7 +332,7 @@ namespace FinanceOverhaul
                 new Vector2(96f, 30f),
                 0.8f
             );
-            sell.eventClick += (c, p) => Trade(BuySellInvestmentPanel.Mode.Sell);
+            sell.eventClick += (c, p) => Trade(DialogSide.Sell);
             UIButton show = FoButton.Add(
                 section,
                 prefix + "Show",
@@ -348,11 +347,11 @@ namespace FinanceOverhaul
                 );
         }
 
-        private void Trade(BuySellInvestmentPanel.Mode mode)
+        private void Trade(DialogSide side)
         {
             if (slot > 0)
             {
-                BuySellInvestmentPanel.ShowPanel((byte)slot, mode);
+                TradeDialog.Show(slot, side);
             }
         }
     }
