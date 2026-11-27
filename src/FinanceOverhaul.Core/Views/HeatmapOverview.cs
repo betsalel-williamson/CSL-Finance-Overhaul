@@ -1,5 +1,5 @@
 using System; // Array, Math, StringComparison
-using System.Collections.Generic; // IEnumerable, List
+using System.Collections.Generic; // IEnumerable, IList, List
 using System.Globalization; // CultureInfo
 
 namespace FinanceOverhaul.Core
@@ -21,23 +21,28 @@ namespace FinanceOverhaul.Core
         /// <summary>The city holds shares of it (outlined).</summary>
         public bool Held;
 
-        /// <summary>Not on sale yet (drawn grey, at the end).</summary>
+        /// <summary>Not on sale yet (drawn grey, the smallest, at the end).</summary>
         public bool Locked;
+
+        /// <summary>The tile's area relative to the others (<see cref="HeatmapOverview.Weight"/>).</summary>
+        public double Weight;
     }
 
-    /// <summary>How the heatmap's tiles fit its area.</summary>
-    public struct HeatGrid
+    /// <summary>Where one tile of the treemap goes, in the area's own units.</summary>
+    public struct HeatRect
     {
-        public int Columns;
-        public int Rows;
-        public float TileWidth;
-        public float TileHeight;
+        public float X;
+        public float Y;
+        public float Width;
+        public float Height;
     }
 
     /// <summary>
-    /// The Heatmap view of the overview (Figma band 20, "Two columns"): every stock as a tile,
-    /// coloured from orange (falling) to green (rising) by its change today or over 7 or 30
-    /// days, the stocks the city holds outlined. The colour scale stretches to the typical
+    /// The Heatmap view of the overview (Figma band 20, "Two columns"): every stock as a tile
+    /// of a treemap, its area by the stock's market value (price × shares, square-root damped
+    /// so a ₡30 stock is still readable beside a ₡9,000 one), coloured from orange (falling) to
+    /// green (rising) by its change today or over 7 or 30 days, the stocks the city holds
+    /// outlined. The colour scale stretches to the typical
     /// move (four tiles in five), rounded up to a round step, so one outlier does not grey
     /// out the rest and a quiet day still shows its leaders.
     /// Cities-free.
@@ -58,8 +63,8 @@ namespace FinanceOverhaul.Core
         /// <summary>The scale's steps in percent: the smallest that holds the biggest move.</summary>
         public static readonly float[] ScaleSteps = { 1f, 2f, 5f, 10f, 20f, 50f, 100f };
 
-        /// <summary>The tiles never grow taller than this, however few stocks there are.</summary>
-        public const float MaxTileHeight = 64f;
+        /// <summary>Shares counted for a stock that shows none (locked): the game's usual 1,000.</summary>
+        public const double DefaultShares = 1000d;
 
         /// <summary>A saved span that is not one of <see cref="Spans"/> reads as Today.</summary>
         public static int Span(int saved)
@@ -171,9 +176,32 @@ namespace FinanceOverhaul.Core
         }
 
         /// <summary>
-        /// Every stock as a tile: those on sale from the biggest rise to the biggest fall
-        /// (unknown changes after them, ties A–Z), then the locked ones A–Z. Each tile's heat
-        /// is its change over the scale, clamped to −1…+1.
+        /// A stock's tile area before scaling: the square root of its market value (price ×
+        /// the shares there are, the city's and those on sale), so area follows value but a
+        /// cheap stock keeps a readable tile. At least 1.
+        /// </summary>
+        public static double Weight(MonitorQuote q)
+        {
+            if (q == null)
+            {
+                return 1d;
+            }
+
+            double price =
+                float.IsNaN(q.Price) || float.IsInfinity(q.Price) || q.Price < 1f ? 1d : q.Price;
+            double shares = (double)q.Owned + q.Available;
+            if (shares <= 0d)
+            {
+                shares = DefaultShares;
+            }
+
+            return Math.Max(1d, Math.Sqrt(price * shares));
+        }
+
+        /// <summary>
+        /// Every stock as a tile, largest first (ties A–Z), the locked ones after them A–Z at
+        /// the smallest size on sale, so the treemap lays them out in that order. Each tile's
+        /// heat is its change over the scale, clamped to −1…+1.
         /// </summary>
         public static List<HeatTile> Tiles(IEnumerable<MonitorQuote> quotes, int span)
         {
@@ -193,6 +221,7 @@ namespace FinanceOverhaul.Core
                     Amount = Amount(q, span),
                     Held = q.Owned > 0,
                     Locked = q.Locked,
+                    Weight = Weight(q),
                 };
                 (q.Locked ? locked : open).Add(tile);
             }
@@ -200,25 +229,26 @@ namespace FinanceOverhaul.Core
             open.Sort(
                 (a, b) =>
                 {
-                    bool aKnown = !float.IsNaN(a.Change),
-                        bKnown = !float.IsNaN(b.Change);
-                    if (aKnown != bKnown)
-                    {
-                        return aKnown ? -1 : 1;
-                    }
-
-                    int byChange = aKnown ? b.Change.CompareTo(a.Change) : 0;
-                    return byChange != 0 ? byChange : BySymbol(a, b);
+                    int byWeight = b.Weight.CompareTo(a.Weight);
+                    return byWeight != 0 ? byWeight : BySymbol(a, b);
                 }
             );
             locked.Sort(BySymbol);
 
             float scale = Scale(open);
+            double smallest = open.Count > 0 ? open[open.Count - 1].Weight : 1d;
             for (int i = 0; i < open.Count; i++)
             {
                 HeatTile t = open[i];
                 t.Heat = float.IsNaN(t.Change) ? 0f : Math.Max(-1f, Math.Min(1f, t.Change / scale));
                 open[i] = t;
+            }
+
+            for (int i = 0; i < locked.Count; i++)
+            {
+                HeatTile t = locked[i];
+                t.Weight = smallest;
+                locked[i] = t;
             }
 
             open.AddRange(locked);
@@ -231,45 +261,145 @@ namespace FinanceOverhaul.Core
         }
 
         /// <summary>
-        /// The grid that gives <paramref name="count"/> tiles the biggest size in the area, as
-        /// near a 3:2 tile as the area allows, with <paramref name="gap"/> between tiles; never
-        /// taller than <see cref="MaxTileHeight"/>.
+        /// A squarified treemap (Bruls, Huizing and van Wijk): the area split into one
+        /// rectangle per weight, each with its share of the area, rows chosen so the tiles stay
+        /// as near square as they can. Weights in the order given (largest first lays out
+        /// best); the result is in the same order. <paramref name="gap"/> is left between
+        /// neighbours; the outer tiles touch the area's edges.
         /// </summary>
-        public static HeatGrid Grid(int count, float width, float height, float gap)
+        public static HeatRect[] Treemap(
+            IList<double> weights,
+            float width,
+            float height,
+            float gap
+        )
         {
-            var best = new HeatGrid { Columns = 1, Rows = Math.Max(1, count) };
-            if (count <= 0 || width <= 0f || height <= 0f)
+            int n = weights == null ? 0 : weights.Count;
+            var rects = new HeatRect[n];
+            double total = 0d;
+            for (int i = 0; i < n; i++)
             {
-                return best;
+                total += Math.Max(0d, weights[i]);
             }
 
-            float bestScore = float.MinValue;
-            for (int cols = 1; cols <= count; cols++)
+            if (n == 0 || total <= 0d || width <= 0f || height <= 0f)
             {
-                int rows = (count + cols - 1) / cols;
-                float w = (width - gap * (cols - 1)) / cols;
-                float h = Math.Min(MaxTileHeight, (height - gap * (rows - 1)) / rows);
-                if (w <= 0f || h <= 0f)
-                {
-                    continue;
-                }
+                return rects;
+            }
 
-                // The biggest 3:2 box that fits in the tile: its area is the tile's score.
-                float score = Math.Min(w, h * 1.5f) * Math.Min(h, w / 1.5f);
-                if (score > bestScore)
+            // Lay out on an area one gap bigger, then take half a gap off every side of each
+            // tile: a gap between neighbours and none at the edges.
+            double x = -gap / 2.0,
+                y = -gap / 2.0,
+                w = width + gap,
+                h = height + gap;
+            double scale = w * h / total;
+            var areas = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                areas[i] = Math.Max(0d, weights[i]) * scale;
+            }
+
+            int start = 0;
+            while (start < n)
+            {
+                double side = Math.Min(w, h);
+                int end = start + 1;
+                double sum = areas[start];
+                double worst = Worst(areas, start, end, sum, side);
+                while (end < n)
                 {
-                    bestScore = score;
-                    best = new HeatGrid
+                    double next = Worst(areas, start, end + 1, sum + areas[end], side);
+                    if (next > worst)
                     {
-                        Columns = cols,
-                        Rows = rows,
-                        TileWidth = w,
-                        TileHeight = h,
-                    };
+                        break;
+                    }
+
+                    sum += areas[end];
+                    worst = next;
+                    end++;
                 }
+
+                // The row along the shorter side; the rest of the area beside it.
+                bool column = w >= h;
+                double thick = sum <= 0d ? 0d : sum / (column ? h : w);
+                double along = 0d;
+                for (int i = start; i < end; i++)
+                {
+                    double length = thick <= 0d ? 0d : areas[i] / thick;
+                    double rx = column ? x : x + along,
+                        ry = column ? y + along : y,
+                        rw = column ? thick : length,
+                        rh = column ? length : thick;
+                    rects[i] = new HeatRect
+                    {
+                        X = (float)(rx + gap / 2.0),
+                        Y = (float)(ry + gap / 2.0),
+                        Width = (float)Math.Max(0d, rw - gap),
+                        Height = (float)Math.Max(0d, rh - gap),
+                    };
+                    along += length;
+                }
+
+                if (column)
+                {
+                    x += thick;
+                    w -= thick;
+                }
+                else
+                {
+                    y += thick;
+                    h -= thick;
+                }
+
+                start = end;
             }
 
-            return best;
+            return rects;
+        }
+
+        /// <summary>The worst aspect ratio of a row of areas[start..end) laid along <paramref name="side"/>.</summary>
+        private static double Worst(double[] areas, int start, int end, double sum, double side)
+        {
+            if (sum <= 0d || side <= 0d)
+            {
+                return double.MaxValue;
+            }
+
+            double max = 0d,
+                min = double.MaxValue;
+            for (int i = start; i < end; i++)
+            {
+                max = Math.Max(max, areas[i]);
+                min = Math.Min(min, areas[i]);
+            }
+
+            if (min <= 0d)
+            {
+                return double.MaxValue;
+            }
+
+            double s2 = side * side,
+                sum2 = sum * sum;
+            return Math.Max(s2 * max / sum2, sum2 / (s2 * min));
+        }
+
+        /// <summary>A big tile's second line: "₡924", or "₡69 · 500 shares" when held.</summary>
+        public static string Detail(HeatTile tile)
+        {
+            MonitorQuote q = tile.Quote;
+            string price = StockMonitor.PriceText(q.Price);
+            return tile.Held
+                ? Strings.Format(
+                    "overview.heatmap.detailHeld",
+                    price,
+                    Strings.Plural(
+                        "shares",
+                        q.Owned,
+                        q.Owned.ToString("N0", CultureInfo.InvariantCulture)
+                    )
+                )
+                : price;
         }
 
         /// <summary>

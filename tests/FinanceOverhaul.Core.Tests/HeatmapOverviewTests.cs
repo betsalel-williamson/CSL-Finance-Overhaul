@@ -1,5 +1,5 @@
 using System.Collections.Generic; // List
-using FinanceOverhaul.Core; // HeatGrid, HeatTile, HeatmapOverview, MonitorQuote
+using FinanceOverhaul.Core; // HeatRect, HeatTile, HeatmapOverview, MonitorQuote
 using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
@@ -16,6 +16,7 @@ namespace FinanceOverhaul.Core.Tests
                 History = history,
                 Price = history[history.Length - 1],
                 Owned = owned,
+                Available = 1000u - owned, // as the game: 1,000 shares, the rest on sale
             };
         }
 
@@ -37,7 +38,7 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
-        public void TilesGoFromTheBiggestRiseToTheBiggestFallThenLocked()
+        public void TilesGoFromTheLargestToTheSmallestThenLocked()
         {
             List<HeatTile> tiles = HeatmapOverview.Tiles(Market(), HeatmapOverview.Today);
             Assert.Equal(
@@ -59,7 +60,7 @@ namespace FinanceOverhaul.Core.Tests
         public void AWeeksChangeComesFromThePrices()
         {
             List<HeatTile> tiles = HeatmapOverview.Tiles(Market(), 7);
-            // AAA +10%, BBB −20%: the scale is 20%, BBB reads −1 and sorts last of the known.
+            // AAA +10%, BBB −20%: the scale is 20%, BBB reads −1 (it is third by size).
             Assert.Equal("AAA", tiles[0].Quote.Symbol);
             Assert.Equal(10f, tiles[0].Change, 3);
             Assert.Equal(0.5f, tiles[0].Heat, 3);
@@ -93,21 +94,77 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
-        public void TheGridFitsEveryTileInTheArea()
+        public void TheTreemapGivesEachTileItsShareOfTheArea()
         {
-            foreach (int count in new[] { 1, 5, 16, 28, 40 })
+            var weights = new List<double> { 60, 30, 20, 10, 5, 5, 3, 1 };
+            const float W = 400f,
+                H = 300f;
+            HeatRect[] rects = HeatmapOverview.Treemap(weights, W, H, 0f);
+            double total = 134;
+            double sum = 0;
+            for (int i = 0; i < rects.Length; i++)
             {
-                HeatGrid g = HeatmapOverview.Grid(count, 400f, 300f, 4f);
-                Assert.True(g.Columns * g.Rows >= count);
-                Assert.True(g.Columns * g.TileWidth + (g.Columns - 1) * 4f <= 400.01f);
-                Assert.True(g.Rows * g.TileHeight + (g.Rows - 1) * 4f <= 300.01f);
-                Assert.True(g.TileHeight <= HeatmapOverview.MaxTileHeight);
-                // Never a column or row more than it needs.
-                Assert.True((g.Rows - 1) * g.Columns < count);
+                HeatRect r = rects[i];
+                Assert.True(r.X >= -0.01f && r.Y >= -0.01f);
+                Assert.True(r.X + r.Width <= W + 0.01f && r.Y + r.Height <= H + 0.01f);
+                // Each tile's area is its weight's share of the whole.
+                Assert.Equal(weights[i] / total * W * H, (double)r.Width * r.Height, 0);
+                sum += r.Width * r.Height;
+                for (int k = 0; k < i; k++)
+                {
+                    HeatRect o = rects[k];
+                    bool apart =
+                        r.X >= o.X + o.Width - 0.01f
+                        || o.X >= r.X + r.Width - 0.01f
+                        || r.Y >= o.Y + o.Height - 0.01f
+                        || o.Y >= r.Y + r.Height - 0.01f;
+                    Assert.True(apart, "tiles " + k + " and " + i + " overlap");
+                }
             }
 
-            HeatGrid sixteen = HeatmapOverview.Grid(16, 400f, 300f, 4f);
-            Assert.True(sixteen.TileWidth >= sixteen.TileHeight); // wider than tall
+            Assert.Equal(W * H, sum, 0);
+            // Squarified: the big tiles are not slivers.
+            Assert.True(
+                rects[0].Width / rects[0].Height < 3f && rects[0].Height / rects[0].Width < 3f
+            );
+        }
+
+        [Fact]
+        public void TheTreemapLeavesGapsOnlyBetweenTiles()
+        {
+            HeatRect[] rects = HeatmapOverview.Treemap(new List<double> { 1, 1 }, 200f, 100f, 4f);
+            // Two equal halves side by side, 4 apart, flush with the edges.
+            Assert.Equal(0f, rects[0].X, 3);
+            Assert.Equal(98f, rects[0].Width, 3);
+            Assert.Equal(102f, rects[1].X, 3);
+            Assert.Equal(200f, rects[1].X + rects[1].Width, 3);
+            Assert.Equal(100f, rects[0].Height, 3);
+            Assert.Empty(HeatmapOverview.Treemap(new List<double>(), 10f, 10f, 0f));
+            Assert.Equal(
+                0f,
+                HeatmapOverview.Treemap(new List<double> { 0 }, 10f, 10f, 0f)[0].Width
+            );
+        }
+
+        [Fact]
+        public void ATilesSizeFollowsTheStocksValue()
+        {
+            var cheap = new MonitorQuote { Price = 25f, Available = 1000 };
+            var dear = new MonitorQuote
+            {
+                Price = 2500f,
+                Available = 900,
+                Owned = 100,
+            };
+            // 100 times the value: 10 times the area (square-root damped).
+            Assert.Equal(10d, HeatmapOverview.Weight(dear) / HeatmapOverview.Weight(cheap), 6);
+            var locked = new MonitorQuote { Price = float.NaN, Locked = true };
+            Assert.Equal(System.Math.Sqrt(1000d), HeatmapOverview.Weight(locked), 6);
+            List<HeatTile> tiles = HeatmapOverview.Tiles(Market(), 1);
+            // The locked tile takes the smallest size on sale.
+            Assert.Equal(tiles[3].Weight, tiles[4].Weight, 6);
+            Assert.Equal("₡110 · 50 shares", HeatmapOverview.Detail(tiles[0]));
+            Assert.Equal("₡100", HeatmapOverview.Detail(tiles[1]));
         }
 
         [Fact]

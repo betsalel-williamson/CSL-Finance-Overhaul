@@ -1,7 +1,7 @@
 using System; // Array
 using System.Collections.Generic; // List
 using ColossalFramework.UI; // UIComponent, UILabel, UIPanel, UITextureSprite
-using FinanceOverhaul.Core; // HeatGrid, HeatTile, HeatmapOverview, MonitorQuote, Strings
+using FinanceOverhaul.Core; // HeatRect, HeatTile, HeatmapOverview, MonitorQuote, Strings
 // UnityEngine: Color32, FilterMode, Mathf, Texture2D, TextureFormat, TextureWrapMode, Vector2,
 //   Vector3
 using UnityEngine;
@@ -56,6 +56,7 @@ namespace FinanceOverhaul
             heatmap = View("Heatmap");
             heatHeading = Heading(heatmap, "", Pad, Pad + 2f);
             heatHeading.name = Name + "HeatmapHeading";
+            heatHeading.tooltip = Strings.Get("overview.heatmap.sizeTip");
 
             var labels = new string[HeatmapOverview.Spans.Length];
             var widths = new float[labels.Length];
@@ -148,8 +149,8 @@ namespace FinanceOverhaul
             heatHeading.text = HeatmapOverview.Heading(span);
 
             List<HeatTile> tiles = HeatmapOverview.Tiles(quotes, span);
-            HeatGrid grid = HeatmapOverview.Grid(
-                tiles.Count,
+            HeatRect[] rects = HeatmapOverview.Treemap(
+                tiles.ConvertAll(t => t.Weight),
                 heatArea.width,
                 heatArea.height,
                 TileGap
@@ -167,17 +168,19 @@ namespace FinanceOverhaul
                     continue;
                 }
 
-                int col = i % Mathf.Max(1, grid.Columns);
-                int row = i / Mathf.Max(1, grid.Columns);
+                // Whole pixels, the gap kept: each edge rounded on its own.
+                HeatRect r = rects[i];
+                float x0 = Mathf.Round(r.X),
+                    y0 = Mathf.Round(r.Y);
                 heatTiles[i]
                     .Show(
                         tiles[i],
                         HeatmapOverview.TileText(tiles[i], inPoints),
-                        new Vector3(
-                            col * (grid.TileWidth + TileGap),
-                            row * (grid.TileHeight + TileGap)
-                        ),
-                        new Vector2(grid.TileWidth, grid.TileHeight)
+                        new Vector3(x0, y0),
+                        new Vector2(
+                            Mathf.Max(1f, Mathf.Round(r.X + r.Width) - x0),
+                            Mathf.Max(1f, Mathf.Round(r.Y + r.Height) - y0)
+                        )
                     );
             }
 
@@ -192,15 +195,23 @@ namespace FinanceOverhaul
             );
         }
 
-        /// <summary>One tile: its heat colour, an accent outline when held, symbol and change.</summary>
+        /// <summary>
+        /// One tile: its heat colour, an accent outline when held. A big tile reads as in the
+        /// design: the symbol top left, the change large at the bottom left, the price (and
+        /// the city's shares) under it; a middling one the symbol and change centred; a small
+        /// one the symbol alone; a sliver nothing (its tooltip still names it).
+        /// </summary>
         private sealed class HeatTileView
         {
             private const float Outline = 2f;
+            private const float BigWidth = 96f;
+            private const float BigHeight = 70f;
 
             private readonly UIPanel back;
             private readonly UIPanel face;
             private readonly UILabel symbol;
             private readonly UILabel change;
+            private readonly UILabel detail;
             private MonitorQuote quote;
 
             public HeatTileView(UIComponent parent, int index)
@@ -214,10 +225,13 @@ namespace FinanceOverhaul
                 face.name = name + "Face";
                 face.backgroundSprite = "GenericPanelWhite";
                 face.isInteractive = false;
+                face.clipChildren = true;
                 symbol = FoText.Label(face, name + "Symbol", "", 0.8f, FoTheme.GameText);
                 symbol.isInteractive = false;
                 change = FoText.Label(face, name + "Change", "", 0.7f, FoTheme.GameText);
                 change.isInteractive = false;
+                detail = FoText.Label(face, name + "Detail", "", 0.7f, FoTheme.GameText);
+                detail.isInteractive = false;
             }
 
             public void Show(HeatTile tile, string text, Vector3 at, Vector2 size)
@@ -226,12 +240,15 @@ namespace FinanceOverhaul
                 back.isVisible = true;
                 // Named for the scenarios: the tile of a stock is found by its symbol.
                 back.name = Name + "Heat-" + tile.Quote.Symbol;
+                symbol.name = back.name + "Symbol";
+                change.name = back.name + "Change";
+                detail.name = back.name + "Detail";
                 back.relativePosition = at;
                 back.size = size;
                 Color32 colour = tile.Locked ? FoTheme.SectionFill : FoTheme.Heat(tile.Heat);
                 back.color = tile.Held ? FoTheme.Accent : colour;
                 face.color = colour;
-                float inset = tile.Held ? Outline : 0f;
+                float inset = tile.Held && size.x > 8f && size.y > 8f ? Outline : 0f;
                 face.relativePosition = new Vector3(inset, inset);
                 face.size = new Vector2(size.x - 2f * inset, size.y - 2f * inset);
                 back.tooltip = HeatmapOverview.Tip(tile);
@@ -239,35 +256,77 @@ namespace FinanceOverhaul
                 Color32 ink = tile.Locked ? FoTheme.TextMuted : FoTheme.GameText;
                 symbol.textColor = ink;
                 change.textColor = ink;
+                detail.textColor = ink;
                 symbol.text = tile.Quote.Symbol;
                 change.text = text;
-                // Both lines when they fit, else the symbol alone; centred, shrunk to the width.
-                float room = face.width - 6f;
-                symbol.textScale = 0.8f;
-                change.textScale = 0.7f;
-                if (symbol.width > room)
+                detail.text = tile.Locked ? string.Empty : HeatmapOverview.Detail(tile);
+                float w = face.width,
+                    h = face.height;
+                if (w >= BigWidth && h >= BigHeight)
                 {
-                    symbol.textScale = Mathf.Max(0.5f, 0.8f * room / symbol.width);
+                    Big(w, h);
+                }
+                else
+                {
+                    Small(w, h);
+                }
+            }
+
+            private void Big(float w, float h)
+            {
+                const float edge = 8f;
+                float room = w - 2f * edge;
+                Scale(symbol, 1.05f, room);
+                Scale(change, 1.15f, room);
+                Scale(detail, 0.7f, room);
+                symbol.isVisible = true;
+                change.isVisible = true;
+                detail.isVisible = detail.text.Length > 0;
+                symbol.relativePosition = new Vector3(edge, 6f);
+                float bottom = h - 6f;
+                if (detail.isVisible)
+                {
+                    detail.relativePosition = new Vector3(
+                        edge,
+                        Mathf.Round(bottom - detail.height)
+                    );
+                    bottom -= detail.height;
                 }
 
-                if (change.width > room)
-                {
-                    change.textScale = Mathf.Max(0.5f, 0.7f * room / change.width);
-                }
+                change.relativePosition = new Vector3(edge, Mathf.Round(bottom - change.height));
+            }
 
-                bool both = face.height >= symbol.height + change.height + 2f;
-                change.isVisible = both;
-                float top = both
-                    ? (face.height - symbol.height - change.height) / 2f
-                    : (face.height - symbol.height) / 2f;
+            private void Small(float w, float h)
+            {
+                float room = w - 6f;
+                detail.isVisible = false;
+                bool symbolFits = Scale(symbol, 0.8f, room) && symbol.height <= h;
+                bool both = Scale(change, 0.7f, room) && h >= symbol.height + change.height + 2f;
+                symbol.isVisible = symbolFits;
+                change.isVisible = symbolFits && both;
+                float top = change.isVisible
+                    ? (h - symbol.height - change.height) / 2f
+                    : (h - symbol.height) / 2f;
                 symbol.relativePosition = new Vector3(
-                    Mathf.Round((face.width - symbol.width) / 2f),
+                    Mathf.Round((w - symbol.width) / 2f),
                     Mathf.Round(top)
                 );
                 change.relativePosition = new Vector3(
-                    Mathf.Round((face.width - change.width) / 2f),
+                    Mathf.Round((w - change.width) / 2f),
                     Mathf.Round(top + symbol.height)
                 );
+            }
+
+            /// <summary>The label at its scale, shrunk (not below half) to fit the room; false when it cannot.</summary>
+            private static bool Scale(UILabel label, float scale, float room)
+            {
+                label.textScale = scale;
+                if (label.width > room)
+                {
+                    label.textScale = Mathf.Max(0.5f * scale, scale * room / label.width);
+                }
+
+                return label.width <= room + 0.5f;
             }
 
             public void Hide()
