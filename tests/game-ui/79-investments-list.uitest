@@ -22,6 +22,22 @@ expect-visible FinanceOverhaulInvestmentsList
 expect-text FinanceOverhaulInvestmentsTab-All All
 expect-text FinanceOverhaulInvestmentsSort Sort: Change %
 capture investments-list-all
+# two columns: on the right a sub tab group picks the view (Market built, the rest disabled)
+expect-visible FinanceOverhaulInvestmentsOverview
+expect-visible FinanceOverhaulInvestmentsOverviewTab-Market
+expect-visible FinanceOverhaulInvestmentsOverviewMarketChart
+expect-visible FinanceOverhaulInvestmentsOverviewMarketBreadth
+expect-no-overlap FinanceOverhaulInvestmentsOverview FinanceOverhaulInvestmentsView
+expect-no-overlap FinanceOverhaulInvestmentsGroup FinanceOverhaulInvestmentsSort
+expect-no-overlap FinanceOverhaulInvestmentsTabs FinanceOverhaulInvestmentsGroup
+click FinanceOverhaulInvestmentsOverviewTab-Feed
+wait 0.5
+expect-visible FinanceOverhaulInvestmentsOverviewMarket
+click FinanceOverhaulInvestmentsOverviewMarketRange-7
+wait 0.5
+capture investments-overview-market-7d
+click FinanceOverhaulInvestmentsOverviewMarketRange-30
+wait 0.5
 # separate: the Monitor in ₡ and sorted by symbol leaves the list as it was
 monitor-change currency
 monitor-sort Symbol

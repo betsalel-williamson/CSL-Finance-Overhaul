@@ -246,7 +246,10 @@ Shown once when a city loads with the mod after days played without it
 ### Investments list and tab groups (band 20, `planned` behind a dev flag)
 
 Band 20 holds captures of the one list (dev flag "Investments list and research",
-[design](../features/investments-and-research.md)). Components on the Components page:
+[design](../features/investments-and-research.md)), the four "Row layouts" options (not picked), and
+"Two columns": the list on the left and the overview on the right with its sub tabs (Market built;
+Portfolio, Heatmap, City, Feed designed in Stitch from `DESIGN.md`, not built). Components on the
+Components page:
 
 | Component              | States                                                                                                         | Code                                                                                                                 |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |

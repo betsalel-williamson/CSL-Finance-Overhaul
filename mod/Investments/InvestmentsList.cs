@@ -34,6 +34,10 @@ namespace FinanceOverhaul
         public const string ListName = Prefix + "List";
 
         private const float BarH = 34f;
+        private const float ColumnGap = 12f;
+        private const float TabWidth = 66f;
+        private const float GroupWidth = 60f;
+        private const float SortWidth = 100f;
         private const float Pad = 4f;
         private const int Pool = 20;
 
@@ -50,6 +54,13 @@ namespace FinanceOverhaul
         internal static InvestmentsList Current { get; private set; }
 
         private UIComponent page;
+        private InvestmentsOverview overview;
+
+        /// <summary>The right-hand column (game UI tests).</summary>
+        internal InvestmentsOverview Overview
+        {
+            get { return overview; }
+        }
         private UIPanel list;
         private UIPanel view;
         private UIScrollbar bar;
@@ -272,6 +283,12 @@ namespace FinanceOverhaul
 
             pool.Clear();
             tabs.Clear();
+            if (overview != null)
+            {
+                overview.Destroy();
+                overview = null;
+            }
+
             tabBar = null;
             if (sortArrow != null && sortArrow.texture != null)
             {
@@ -362,6 +379,10 @@ namespace FinanceOverhaul
             settingBar = false;
             bar.isVisible = content > view.height;
             Fill();
+            if (overview != null)
+            {
+                overview.Refresh(quotes);
+            }
         }
 
         private Row hovered;
@@ -486,6 +507,8 @@ namespace FinanceOverhaul
             list.name = ListName;
             list.relativePosition = new Vector3(16f, 12f);
             list.size = new Vector2(page.width - 32f, page.height - 59f);
+            // Two columns: the list on the left, the overview (or later the trade) on the right.
+            float left = Mathf.Floor((list.width - ColumnGap) * 0.52f);
 
             InvestmentFilter[] filters = InvestmentList.Filters;
             var labels = new string[filters.Length];
@@ -493,7 +516,7 @@ namespace FinanceOverhaul
             for (int i = 0; i < filters.Length; i++)
             {
                 labels[i] = InvestmentList.FilterLabel(filters[i], quotes);
-                widths[i] = 100f;
+                widths[i] = TabWidth;
             }
 
             tabBar = FoToggleTabs.Add(
@@ -502,7 +525,7 @@ namespace FinanceOverhaul
                 labels,
                 widths,
                 26f,
-                0.8f,
+                0.75f,
                 i => Pick(filters[i])
             );
             // Sub tabs: the filters sit under the Economy panel's own tabs.
@@ -521,10 +544,10 @@ namespace FinanceOverhaul
                 list,
                 Prefix + "Group",
                 InvestmentList.GroupLabel(grouped),
-                new Vector2(100f, 26f),
+                new Vector2(GroupWidth, 26f),
                 0.8f
             );
-            groupButton.relativePosition = new Vector3(x + 16f, 2f);
+            groupButton.relativePosition = new Vector3(x + 8f, 2f);
             groupButton.eventClick += (c, p) =>
             {
                 grouped = !grouped;
@@ -538,7 +561,7 @@ namespace FinanceOverhaul
                 new Vector2(22f, 22f),
                 0.8f
             );
-            sortDirection.relativePosition = new Vector3(list.width - 22f, 4f);
+            sortDirection.relativePosition = new Vector3(left - 22f, 4f);
             sortDirection.eventClick += (c, p) =>
             {
                 reversed = !reversed;
@@ -552,10 +575,10 @@ namespace FinanceOverhaul
             // As the Stock Monitor: the sort is a muted line of text to click, then ▲/▼.
             sortLabel = FoText.Label(list, Prefix + "Sort", "", 0.75f, FoTheme.TextMuted);
             sortLabel.autoSize = false;
-            sortLabel.size = new Vector2(150f, 26f);
+            sortLabel.size = new Vector2(SortWidth, 26f);
             sortLabel.textAlignment = UIHorizontalAlignment.Right;
             sortLabel.verticalAlignment = UIVerticalAlignment.Middle;
-            sortLabel.relativePosition = new Vector3(list.width - 22f - 8f - 150f, 2f);
+            sortLabel.relativePosition = new Vector3(left - 22f - 8f - SortWidth, 2f);
             sortLabel.isInteractive = true;
             sortLabel.eventClick += (c, p) =>
             {
@@ -569,7 +592,7 @@ namespace FinanceOverhaul
             view.backgroundSprite = "GenericPanel";
             view.color = FoTheme.GameStockCard;
             view.relativePosition = new Vector3(0f, BarH);
-            view.size = new Vector2(list.width, list.height - BarH);
+            view.size = new Vector2(left, list.height - BarH);
             view.clipChildren = true;
             list.eventMouseWheel += (c, p) =>
             {
@@ -616,8 +639,19 @@ namespace FinanceOverhaul
                 pool.Add(new Row(view, i, rowWidth, TogglePills));
             }
 
+            overview = new InvestmentsOverview(
+                list,
+                new Vector3(left + ColumnGap, 0f),
+                new Vector2(list.width - left - ColumnGap, list.height)
+            );
             Current = this;
-            ModLog.Info("investments list: shown in place of the game's two lists");
+            ModLog.Info(
+                "investments list: shown in place of the game's two lists (list "
+                    + left
+                    + " px, overview "
+                    + (list.width - left - ColumnGap)
+                    + " px)"
+            );
             Read();
             return true;
         }
@@ -632,9 +666,11 @@ namespace FinanceOverhaul
             private const int SparkW = 120,
                 SparkH = 28,
                 SparkScale = 2;
-            private const float SparkX = 430f;
-            private const float PriceRight = 720f;
-            private const float LockWidth = 280f;
+
+            // Placed from the line's right edge: the list is the left of two columns.
+            private readonly float PriceRight;
+            private readonly float SparkX;
+            private readonly float LockWidth;
 
             private readonly UIPanel back;
             private readonly UISprite coin;
@@ -655,8 +691,6 @@ namespace FinanceOverhaul
             private readonly UILabel orderLine;
             private readonly UIButton cancel;
             private readonly UIPanel orderRule;
-            private readonly UIButton buy;
-            private readonly UIButton sell;
             private readonly float width;
             private string key;
             private string drawn;
@@ -672,6 +706,9 @@ namespace FinanceOverhaul
             public Row(UIComponent parent, int index, float width, Action togglePills)
             {
                 this.width = width;
+                PriceRight = width - 12f;
+                SparkX = PriceRight - 90f - SparkW;
+                LockWidth = PriceRight - SparkX;
                 back = parent.AddUIComponent<UIPanel>();
                 back.name = Prefix + "Pool" + index;
                 back.backgroundSprite = "GenericPanelWhite";
@@ -775,33 +812,6 @@ namespace FinanceOverhaul
                 {
                     p.Use(); // the line's own click must not open the dialog too
                     OrderDesk.Cancel(orderId);
-                };
-
-                buy = FoButton.Add(
-                    back,
-                    "",
-                    Strings.Get("investments.buy"),
-                    new Vector2(70f, 28f),
-                    0.85f
-                );
-                buy.relativePosition = new Vector3(width - 160f, 9f);
-                buy.eventClick += (c, p) =>
-                {
-                    p.Use();
-                    Open(BuySellInvestmentPanel.Mode.Buy);
-                };
-                sell = FoButton.Add(
-                    back,
-                    "",
-                    Strings.Get("investments.sell"),
-                    new Vector2(70f, 28f),
-                    0.85f
-                );
-                sell.relativePosition = new Vector3(width - 82f, 9f);
-                sell.eventClick += (c, p) =>
-                {
-                    p.Use();
-                    Open(BuySellInvestmentPanel.Mode.Sell);
                 };
             }
 
@@ -980,11 +990,6 @@ namespace FinanceOverhaul
                 locked = q != null && q.Locked;
                 available = q == null ? 0u : q.Available;
                 owned = q == null ? 0u : q.Owned;
-                buy.isEnabled = available > 0;
-                buy.tooltip = available > 0 ? string.Empty : Strings.Get("order.side.buyNone");
-                // Every time: the "nothing changed" return below skips the rest.
-                buy.isVisible = isStock && !locked;
-                sell.isVisible = isStock && q.Owned > 0;
                 if (!isStock)
                 {
                     foreach (
@@ -1018,6 +1023,13 @@ namespace FinanceOverhaul
                 {
                     orderId = row.Order.Id;
                     orderLine.text = InvestmentList.OrderLine(row.Order, OrderDesk.Today);
+                    // The column is narrow: a long order line is scaled down to fit before Cancel.
+                    float room = width - 82f - 8f - 54f;
+                    orderLine.textScale = 0.72f;
+                    if (orderLine.width > room)
+                    {
+                        orderLine.textScale = Mathf.Max(0.55f, 0.72f * room / orderLine.width);
+                    }
                     return;
                 }
 
@@ -1119,8 +1131,6 @@ namespace FinanceOverhaul
                 lockLine.name = n + "Lock";
                 orderLine.name = n + "Text";
                 cancel.name = n + "Cancel";
-                buy.name = n + "Buy";
-                sell.name = n + "Sell";
                 for (int i = 0; i < outline.Length; i++)
                 {
                     outline[i].name = n + "Outline" + (i == 0 ? string.Empty : i.ToString());

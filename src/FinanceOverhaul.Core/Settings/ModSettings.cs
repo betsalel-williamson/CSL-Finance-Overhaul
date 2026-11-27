@@ -93,6 +93,12 @@ namespace FinanceOverhaul.Core
         /// <summary>The Investments list's own pills show the change in ₡ instead of %.</summary>
         public bool InvestmentListChangeAsCurrency { get; set; }
 
+        /// <summary>The overview page the Investments tab's right-hand column last showed.</summary>
+        public OverviewPage InvestmentOverviewPage { get; set; } = OverviewPage.Market;
+
+        /// <summary>The days the overview's charts span (7 or 30).</summary>
+        public int InvestmentOverviewDays { get; set; } = StockDetail.LongRange;
+
         /// <summary>
         /// Preference: show the IPO dialog when a local company is announced. The dialog's
         /// "Don't show this for future IPOs" checkbox is this same value, read the other way.

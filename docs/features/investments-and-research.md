@@ -138,13 +138,28 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
   Scenarios 79 and 80 set and restore both windows' settings.
 - **Rows (Condensed B):** coin, symbol (LOCAL badge for a local company) and name; for a holding a
   third line "500 shares · avg ₡6,616"; the 30-day line; price above the change pill, and for a
-  holding the gain under it; Buy (not on a locked stock) and Sell (only when held). A locked stock
-  shows "Locked · 30 / 50" and a bar, last in the list. **Open orders** sit under their stock, one
-  line each ("Open order · SELL (stop-loss) · 500 shares if the price drops to ₡6,800 · 54 days
-  left") with Cancel, as the lower part of the stock's card: the same fill, no gap, a thin rule
-  between (`InvestmentRow.JoinsNext`). Four layouts for the empty space between the price and Buy /
-  Sell (stats column, wider chart, order chip, 30-day range bar) are in Figma band 20, "Row
-  layouts", waiting for a pick.
+  holding the gain under it (no buttons since the two columns). A locked stock shows "Locked · 30 /
+  50" and a bar, last in the list. **Open orders** sit under their stock, one line each ("Open order
+  · SELL (stop-loss) · 500 shares if the price drops to ₡6,800 · 54 days left") with Cancel, as the
+  lower part of the stock's card: the same fill, no gap, a thin rule between
+  (`InvestmentRow.JoinsNext`). Four layouts for the empty space between the price and Buy / Sell
+  (stats column, wider chart, order chip, 30-day range bar) are in Figma band 20, "Row layouts",
+  waiting for a pick.
+- **Two columns and the overview (2026-11-27):** the list is the left column (about half the tab)
+  and an overview the right. Rows lost their Buy and Sell buttons: a click anywhere on a line opens
+  the dialog (Buy, or Sell when nothing is left to buy), whose Buy | Sell tabs turn it. The
+  overview's header is a sub tab group (Market · Portfolio · Heatmap · City · Feed) that picks one
+  view at a time; a view not built yet has a disabled tab ("Not built yet"). The view and its 7D |
+  30D range are kept in the settings (`InvestmentOverviewPage`, `InvestmentOverviewDays`). The views
+  come one at a time from the Stitch designs (Figma band 20, "Two columns"), redrawn in the game's
+  panel art and `FoTheme`:
+  1. **Market overview** (built): the market index (`MarketOverview.Index`: every stock on sale
+     rebased to 100 on the first day shown and averaged, each counted equally; a stock listed later
+     joins on its first day), its change over the range, a 7D | 30D chart with its high and low,
+     today's top three gainers and losers (a click opens the stock's dialog) and "9 up · 6 down · 1
+     flat".
+  2. Portfolio dashboard, 3. heatmap, 4. city and market, 5. market desk feed: designed, not built.
+     Later, a click on a stock shows its trade in this column instead of the dialog.
 - **Hover:** over a stock's 30-day line the game's own stock tooltip opens with its large "Share
   value" chart, beside the line (left of it near the screen edge), as over the game's cards; it
   closes when the pointer leaves. The list reads the mod's pointer each frame, so game UI tests can

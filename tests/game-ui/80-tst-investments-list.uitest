@@ -52,7 +52,7 @@ expect-visible FinanceOverhaulOrderTab-Limit
 close-dialog
 wait 0.5
 investments-scroll-to TST
-click FinanceOverhaulInvestmentsRow-TSTBuy
+click FinanceOverhaulInvestmentsRow-TST
 wait 1
 type FinanceOverhaulShareAmountField 4
 click Button
@@ -61,7 +61,6 @@ investments-scroll-to TST
 expect-owned-delta TST 4
 expect-investments All TST
 expect-text FinanceOverhaulInvestmentsRow-TSTHolding 4 shares · avg ₡100
-expect-visible FinanceOverhaulInvestmentsRow-TSTSell
 capture investments-list-tst-held
 click FinanceOverhaulInvestmentsGroup
 wait 0.5
@@ -72,7 +71,7 @@ click FinanceOverhaulInvestmentsGroup
 wait 0.5
 # with the dialog open, the line behind it under the pointer is not outlined
 investments-scroll-to TST
-click FinanceOverhaulInvestmentsRow-TSTBuy
+click FinanceOverhaulInvestmentsRow-TST
 wait 1
 hover FinanceOverhaulInvestmentsRow-TST 0.3 0.5
 wait 0.3
@@ -82,7 +81,7 @@ close-dialog
 wait 0.5
 # the dialog turns from Buy to Sell and back without closing
 investments-scroll-to TST
-click FinanceOverhaulInvestmentsRow-TSTBuy
+click FinanceOverhaulInvestmentsRow-TST
 wait 1
 click FinanceOverhaulOrderTab-SideSell
 wait 0.5
