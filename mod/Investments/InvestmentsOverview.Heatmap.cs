@@ -292,10 +292,15 @@ namespace FinanceOverhaul
                 face.size = new Vector2(size.x - 2f * inset, size.y - 2f * inset);
                 back.tooltip = HeatmapOverview.Tip(tile);
 
-                Color32 ink = tile.Locked ? FoTheme.TextMuted : FoTheme.GameText;
+                Color32 ink = tile.Locked ? FoTheme.TextMuted : FoTheme.HeatInk(colour);
                 symbol.textColor = ink;
                 change.textColor = ink;
                 detail.textColor = ink;
+                // Dark text on a bright tile goes without the shadow that keeps white text sharp.
+                bool shadow = !ink.Equals(FoTheme.HeatInkDark);
+                symbol.useDropShadow = shadow;
+                change.useDropShadow = shadow;
+                detail.useDropShadow = shadow;
                 symbol.text = tile.Quote.Symbol;
                 change.text = text;
                 detail.text = tile.Locked ? string.Empty : HeatmapOverview.Detail(tile);

@@ -180,12 +180,15 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
      as real market maps leave index funds out): its change sits in a pill by the heading, which
      follows the span and flips between % and ₡ as every pill does. Coins (ChirperCrypto, ChirpCoin)
      keep their tiles. Today | 7D | 30D picks the span (today is the game's change rate, as the
-     pills). Tiles go from `FoTheme.HeatLoss` through `HeatFlat` to `HeatGain`; the scale is the
-     round step (1, 2, 5, 10, 20, 50, 100%) that holds four moves in five, so one outlier shows at
-     full colour without greying the rest. Stocks the city holds have an accent outline. A big tile
-     shows the symbol top left, the change large at the bottom left and the price (and the city's
-     shares) under it; a middling one the symbol and change centred; a small one the symbol. A
-     tile's change follows the pills (% or ₡); a click opens the stock's dialog.
+     pills). Tiles go from grey (`FoTheme.HeatFlat`, no change) through a dark, a middle and a
+     bright stop each way, as the Stitch design: dark green, green and the game's lime for a rise,
+     dark red, red and the game's orange for a fall (the dark shade is reached at an eighth of the
+     scale, so a small move already reads); bright tiles take near-black text (`FoTheme.HeatInk`);
+     the scale is the round step (1, 2, 5, 10, 20, 50, 100%) that holds four moves in five, so one
+     outlier shows at full colour without greying the rest. Stocks the city holds have an accent
+     outline. A big tile shows the symbol top left, the change large at the bottom left and the
+     price (and the city's shares) under it; a middling one the symbol and change centred; a small
+     one the symbol. A tile's change follows the pills (% or ₡); a click opens the stock's dialog.
   4. **City** (built): each stock beside the city figure the game prices it from, read as the game's
      stock classes read it (District 0; `mod/Engines/CityFigures.cs`, only while the view draws):
      industry productivity and area, city health and care, deathcare, vehicles, traffic flow, crime,

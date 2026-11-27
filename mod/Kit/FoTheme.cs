@@ -203,22 +203,59 @@ namespace FinanceOverhaul
         /// <summary>Fully transparent.</summary>
         public static readonly Color32 Clear = new Color32(0, 0, 0, 0);
 
-        // The heatmap's tiles: a dark grey for no change, deepening to green or orange.
+        // The heatmap's tiles, as the Stitch design: grey for no change, then for a rise dark
+        // green, green and the game's lime; for a fall dark red, red and the game's orange.
 
         /// <summary>A heatmap tile that did not move.</summary>
-        public static readonly Color32 HeatFlat = new Color32(58, 66, 76, 255);
+        public static readonly Color32 HeatFlat = new Color32(54, 60, 68, 255);
 
-        /// <summary>A heatmap tile at the top of the scale.</summary>
-        public static readonly Color32 HeatGain = new Color32(52, 132, 56, 255);
+        /// <summary>A small rise.</summary>
+        public static readonly Color32 HeatGainLow = new Color32(28, 96, 52, 255);
 
-        /// <summary>A heatmap tile at the bottom of the scale.</summary>
-        public static readonly Color32 HeatLoss = new Color32(196, 92, 36, 255);
+        /// <summary>A middling rise.</summary>
+        public static readonly Color32 HeatGainMid = new Color32(40, 178, 92, 255);
 
-        /// <summary>A tile's colour for a heat from −1 (biggest fall) to +1 (biggest rise).</summary>
+        /// <summary>A rise at the top of the scale: the game's gain lime.</summary>
+        public static readonly Color32 HeatGain = GamePositive;
+
+        /// <summary>A small fall.</summary>
+        public static readonly Color32 HeatLossLow = new Color32(116, 40, 42, 255);
+
+        /// <summary>A middling fall.</summary>
+        public static readonly Color32 HeatLossMid = new Color32(218, 78, 78, 255);
+
+        /// <summary>A fall at the bottom of the scale: the game's loss orange.</summary>
+        public static readonly Color32 HeatLoss = GameNegative;
+
+        /// <summary>Text on a bright tile (lime, orange): the chosen tab's near-black.</summary>
+        public static readonly Color32 HeatInkDark = GameTabChosenText;
+
+        /// <summary>
+        /// A tile's colour for a heat from −1 (biggest fall) to +1 (biggest rise): grey at 0, the
+        /// low shade by 0.12 (so a small move already reads), the middle at 0.5, the end at 1.
+        /// </summary>
         public static Color32 Heat(float heat)
         {
             float t = Mathf.Clamp01(Mathf.Abs(heat));
-            return Color32.Lerp(HeatFlat, heat >= 0f ? HeatGain : HeatLoss, t);
+            bool up = heat >= 0f;
+            Color32 low = up ? HeatGainLow : HeatLossLow;
+            Color32 mid = up ? HeatGainMid : HeatLossMid;
+            Color32 high = up ? HeatGain : HeatLoss;
+            if (t <= 0.12f)
+            {
+                return Color32.Lerp(HeatFlat, low, t / 0.12f);
+            }
+
+            return t <= 0.5f
+                ? Color32.Lerp(low, mid, (t - 0.12f) / 0.38f)
+                : Color32.Lerp(mid, high, (t - 0.5f) / 0.5f);
+        }
+
+        /// <summary>The text colour that reads on a tile: near-black on the bright end, else white.</summary>
+        public static Color32 HeatInk(Color32 tile)
+        {
+            float luminance = (0.299f * tile.r + 0.587f * tile.g + 0.114f * tile.b) / 255f;
+            return luminance > 0.55f ? HeatInkDark : GameText;
         }
 
         /// <summary>
