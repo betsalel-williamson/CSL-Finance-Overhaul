@@ -1,0 +1,43 @@
+# Records what the player sees (every shown frame, not a fresh render) while the investments list
+# scrolls like a wheel and the overview flips through its views, for checking by eye:
+#   scripts/frames-to-video.sh investments-scroll --sheets
+# A line drawn one row late after a scroll lasts only a frame or two; it shows in the frames.
+# Assumes nothing about what the city holds.
+name investments recording: smooth scrolling and the overview's views, every frame saved
+close-economy
+investments-list on
+show-economy
+wait 1.5
+expect-visible FinanceOverhaulInvestmentsList
+record investments-scroll FinanceOverhaulInvestmentsList
+wait 0.5
+investments-scroll-smooth 600 2
+wait 0.3
+expect-sparks-in-rows
+investments-scroll-smooth -300 1
+wait 0.3
+expect-sparks-in-rows
+investments-scroll-smooth -400 1
+wait 0.3
+expect-sparks-in-rows
+click FinanceOverhaulInvestmentsOverviewTab-Market
+wait 0.4
+click FinanceOverhaulInvestmentsOverviewTab-Portfolio
+wait 0.4
+click FinanceOverhaulInvestmentsOverviewTab-Heatmap
+wait 0.4
+click FinanceOverhaulInvestmentsOverviewHeatmapSpan-30
+wait 0.4
+click FinanceOverhaulInvestmentsOverviewHeatmapSpan-1
+wait 0.4
+click FinanceOverhaulInvestmentsOverviewTab-City
+wait 0.4
+click FinanceOverhaulInvestmentsOverviewTab-Feed
+wait 0.4
+click FinanceOverhaulInvestmentsOverviewTab-Market
+wait 0.4
+record-stop
+cleanup:
+record-stop
+investments-list restore
+close-economy

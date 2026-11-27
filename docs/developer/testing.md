@@ -126,10 +126,13 @@ logs the list; scenarios 79 and 80), `log-modal` (dev: which control holds the g
 which is under the mouse), `ipo-open-buy` (the game's dialog on Buy for the test company),
 `button-state NAME Normal|Hovered|Pressed|Focused|Disabled` (dev: puts a button in that state to
 capture its art), `investments-scroll-to SYMBOL` (that stock's line at the top of the list),
-scenarios that check the game's own Investments lists start with `investments-list off` and restore
-it), `dump-all NAME` (every control with that name, shown or not, with its parents: finds copies
-another loaded copy of the mod or an old build left; a text field's dump shows its text, focus and
-hover), `share-charts on|off` (the share chart flag, for before/after captures) — and checks
+`investments-scroll-smooth PIXELS SECONDS` (scrolls a little every frame, as a wheel does),
+`record NAME [CONTROL]` and `record-stop` (every shown frame saved for `scripts/frames-to-video.sh`;
+see [Live reload](./live-reload.md#video-capture-every-shown-frame)), scenarios that check the
+game's own Investments lists start with `investments-list off` and restore it), `dump-all NAME`
+(every control with that name, shown or not, with its parents: finds copies another loaded copy of
+the mod or an old build left; a text field's dump shows its text, focus and hover),
+`share-charts on|off` (the share chart flag, for before/after captures) — and checks
 `expect-visible`, `expect-text`, `expect-slider CONTROL [max]` (the slider's thumb is drawn where
 its value is; with `max`, the value is the maximum), `expect-no-overflow` (every visible part inside
 the dialog or the named control, and none of our fixed-width labels cutting its text off; inside a

@@ -47,6 +47,7 @@ namespace FinanceOverhaul
                 if (BuildInfo.ShowDevBuildIdentity)
                 {
                     root.AddComponent<DevCapture>();
+                    root.AddComponent<FrameRecorder>();
                     root.AddComponent<UiTestRunner>();
                 }
                 ModLog.Info("ticker: overlay attached");

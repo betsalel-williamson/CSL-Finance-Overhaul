@@ -9,7 +9,8 @@ using ColossalFramework.UI;
 // FinanceOverhaul.Core: DuplicateCopies, InvestmentRow, MonitorSort, PortfolioOverview,
 //   SliderThumb
 using FinanceOverhaul.Core;
-using UnityEngine; // Application, GameObject, Mathf, Resources, Vector2, Vector3, WaitForSeconds
+// UnityEngine: Application, GameObject, Mathf, Resources, Time, Vector2, Vector3, WaitForSeconds
+using UnityEngine;
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
 //   ConfirmPanel, EconomyManager, EconomyPanel, EffectInfo, Investment, InvestmentInfo
@@ -218,6 +219,54 @@ namespace FinanceOverhaul
 
                     shown.ScrollBy(float.Parse(a, CultureInfo.InvariantCulture));
                     yield return null;
+                    break;
+                }
+                case "investments-scroll-smooth":
+                {
+                    // investments-scroll-smooth PIXELS SECONDS — a little every frame, as a
+                    // wheel or a dragged scrollbar moves the list (for recordings).
+                    InvestmentsList shown = InvestmentsList.Current;
+                    if (shown == null)
+                    {
+                        r.Error = "the investments list is not shown";
+                        break;
+                    }
+
+                    float total = float.Parse(a, CultureInfo.InvariantCulture);
+                    float seconds = Mathf.Max(
+                        0.05f,
+                        float.Parse(b ?? "1", CultureInfo.InvariantCulture)
+                    );
+                    float done = 0f;
+                    float start = Time.unscaledTime;
+                    float t = 0f;
+                    while (t < 1f)
+                    {
+                        t = Mathf.Clamp01((Time.unscaledTime - start) / seconds);
+                        float step = total * t - done;
+                        shown.ScrollBy(step);
+                        done += step;
+                        yield return null;
+                    }
+
+                    break;
+                }
+                case "record":
+                {
+                    // record NAME [CONTROL] — every shown frame to FinanceOverhaul-video-NAME/.
+                    r.Error = FrameRecorder.Start(a, b);
+                    yield return null;
+                    break;
+                }
+                case "record-stop":
+                {
+                    FrameRecorder.Stop();
+                    ModLog.Info("uitest: recorded " + FrameRecorder.Frames + " frames");
+                    if (FrameRecorder.Frames == 0)
+                    {
+                        r.Error = "the recording saved no frames";
+                    }
+
                     break;
                 }
                 case "investments-scroll-to":
