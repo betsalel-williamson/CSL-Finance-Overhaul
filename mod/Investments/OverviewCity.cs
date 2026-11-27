@@ -1,6 +1,7 @@
 using System; // Action
 using System.Collections.Generic; // List
-using ColossalFramework.UI; // UIComponent, UILabel, UIOrientation, UIPanel, UIScrollablePanel
+using System.Text; // StringBuilder
+using ColossalFramework.UI; // UIComponent, UILabel, UIPanel, UIScrollablePanel
 // FinanceOverhaul.Core: CityOverview, CityRow, HeatmapOverview, MonitorQuote, StockDetail,
 //   StockMonitor, Strings
 using FinanceOverhaul.Core;
@@ -14,8 +15,26 @@ namespace FinanceOverhaul
     /// over 7 or 30 days. The rows scroll with the mouse wheel; a click opens the stock's
     /// dialog. Figures are read by <see cref="CityFigures"/>, worded by <see cref="CityOverview"/>.
     /// </summary>
-    internal sealed partial class InvestmentsOverview
+    internal sealed class OverviewCity : IOverviewView
     {
+        private const string Name = InvestmentsOverview.Name;
+        private const float Pad = InvestmentsOverview.Pad;
+        private const int ChartScale = InvestmentsOverview.ChartScale;
+
+        private readonly InvestmentsOverview host;
+        private List<MonitorQuote> quotes = new List<MonitorQuote>();
+
+        public OverviewCity(InvestmentsOverview host)
+        {
+            this.host = host;
+            BuildCity();
+        }
+
+        public UIPanel Panel
+        {
+            get { return city; }
+        }
+
         private const float CityRowH = 52f;
 
         private UIPanel city;
@@ -25,47 +44,33 @@ namespace FinanceOverhaul
 
         private void BuildCity()
         {
-            city = View("City");
-            UILabel heading = Heading(city, Strings.Get("overview.city.heading"), Pad, Pad + 2f);
+            city = host.NewView("City");
+            UILabel heading = InvestmentsOverview.Heading(
+                city,
+                Strings.Get("overview.city.heading"),
+                Pad,
+                Pad + 2f
+            );
             heading.name = Name + "CityHeading";
             heading.tooltip = Strings.Get("overview.city.tip");
-            cityRange = RangeTabs(city, Name + "CityRange", city.width - Pad, Pad);
-            cityList = Scroller(city, Name + "CityRows", Pad + 30f);
+            cityRange = host.RangeTabs(city, Name + "CityRange", city.width - Pad, Pad);
+            cityList = InvestmentsOverview.Scroller(city, Name + "CityRows", Pad + 30f);
         }
 
-        /// <summary>
-        /// A list under a view's header that scrolls with the mouse wheel and its scrollbar
-        /// (Kit <see cref="FoScrollbar"/>, shown only when the list is longer than the view).
-        /// </summary>
-        private static UIScrollablePanel Scroller(UIPanel view, string name, float top)
-        {
-            float height = view.height - top - Pad;
-            UIScrollablePanel list = view.AddUIComponent<UIScrollablePanel>();
-            list.name = name;
-            list.relativePosition = new Vector3(Pad, top);
-            list.size = new Vector2(view.width - 2f * Pad - FoScrollbar.Width - 4f, height);
-            list.clipChildren = true;
-            list.autoLayout = false;
-            list.scrollWheelDirection = UIOrientation.Vertical;
-            list.scrollWheelAmount = 26;
-            list.verticalScrollbar = FoScrollbar.Add(
-                view,
-                name + "Scrollbar",
-                new Vector3(view.width - Pad - FoScrollbar.Width, top),
-                height
-            );
-            return list;
-        }
+        /// <summary>What else, besides prices and orders, makes this view draw again.</summary>
+        public void Sign(StringBuilder sig) { }
 
-        private void DrawCity(int days)
+        public void Draw(OverviewFrame frame)
         {
+            quotes = frame.Quotes;
+            int days = frame.Days;
             cityRange.Choose(days == StockDetail.ShortRange ? 0 : 1);
             CityFigures.Fill(quotes);
             List<CityRow> rows = CityOverview.Rows(quotes, days);
-            bool inPoints = pillsInPoints();
+            bool inPoints = frame.InPoints;
             while (cityRows.Count < rows.Count)
             {
-                cityRows.Add(new CityRowView(cityList, cityRows.Count, togglePills));
+                cityRows.Add(new CityRowView(cityList, cityRows.Count, host.TogglePills));
             }
 
             for (int i = 0; i < cityRows.Count; i++)
@@ -101,7 +106,7 @@ namespace FinanceOverhaul
                     name,
                     new Vector2(width, CityRowH - 4f),
                     Vector3.zero,
-                    p => OpenDialog(quote)
+                    p => InvestmentsOverview.OpenDialog(quote)
                 );
                 symbol = FoText.Label(back, name + "Symbol", "", 0.85f, FoTheme.GameText);
                 symbol.relativePosition = new Vector3(8f, 4f);

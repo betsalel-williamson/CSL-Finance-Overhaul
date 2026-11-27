@@ -1,5 +1,6 @@
 using System; // Array
 using System.Collections.Generic; // List
+using System.Text; // StringBuilder
 using ColossalFramework.UI; // UIComponent, UILabel, UIPanel, UITextureSprite
 // FinanceOverhaul.Core: HeatRect, HeatTile, HeatmapOverview, MonitorQuote, StockMonitor, Strings
 using FinanceOverhaul.Core;
@@ -13,8 +14,26 @@ namespace FinanceOverhaul
     /// accent, the scale under the tiles. A click on a tile opens the stock's dialog. Order,
     /// scale and grid come from <see cref="HeatmapOverview"/>.
     /// </summary>
-    internal sealed partial class InvestmentsOverview
+    internal sealed class OverviewHeatmap : IOverviewView
     {
+        private const string Name = InvestmentsOverview.Name;
+        private const float Pad = InvestmentsOverview.Pad;
+        private const int ChartScale = InvestmentsOverview.ChartScale;
+
+        private readonly InvestmentsOverview host;
+        private List<MonitorQuote> quotes = new List<MonitorQuote>();
+
+        public OverviewHeatmap(InvestmentsOverview host)
+        {
+            this.host = host;
+            BuildHeatmap();
+        }
+
+        public UIPanel Panel
+        {
+            get { return heatmap; }
+        }
+
         private const float TileGap = 4f;
         private const float LegendH = 22f;
         private const int ScaleWidth = 120;
@@ -54,8 +73,8 @@ namespace FinanceOverhaul
 
         private void BuildHeatmap()
         {
-            heatmap = View("Heatmap");
-            heatHeading = Heading(heatmap, "", Pad, Pad + 2f);
+            heatmap = host.NewView("Heatmap");
+            heatHeading = InvestmentsOverview.Heading(heatmap, "", Pad, Pad + 2f);
             heatHeading.name = Name + "HeatmapHeading";
             heatHeading.tooltip = Strings.Get("overview.heatmap.sizeTip");
             // The index fund averages the tiles: its change sits by the heading, not as a tile.
@@ -73,7 +92,7 @@ namespace FinanceOverhaul
                 0.7f,
                 FoTheme.Header,
                 Strings.Get("monitor.pill.tip"),
-                togglePills
+                host.TogglePills
             );
 
             var labels = new string[HeatmapOverview.Spans.Length];
@@ -94,8 +113,7 @@ namespace FinanceOverhaul
                 i =>
                 {
                     HeatSpan = HeatmapOverview.Spans[i];
-                    drawn = null;
-                    Draw();
+                    host.Redraw();
                 }
             );
             heatSpan.Secondary();
@@ -125,7 +143,7 @@ namespace FinanceOverhaul
             }
 
             scaleTexture.Apply();
-            textures.Add(scaleTexture);
+            host.Textures.Add(scaleTexture);
             scaleBar = heatmap.AddUIComponent<UITextureSprite>();
             scaleBar.name = Name + "HeatmapScale";
             scaleBar.texture = scaleTexture;
@@ -157,10 +175,17 @@ namespace FinanceOverhaul
             hole.isInteractive = false;
         }
 
-        private void DrawHeatmap()
+        /// <summary>What else, besides prices and orders, makes this view draw again.</summary>
+        public void Sign(StringBuilder sig)
         {
+            sig.Append("|h").Append(HeatSpan);
+        }
+
+        public void Draw(OverviewFrame frame)
+        {
+            quotes = frame.Quotes;
             int span = HeatSpan;
-            bool inPoints = pillsInPoints();
+            bool inPoints = frame.InPoints;
             heatSpan.Choose(Array.IndexOf(HeatmapOverview.Spans, span));
             heatHeading.text = HeatmapOverview.Heading(span);
             MonitorQuote fund = HeatmapOverview.IndexFund(quotes);
@@ -259,7 +284,7 @@ namespace FinanceOverhaul
                 back = parent.AddUIComponent<UIPanel>();
                 back.name = name;
                 back.backgroundSprite = "GenericPanelWhite";
-                back.eventClick += (c, p) => OpenDialog(quote);
+                back.eventClick += (c, p) => InvestmentsOverview.OpenDialog(quote);
                 face = back.AddUIComponent<UIPanel>();
                 face.name = name + "Face";
                 face.backgroundSprite = "GenericPanelWhite";

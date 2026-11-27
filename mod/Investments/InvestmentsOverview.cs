@@ -1,39 +1,79 @@
 using System; // Action, Array, Func
-using System.Collections.Generic; // List
+using System.Collections.Generic; // Dictionary, KeyValuePair, List
 using System.Text; // StringBuilder
-using ColossalFramework.UI; // UIComponent, UILabel, UIPanel, UITextureSprite
-// FinanceOverhaul.Core: LocalCompany, MonitorQuote, OverviewPage, OverviewPages, StockDetail,
-//   Strings, TradeOrder
+// ColossalFramework.UI: UIComponent, UILabel, UIOrientation, UIPanel, UIScrollablePanel,
+//   UITextureSprite
+using ColossalFramework.UI;
+// FinanceOverhaul.Core: MonitorQuote, OverviewPage, OverviewPages, StockDetail, Strings,
+//   TradeOrder
 using FinanceOverhaul.Core;
 using UnityEngine; // Color32, Texture2D, Vector2, Vector3
 
 namespace FinanceOverhaul
 {
     /// <summary>
-    /// The right-hand column of Economy → Investments (Figma band 20, "Two columns"): a sub tab
-    /// group that picks one view at a time (a view not built yet would be disabled), and the view
-    /// itself, drawn in the game's panel art and the theme's colours. Each view is a partial
-    /// file (<c>.Market</c>, <c>.Portfolio</c>, <c>.Heatmap</c>, <c>.City</c>, <c>.Feed</c>);
-    /// their numbers come from the library (<see cref="MarketOverview"/>,
-    /// <see cref="PortfolioOverview"/>, <see cref="HeatmapOverview"/>, <see cref="CityOverview"/>,
-    /// <see cref="FeedOverview"/>), this only draws them.
+    /// One view of the overview (Market, Portfolio, Heatmap, City, Feed): its own panel in the
+    /// body, drawn from the latest quotes when it is the one on show.
     /// </summary>
-    internal sealed partial class InvestmentsOverview
+    internal interface IOverviewView
     {
-        private const string Name = InvestmentsList.Prefix + "Overview";
+        UIPanel Panel { get; }
+
+        /// <summary>Adds what else, besides prices and orders, should make it draw again.</summary>
+        void Sign(StringBuilder sig);
+
+        void Draw(OverviewFrame frame);
+    }
+
+    /// <summary>What a view draws from: the quotes, the chart range, the pills' unit.</summary>
+    internal sealed class OverviewFrame
+    {
+        public List<MonitorQuote> Quotes;
+
+        /// <summary>The days the charts span (7 or 30), one choice for every view.</summary>
+        public int Days;
+
+        /// <summary>The pills show ₡ (points), not % (one switch for all, the list's too).</summary>
+        public bool InPoints;
+    }
+
+    /// <summary>
+    /// The right-hand column of Economy → Investments (Figma band 20, "Two columns"): a sub tab
+    /// group that picks one view at a time, and the view itself, drawn in the game's panel art
+    /// and the theme's colours. Each view is its own class (<see cref="OverviewMarket"/>,
+    /// <see cref="OverviewPortfolio"/>, <see cref="OverviewHeatmap"/>, <see cref="OverviewCity"/>,
+    /// <see cref="OverviewFeed"/>) behind <see cref="IOverviewView"/>; this shell holds what they
+    /// share (the body, the 7D | 30D choice, the pills' switch, chart boxes, scrolling lists)
+    /// and redraws the one on show only when something it shows has changed. Their numbers come
+    /// from the library; the views only draw them.
+    /// </summary>
+    internal sealed class InvestmentsOverview
+    {
+        internal const string Name = InvestmentsList.Prefix + "Overview";
+        internal const float Pad = 12f;
+        internal const int ChartScale = 2;
         private const float BarH = 34f;
-        private const float Pad = 12f;
-        private const int ChartScale = 2;
 
         private readonly UIPanel root;
-        private readonly FoToggleTabs views;
-        private readonly UIPanel body;
-        private readonly List<Texture2D> textures = new List<Texture2D>();
+        private readonly FoToggleTabs tabs;
         private readonly Func<bool> pillsInPoints;
-        private readonly Action togglePills;
+        private readonly Dictionary<OverviewPage, IOverviewView> views =
+            new Dictionary<OverviewPage, IOverviewView>();
 
         private List<MonitorQuote> quotes = new List<MonitorQuote>();
         private string drawn;
+
+        /// <summary>Orders the Portfolio and Feed views show instead of the city's (game UI tests: the longest text).</summary>
+        internal static List<TradeOrder> TestOrders;
+
+        /// <summary>The body the views fill (the game's card art, as the list's).</summary>
+        internal UIPanel Body { get; private set; }
+
+        /// <summary>Textures the views drew into; destroyed with the overview.</summary>
+        internal List<Texture2D> Textures { get; } = new List<Texture2D>();
+
+        /// <summary>A click on any pill: flips every pill between % and ₡, the list's too.</summary>
+        internal Action TogglePills { get; private set; }
 
         private static OverviewPage Page
         {
@@ -85,7 +125,7 @@ namespace FinanceOverhaul
         )
         {
             pillsInPoints = inPoints;
-            togglePills = toggle;
+            TogglePills = toggle;
             root = parent.AddUIComponent<UIPanel>();
             root.name = Name;
             root.relativePosition = at;
@@ -100,7 +140,7 @@ namespace FinanceOverhaul
                 widths[i] = 88f;
             }
 
-            views = FoToggleTabs.Add(
+            tabs = FoToggleTabs.Add(
                 root,
                 Name + "Tabs",
                 labels,
@@ -109,31 +149,31 @@ namespace FinanceOverhaul
                 0.8f,
                 i => Pick(OverviewPages.All[i])
             );
-            views.Secondary();
-            views.Panel.relativePosition = new Vector3(0f, 2f);
+            tabs.Secondary();
+            tabs.Panel.relativePosition = new Vector3(0f, 2f);
             for (int i = 0; i < labels.Length; i++)
             {
                 OverviewPage v = OverviewPages.All[i];
-                views[i].name = Name + "Tab-" + v;
+                tabs[i].name = Name + "Tab-" + v;
                 if (!OverviewPages.IsBuilt(v))
                 {
-                    views.SetEnabled(i, false, Strings.Get("overview.tab.later"));
+                    tabs.SetEnabled(i, false, Strings.Get("overview.tab.later"));
                 }
             }
 
             // ---- body: the game's card art, as the list's ----
-            body = root.AddUIComponent<UIPanel>();
-            body.name = Name + "Body";
-            body.backgroundSprite = "GenericPanel";
-            body.color = FoTheme.GameStockCard;
-            body.relativePosition = new Vector3(0f, BarH);
-            body.size = new Vector2(size.x, size.y - BarH);
+            Body = root.AddUIComponent<UIPanel>();
+            Body.name = Name + "Body";
+            Body.backgroundSprite = "GenericPanel";
+            Body.color = FoTheme.GameStockCard;
+            Body.relativePosition = new Vector3(0f, BarH);
+            Body.size = new Vector2(size.x, size.y - BarH);
 
-            BuildMarket();
-            BuildPortfolio();
-            BuildHeatmap();
-            BuildCity();
-            BuildFeed();
+            views[OverviewPage.Market] = new OverviewMarket(this);
+            views[OverviewPage.Portfolio] = new OverviewPortfolio(this);
+            views[OverviewPage.Heatmap] = new OverviewHeatmap(this);
+            views[OverviewPage.City] = new OverviewCity(this);
+            views[OverviewPage.Feed] = new OverviewFeed(this);
         }
 
         /// <summary>The page on show (game UI tests).</summary>
@@ -151,8 +191,7 @@ namespace FinanceOverhaul
             }
 
             Page = page;
-            drawn = null;
-            Draw();
+            Redraw();
         }
 
         /// <summary>New prices (the list's own read): redraws only when something changed.</summary>
@@ -162,9 +201,16 @@ namespace FinanceOverhaul
             Draw();
         }
 
+        /// <summary>Draws the view on show again now (a choice inside it changed).</summary>
+        internal void Redraw()
+        {
+            drawn = null;
+            Draw();
+        }
+
         public void Destroy()
         {
-            foreach (Texture2D t in textures)
+            foreach (Texture2D t in Textures)
             {
                 if (t != null)
                 {
@@ -172,7 +218,7 @@ namespace FinanceOverhaul
                 }
             }
 
-            textures.Clear();
+            Textures.Clear();
             if (root != null)
             {
                 UnityEngine.Object.Destroy(root.gameObject);
@@ -182,15 +228,21 @@ namespace FinanceOverhaul
         private void Draw()
         {
             OverviewPage page = Page;
-            int days = Days;
+            IOverviewView view = views[page];
+            var frame = new OverviewFrame
+            {
+                Quotes = quotes,
+                Days = Days,
+                InPoints = pillsInPoints(),
+            };
             var sig = new StringBuilder();
             sig.Append(page)
                 .Append('|')
-                .Append(days)
+                .Append(frame.Days)
                 .Append('|')
                 .Append(Strings.Language)
                 .Append('|')
-                .Append(pillsInPoints())
+                .Append(frame.InPoints)
                 .Append('|')
                 .Append(OrderDesk.Today);
             foreach (MonitorQuote q in quotes)
@@ -214,19 +266,8 @@ namespace FinanceOverhaul
                 sig.Append("|o").Append(o.Id);
             }
 
-            sig.Append(TestOrders == null ? "|city" : "|test")
-                .Append("|h")
-                .Append(HeatSpan)
-                .Append("|n")
-                .Append(ChirpNotices.Log.Snapshot().Count);
-            if (page == OverviewPage.Feed)
-            {
-                foreach (LocalCompany c in FeedCompanies())
-                {
-                    sig.Append("|c").Append(c.Symbol).Append(':').Append(c.Status);
-                }
-            }
-
+            sig.Append(TestOrders == null ? "|city" : "|test");
+            view.Sign(sig);
             string signature = sig.ToString();
             if (signature == drawn)
             {
@@ -234,47 +275,30 @@ namespace FinanceOverhaul
             }
 
             drawn = signature;
-            views.Choose(Array.IndexOf(OverviewPages.All, page));
-            market.isVisible = page == OverviewPage.Market;
-            portfolio.isVisible = page == OverviewPage.Portfolio;
-            heatmap.isVisible = page == OverviewPage.Heatmap;
-            city.isVisible = page == OverviewPage.City;
-            feed.isVisible = page == OverviewPage.Feed;
-            switch (page)
+            tabs.Choose(Array.IndexOf(OverviewPages.All, page));
+            foreach (KeyValuePair<OverviewPage, IOverviewView> v in views)
             {
-                case OverviewPage.Market:
-                    DrawMarket(days);
-                    break;
-                case OverviewPage.Portfolio:
-                    DrawPortfolio(days);
-                    break;
-                case OverviewPage.Heatmap:
-                    DrawHeatmap();
-                    break;
-                case OverviewPage.City:
-                    DrawCity(days);
-                    break;
-                default:
-                    DrawFeed();
-                    break;
+                v.Value.Panel.isVisible = v.Key == page;
             }
+
+            view.Draw(frame);
         }
 
         // ---------- shared building blocks ----------
 
         /// <summary>A view's own panel, filling the body.</summary>
-        private UIPanel View(string name)
+        internal UIPanel NewView(string name)
         {
-            UIPanel p = body.AddUIComponent<UIPanel>();
+            UIPanel p = Body.AddUIComponent<UIPanel>();
             p.name = Name + name;
-            p.size = body.size;
+            p.size = Body.size;
             p.relativePosition = Vector3.zero;
             p.isVisible = false;
             return p;
         }
 
         /// <summary>7D | 30D for a view's chart: one choice for every view.</summary>
-        private FoToggleTabs RangeTabs(UIComponent parent, string name, float right, float y)
+        internal FoToggleTabs RangeTabs(UIComponent parent, string name, float right, float y)
         {
             FoToggleTabs range = FoToggleTabs.Add(
                 parent,
@@ -290,8 +314,7 @@ namespace FinanceOverhaul
                 i =>
                 {
                     Days = i == 0 ? StockDetail.ShortRange : StockDetail.LongRange;
-                    drawn = null;
-                    Draw();
+                    Redraw();
                 }
             );
             range.Secondary();
@@ -301,7 +324,7 @@ namespace FinanceOverhaul
             return range;
         }
 
-        private UILabel Heading(UIComponent parent, string text, float x, float y)
+        internal static UILabel Heading(UIComponent parent, string text, float x, float y)
         {
             UILabel l = FoText.Label(parent, null, text, 0.8f, FoTheme.GameHeading);
             l.relativePosition = new Vector3(x, y);
@@ -309,7 +332,7 @@ namespace FinanceOverhaul
         }
 
         /// <summary>Opens the game's dialog on a stock, as a click on its line in the list does.</summary>
-        private static void OpenDialog(MonitorQuote q)
+        internal static void OpenDialog(MonitorQuote q)
         {
             if (q != null)
             {
@@ -318,10 +341,34 @@ namespace FinanceOverhaul
         }
 
         /// <summary>
+        /// A list under a view's header that scrolls with the mouse wheel and its scrollbar
+        /// (Kit <see cref="FoScrollbar"/>, shown only when the list is longer than the view).
+        /// </summary>
+        internal static UIScrollablePanel Scroller(UIPanel view, string name, float top)
+        {
+            float height = view.height - top - Pad;
+            UIScrollablePanel list = view.AddUIComponent<UIScrollablePanel>();
+            list.name = name;
+            list.relativePosition = new Vector3(Pad, top);
+            list.size = new Vector2(view.width - 2f * Pad - FoScrollbar.Width - 4f, height);
+            list.clipChildren = true;
+            list.autoLayout = false;
+            list.scrollWheelDirection = UIOrientation.Vertical;
+            list.scrollWheelAmount = 26;
+            list.verticalScrollbar = FoScrollbar.Add(
+                view,
+                name + "Scrollbar",
+                new Vector3(view.width - Pad - FoScrollbar.Width, top),
+                height
+            );
+            return list;
+        }
+
+        /// <summary>
         /// A line chart on the game's chart black, its high and low inside it and "N days ago …
         /// Today" under it. Values named <c>name + "Chart"</c>, <c>"High"</c>, <c>"Low"</c>.
         /// </summary>
-        private sealed class ChartBox
+        internal sealed class ChartBox
         {
             private readonly Texture2D texture;
             private readonly UILabel high;

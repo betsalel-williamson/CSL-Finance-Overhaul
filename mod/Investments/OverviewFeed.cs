@@ -1,4 +1,5 @@
 using System.Collections.Generic; // List
+using System.Text; // StringBuilder
 using ColossalFramework.UI; // UIComponent, UILabel, UIPanel, UIScrollablePanel
 // FinanceOverhaul.Core: FeedItem, FeedOverview, FeedTone, LocalCompany, MonitorQuote, Strings,
 //   TradeOrder
@@ -14,8 +15,26 @@ namespace FinanceOverhaul
     /// mouse wheel; a click on one about a stock opens its dialog. Items come from
     /// <see cref="FeedOverview"/>.
     /// </summary>
-    internal sealed partial class InvestmentsOverview
+    internal sealed class OverviewFeed : IOverviewView
     {
+        private const string Name = InvestmentsOverview.Name;
+        private const float Pad = InvestmentsOverview.Pad;
+        private const int ChartScale = InvestmentsOverview.ChartScale;
+
+        private readonly InvestmentsOverview host;
+        private List<MonitorQuote> quotes = new List<MonitorQuote>();
+
+        public OverviewFeed(InvestmentsOverview host)
+        {
+            this.host = host;
+            BuildFeed();
+        }
+
+        public UIPanel Panel
+        {
+            get { return feed; }
+        }
+
         private const float FeedGap = 4f;
         private const float WhenWidth = 70f;
 
@@ -35,11 +54,21 @@ namespace FinanceOverhaul
 
         private void BuildFeed()
         {
-            feed = View("Feed");
-            feedList = Scroller(feed, Name + "FeedItems", Pad);
-            upcomingHeading = Heading(feedList, Strings.Get("overview.feed.upcoming"), 0f, 0f);
+            feed = host.NewView("Feed");
+            feedList = InvestmentsOverview.Scroller(feed, Name + "FeedItems", Pad);
+            upcomingHeading = InvestmentsOverview.Heading(
+                feedList,
+                Strings.Get("overview.feed.upcoming"),
+                0f,
+                0f
+            );
             upcomingHeading.name = Name + "FeedUpcoming";
-            latelyHeading = Heading(feedList, Strings.Get("overview.feed.lately"), 0f, 0f);
+            latelyHeading = InvestmentsOverview.Heading(
+                feedList,
+                Strings.Get("overview.feed.lately"),
+                0f,
+                0f
+            );
             latelyHeading.name = Name + "FeedLately";
             nothingUpcoming = FoText.Label(
                 feedList,
@@ -57,13 +86,24 @@ namespace FinanceOverhaul
             );
         }
 
-        private void DrawFeed()
+        /// <summary>What else, besides prices and orders, makes this view draw again.</summary>
+        public void Sign(StringBuilder sig)
         {
+            sig.Append("|n").Append(ChirpNotices.Log.Snapshot().Count);
+            foreach (LocalCompany c in FeedCompanies())
+            {
+                sig.Append("|c").Append(c.Symbol).Append(':').Append(c.Status);
+            }
+        }
+
+        public void Draw(OverviewFrame frame)
+        {
+            quotes = frame.Quotes;
             int today = OrderDesk.Today;
             List<LocalCompany> companies = FeedCompanies();
             List<TradeOrder> orders =
-                TestOrders != null
-                    ? new List<TradeOrder>(TestOrders)
+                InvestmentsOverview.TestOrders != null
+                    ? new List<TradeOrder>(InvestmentsOverview.TestOrders)
                     : new List<TradeOrder>(OrderDesk.Snapshot());
             List<FeedItem> upcoming = FeedOverview.Upcoming(quotes, orders, companies, today);
             List<FeedItem> lately = FeedOverview.Lately(
@@ -179,7 +219,7 @@ namespace FinanceOverhaul
                     name,
                     new Vector2(width, 26f),
                     Vector3.zero,
-                    p => OpenDialog(quote),
+                    p => InvestmentsOverview.OpenDialog(quote),
                     () => quote != null
                 );
                 bar = back.AddUIComponent<UIPanel>();

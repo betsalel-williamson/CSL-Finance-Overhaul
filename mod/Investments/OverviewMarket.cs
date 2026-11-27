@@ -1,5 +1,6 @@
 using System; // Action, Math
 using System.Collections.Generic; // List
+using System.Text; // StringBuilder
 using ColossalFramework.UI; // UIComponent, UILabel, UIPanel
 using FinanceOverhaul.Core; // MarketOverview, MonitorQuote, StockDetail, StockMonitor, Strings
 using UnityEngine; // Color32, Vector2, Vector3
@@ -11,8 +12,26 @@ namespace FinanceOverhaul
     /// days with its pill, today's top gainers and losers (a click opens the stock's dialog;
     /// ranked by ₡ while the pills show points) and how many stocks rose, fell or stayed.
     /// </summary>
-    internal sealed partial class InvestmentsOverview
+    internal sealed class OverviewMarket : IOverviewView
     {
+        private const string Name = InvestmentsOverview.Name;
+        private const float Pad = InvestmentsOverview.Pad;
+        private const int ChartScale = InvestmentsOverview.ChartScale;
+
+        private readonly InvestmentsOverview host;
+        private List<MonitorQuote> quotes = new List<MonitorQuote>();
+
+        public OverviewMarket(InvestmentsOverview host)
+        {
+            this.host = host;
+            BuildMarket();
+        }
+
+        public UIPanel Panel
+        {
+            get { return market; }
+        }
+
         private const float MarketChartH = 150f;
         private const int Movers = 3;
         private const float MoverH = 26f;
@@ -23,7 +42,7 @@ namespace FinanceOverhaul
         private UILabel indexChange;
         private UILabel indexDays;
         private FoToggleTabs marketRange;
-        private ChartBox marketChart;
+        private InvestmentsOverview.ChartBox marketChart;
         private readonly Mover[] gainers = new Mover[Movers];
         private readonly Mover[] losers = new Mover[Movers];
         private UILabel noGainers;
@@ -32,8 +51,8 @@ namespace FinanceOverhaul
 
         private void BuildMarket()
         {
-            market = View("Market");
-            float w = body.width - 2f * Pad;
+            market = host.NewView("Market");
+            float w = host.Body.width - 2f * Pad;
 
             indexKey = FoText.Label(
                 market,
@@ -54,26 +73,41 @@ namespace FinanceOverhaul
                 0.75f,
                 FoTheme.Header,
                 Strings.Get("monitor.pill.tip"),
-                togglePills
+                host.TogglePills
             );
             indexDays = FoText.Label(market, Name + "MarketDays", "", 0.75f, FoTheme.TextMuted);
-            marketRange = RangeTabs(market, Name + "MarketRange", market.width - Pad, Pad + 4f);
+            marketRange = host.RangeTabs(
+                market,
+                Name + "MarketRange",
+                market.width - Pad,
+                Pad + 4f
+            );
 
             float chartY = Pad + 52f;
-            marketChart = new ChartBox(
+            marketChart = new InvestmentsOverview.ChartBox(
                 market,
                 Name + "Market",
                 Pad,
                 chartY,
                 w,
                 MarketChartH,
-                textures
+                host.Textures
             );
 
             float moversY = chartY + MarketChartH + 26f;
             float half = (w - Pad) / 2f;
-            Heading(market, Strings.Get("overview.market.gainers"), Pad, moversY);
-            Heading(market, Strings.Get("overview.market.losers"), Pad + half + Pad, moversY);
+            InvestmentsOverview.Heading(
+                market,
+                Strings.Get("overview.market.gainers"),
+                Pad,
+                moversY
+            );
+            InvestmentsOverview.Heading(
+                market,
+                Strings.Get("overview.market.losers"),
+                Pad + half + Pad,
+                moversY
+            );
             for (int i = 0; i < Movers; i++)
             {
                 float y = moversY + 20f + i * MoverH;
@@ -83,7 +117,7 @@ namespace FinanceOverhaul
                     Pad,
                     y,
                     half,
-                    togglePills
+                    host.TogglePills
                 );
                 losers[i] = new Mover(
                     market,
@@ -91,7 +125,7 @@ namespace FinanceOverhaul
                     Pad + half + Pad,
                     y,
                     half,
-                    togglePills
+                    host.TogglePills
                 );
             }
 
@@ -102,9 +136,14 @@ namespace FinanceOverhaul
             breadth.relativePosition = new Vector3(Pad, market.height - Pad - 14f);
         }
 
-        private void DrawMarket(int days)
+        /// <summary>What else, besides prices and orders, makes this view draw again.</summary>
+        public void Sign(StringBuilder sig) { }
+
+        public void Draw(OverviewFrame frame)
         {
-            bool inPoints = pillsInPoints();
+            quotes = frame.Quotes;
+            int days = frame.Days;
+            bool inPoints = frame.InPoints;
             marketRange.Choose(days == StockDetail.ShortRange ? 0 : 1);
             // With the city index fund listed this is IDX's own chart, in ₡.
             MonitorQuote fund = MarketOverview.IndexFund(quotes);
@@ -195,7 +234,7 @@ namespace FinanceOverhaul
                     name,
                     new Vector2(width, MoverH - 3f),
                     new Vector3(x, y),
-                    p => OpenDialog(quote)
+                    p => InvestmentsOverview.OpenDialog(quote)
                 );
                 symbol = FoText.Label(back, name + "Symbol", "", 0.85f, FoTheme.GameText);
                 symbol.relativePosition = new Vector3(8f, 4f);

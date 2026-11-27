@@ -1,4 +1,5 @@
 using System.Collections.Generic; // List
+using System.Text; // StringBuilder
 using ColossalFramework.UI; // UIButton, UIComponent, UILabel, UIPanel, UITextureSprite
 // FinanceOverhaul.Core: MonitorQuote, PortfolioOverview, PortfolioSlice, StockDetail, StockMonitor,
 //   Strings, TradeOrder
@@ -12,8 +13,26 @@ namespace FinanceOverhaul
     /// they were bought, a chart of what today's holdings were worth each day, the holdings by
     /// value as a donut with its legend, and the open orders with Cancel.
     /// </summary>
-    internal sealed partial class InvestmentsOverview
+    internal sealed class OverviewPortfolio : IOverviewView
     {
+        private const string Name = InvestmentsOverview.Name;
+        private const float Pad = InvestmentsOverview.Pad;
+        private const int ChartScale = InvestmentsOverview.ChartScale;
+
+        private readonly InvestmentsOverview host;
+        private List<MonitorQuote> quotes = new List<MonitorQuote>();
+
+        public OverviewPortfolio(InvestmentsOverview host)
+        {
+            this.host = host;
+            BuildPortfolio();
+        }
+
+        public UIPanel Panel
+        {
+            get { return portfolio; }
+        }
+
         private const float PortfolioChartH = 100f;
         private const int Slices = 5;
         private const int OrderRows = 4;
@@ -24,7 +43,7 @@ namespace FinanceOverhaul
         private UILabel worth;
         private FoStatGrid worthStats;
         private FoToggleTabs portfolioRange;
-        private ChartBox portfolioChart;
+        private InvestmentsOverview.ChartBox portfolioChart;
         private UITextureSprite donut;
         private Texture2D donutTexture;
         private readonly LegendRow[] legend = new LegendRow[Slices];
@@ -34,13 +53,10 @@ namespace FinanceOverhaul
         private UILabel moreOrders;
         private float ordersTop;
 
-        /// <summary>Orders the view shows instead of the city's (game UI tests: the longest text).</summary>
-        internal static List<TradeOrder> TestOrders;
-
         private void BuildPortfolio()
         {
-            portfolio = View("Portfolio");
-            float w = body.width - 2f * Pad;
+            portfolio = host.NewView("Portfolio");
+            float w = host.Body.width - 2f * Pad;
 
             FoText
                 .Label(
@@ -53,7 +69,7 @@ namespace FinanceOverhaul
                 .relativePosition = new Vector3(Pad, Pad);
             worth = FoText.Label(portfolio, Name + "PortfolioValue", "", 1.4f, FoTheme.GameText);
             worth.relativePosition = new Vector3(Pad, Pad + 16f);
-            portfolioRange = RangeTabs(
+            portfolioRange = host.RangeTabs(
                 portfolio,
                 Name + "PortfolioRange",
                 portfolio.width - Pad,
@@ -74,26 +90,36 @@ namespace FinanceOverhaul
             worthStats.Panel.relativePosition = new Vector3(Pad, Pad + 46f);
 
             float chartY = Pad + 46f + 2f * 22f + 8f;
-            portfolioChart = new ChartBox(
+            portfolioChart = new InvestmentsOverview.ChartBox(
                 portfolio,
                 Name + "Portfolio",
                 Pad,
                 chartY,
                 w,
                 PortfolioChartH,
-                textures
+                host.Textures
             );
 
             float lowerY = chartY + PortfolioChartH + 26f;
             float half = (w - Pad) / 2f;
-            Heading(portfolio, Strings.Get("overview.portfolio.holdings"), Pad, lowerY);
-            Heading(portfolio, Strings.Get("overview.portfolio.orders"), Pad + half + Pad, lowerY);
+            InvestmentsOverview.Heading(
+                portfolio,
+                Strings.Get("overview.portfolio.holdings"),
+                Pad,
+                lowerY
+            );
+            InvestmentsOverview.Heading(
+                portfolio,
+                Strings.Get("overview.portfolio.orders"),
+                Pad + half + Pad,
+                lowerY
+            );
 
             donutTexture = FoTexture.Canvas(
                 (int)DonutSize * ChartScale,
                 (int)DonutSize * ChartScale
             );
-            textures.Add(donutTexture);
+            host.Textures.Add(donutTexture);
             donut = portfolio.AddUIComponent<UITextureSprite>();
             donut.name = Name + "PortfolioDonut";
             donut.texture = donutTexture;
@@ -155,8 +181,13 @@ namespace FinanceOverhaul
             moreOrders.relativePosition = new Vector3(ordersX, ordersTop);
         }
 
-        private void DrawPortfolio(int days)
+        /// <summary>What else, besides prices and orders, makes this view draw again.</summary>
+        public void Sign(StringBuilder sig) { }
+
+        public void Draw(OverviewFrame frame)
         {
+            quotes = frame.Quotes;
+            int days = frame.Days;
             portfolioRange.Choose(days == StockDetail.ShortRange ? 0 : 1);
             double value = PortfolioOverview.Value(quotes);
             worth.text = PortfolioOverview.Money(value);
@@ -218,8 +249,8 @@ namespace FinanceOverhaul
             // Open orders, each with its stock and Cancel, its terms wrapped under them; as many
             // as fit above the bottom edge, then "+N more in the list".
             var orders =
-                TestOrders != null
-                    ? new List<TradeOrder>(TestOrders)
+                InvestmentsOverview.TestOrders != null
+                    ? new List<TradeOrder>(InvestmentsOverview.TestOrders)
                     : new List<TradeOrder>(OrderDesk.Snapshot());
             float y = ordersTop;
             float bottom = portfolio.height - Pad - 16f;
