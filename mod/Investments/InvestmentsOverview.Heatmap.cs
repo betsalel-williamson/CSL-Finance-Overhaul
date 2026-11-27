@@ -68,11 +68,15 @@ namespace FinanceOverhaul
                 0.75f,
                 FoTheme.TextMuted
             );
-            heatIndex = FoPill.AddValue(heatmap, new Vector2(62f, 17f), 0.7f, FoTheme.Header);
-            heatIndex.name = Name + "HeatmapIndex";
-            heatIndex.isInteractive = true;
-            heatIndex.tooltip = Strings.Get("monitor.pill.tip");
-            heatIndex.eventClick += (c, p) => togglePills();
+            heatIndex = FoPill.AddToggle(
+                heatmap,
+                Name + "HeatmapIndex",
+                new Vector2(62f, 17f),
+                0.7f,
+                FoTheme.Header,
+                Strings.Get("monitor.pill.tip"),
+                togglePills
+            );
 
             var labels = new string[HeatmapOverview.Spans.Length];
             var widths = new float[labels.Length];
@@ -320,12 +324,24 @@ namespace FinanceOverhaul
             {
                 const float edge = 8f;
                 float room = w - 2f * edge;
-                Scale(symbol, 1.05f, room);
-                Scale(change, 1.15f, room);
-                Scale(detail, 0.7f, room);
+                if (!Scale(symbol, 1.05f, room) || !Scale(change, 1.15f, room))
+                {
+                    Small(w, h); // too narrow for the big layout's text: as a middling tile
+                    return;
+                }
+
                 symbol.isVisible = true;
                 change.isVisible = true;
-                detail.isVisible = detail.text.Length > 0;
+                // The price line: with the city's shares, else the price alone, else nothing (the
+                // tooltip still has both).
+                bool fits = detail.text.Length > 0 && Scale(detail, 0.7f, room);
+                if (!fits && detail.text.Length > 0 && quote != null)
+                {
+                    detail.text = StockMonitor.PriceText(quote.Price);
+                    fits = Scale(detail, 0.7f, room);
+                }
+
+                detail.isVisible = fits;
                 symbol.relativePosition = new Vector3(edge, 6f);
                 float bottom = h - 6f;
                 if (detail.isVisible)
@@ -364,13 +380,21 @@ namespace FinanceOverhaul
             /// <summary>The label at its scale, shrunk (not below half) to fit the room; false when it cannot.</summary>
             private static bool Scale(UILabel label, float scale, float room)
             {
-                label.textScale = scale;
+                SetScale(label, scale);
                 if (label.width > room)
                 {
-                    label.textScale = Mathf.Max(0.5f * scale, scale * room / label.width);
+                    SetScale(label, Mathf.Max(0.5f * scale, scale * room / label.width));
                 }
 
                 return label.width <= room + 0.5f;
+            }
+
+            /// <summary>Sets the text scale and has the label measure itself again at once.</summary>
+            private static void SetScale(UILabel label, float scale)
+            {
+                label.autoSize = false;
+                label.textScale = scale;
+                label.autoSize = true;
             }
 
             public void Hide()
