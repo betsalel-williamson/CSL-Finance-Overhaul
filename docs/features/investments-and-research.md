@@ -195,7 +195,8 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
      plane and ship passengers; a local company shows its kind and annual earnings, the fund how
      many stocks it follows, a coin "No city figure". Under it, what moves it ("Rises with crime")
      and its 7D | 30D change pill. Grouped industry first (`CityOverview.Rows`); the rows scroll
-     with the mouse wheel.
+     with the mouse wheel and a game-style scrollbar (Kit `FoScrollbar`, hidden while they fit; the
+     Feed has one too).
   5. **Feed** (built): "Coming up": local companies in their offering window, orders within 5% of
      their trigger or ending within 7 days, locked stocks at least 75% unlocked. "Lately" (30 days):
      today's big moves (a change rate of 10% or more), 30-day highs and lows (with at least 10 days
