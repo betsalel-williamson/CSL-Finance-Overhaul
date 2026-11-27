@@ -1,7 +1,8 @@
 using System; // Array
 using System.Collections.Generic; // List
 using ColossalFramework.UI; // UIComponent, UILabel, UIPanel, UITextureSprite
-using FinanceOverhaul.Core; // HeatRect, HeatTile, HeatmapOverview, MonitorQuote, Strings
+// FinanceOverhaul.Core: HeatRect, HeatTile, HeatmapOverview, MonitorQuote, StockMonitor, Strings
+using FinanceOverhaul.Core;
 // UnityEngine: Color32, FilterMode, Mathf, Texture2D, TextureFormat, TextureWrapMode, Vector2,
 //   Vector3
 using UnityEngine;
@@ -22,6 +23,8 @@ namespace FinanceOverhaul
 
         private UIPanel heatmap;
         private UILabel heatHeading;
+        private UILabel heatIndexKey;
+        private UILabel heatIndex;
         private FoToggleTabs heatSpan;
         private UIPanel heatArea;
         private readonly List<HeatTileView> heatTiles = new List<HeatTileView>();
@@ -57,6 +60,19 @@ namespace FinanceOverhaul
             heatHeading = Heading(heatmap, "", Pad, Pad + 2f);
             heatHeading.name = Name + "HeatmapHeading";
             heatHeading.tooltip = Strings.Get("overview.heatmap.sizeTip");
+            // The index fund averages the tiles: its change sits by the heading, not as a tile.
+            heatIndexKey = FoText.Label(
+                heatmap,
+                Name + "HeatmapIndexKey",
+                "",
+                0.75f,
+                FoTheme.TextMuted
+            );
+            heatIndex = FoPill.AddValue(heatmap, new Vector2(62f, 17f), 0.7f, FoTheme.Header);
+            heatIndex.name = Name + "HeatmapIndex";
+            heatIndex.isInteractive = true;
+            heatIndex.tooltip = Strings.Get("monitor.pill.tip");
+            heatIndex.eventClick += (c, p) => togglePills();
 
             var labels = new string[HeatmapOverview.Spans.Length];
             var widths = new float[labels.Length];
@@ -147,6 +163,29 @@ namespace FinanceOverhaul
             bool inPoints = pillsInPoints();
             heatSpan.Choose(Array.IndexOf(HeatmapOverview.Spans, span));
             heatHeading.text = HeatmapOverview.Heading(span);
+            MonitorQuote fund = HeatmapOverview.IndexFund(quotes);
+            heatIndexKey.isVisible = fund != null;
+            heatIndex.isVisible = fund != null;
+            if (fund != null)
+            {
+                heatIndexKey.text = fund.Symbol;
+                heatIndexKey.relativePosition = new Vector3(
+                    heatHeading.relativePosition.x + heatHeading.width + 12f,
+                    heatHeading.relativePosition.y + 1f
+                );
+                heatIndex.text = HeatmapOverview.IndexChange(quotes, span, inPoints);
+                heatIndex.color = FoTheme.Change(
+                    StockMonitor.ChangeColour(HeatmapOverview.Change(fund, span))
+                );
+                heatIndex.relativePosition = new Vector3(
+                    heatIndexKey.relativePosition.x + heatIndexKey.width + 6f,
+                    heatHeading.relativePosition.y
+                );
+                heatIndex.tooltip = Strings.Format(
+                    "overview.heatmap.indexTip",
+                    fund.Name ?? fund.Symbol
+                );
+            }
 
             List<HeatTile> tiles = HeatmapOverview.Tiles(quotes, span);
             HeatRect[] rects = HeatmapOverview.Treemap(

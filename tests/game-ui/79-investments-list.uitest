@@ -74,6 +74,9 @@ wait 0.5
 expect-visible FinanceOverhaulInvestmentsOverviewHeatmap
 expect-hidden FinanceOverhaulInvestmentsOverviewPortfolio
 expect-text FinanceOverhaulInvestmentsOverviewHeatmapHeading Today's change
+# the index fund averages the tiles: no tile of its own, its change by the heading
+expect-hidden FinanceOverhaulInvestmentsOverviewHeat-IDX
+expect-no-overlap FinanceOverhaulInvestmentsOverviewHeatmapIndex FinanceOverhaulInvestmentsOverviewHeatmapSpan
 expect-visible FinanceOverhaulInvestmentsOverviewHeatmapScale
 expect-no-overflow FinanceOverhaulInvestmentsOverviewHeatmapTiles
 expect-no-overflow FinanceOverhaulInvestmentsOverviewHeatmap

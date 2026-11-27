@@ -98,6 +98,10 @@ namespace FinanceOverhaul.Core
             { "overview.heatmap.held", "Held by the city" },
             { "overview.heatmap.detailHeld", "{0} · {1}" },
             { "overview.heatmap.sizeTip", "Tile size: the stock's market value" },
+            {
+                "overview.heatmap.indexTip",
+                "{0}: the average of the tiles, so it has no tile of its own. Click: show the change in ₡ or %"
+            },
             { "overview.heatmap.scale", "Colour scale" },
             { "overview.city.heading", "What moves each stock" },
             {

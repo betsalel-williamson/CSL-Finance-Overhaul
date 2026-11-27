@@ -175,14 +175,17 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
   3. **Heatmap** (built): a squarified treemap of every stock (`HeatmapOverview.Treemap`, as the
      Stitch design): a tile's area is the square root of the stock's market value (price × the
      shares there are; `HeatmapOverview.Weight`), so area follows value while a ₡30 stock stays
-     readable beside a ₡20,000 one; locked stocks take the smallest size, grey, at the end. Today |
-     7D | 30D picks the span (today is the game's change rate, as the pills). Tiles go from
-     `FoTheme.HeatLoss` through `HeatFlat` to `HeatGain`; the scale is the round step (1, 2, 5, 10,
-     20, 50, 100%) that holds four moves in five, so one outlier shows at full colour without
-     greying the rest. Stocks the city holds have an accent outline. A big tile shows the symbol top
-     left, the change large at the bottom left and the price (and the city's shares) under it; a
-     middling one the symbol and change centred; a small one the symbol. A tile's change follows the
-     pills (% or ₡); a click opens the stock's dialog.
+     readable beside a ₡20,000 one; locked stocks take the smallest size, grey, at the end. The city
+     index fund has no tile (it is the average of the tiles, so a tile would count the market twice,
+     as real market maps leave index funds out): its change sits in a pill by the heading, which
+     follows the span and flips between % and ₡ as every pill does. Coins (ChirperCrypto, ChirpCoin)
+     keep their tiles. Today | 7D | 30D picks the span (today is the game's change rate, as the
+     pills). Tiles go from `FoTheme.HeatLoss` through `HeatFlat` to `HeatGain`; the scale is the
+     round step (1, 2, 5, 10, 20, 50, 100%) that holds four moves in five, so one outlier shows at
+     full colour without greying the rest. Stocks the city holds have an accent outline. A big tile
+     shows the symbol top left, the change large at the bottom left and the price (and the city's
+     shares) under it; a middling one the symbol and change centred; a small one the symbol. A
+     tile's change follows the pills (% or ₡); a click opens the stock's dialog.
   4. **City** (built): each stock beside the city figure the game prices it from, read as the game's
      stock classes read it (District 0; `mod/Engines/CityFigures.cs`, only while the view draws):
      industry productivity and area, city health and care, deathcare, vehicles, traffic flow, crime,

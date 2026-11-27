@@ -1,5 +1,5 @@
 using System.Collections.Generic; // List
-using FinanceOverhaul.Core; // HeatRect, HeatTile, HeatmapOverview, MonitorQuote
+using FinanceOverhaul.Core; // CityIndexBasket, HeatRect, HeatTile, HeatmapOverview, MonitorQuote
 using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
@@ -165,6 +165,26 @@ namespace FinanceOverhaul.Core.Tests
             Assert.Equal(tiles[3].Weight, tiles[4].Weight, 6);
             Assert.Equal("₡110 · 50 shares", HeatmapOverview.Detail(tiles[0]));
             Assert.Equal("₡100", HeatmapOverview.Detail(tiles[1]));
+        }
+
+        [Fact]
+        public void TheIndexFundShowsByTheHeadingNotAsATile()
+        {
+            List<MonitorQuote> market = Market();
+            Assert.Null(HeatmapOverview.IndexChange(market, 1, false));
+            MonitorQuote fund = Q("IDX", -1.03f, new[] { 3100f, 3056f });
+            fund.Prefab = CityIndexBasket.IndexName;
+            market.Add(fund);
+            var coin = Q("CHC", 2f, new[] { 20000f, 21291f });
+            coin.Coin = true;
+            market.Add(coin);
+            List<HeatTile> tiles = HeatmapOverview.Tiles(market, 1);
+            Assert.DoesNotContain(tiles, t => t.Quote.Symbol == "IDX");
+            Assert.Contains(tiles, t => t.Quote.Symbol == "CHC"); // coins stay
+            Assert.Equal("-1.03%", HeatmapOverview.IndexChange(market, 1, false));
+            Assert.Equal("−₡44", HeatmapOverview.IndexChange(market, 7, true));
+            fund.Locked = true;
+            Assert.Null(HeatmapOverview.IndexChange(market, 1, false));
         }
 
         [Fact]

@@ -199,7 +199,8 @@ namespace FinanceOverhaul.Core
         }
 
         /// <summary>
-        /// Every stock as a tile, largest first (ties A–Z), the locked ones after them A–Z at
+        /// Every stock as a tile (not the city index fund, which averages them; coins such as
+        /// ChirpCoin stay), largest first (ties A–Z), the locked ones after them A–Z at
         /// the smallest size on sale, so the treemap lays them out in that order. Each tile's
         /// heat is its change over the scale, clamped to −1…+1.
         /// </summary>
@@ -209,7 +210,8 @@ namespace FinanceOverhaul.Core
             var locked = new List<HeatTile>();
             foreach (MonitorQuote q in quotes ?? new List<MonitorQuote>())
             {
-                if (q == null)
+                // The index fund is the average of the tiles: it shows by the heading, not as one.
+                if (q == null || CityIndexBasket.IsIndexName(q.Prefab))
                 {
                     continue;
                 }
@@ -451,6 +453,41 @@ namespace FinanceOverhaul.Core
                     "overview.heatmap.overDays",
                     span.ToString(CultureInfo.InvariantCulture)
                 );
+        }
+
+        /// <summary>
+        /// The city index fund's change over the span as its pill shows it beside the heading
+        /// ("-1.03%", or "−₡31" in points); null when the fund is not listed (or locked).
+        /// </summary>
+        public static string IndexChange(IEnumerable<MonitorQuote> quotes, int span, bool points)
+        {
+            MonitorQuote fund = IndexFund(quotes);
+            if (fund == null)
+            {
+                return null;
+            }
+
+            var tile = new HeatTile
+            {
+                Quote = fund,
+                Change = Change(fund, span),
+                Amount = Amount(fund, span),
+            };
+            return TileText(tile, points);
+        }
+
+        /// <summary>The city index fund when listed and on sale, else null.</summary>
+        public static MonitorQuote IndexFund(IEnumerable<MonitorQuote> quotes)
+        {
+            foreach (MonitorQuote q in quotes ?? new List<MonitorQuote>())
+            {
+                if (q != null && !q.Locked && CityIndexBasket.IsIndexName(q.Prefab))
+                {
+                    return q;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>"Today", "7D", "30D": the span tabs.</summary>
