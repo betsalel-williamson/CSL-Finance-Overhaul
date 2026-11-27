@@ -99,6 +99,9 @@ namespace FinanceOverhaul.Core
         /// <summary>The days the overview's charts span (7 or 30).</summary>
         public int InvestmentOverviewDays { get; set; } = StockDetail.LongRange;
 
+        /// <summary>The span the overview's heatmap colours by: 1 (today), 7 or 30 days.</summary>
+        public int InvestmentHeatmapDays { get; set; } = HeatmapOverview.Today;
+
         /// <summary>
         /// Preference: show the IPO dialog when a local company is announced. The dialog's
         /// "Don't show this for future IPOs" checkbox is this same value, read the other way.

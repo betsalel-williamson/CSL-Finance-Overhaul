@@ -1,5 +1,5 @@
 using FinanceOverhaul.Core; // LedText
-using UnityEngine; // Color32
+using UnityEngine; // Color32, Mathf
 
 namespace FinanceOverhaul
 {
@@ -202,6 +202,24 @@ namespace FinanceOverhaul
 
         /// <summary>Fully transparent.</summary>
         public static readonly Color32 Clear = new Color32(0, 0, 0, 0);
+
+        // The heatmap's tiles: a dark grey for no change, deepening to green or orange.
+
+        /// <summary>A heatmap tile that did not move.</summary>
+        public static readonly Color32 HeatFlat = new Color32(58, 66, 76, 255);
+
+        /// <summary>A heatmap tile at the top of the scale.</summary>
+        public static readonly Color32 HeatGain = new Color32(52, 132, 56, 255);
+
+        /// <summary>A heatmap tile at the bottom of the scale.</summary>
+        public static readonly Color32 HeatLoss = new Color32(196, 92, 36, 255);
+
+        /// <summary>A tile's colour for a heat from −1 (biggest fall) to +1 (biggest rise).</summary>
+        public static Color32 Heat(float heat)
+        {
+            float t = Mathf.Clamp01(Mathf.Abs(heat));
+            return Color32.Lerp(HeatFlat, heat >= 0f ? HeatGain : HeatLoss, t);
+        }
 
         /// <summary>
         /// The colour of a price change in the Stock Monitor's style (pills, sparklines, share

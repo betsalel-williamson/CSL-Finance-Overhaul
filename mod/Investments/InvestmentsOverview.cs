@@ -2,8 +2,8 @@ using System; // Action, Array, Func
 using System.Collections.Generic; // List
 using System.Text; // StringBuilder
 using ColossalFramework.UI; // UIComponent, UILabel, UIPanel, UITextureSprite
-// FinanceOverhaul.Core: MonitorQuote, OverviewPage, OverviewPages, StockDetail, Strings,
-//   TradeOrder
+// FinanceOverhaul.Core: LocalCompany, MonitorQuote, OverviewPage, OverviewPages, StockDetail,
+//   Strings, TradeOrder
 using FinanceOverhaul.Core;
 // UnityEngine: Color32, FilterMode, Texture2D, TextureFormat, TextureWrapMode, Vector2, Vector3
 using UnityEngine;
@@ -14,10 +14,12 @@ namespace FinanceOverhaul
 {
     /// <summary>
     /// The right-hand column of Economy → Investments (Figma band 20, "Two columns"): a sub tab
-    /// group that picks one view at a time (views not built yet are disabled), and the view
+    /// group that picks one view at a time (a view not built yet would be disabled), and the view
     /// itself, drawn in the game's panel art and the theme's colours. Each view is a partial
-    /// file (<c>.Market</c>, <c>.Portfolio</c>); their numbers come from the library
-    /// (<see cref="MarketOverview"/>, <see cref="PortfolioOverview"/>), this only draws them.
+    /// file (<c>.Market</c>, <c>.Portfolio</c>, <c>.Heatmap</c>, <c>.City</c>, <c>.Feed</c>);
+    /// their numbers come from the library (<see cref="MarketOverview"/>,
+    /// <see cref="PortfolioOverview"/>, <see cref="HeatmapOverview"/>, <see cref="CityOverview"/>,
+    /// <see cref="FeedOverview"/>), this only draws them.
     /// </summary>
     internal sealed partial class InvestmentsOverview
     {
@@ -132,6 +134,9 @@ namespace FinanceOverhaul
 
             BuildMarket();
             BuildPortfolio();
+            BuildHeatmap();
+            BuildCity();
+            BuildFeed();
         }
 
         /// <summary>The page on show (game UI tests).</summary>
@@ -212,7 +217,18 @@ namespace FinanceOverhaul
                 sig.Append("|o").Append(o.Id);
             }
 
-            sig.Append(TestOrders == null ? "|city" : "|test");
+            sig.Append(TestOrders == null ? "|city" : "|test")
+                .Append("|h")
+                .Append(HeatSpan)
+                .Append("|n")
+                .Append(ChirpNotices.Log.Snapshot().Count);
+            if (page == OverviewPage.Feed)
+            {
+                foreach (LocalCompany c in FeedCompanies())
+                {
+                    sig.Append("|c").Append(c.Symbol).Append(':').Append(c.Status);
+                }
+            }
 
             string signature = sig.ToString();
             if (signature == drawn)
@@ -224,13 +240,26 @@ namespace FinanceOverhaul
             views.Choose(Array.IndexOf(OverviewPages.All, page));
             market.isVisible = page == OverviewPage.Market;
             portfolio.isVisible = page == OverviewPage.Portfolio;
-            if (page == OverviewPage.Market)
+            heatmap.isVisible = page == OverviewPage.Heatmap;
+            city.isVisible = page == OverviewPage.City;
+            feed.isVisible = page == OverviewPage.Feed;
+            switch (page)
             {
-                DrawMarket(days);
-            }
-            else if (page == OverviewPage.Portfolio)
-            {
-                DrawPortfolio(days);
+                case OverviewPage.Market:
+                    DrawMarket(days);
+                    break;
+                case OverviewPage.Portfolio:
+                    DrawPortfolio(days);
+                    break;
+                case OverviewPage.Heatmap:
+                    DrawHeatmap();
+                    break;
+                case OverviewPage.City:
+                    DrawCity(days);
+                    break;
+                default:
+                    DrawFeed();
+                    break;
             }
         }
 

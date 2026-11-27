@@ -1,4 +1,4 @@
-using System; // Math, StringComparison
+using System; // Array, Math, StringComparison
 using System.Collections.Generic; // IEnumerable, List
 using System.Globalization; // CultureInfo
 
@@ -42,7 +42,7 @@ namespace FinanceOverhaul.Core
         /// <summary>Whether a view is built (its tab can be picked).</summary>
         public static bool IsBuilt(OverviewPage page)
         {
-            return page == OverviewPage.Market || page == OverviewPage.Portfolio;
+            return Array.IndexOf(All, page) >= 0;
         }
 
         /// <summary>The view to show for a saved choice: it, or the first built one.</summary>

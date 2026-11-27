@@ -149,10 +149,10 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
   and an overview the right. Rows lost their Buy and Sell buttons: a click anywhere on a line opens
   the dialog (Buy, or Sell when nothing is left to buy), whose Buy | Sell tabs turn it. The
   overview's header is a sub tab group (Market · Portfolio · Heatmap · City · Feed) that picks one
-  view at a time; a view not built yet has a disabled tab ("Not built yet"). The view and its 7D |
-  30D range are kept in the settings (`InvestmentOverviewPage`, `InvestmentOverviewDays`). The views
-  come one at a time from the Stitch designs (Figma band 20, "Two columns"), redrawn in the game's
-  panel art and `FoTheme`:
+  view at a time; all five are built. The view, its 7D | 30D range and the heatmap's span are kept
+  in the settings (`InvestmentOverviewPage`, `InvestmentOverviewDays`, `InvestmentHeatmapDays`). The
+  views come one at a time from the Stitch designs (Figma band 20, "Two columns"), redrawn in the
+  game's panel art and `FoTheme`:
   1. **Market overview** (built): the market index. With the city index fund listed it is IDX itself
      ("Market index (IDX)", its price in ₡, its 7D | 30D chart, high and low), so the view and the
      fund always agree. Without the fund, `MarketOverview.Index` rebuilds the fund's rule from the
@@ -172,8 +172,30 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
      its own line and its terms wrapped, as many as fit, then "+N more in the list". Dev
      `overview-orders longest` shows one order of each kind with the longest numbers (9,999,999
      shares at ₡9,999,999, a year left) so scenario 79 checks they fit.
-  3. Heatmap, 4. city and market, 5. market desk feed: designed, not built. Later, a click on a
-     stock shows its trade in this column instead of the dialog.
+  3. **Heatmap** (built): a tile per stock (`HeatmapOverview`), from the biggest rise to the biggest
+     fall, the locked ones grey at the end; Today | 7D | 30D picks the span (today is the game's
+     change rate, as the pills). Tiles go from `FoTheme.HeatLoss` through `HeatFlat` to `HeatGain`;
+     the scale is the round step (1, 2, 5, 10, 20, 50, 100%) that holds four moves in five, so one
+     outlier shows at full colour without greying the rest. Stocks the city holds have an accent
+     outline. The grid picks the column count that gives the biggest 3:2 tiles (no taller than 64).
+     A tile's text follows the pills (% or ₡); a click opens the stock's dialog.
+  4. **City** (built): each stock beside the city figure the game prices it from, read as the game's
+     stock classes read it (District 0; `mod/Engines/CityFigures.cs`, only while the view draws):
+     industry productivity and area, city health and care, deathcare, vehicles, traffic flow, crime,
+     plane and ship passengers; a local company shows its kind and annual earnings, the fund how
+     many stocks it follows, a coin "No city figure". Under it, what moves it ("Rises with crime")
+     and its 7D | 30D change pill. Grouped industry first (`CityOverview.Rows`); the rows scroll
+     with the mouse wheel.
+  5. **Feed** (built): "Coming up": local companies in their offering window, orders within 5% of
+     their trigger or ending within 7 days, locked stocks at least 75% unlocked. "Lately" (30 days):
+     today's big moves (a change rate of 10% or more), 30-day highs and lows (with at least 10 days
+     of prices), companies that began trading, and the notices the mod posted this session (fills,
+     expiries, bonds, company news; `ChirpNotices.Log`, a `FeedLog` of 40, not saved, kept even with
+     notices off). Each item has a tone bar and when it happens; a click on one about a stock opens
+     its dialog (`FeedOverview`).
+
+  Later, a click on a stock shows its trade in this column instead of the dialog.
+
 - **Movers in points (2026-11-27):** with the pills in ₡ the Market view ranks today's gainers and
   losers by the ₡ change, as the list's Change sort does (`MarketOverview.Movers`).
 - **Scrolling (2026-11-27):** each stock has its own 30-day line sprite in the list's view, with its

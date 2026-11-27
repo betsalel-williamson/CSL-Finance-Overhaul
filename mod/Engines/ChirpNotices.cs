@@ -1,6 +1,6 @@
 using System; // Exception
 using System.Collections.Generic; // List, Queue
-using FinanceOverhaul.Core; // Notice, NoticeBatch
+using FinanceOverhaul.Core; // FeedLog, Notice, NoticeBatch
 using ICities; // IChirperMessage
 using UnityEngine; // MonoBehaviour
 
@@ -23,6 +23,9 @@ namespace FinanceOverhaul
         /// <summary>Set while a game UI test runs (tests never chirp in the player's city).</summary>
         public static bool Muted;
 
+        /// <summary>This session's notices for the Investments overview's Feed (kept even when muted or off).</summary>
+        public static readonly FeedLog Log = new FeedLog();
+
         public static bool Enabled
         {
             get { return Mod.Settings == null || Mod.Settings.NoticesEnabled; }
@@ -34,6 +37,12 @@ namespace FinanceOverhaul
             if (day == null || day.Count == 0)
             {
                 return;
+            }
+
+            int today = OrderDesk.Today;
+            foreach (Notice n in day)
+            {
+                Log.Add(today, n);
             }
 
             List<Notice> collapsed = NoticeBatch.Collapse(day);
@@ -95,6 +104,8 @@ namespace FinanceOverhaul
             {
                 Outbox.Clear();
             }
+
+            Log.Clear();
         }
 
         /// <summary>A chirp that lives only in the Chirper panel.</summary>

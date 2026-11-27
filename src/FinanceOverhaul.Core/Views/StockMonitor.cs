@@ -62,6 +62,9 @@ namespace FinanceOverhaul.Core
         /// <summary>A local company the city grew (Local IPOs), not one of the game's stocks.</summary>
         public bool Local;
 
+        /// <summary>The city figure the game prices it from (the City overview); null when unread.</summary>
+        public CityFigure Figure;
+
         /// <summary>Priced in coins, not shares (ChirpCoin): not in the city index fund.</summary>
         public bool Coin;
 

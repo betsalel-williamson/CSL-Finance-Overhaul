@@ -22,7 +22,7 @@ expect-visible FinanceOverhaulInvestmentsList
 expect-text FinanceOverhaulInvestmentsTab-All All
 expect-text FinanceOverhaulInvestmentsSort Sort: Change %
 capture investments-list-all
-# two columns: on the right a sub tab group picks the view (Market built, the rest disabled)
+# two columns: on the right a sub tab group picks the view (Market, Portfolio, Heatmap, City, Feed)
 expect-visible FinanceOverhaulInvestmentsOverview
 expect-visible FinanceOverhaulInvestmentsOverviewTab-Market
 expect-visible FinanceOverhaulInvestmentsOverviewMarketChart
@@ -30,9 +30,6 @@ expect-visible FinanceOverhaulInvestmentsOverviewMarketBreadth
 expect-no-overlap FinanceOverhaulInvestmentsOverview FinanceOverhaulInvestmentsView
 expect-no-overlap FinanceOverhaulInvestmentsGroup FinanceOverhaulInvestmentsSort
 expect-no-overlap FinanceOverhaulInvestmentsTabs FinanceOverhaulInvestmentsGroup
-click FinanceOverhaulInvestmentsOverviewTab-Feed
-wait 0.5
-expect-visible FinanceOverhaulInvestmentsOverviewMarket
 # a click on the index's pill (or any pill) shows them all in points: ₡ for the fund
 expect-text FinanceOverhaulInvestmentsOverviewMarketChange %
 click FinanceOverhaulInvestmentsOverviewMarketChange
@@ -71,6 +68,41 @@ expect-no-overlap FinanceOverhaulInvestmentsOverviewPortfolioOrder-2Symbol Finan
 capture investments-overview-portfolio-longest-orders
 overview-orders off
 wait 0.5
+# the Heatmap view: a tile per stock coloured by its change, today or over 7 or 30 days
+click FinanceOverhaulInvestmentsOverviewTab-Heatmap
+wait 0.5
+expect-visible FinanceOverhaulInvestmentsOverviewHeatmap
+expect-hidden FinanceOverhaulInvestmentsOverviewPortfolio
+expect-text FinanceOverhaulInvestmentsOverviewHeatmapHeading Today's change
+expect-visible FinanceOverhaulInvestmentsOverviewHeatmapScale
+expect-no-overflow FinanceOverhaulInvestmentsOverviewHeatmapTiles
+expect-no-overflow FinanceOverhaulInvestmentsOverviewHeatmap
+capture investments-overview-heatmap
+click FinanceOverhaulInvestmentsOverviewHeatmapSpan-7
+wait 0.5
+expect-text FinanceOverhaulInvestmentsOverviewHeatmapHeading Change over 7 days
+expect-no-overflow FinanceOverhaulInvestmentsOverviewHeatmapTiles
+capture investments-overview-heatmap-7d
+click FinanceOverhaulInvestmentsOverviewHeatmapSpan-1
+wait 0.5
+# the City view: each stock beside the city figure the game prices it from
+click FinanceOverhaulInvestmentsOverviewTab-City
+wait 0.5
+expect-visible FinanceOverhaulInvestmentsOverviewCity
+expect-visible FinanceOverhaulInvestmentsOverviewCityRow-0
+expect-no-overlap FinanceOverhaulInvestmentsOverviewCityRow-0Figure FinanceOverhaulInvestmentsOverviewCityRow-0Change
+expect-no-overlap FinanceOverhaulInvestmentsOverviewCityRow-0Driver FinanceOverhaulInvestmentsOverviewCityRow-0Change
+expect-no-overlap FinanceOverhaulInvestmentsOverviewCityRow-0Figure FinanceOverhaulInvestmentsOverviewCityRow-0Rule
+expect-no-overlap FinanceOverhaulInvestmentsOverviewCityRows FinanceOverhaulInvestmentsOverviewCityRange
+capture investments-overview-city
+# the Feed view: what is coming up and what happened lately
+click FinanceOverhaulInvestmentsOverviewTab-Feed
+wait 0.5
+expect-visible FinanceOverhaulInvestmentsOverviewFeed
+expect-visible FinanceOverhaulInvestmentsOverviewFeedUpcoming
+expect-visible FinanceOverhaulInvestmentsOverviewFeedLately
+expect-hidden FinanceOverhaulInvestmentsOverviewCity
+capture investments-overview-feed
 click FinanceOverhaulInvestmentsOverviewTab-Market
 wait 0.5
 expect-visible FinanceOverhaulInvestmentsOverviewMarket

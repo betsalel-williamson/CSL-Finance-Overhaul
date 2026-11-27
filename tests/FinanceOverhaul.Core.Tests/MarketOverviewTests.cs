@@ -143,11 +143,17 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
-        public void OnlyBuiltViewsAreShownAndEachHasATab()
+        public void EveryViewIsBuiltAndEachHasATab()
         {
             Assert.Equal(5, OverviewPages.All.Length);
-            Assert.Equal(OverviewPage.Market, OverviewPages.Shown(OverviewPage.Market));
-            Assert.Equal(OverviewPage.Market, OverviewPages.Shown(OverviewPage.Feed));
+            foreach (OverviewPage page in OverviewPages.All)
+            {
+                Assert.True(OverviewPages.IsBuilt(page));
+                Assert.Equal(page, OverviewPages.Shown(page));
+            }
+
+            // A saved value from a newer or broken settings file falls back to Market.
+            Assert.Equal(OverviewPage.Market, OverviewPages.Shown((OverviewPage)99));
             Assert.Equal("Market", OverviewPages.Tab(OverviewPage.Market));
             Assert.Equal("Feed", OverviewPages.Tab(OverviewPage.Feed));
             Assert.Equal("over 30 days", MarketOverview.OverDays(30));

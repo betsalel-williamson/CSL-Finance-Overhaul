@@ -1,0 +1,280 @@
+using System; // Array
+using System.Collections.Generic; // List
+using ColossalFramework.UI; // UIComponent, UILabel, UIPanel, UITextureSprite
+using FinanceOverhaul.Core; // HeatGrid, HeatTile, HeatmapOverview, MonitorQuote, Strings
+// UnityEngine: Color32, FilterMode, Mathf, Texture2D, TextureFormat, TextureWrapMode, Vector2,
+//   Vector3
+using UnityEngine;
+
+namespace FinanceOverhaul
+{
+    /// <summary>
+    /// The Heatmap view: every stock as a tile coloured from orange (falling) to green
+    /// (rising) by its change today or over 7 or 30 days, the city's holdings outlined in the
+    /// accent, the scale under the tiles. A click on a tile opens the stock's dialog. Order,
+    /// scale and grid come from <see cref="HeatmapOverview"/>.
+    /// </summary>
+    internal sealed partial class InvestmentsOverview
+    {
+        private const float TileGap = 4f;
+        private const float LegendH = 22f;
+        private const int ScaleWidth = 120;
+
+        private UIPanel heatmap;
+        private UILabel heatHeading;
+        private FoToggleTabs heatSpan;
+        private UIPanel heatArea;
+        private readonly List<HeatTileView> heatTiles = new List<HeatTileView>();
+        private UILabel scaleLow;
+        private UILabel scaleHigh;
+        private UITextureSprite scaleBar;
+        private Texture2D scaleTexture;
+
+        /// <summary>The span the heatmap colours by: 1 (today), 7 or 30 days.</summary>
+        private static int HeatSpan
+        {
+            get
+            {
+                return HeatmapOverview.Span(
+                    Mod.Settings == null
+                        ? HeatmapOverview.Today
+                        : Mod.Settings.InvestmentHeatmapDays
+                );
+            }
+            set
+            {
+                if (Mod.Settings != null)
+                {
+                    Mod.Settings.InvestmentHeatmapDays = value;
+                    Mod.SaveSettings();
+                }
+            }
+        }
+
+        private void BuildHeatmap()
+        {
+            heatmap = View("Heatmap");
+            heatHeading = Heading(heatmap, "", Pad, Pad + 2f);
+            heatHeading.name = Name + "HeatmapHeading";
+
+            var labels = new string[HeatmapOverview.Spans.Length];
+            var widths = new float[labels.Length];
+            for (int i = 0; i < labels.Length; i++)
+            {
+                labels[i] = HeatmapOverview.SpanTab(HeatmapOverview.Spans[i]);
+                widths[i] = i == 0 ? 52f : 40f;
+            }
+
+            heatSpan = FoToggleTabs.Add(
+                heatmap,
+                Name + "HeatmapSpan",
+                labels,
+                widths,
+                20f,
+                0.7f,
+                i =>
+                {
+                    HeatSpan = HeatmapOverview.Spans[i];
+                    drawn = null;
+                    Draw();
+                }
+            );
+            heatSpan.Secondary();
+            for (int i = 0; i < labels.Length; i++)
+            {
+                heatSpan[i].name = Name + "HeatmapSpan-" + HeatmapOverview.Spans[i];
+            }
+
+            heatSpan.Panel.relativePosition = new Vector3(heatmap.width - Pad - 132f, Pad);
+
+            heatArea = heatmap.AddUIComponent<UIPanel>();
+            heatArea.name = Name + "HeatmapTiles";
+            heatArea.relativePosition = new Vector3(Pad, Pad + 30f);
+            heatArea.size = new Vector2(
+                heatmap.width - 2f * Pad,
+                heatmap.height - Pad - 30f - Pad - LegendH
+            );
+
+            // The scale: orange … grey … green, its ends in %, and the outline's key.
+            float legendY = heatmap.height - Pad - LegendH + 6f;
+            scaleLow = FoText.Label(heatmap, Name + "HeatmapLow", "", 0.65f, FoTheme.ChartLabel);
+            scaleLow.relativePosition = new Vector3(Pad, legendY);
+            scaleTexture = new Texture2D(ScaleWidth, 1, TextureFormat.ARGB32, false);
+            scaleTexture.filterMode = FilterMode.Bilinear;
+            scaleTexture.wrapMode = TextureWrapMode.Clamp;
+            for (int x = 0; x < ScaleWidth; x++)
+            {
+                scaleTexture.SetPixel(x, 0, FoTheme.Heat(x / (float)(ScaleWidth - 1) * 2f - 1f));
+            }
+
+            scaleTexture.Apply();
+            textures.Add(scaleTexture);
+            scaleBar = heatmap.AddUIComponent<UITextureSprite>();
+            scaleBar.name = Name + "HeatmapScale";
+            scaleBar.texture = scaleTexture;
+            scaleBar.size = new Vector2(ScaleWidth, 8f);
+            scaleBar.isInteractive = false;
+            scaleBar.tooltip = Strings.Get("overview.heatmap.scale");
+            scaleHigh = FoText.Label(heatmap, Name + "HeatmapHigh", "", 0.65f, FoTheme.ChartLabel);
+
+            UILabel heldKey = FoText.Label(
+                heatmap,
+                Name + "HeatmapHeldKey",
+                Strings.Get("overview.heatmap.held"),
+                0.65f,
+                FoTheme.ChartLabel
+            );
+            heldKey.relativePosition = new Vector3(heatmap.width - Pad - heldKey.width, legendY);
+            UIPanel swatch = heatmap.AddUIComponent<UIPanel>();
+            swatch.name = Name + "HeatmapHeldSwatch";
+            swatch.backgroundSprite = "EmptySprite"; // not shown: a game sprite name
+            swatch.color = FoTheme.Accent;
+            swatch.size = new Vector2(12f, 10f);
+            swatch.relativePosition = new Vector3(heldKey.relativePosition.x - 17f, legendY + 1f);
+            swatch.isInteractive = false;
+            UIPanel hole = swatch.AddUIComponent<UIPanel>();
+            hole.backgroundSprite = "EmptySprite"; // not shown: a game sprite name
+            hole.color = FoTheme.HeatFlat;
+            hole.size = new Vector2(8f, 6f);
+            hole.relativePosition = new Vector3(2f, 2f);
+            hole.isInteractive = false;
+        }
+
+        private void DrawHeatmap()
+        {
+            int span = HeatSpan;
+            bool inPoints = pillsInPoints();
+            heatSpan.Choose(Array.IndexOf(HeatmapOverview.Spans, span));
+            heatHeading.text = HeatmapOverview.Heading(span);
+
+            List<HeatTile> tiles = HeatmapOverview.Tiles(quotes, span);
+            HeatGrid grid = HeatmapOverview.Grid(
+                tiles.Count,
+                heatArea.width,
+                heatArea.height,
+                TileGap
+            );
+            while (heatTiles.Count < tiles.Count)
+            {
+                heatTiles.Add(new HeatTileView(heatArea, heatTiles.Count));
+            }
+
+            for (int i = 0; i < heatTiles.Count; i++)
+            {
+                if (i >= tiles.Count)
+                {
+                    heatTiles[i].Hide();
+                    continue;
+                }
+
+                int col = i % Mathf.Max(1, grid.Columns);
+                int row = i / Mathf.Max(1, grid.Columns);
+                heatTiles[i]
+                    .Show(
+                        tiles[i],
+                        HeatmapOverview.TileText(tiles[i], inPoints),
+                        new Vector3(
+                            col * (grid.TileWidth + TileGap),
+                            row * (grid.TileHeight + TileGap)
+                        ),
+                        new Vector2(grid.TileWidth, grid.TileHeight)
+                    );
+            }
+
+            float scale = HeatmapOverview.Scale(tiles);
+            float legendY = heatmap.height - Pad - LegendH + 6f;
+            scaleLow.text = HeatmapOverview.ScaleEnd(scale, false);
+            scaleBar.relativePosition = new Vector3(Pad + scaleLow.width + 6f, legendY + 2f);
+            scaleHigh.text = HeatmapOverview.ScaleEnd(scale, true);
+            scaleHigh.relativePosition = new Vector3(
+                scaleBar.relativePosition.x + ScaleWidth + 6f,
+                legendY
+            );
+        }
+
+        /// <summary>One tile: its heat colour, an accent outline when held, symbol and change.</summary>
+        private sealed class HeatTileView
+        {
+            private const float Outline = 2f;
+
+            private readonly UIPanel back;
+            private readonly UIPanel face;
+            private readonly UILabel symbol;
+            private readonly UILabel change;
+            private MonitorQuote quote;
+
+            public HeatTileView(UIComponent parent, int index)
+            {
+                string name = Name + "Heat-" + index;
+                back = parent.AddUIComponent<UIPanel>();
+                back.name = name;
+                back.backgroundSprite = "GenericPanelWhite";
+                back.eventClick += (c, p) => OpenDialog(quote);
+                face = back.AddUIComponent<UIPanel>();
+                face.name = name + "Face";
+                face.backgroundSprite = "GenericPanelWhite";
+                face.isInteractive = false;
+                symbol = FoText.Label(face, name + "Symbol", "", 0.8f, FoTheme.GameText);
+                symbol.isInteractive = false;
+                change = FoText.Label(face, name + "Change", "", 0.7f, FoTheme.GameText);
+                change.isInteractive = false;
+            }
+
+            public void Show(HeatTile tile, string text, Vector3 at, Vector2 size)
+            {
+                quote = tile.Quote;
+                back.isVisible = true;
+                // Named for the scenarios: the tile of a stock is found by its symbol.
+                back.name = Name + "Heat-" + tile.Quote.Symbol;
+                back.relativePosition = at;
+                back.size = size;
+                Color32 colour = tile.Locked ? FoTheme.SectionFill : FoTheme.Heat(tile.Heat);
+                back.color = tile.Held ? FoTheme.Accent : colour;
+                face.color = colour;
+                float inset = tile.Held ? Outline : 0f;
+                face.relativePosition = new Vector3(inset, inset);
+                face.size = new Vector2(size.x - 2f * inset, size.y - 2f * inset);
+                back.tooltip = HeatmapOverview.Tip(tile);
+
+                Color32 ink = tile.Locked ? FoTheme.TextMuted : FoTheme.GameText;
+                symbol.textColor = ink;
+                change.textColor = ink;
+                symbol.text = tile.Quote.Symbol;
+                change.text = text;
+                // Both lines when they fit, else the symbol alone; centred, shrunk to the width.
+                float room = face.width - 6f;
+                symbol.textScale = 0.8f;
+                change.textScale = 0.7f;
+                if (symbol.width > room)
+                {
+                    symbol.textScale = Mathf.Max(0.5f, 0.8f * room / symbol.width);
+                }
+
+                if (change.width > room)
+                {
+                    change.textScale = Mathf.Max(0.5f, 0.7f * room / change.width);
+                }
+
+                bool both = face.height >= symbol.height + change.height + 2f;
+                change.isVisible = both;
+                float top = both
+                    ? (face.height - symbol.height - change.height) / 2f
+                    : (face.height - symbol.height) / 2f;
+                symbol.relativePosition = new Vector3(
+                    Mathf.Round((face.width - symbol.width) / 2f),
+                    Mathf.Round(top)
+                );
+                change.relativePosition = new Vector3(
+                    Mathf.Round((face.width - change.width) / 2f),
+                    Mathf.Round(top + symbol.height)
+                );
+            }
+
+            public void Hide()
+            {
+                back.isVisible = false;
+                quote = null;
+            }
+        }
+    }
+}
