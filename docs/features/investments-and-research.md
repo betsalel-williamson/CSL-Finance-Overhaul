@@ -153,11 +153,13 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
   30D range are kept in the settings (`InvestmentOverviewPage`, `InvestmentOverviewDays`). The views
   come one at a time from the Stitch designs (Figma band 20, "Two columns"), redrawn in the game's
   panel art and `FoTheme`:
-  1. **Market overview** (built): the market index (`MarketOverview.Index`: every stock on sale
-     rebased to 100 on the first day shown and averaged, each counted equally; a stock listed later
-     joins on its first day), its change over the range, a 7D | 30D chart with its high and low,
-     today's top three gainers and losers (a click opens the stock's dialog) and "9 up · 6 down · 1
-     flat".
+  1. **Market overview** (built): the market index. With the city index fund listed it is IDX itself
+     ("Market index (IDX)", its price in ₡, its 7D | 30D chart, high and low), so the view and the
+     fund always agree. Without the fund, `MarketOverview.Index` rebuilds the fund's rule from the
+     members' prices starting at 100 (each day the geometric mean of their daily price ratios, each
+     capped at a halving or a doubling: `CityIndexBasket.TryComputeChainedMark`). Also today's top
+     three gainers and losers (a click opens the stock's dialog) and "6 up · 9 down · 0 flat"; IDX
+     itself is left out of the movers and the count.
   2. Portfolio dashboard, 3. heatmap, 4. city and market, 5. market desk feed: designed, not built.
      Later, a click on a stock shows its trade in this column instead of the dialog.
 - **Hover:** over a stock's 30-day line the game's own stock tooltip opens with its large "Share

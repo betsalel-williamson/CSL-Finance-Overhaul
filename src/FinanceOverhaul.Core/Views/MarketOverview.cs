@@ -76,48 +76,63 @@ namespace FinanceOverhaul.Core
             return q != null && !q.Locked && q.History != null;
         }
 
+        /// <summary>The city index fund (IDX) when it is listed and has a history, else null.</summary>
+        public static MonitorQuote IndexFund(IEnumerable<MonitorQuote> quotes)
+        {
+            foreach (MonitorQuote q in quotes ?? new List<MonitorQuote>())
+            {
+                if (q != null && q.History != null && CityIndexBasket.IsIndexName(q.Prefab))
+                {
+                    return q;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>A stock the market's breadth, movers and index count: on sale and not IDX itself.</summary>
+        private static bool Member(MonitorQuote q)
+        {
+            return Counts(q) && !CityIndexBasket.IsIndexName(q.Prefab);
+        }
+
         /// <summary>
-        /// The market index over the last <paramref name="days"/> days: each stock on sale
-        /// rebased to <see cref="IndexBase"/> on its first price in the range and all of them
-        /// averaged, each counted equally (a ₡97,000 stock moves it no more than a ₡50 one). The
-        /// days line up from today backwards; a day no stock has a price for is NaN. Empty when
-        /// no stock has two prices.
+        /// The market over the last <paramref name="days"/> days, oldest first. With the city
+        /// index fund listed it is the fund's own daily prices (the chart matches IDX's). Without
+        /// it, the fund's rule rebuilt from the members' prices, starting at
+        /// <see cref="IndexBase"/>: each day the level moves by the geometric mean of the
+        /// members' price ratios, each capped at a halving or a doubling
+        /// (<see cref="CityIndexBasket.TryComputeChainedMark"/>); a stock listed later joins on
+        /// its second day. Empty when there are fewer than two days.
         /// </summary>
         public static float[] Index(IEnumerable<MonitorQuote> quotes, int days)
         {
+            MonitorQuote fund = IndexFund(quotes);
+            if (fund != null)
+            {
+                float[] own = StockDetail.Range(fund.History, days);
+                return own.Length < 2 ? new float[0] : own;
+            }
+
+            var names = new List<string>();
             var ranges = new List<float[]>();
             int longest = 0;
             foreach (MonitorQuote q in quotes ?? new List<MonitorQuote>())
             {
-                if (!Counts(q))
+                if (!Member(q))
                 {
                     continue;
                 }
 
                 float[] range = StockDetail.Range(q.History, days);
-                float first = float.NaN;
-                foreach (float v in range)
-                {
-                    if (Usable(v))
-                    {
-                        first = v;
-                        break;
-                    }
-                }
-
-                if (float.IsNaN(first))
+                if (range.Length == 0)
                 {
                     continue;
                 }
 
-                var rebased = new float[range.Length];
-                for (int i = 0; i < range.Length; i++)
-                {
-                    rebased[i] = Usable(range[i]) ? range[i] / first * IndexBase : float.NaN;
-                }
-
-                ranges.Add(rebased);
-                longest = Math.Max(longest, rebased.Length);
+                names.Add(q.Prefab ?? q.Symbol);
+                ranges.Add(range);
+                longest = Math.Max(longest, range.Length);
             }
 
             if (longest < 2)
@@ -126,30 +141,39 @@ namespace FinanceOverhaul.Core
             }
 
             var index = new float[longest];
-            for (int d = 0; d < longest; d++)
+            index[0] = IndexBase;
+            var eligible = new List<bool>();
+            foreach (string unused in names)
             {
-                double sum = 0;
-                int n = 0;
+                eligible.Add(true);
+            }
+
+            for (int d = 1; d < longest; d++)
+            {
+                var last = new List<float>();
+                var previous = new List<float>();
                 foreach (float[] r in ranges)
                 {
                     // Line up at today: the last value of every range is the same day.
                     int i = d - (longest - r.Length);
-                    if (i >= 0 && !float.IsNaN(r[i]))
-                    {
-                        sum += r[i];
-                        n++;
-                    }
+                    last.Add(i >= 1 ? r[i] : float.NaN);
+                    previous.Add(i >= 1 ? r[i - 1] : float.NaN);
                 }
 
-                index[d] = n == 0 ? float.NaN : (float)(sum / n);
+                float mark;
+                index[d] = CityIndexBasket.TryComputeChainedMark(
+                    index[d - 1],
+                    names,
+                    last,
+                    previous,
+                    eligible,
+                    out mark
+                )
+                    ? mark
+                    : index[d - 1];
             }
 
             return index;
-        }
-
-        private static bool Usable(float v)
-        {
-            return !float.IsNaN(v) && !float.IsInfinity(v) && v > 0f;
         }
 
         /// <summary>The index's change over the range, in percent (0 when it has too few days).</summary>
@@ -186,7 +210,7 @@ namespace FinanceOverhaul.Core
             var movers = new List<MonitorQuote>();
             foreach (MonitorQuote q in quotes ?? new List<MonitorQuote>())
             {
-                if (!Counts(q) || Math.Abs(q.ChangeRate) < FlatPercent)
+                if (!Member(q) || Math.Abs(q.ChangeRate) < FlatPercent)
                 {
                     continue;
                 }
@@ -224,7 +248,7 @@ namespace FinanceOverhaul.Core
                 flat = 0;
             foreach (MonitorQuote q in quotes ?? new List<MonitorQuote>())
             {
-                if (!Counts(q))
+                if (!Member(q))
                 {
                     continue;
                 }
@@ -251,10 +275,28 @@ namespace FinanceOverhaul.Core
             );
         }
 
-        /// <summary>"104.2": the index's value as shown.</summary>
-        public static string IndexText(float value)
+        /// <summary>
+        /// The index's value as shown: the fund's price ("₡3,056") when it is listed, else the
+        /// rebuilt level ("104.2").
+        /// </summary>
+        public static string IndexText(float value, bool fund)
         {
-            return float.IsNaN(value) ? "--" : value.ToString("0.0", CultureInfo.InvariantCulture);
+            if (float.IsNaN(value))
+            {
+                return "--";
+            }
+
+            return fund
+                ? StockMonitor.PriceText(value)
+                : value.ToString("0.0", CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>"Market index (IDX)" with the fund listed, else "Market index".</summary>
+        public static string IndexLabel(MonitorQuote fund)
+        {
+            return fund == null
+                ? Strings.Get("overview.market.index")
+                : Strings.Format("overview.market.indexFund", fund.Symbol);
         }
 
         /// <summary>"+4.2% over 30 days".</summary>

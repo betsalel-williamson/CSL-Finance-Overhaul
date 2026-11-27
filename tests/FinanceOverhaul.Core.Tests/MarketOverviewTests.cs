@@ -1,5 +1,6 @@
 using System.Collections.Generic; // List
-using FinanceOverhaul.Core; // MarketOverview, MonitorQuote, OverviewPage, OverviewPages
+// FinanceOverhaul.Core: CityIndexBasket, MarketOverview, MonitorQuote, OverviewPage, OverviewPages
+using FinanceOverhaul.Core;
 using Xunit; // Assert, FactAttribute
 
 namespace FinanceOverhaul.Core.Tests
@@ -24,31 +25,58 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
-        public void TheIndexCountsEveryStockOnSaleEquallyFrom100()
+        public void WithTheIndexFundListedTheIndexIsTheFundsOwnChart()
         {
-            var quotes = new List<MonitorQuote>
-            {
-                // ₡10 → ₡20 (+100%) and ₡1,000 → ₡1,000 (flat): the index ends at 150, not near 101.
-                Q("A", 1f, new[] { 10f, 15f, 20f }),
-                Q("B", 0f, new[] { 1000f, 1000f, 1000f }),
-                Q("L", 5f, new[] { 1f, 50f, 99f }, locked: true),
-            };
-            float[] index = MarketOverview.Index(quotes, 30);
-            Assert.Equal(new[] { 100f, 125f, 150f }, index);
-            Assert.Equal(50f, MarketOverview.RangeChange(index), 3);
+            var fund = Q("IDX", 0.4f, new[] { 3000f, 3050f, 3056f });
+            fund.Prefab = CityIndexBasket.IndexName;
+            var quotes = new List<MonitorQuote> { Q("A", 1f, new[] { 10f, 15f, 20f }), fund };
+            Assert.Same(fund, MarketOverview.IndexFund(quotes));
+            Assert.Equal(new[] { 3050f, 3056f }, MarketOverview.Index(quotes, 2));
+            Assert.Equal("Market index (IDX)", MarketOverview.IndexLabel(fund));
+            Assert.Equal("Market index", MarketOverview.IndexLabel(null));
+            Assert.Equal("104.2", MarketOverview.IndexText(104.24f, false));
         }
 
         [Fact]
-        public void AStockListedLaterJoinsTheIndexOnItsFirstDayAtTheSameDay()
+        public void WithoutTheFundTheIndexFollowsTheFundsRuleTheGeometricMeanOfDailyMoves()
+        {
+            var quotes = new List<MonitorQuote>
+            {
+                // A doubles, B halves each day: their geometric mean is 1, the index stays at 100
+                // (a plain average of rebased prices would climb to 212.5).
+                Q("A", 1f, new[] { 10f, 20f, 40f }),
+                Q("B", -1f, new[] { 1000f, 500f, 250f }),
+                Q("L", 5f, new[] { 1f, 50f, 99f }, locked: true),
+            };
+            float[] index = MarketOverview.Index(quotes, 30);
+            Assert.Equal(3, index.Length);
+            foreach (float v in index)
+            {
+                Assert.Equal(100f, v, 3);
+            }
+
+            // One member up 21% over two days (10% a day): the level moves by the same rule.
+            float[] one = MarketOverview.Index(
+                new List<MonitorQuote> { Q("A", 1f, new[] { 100f, 110f, 121f }) },
+                30
+            );
+            Assert.Equal(121f, one[2], 2);
+            Assert.Equal(21f, MarketOverview.RangeChange(one), 2);
+        }
+
+        [Fact]
+        public void AStockListedLaterJoinsTheIndexWithoutAJump()
         {
             var quotes = new List<MonitorQuote>
             {
                 Q("A", 0f, new[] { 10f, 10f, 10f, 10f }),
-                // Listed two days ago (NaN before): its first price counts as 100 that day.
+                // Listed two days ago: its first price moves nothing, its next day counts.
                 Q("NEW", 0f, new[] { float.NaN, float.NaN, 50f, 100f }),
             };
             float[] index = MarketOverview.Index(quotes, 30);
-            Assert.Equal(new[] { 100f, 100f, 100f, 150f }, index);
+            Assert.Equal(100f, index[2], 3);
+            // Mean of ln(1) and ln(2): ×√2.
+            Assert.Equal(141.42f, index[3], 1);
         }
 
         [Fact]

@@ -54,9 +54,10 @@ namespace FinanceOverhaul.Core
             { "overview.tab.Feed", "Feed" },
             { "overview.tab.later", "Not built yet" },
             { "overview.market.index", "Market index" },
+            { "overview.market.indexFund", "Market index ({0})" },
             {
                 "overview.market.indexTip",
-                "Every stock on sale, each counted equally: 100 is its price on the first day shown."
+                "Every stock on sale, each counted equally, as the city index fund counts them: each day it moves by their average move."
             },
             { "overview.market.rangeChange", "{0} over {1} days" },
             { "overview.market.gainers", "Top gainers today" },

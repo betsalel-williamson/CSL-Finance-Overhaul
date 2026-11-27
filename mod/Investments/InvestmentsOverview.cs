@@ -37,6 +37,7 @@ namespace FinanceOverhaul
 
         // Market page
         private readonly UIPanel market;
+        private readonly UILabel indexKey;
         private readonly UILabel indexValue;
         private readonly UILabel indexChange;
         private readonly FoToggleTabs range;
@@ -144,15 +145,14 @@ namespace FinanceOverhaul
             market.relativePosition = Vector3.zero;
             float w = body.width - 2f * Pad;
 
-            FoText
-                .Label(
-                    market,
-                    Name + "MarketIndexKey",
-                    Strings.Get("overview.market.index"),
-                    0.75f,
-                    FoTheme.GameDialogBody
-                )
-                .relativePosition = new Vector3(Pad, Pad);
+            indexKey = FoText.Label(
+                market,
+                Name + "MarketIndexKey",
+                Strings.Get("overview.market.index"),
+                0.75f,
+                FoTheme.GameDialogBody
+            );
+            indexKey.relativePosition = new Vector3(Pad, Pad);
             indexValue = FoText.Label(market, Name + "MarketIndex", "", 1.4f, FoTheme.GameText);
             indexValue.relativePosition = new Vector3(Pad, Pad + 16f);
             indexValue.tooltip = Strings.Get("overview.market.indexTip");
@@ -315,6 +315,10 @@ namespace FinanceOverhaul
         private void DrawMarket(int days)
         {
             range.Choose(days == StockDetail.ShortRange ? 0 : 1);
+            // With the city index fund listed this is IDX's own chart, in ₡.
+            MonitorQuote fund = MarketOverview.IndexFund(quotes);
+            bool inMoney = fund != null;
+            indexKey.text = MarketOverview.IndexLabel(fund);
             float[] index = MarketOverview.Index(quotes, days);
             float last = float.NaN;
             for (int i = index.Length - 1; i >= 0 && float.IsNaN(last); i--)
@@ -322,7 +326,7 @@ namespace FinanceOverhaul
                 last = index[i];
             }
 
-            indexValue.text = MarketOverview.IndexText(last);
+            indexValue.text = MarketOverview.IndexText(last, inMoney);
             float change = MarketOverview.RangeChange(index);
             indexChange.text = MarketOverview.RangeChangeText(change, days);
             int sign = Math.Sign(Math.Round(change * 10f));
@@ -342,11 +346,11 @@ namespace FinanceOverhaul
             FoSparkline.Draw(chartTexture, index, line, ChartScale + 1);
             chartHigh.text = Strings.Format(
                 "overview.market.high",
-                MarketOverview.IndexText(StockDetail.High(index))
+                MarketOverview.IndexText(StockDetail.High(index), inMoney)
             );
             chartLow.text = Strings.Format(
                 "overview.market.low",
-                MarketOverview.IndexText(StockDetail.Low(index))
+                MarketOverview.IndexText(StockDetail.Low(index), inMoney)
             );
             chartLow.relativePosition = new Vector3(8f, ChartH - chartLow.height - 2f);
             chartStart.text = Strings.Format("overview.market.daysAgo", days.ToString());
