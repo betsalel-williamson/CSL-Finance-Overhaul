@@ -136,14 +136,32 @@ namespace FinanceOverhaul
             sideTabs = FoToggleTabs.AddEven(
                 sides,
                 TabPrefix + "Side",
-                new[] { Strings.Get("investments.buy"), Strings.Get("investments.sell") },
+                new[]
+                {
+                    Strings.Get("investments.buy"),
+                    Strings.Get("investments.sell"),
+                    Strings.Get("investments.chirps"),
+                },
                 new Vector2(dark.width - 52f, 34f),
                 1f,
-                i => SwitchSide(i == 0)
+                i =>
+                {
+                    // Chirps keeps the side as it is; Buy or Sell brings the trade back first.
+                    if (i == 2)
+                    {
+                        ShowChirps(true);
+                        return;
+                    }
+
+                    ShowChirps(false);
+                    SwitchSide(i == 0);
+                }
             );
             sideTabs.Panel.relativePosition = new Vector3(26f, 6f);
             sideTabs[0].name = TabPrefix + "SideBuy";
             sideTabs[1].name = TabPrefix + "SideSell";
+            sideTabs[2].name = TabPrefix + "SideChirps";
+            sideTabs[2].tooltip = Strings.Get("chirps.tip");
 
             // Tabs row above the share amount; one button per (mode, kind).
             tabs = dark.AddUIComponent<UIPanel>();
@@ -235,6 +253,7 @@ namespace FinanceOverhaul
             tabs.zOrder = slider.zOrder;
             sides.zOrder = tabs.zOrder;
             pricePanel.zOrder = slider.zOrder + 1;
+            BuildChirps();
             BuildInfo(root);
             ModLog.Info("order ticket: attached (buy and sell order types)");
         }
@@ -246,6 +265,7 @@ namespace FinanceOverhaul
         /// </summary>
         private static void ResetForShow()
         {
+            ShowChirps(false); // a fresh open starts on the trade
             active = null;
             ApplyVanillaButtonLabel();
             RepairPriceLabel();
@@ -296,7 +316,11 @@ namespace FinanceOverhaul
                 byte shown = (byte)IdField.GetValue(owner);
                 bool canSell = Owned(shown) > 0;
                 bool canBuy = Available(shown) > 0;
-                sideTabs.Choose(buy ? 0 : 1);
+                sideTabs.Choose(
+                    chirpsShown ? 2
+                    : buy ? 0
+                    : 1
+                );
                 sideTabs.SetEnabled(0, canBuy || buy, Strings.Get("order.side.buyNone"));
                 sideTabs.SetEnabled(1, canSell || !buy, Strings.Get("order.side.sellNone"));
             }
@@ -328,7 +352,8 @@ namespace FinanceOverhaul
         /// </summary>
         private static void Relayout()
         {
-            if (dark == null || owner == null)
+            // While the chirps show, the trade stays folded away (Buy or Sell lays it out again).
+            if (dark == null || owner == null || chirpsShown)
             {
                 return;
             }
@@ -416,7 +441,7 @@ namespace FinanceOverhaul
 
         private static void RemoveStale(UIComponent parent)
         {
-            UiCleanup.RemoveChildrenNamed(parent, TabsName, SidesName, PriceName);
+            UiCleanup.RemoveChildrenNamed(parent, TabsName, SidesName, PriceName, ChirpsName);
         }
 
         private static void Destroy(UIComponent c)

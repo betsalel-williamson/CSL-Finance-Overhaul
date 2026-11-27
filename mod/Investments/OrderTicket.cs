@@ -474,6 +474,7 @@ namespace FinanceOverhaul
         {
             try
             {
+                ShowChirps(false); // the trade back first, so the height comes back as it grew
                 DetachInfo();
                 SetKind(null);
                 if (dark != null && addedHeight != 0f)
@@ -489,6 +490,9 @@ namespace FinanceOverhaul
             Destroy(tabs);
             Destroy(sides);
             Destroy(pricePanel);
+            Destroy(chirps);
+            chirps = null;
+            chirpList = null;
             foreach (Tab t in AllTabs)
             {
                 t.Button = null;

@@ -138,6 +138,19 @@ wait 1
 expect-chirper Test fill: bought 10 FOTEST
 capture investments-overview-feed-chirp
 chirper close
+# the Invest dialog's Chirps tab (after Buy | Sell): the chirps in place of the trade, Buy brings it back
+show-buy any
+wait 1
+click FinanceOverhaulOrderTab-SideChirps
+wait 0.8
+expect-visible FinanceOverhaulOrderChirps
+expect-hidden FinanceOverhaulOrderTabs
+capture invest-dialog-chirps
+click FinanceOverhaulOrderTab-SideBuy
+wait 0.8
+expect-hidden FinanceOverhaulOrderChirps
+expect-visible FinanceOverhaulOrderTabs
+close-dialog
 click FinanceOverhaulInvestmentsOverviewTab-Market
 wait 0.5
 expect-visible FinanceOverhaulInvestmentsOverviewMarket
@@ -205,6 +218,7 @@ expect-visible OwnedInvestmentsPanel
 expect-visible OwnedInvestmentsSummaryPanel
 expect-hidden FinanceOverhaulInvestmentsList
 cleanup:
+close-dialog
 chirper close
 overview-orders off
 monitor restore

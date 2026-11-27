@@ -154,6 +154,13 @@ namespace FinanceOverhaul.Core
             { "overview.city.rule.None", "Set by its own rules" },
             { "overview.feed.upcoming", "Coming up" },
             { "overview.feed.lately", "Lately" },
+            { "investments.chirps", "Chirps" },
+            { "chirps.none", "No chirps about this stock yet." },
+            { "chirps.recently", "Recently" },
+            {
+                "chirps.tip",
+                "What Chirper said about this stock lately: the city's own chirps and the mod's notices"
+            },
             { "overview.feed.openChirp", "Click: open it in the Chirper" },
             {
                 "overview.feed.nothingLately",

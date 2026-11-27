@@ -579,13 +579,17 @@ namespace FinanceOverhaul
                     continue;
                 }
 
+                // "any": the first stock on sale (a scenario that needs some stock, not one).
                 if (
-                    info.name == symbol
-                    || string.Equals(
-                        StockSymbols.For(info),
-                        symbol,
-                        StringComparison.OrdinalIgnoreCase
-                    )
+                    symbol == "any"
+                        ? info.m_investmentAI != null
+                            && info.m_investmentAI.IsAvailable((byte)i, ref buffer[i])
+                        : info.name == symbol
+                            || string.Equals(
+                                StockSymbols.For(info),
+                                symbol,
+                                StringComparison.OrdinalIgnoreCase
+                            )
                 )
                 {
                     return i;

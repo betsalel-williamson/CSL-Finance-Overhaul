@@ -3,7 +3,7 @@ using ColossalFramework.UI; // UIComponent, UIKeyEventParameter, UISlider, UITex
 using HarmonyLib; // AccessTools
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
-//   ChirpPanel, EconomyManager, EconomyPanel, GameKeyShortcuts, InvestmentTooltip,
+//   ChirpPanel, EconomyManager, EconomyPanel, GameKeyShortcuts, InvestmentTooltip, MessageManager,
 //   OptionsMainPanel
 
 namespace FinanceOverhaul
@@ -183,6 +183,12 @@ namespace FinanceOverhaul
             public static readonly FieldInfo Container = AccessTools.Field(
                 typeof(ChirpPanel),
                 "m_Container"
+            );
+
+            /// <summary>The game's last 16 messages (saved with the city), newest not first.</summary>
+            public static readonly FieldInfo RecentMessages = AccessTools.Field(
+                typeof(MessageManager),
+                "m_recentMessages"
             );
         }
 

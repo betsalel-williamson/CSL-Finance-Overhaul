@@ -231,6 +231,12 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
   own set-up for that side, with that side's order types (Buy now, Limit / Sell now, Stop-loss,
   Take-profit, Trailing stop). Sell is disabled, with a tooltip, when the city holds none. This
   works for the game's own lists too.
+- **Chirps in the dialog (2026-11-27):** a third tab after Buy | Sell, Chirps, shows what Chirper
+  said about the stock lately in place of the trade (the side stays as it was; Buy or Sell brings
+  the trade back, and the dialog keeps its size): the mod's notices about it this session (fills,
+  expiries, company news, newest first) and the game's own rising and falling chirps still in its
+  last 16 messages ("Recently"; the game keeps no day for them). `StockChirps` in the library,
+  `OrderTicket.Chirps` in the mod.
 - **Tab groups everywhere a choice is one of several (2026-11-25):** Kit `FoToggleTabs`, Figma
   FO/ToggleTabs: drawn exactly as the game's own tab strip at the top of the Economy panel (Taxes ·
   Budget · Loans · Investments): tabs joined edge to edge in the game's tab art, white text, the

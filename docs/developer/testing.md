@@ -22,53 +22,54 @@ npm run test:game              # game UI scenarios (running game, --dev build)
 
 `scripts/game-ui-test.sh` copies each `tests/game-ui/*.uitest` script into the mod's
 `FinanceOverhaul.uitest` trigger; the mod (`UiTestRunner`, `--dev` only) drives the real UI —
-`show-buy`, `click`, `type` (focus, type, tab out), `run-days`, `set-flag <OrderKind|all> on|off`
-(same as ticking an order type's Options checkbox), `monitor-compact on|off` (the Compact rows
-setting), `monitor open|close` (sets the Stock Monitor window outright, never toggling a player's
-window), `monitor remember|restore` (snapshot and put back the player's monitor settings),
-`log-symbols` (logs every stock prefab with its ticker symbol and any clash), `info-view MODE` /
-`info-view-swap MODE shown|hidden` (switch the info view; the swap variant checks the boards inside
-the game's switch event), `live-ticker on|off`, `pause on|off` (a later scenario must resume),
-`expect-ticker-full`, `ticker-in-info-views on|off`, `expect-ticker shown|hidden`,
-`ticker-shows percent|price|restore`, `ticker-brightness LEVEL|restore` (all put the player's
-choices back), `bonds-section show|auto` (shows the Loans tab's City bonds section and allows
-selling with the flag off), `bonds-term YEARS` / `bonds-amount TEXT` (fill the section), `$bond`
-(the newest bond the scenario sold), `bond-finances` (logs debt and annual income used for bond
-pricing; `bond-finances DEBT INCOME` fixes them in whole ₡ until the scenario ends, the bond
-counterpart of the test stock; `bond-finances real` undoes it), `issue-bond YEARS FACE` (sells a
-bond, simulation paused; cash must rise by exactly the face), `bond-backdate DAYS` and
-`expect-bond-coupons N` (the scenario's newest bond), `away DAYS` (pretends the mod was off: the
-scenario's bonds miss DAYS of payments and the bookmark goes back),
-`stress-stocks add N|fill TOTAL|slots|clear`, `stress-measure SECONDS`, `stress-panel`,
-`scroll-investments bottom` and `count-investment-rows` (dev many-stocks test, scenario 51: test
-save with the dev test stock option; never overwrites a held investment), `welcome-back pay|skip`
-and `expect-welcome-back shown|hidden` (scenarios 48–49), `redeem-new-bonds` (cleanup: repays the
-scenario's own bonds — scenario 37), `money-probe AMOUNT` (adds AMOUNT cents through the loan-taken
-budget line and fetches it back, simulation paused; fails unless cash ends where it began — scenario
-36), `hover CONTROL FX FY` / `hover off` (a simulated mouse at that fraction of a control, for the
-Stock Monitor hover), `log-basket` (every investment's daily history, for auditing the Index math
-offline), `inspect-parents CONTROL` (a control and every parent: absolute box, background, clipping
-— for measuring vanilla UI), `inspect CONTROL` (one control: box, text, colour, text colour, font
-and scale, and the opacity it is drawn with), `game-colors [expect]` (logs the game's own gain, loss
-and value colours from the Economy panel; with `expect`, fails unless the theme's copies match —
-scenario 53), `log-fonts` (every UI font the game has loaded), `keys CONTROL TOKEN…` (real key
-presses through the field's own key handling, one a frame: a character types it; `home`, `end`,
-`left`, `right`, `backspace`, `delete` press that key), `blur CONTROL` and `expect-caret CONTROL N`
-(scenarios 57–58: typing regroups thousands), `turn-exchange DEGREES|restore` and
-`expect-ticker-on-building` (turns the first Stock Exchange where it stands and checks the live
-boards stand on it — scenario 55), `duplicate-alert preview|close` (shows the "switched on twice"
-dialog for every installed copy without changing anything, or closes it with No; needs a second copy
-installed), `duplicate-alert live|end|busy|escape|expect-ours|expect-not-ours` (the real check as a
-rehearsal over every installed copy, answers logged and nothing switched off; another question on
-the game's Yes / No dialog; Escape; what the dialog asks — scenario 73), `game-escape` (runs the
-game's own Esc handling, as the key would — scenario 60), `cash-set ₡`, `cash-restore`,
-`expect-cash ₡` and `bond-pay-due` (with the simulation paused by `pause on`: set the city's cash
-outright, put back what was taken, check the cash to the cent, and run the daily bond step now —
-scenario 61), `local-ipos on|off|restore`, `ipo-healthy-days N`, `ipo-forget`, `ipo-scan` (reads
-every zoned business now and logs each kind's squares, top-level buildings, candidates, slots and
-why businesses fail the health check, and every business's jobs and workers per kind), `ipo-workers`
-(a full count of jobs and workers today: zoned kinds by building type, every industry building with
-its area, every unique factory) and `expect-ipo-candidates none|some` (scenario 64), `ipo-list-now`,
+`show-buy NAME|any` (`any`: the first stock on sale), `click`, `type` (focus, type, tab out),
+`run-days`, `set-flag <OrderKind|all> on|off` (same as ticking an order type's Options checkbox),
+`monitor-compact on|off` (the Compact rows setting), `monitor open|close` (sets the Stock Monitor
+window outright, never toggling a player's window), `monitor remember|restore` (snapshot and put
+back the player's monitor settings), `log-symbols` (logs every stock prefab with its ticker symbol
+and any clash), `info-view MODE` / `info-view-swap MODE shown|hidden` (switch the info view; the
+swap variant checks the boards inside the game's switch event), `live-ticker on|off`, `pause on|off`
+(a later scenario must resume), `expect-ticker-full`, `ticker-in-info-views on|off`,
+`expect-ticker shown|hidden`, `ticker-shows percent|price|restore`,
+`ticker-brightness LEVEL|restore` (all put the player's choices back), `bonds-section show|auto`
+(shows the Loans tab's City bonds section and allows selling with the flag off), `bonds-term YEARS`
+/ `bonds-amount TEXT` (fill the section), `$bond` (the newest bond the scenario sold),
+`bond-finances` (logs debt and annual income used for bond pricing; `bond-finances DEBT INCOME`
+fixes them in whole ₡ until the scenario ends, the bond counterpart of the test stock;
+`bond-finances real` undoes it), `issue-bond YEARS FACE` (sells a bond, simulation paused; cash must
+rise by exactly the face), `bond-backdate DAYS` and `expect-bond-coupons N` (the scenario's newest
+bond), `away DAYS` (pretends the mod was off: the scenario's bonds miss DAYS of payments and the
+bookmark goes back), `stress-stocks add N|fill TOTAL|slots|clear`, `stress-measure SECONDS`,
+`stress-panel`, `scroll-investments bottom` and `count-investment-rows` (dev many-stocks test,
+scenario 51: test save with the dev test stock option; never overwrites a held investment),
+`welcome-back pay|skip` and `expect-welcome-back shown|hidden` (scenarios 48–49), `redeem-new-bonds`
+(cleanup: repays the scenario's own bonds — scenario 37), `money-probe AMOUNT` (adds AMOUNT cents
+through the loan-taken budget line and fetches it back, simulation paused; fails unless cash ends
+where it began — scenario 36), `hover CONTROL FX FY` / `hover off` (a simulated mouse at that
+fraction of a control, for the Stock Monitor hover), `log-basket` (every investment's daily history,
+for auditing the Index math offline), `inspect-parents CONTROL` (a control and every parent:
+absolute box, background, clipping — for measuring vanilla UI), `inspect CONTROL` (one control: box,
+text, colour, text colour, font and scale, and the opacity it is drawn with), `game-colors [expect]`
+(logs the game's own gain, loss and value colours from the Economy panel; with `expect`, fails
+unless the theme's copies match — scenario 53), `log-fonts` (every UI font the game has loaded),
+`keys CONTROL TOKEN…` (real key presses through the field's own key handling, one a frame: a
+character types it; `home`, `end`, `left`, `right`, `backspace`, `delete` press that key),
+`blur CONTROL` and `expect-caret CONTROL N` (scenarios 57–58: typing regroups thousands),
+`turn-exchange DEGREES|restore` and `expect-ticker-on-building` (turns the first Stock Exchange
+where it stands and checks the live boards stand on it — scenario 55),
+`duplicate-alert preview|close` (shows the "switched on twice" dialog for every installed copy
+without changing anything, or closes it with No; needs a second copy installed),
+`duplicate-alert live|end|busy|escape|expect-ours|expect-not-ours` (the real check as a rehearsal
+over every installed copy, answers logged and nothing switched off; another question on the game's
+Yes / No dialog; Escape; what the dialog asks — scenario 73), `game-escape` (runs the game's own Esc
+handling, as the key would — scenario 60), `cash-set ₡`, `cash-restore`, `expect-cash ₡` and
+`bond-pay-due` (with the simulation paused by `pause on`: set the city's cash outright, put back
+what was taken, check the cash to the cent, and run the daily bond step now — scenario 61),
+`local-ipos on|off|restore`, `ipo-healthy-days N`, `ipo-forget`, `ipo-scan` (reads every zoned
+business now and logs each kind's squares, top-level buildings, candidates, slots and why businesses
+fail the health check, and every business's jobs and workers per kind), `ipo-workers` (a full count
+of jobs and workers today: zoned kinds by building type, every industry building with its area,
+every unique factory) and `expect-ipo-candidates none|some` (scenario 64), `ipo-list-now`,
 `ipo-first-day`, `ipo-buyout`, `expect-company offering|trading|gone [listed|unlisted]` and
 `ipo-remove-test` (scenario 66: a company lists as a stock, opens and is bought out),
 `expect-company-cards` (scenario 68: a card per kind of business in Economy → Investments),
@@ -133,10 +134,11 @@ scenarios that check the game's own Investments lists start with `investments-li
 it), `dump-all NAME` (every control with that name, shown or not, with its parents: finds copies
 another loaded copy of the mod or an old build left; a text field's dump shows its text, focus and
 hover), `share-charts on|off` (the share chart flag, for before/after captures) — and checks
-`expect-visible`, `expect-text`, `feed-notice SYMBOL TEXT` (a test notice in the Feed, taken out
-after), `feed-click TEXT` (clicks the Feed item that reads it), `expect-chirper TEXT` (the Chirper
-is open and holds it), `chirper close`, `wheel CONTROL NOTCHES` (the mouse wheel over a control as
-the game delivers it; negative is down), `expect-scroll LIST top|moved` (a scrolling list, or
+`expect-visible`, `expect-text`, `company-home SYMBOL` (opens a listed company's headquarters panel,
+as View headquarters does), `feed-notice SYMBOL TEXT` (a test notice in the Feed, taken out after),
+`feed-click TEXT` (clicks the Feed item that reads it), `expect-chirper TEXT` (the Chirper is open
+and holds it), `chirper close`, `wheel CONTROL NOTCHES` (the mouse wheel over a control as the game
+delivers it; negative is down), `expect-scroll LIST top|moved` (a scrolling list, or
 `FinanceOverhaulInvestmentsView`, is at its top or has moved), `expect-text-fits CONTROL` (a label's
 text is no wider than the label, measured with the game's font), `expect-slider CONTROL [max]` (the
 slider's thumb is drawn where its value is; with `max`, the value is the maximum),
