@@ -40,16 +40,40 @@ echo "1 capture" > ~/Library/Application\ Support/Colossal\ Order/Cities_Skyline
 
 A still capture misses a glitch that lasts a frame or two (a line drawn one row late just after a
 scroll). `FrameRecorder` (dev builds only) reads the screen at the end of each frame, so the frames
-are what the player saw, and saves them as JPEGs in `FinanceOverhaul-video-NAME/` with `frames.txt`
-(how long each was on screen). Cropping to a control (`FinanceOverhaulInvestmentsList`) keeps them
-small. The log notes the game's frame rate when the recording starts and the frames saved when it
-stops; saving costs a few ms per frame, so a busy city records about as fast as it draws. Then:
+are what the player saw. With ffmpeg installed (`/opt/homebrew/bin`, `/usr/local/bin` or `/usr/bin`)
+the raw pixels go to a worker thread that streams them into one ffmpeg process, which encodes H.264
+on the Mac's VideoToolbox: `FinanceOverhaul-video-NAME/FinanceOverhaul-video-NAME.mp4`, every shown
+frame once at the game's frame rate when the recording started, and `frames.txt` with when each
+frame was shown. Without ffmpeg (or after `record-format jpeg`) each frame is a JPEG instead.
+Cropping to a control (`FinanceOverhaulInvestmentsList`) keeps frames small. A frame that finds 90
+still waiting for ffmpeg is dropped and counted, so a slow disk never stalls the game.
+
+What it costs (measured 2026-11-27 in a city of 140,000 at about 14 fps; the log's stop line gives
+the recorder's main-thread time per frame):
+
+| `record-format` | What runs each frame                | Main thread per frame |
+| --------------- | ----------------------------------- | --------------------- |
+| `count`         | frames counted, nothing read        | —                     |
+| `probe`         | a 16 × 16 read, nothing kept        | ~22 ms                |
+| `jpeg`          | full read, JPEG encoded in the game | ~31 ms                |
+| `video`         | full read, raw pixels to ffmpeg     | ~32 ms                |
+
+Almost all of it is the read: Unity 5.6 has no asynchronous GPU read (`AsyncGPUReadback` came in
+2018.1), so `ReadPixels` makes the CPU wait for the GPU to finish the frame, however small the read.
+A GPU copy into a ring of render textures read two frames later waited just as long (tried and
+removed). Encoding is cheap by comparison, so the ffmpeg path is about the files (one MP4, no
+stitching), not speed. The game slows by about a third while recording; every saved frame is still
+one the player saw. A recorder that costs the game nothing has to capture outside it (macOS screen
+recording), which needs the Screen Recording permission.
+
+Then:
 
 ```bash
 scripts/frames-to-video.sh NAME --sheets
 ```
 
-writes `NAME.mp4` at the real pace (ffmpeg's concat durations) and contact sheets of 16 frames in
-order (`--gif` adds a half-size GIF). In a scenario: `record NAME [CONTROL]` … `record-stop`, with
+makes `NAME.mp4` from JPEG frames at the real pace (a video recording already has it) and contact
+sheets of 16 frames in order (`--gif` adds a half-size GIF). In a scenario: `record NAME [CONTROL]`
+… `record-stop` (`record-format video|jpeg|count|probe` first to choose), with
 `investments-scroll-smooth PIXELS SECONDS` to scroll a little every frame as a wheel does; scenario
 81 records the list scrolling and the overview flipping through its views.

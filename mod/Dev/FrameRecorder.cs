@@ -13,16 +13,19 @@ namespace FinanceOverhaul
 {
     /// <summary>
     /// Dev-only video capture: every frame the game shows, read from the screen at the end of
-    /// the frame (what the player saw, not a fresh render), saved as numbered JPEGs with the
-    /// time each was shown, so <c>scripts/frames-to-video.sh</c> can make an MP4 at the real
-    /// pace and a contact sheet to look through. A glitch that lasts one frame (a line drawn
+    /// the frame (what the player saw, not a fresh render). With ffmpeg installed the raw
+    /// pixels stream to it on a worker thread and become <c>NAME.mp4</c> (hardware H.264, no
+    /// encoding in the game: <see cref="FfmpegSink"/>); without it, or after
+    /// <c>record-format jpeg</c>, each frame is saved as a JPEG for
+    /// <c>scripts/frames-to-video.sh</c>. Either way <c>frames.txt</c> keeps when each frame
+    /// was shown. Unity 5.6 has no asynchronous GPU read, so the one read per frame stays. A glitch that lasts one frame (a line drawn
     /// one row late after a scroll) shows in the frames even when a still capture misses it.
     /// Optional crop to one UI control. Started by scenario steps (<c>record</c>,
     /// <c>record-stop</c>) or the <c>FinanceOverhaul.record</c> trigger file
     /// ("start NAME [CONTROL]" or "stop"). Stops by itself after <see cref="MaxSeconds"/>.
     /// Hot-reload safe: lives on the ticker root, and a stop waits for the writes.
     /// </summary>
-    public class FrameRecorder : MonoBehaviour
+    public partial class FrameRecorder : MonoBehaviour
     {
         public const string TriggerName = "FinanceOverhaul.record";
         public const float MaxSeconds = 30f;
@@ -31,6 +34,26 @@ namespace FinanceOverhaul
         private static FrameRecorder instance;
         private static int pendingWrites;
 
+        /// <summary>Save JPEGs even when ffmpeg is there (scenario step <c>record-format jpeg</c>).</summary>
+        public static bool PreferJpeg;
+
+        /// <summary>
+        /// Count the frames without reading them (scenario step <c>record-format count</c>):
+        /// the game's own frame rate over the same steps, to set a recording's cost against.
+        /// </summary>
+        public static bool CountOnly;
+
+        /// <summary>
+        /// Read a 16 × 16 patch each frame and keep nothing (<c>record-format probe</c>): what
+        /// the read itself costs, apart from its size and from saving.
+        /// </summary>
+        public static bool ProbeOnly;
+        private readonly System.Diagnostics.Stopwatch work = new System.Diagnostics.Stopwatch();
+        private int workFrames;
+
+        private FfmpegSink sink;
+        private bool triedSink;
+        private int dropped;
         private Coroutine loop;
         private bool stopping;
         private string folder;
@@ -137,6 +160,10 @@ namespace FinanceOverhaul
 
             instance.folder = folder;
             instance.frames = 0;
+            instance.dropped = 0;
+            instance.work.Reset();
+            instance.workFrames = 0;
+            instance.triedSink = false;
             instance.stopping = false;
             instance.timing.Length = 0;
             instance.startedAt = Time.unscaledTime;
@@ -174,6 +201,7 @@ namespace FinanceOverhaul
             stopping = true;
             StopCoroutine(loop);
             loop = null;
+
             // The frames are written on worker threads: wait (briefly) for the last ones.
             float until = Time.realtimeSinceStartup + 5f;
             while (Interlocked.CompareExchange(ref pendingWrites, 0, 0) > 0)
@@ -185,6 +213,15 @@ namespace FinanceOverhaul
                 }
 
                 Thread.Sleep(10);
+            }
+
+            string video = null;
+            if (sink != null)
+            {
+                sink.Finish();
+                dropped += sink.Dropped;
+                video = sink.Output;
+                sink = null;
             }
 
             try
@@ -204,6 +241,14 @@ namespace FinanceOverhaul
                     + " frames in "
                     + (Time.unscaledTime - startedAt).ToString("0.0", CultureInfo.InvariantCulture)
                     + " s"
+                    + (dropped > 0 ? ", " + dropped + " dropped" : string.Empty)
+                    + ", "
+                    + (workFrames == 0 ? 0d : work.Elapsed.TotalMilliseconds / workFrames).ToString(
+                        "0.00",
+                        CultureInfo.InvariantCulture
+                    )
+                    + " ms a frame in the game"
+                    + (video != null ? " -> " + video : " as JPEGs")
             );
         }
 
@@ -216,12 +261,25 @@ namespace FinanceOverhaul
             {
                 while (!stopping)
                 {
+                    if (work.IsRunning)
+                    {
+                        work.Stop();
+                        workFrames++;
+                    }
+
                     yield return end;
+                    work.Start();
                     if (Time.unscaledTime - startedAt > MaxSeconds)
                     {
                         ModLog.Info("record: " + MaxSeconds + " s reached");
                         StopNow();
                         yield break;
+                    }
+
+                    if (CountOnly)
+                    {
+                        frames++;
+                        continue;
                     }
 
                     Rect r = ScreenRect(crop);
@@ -237,9 +295,50 @@ namespace FinanceOverhaul
                         grab = new Texture2D(w, h, TextureFormat.RGB24, false);
                     }
 
-                    grab.ReadPixels(new Rect(r.x, r.y, w, h), 0, 0, false);
-                    byte[] jpg = grab.EncodeToJPG(Quality);
                     float now = Time.unscaledTime;
+                    var area = ProbeOnly ? new Rect(r.x, r.y, 16f, 16f) : new Rect(r.x, r.y, w, h);
+                    // Unity 5.6 can only read the screen synchronously: the CPU waits here for
+                    // the GPU to finish the frame (about 20 ms in a big city, whatever the size
+                    // read; a GPU copy read frames later waited just as long).
+                    grab.ReadPixels(area, 0, 0, false);
+                    if (ProbeOnly)
+                    {
+                        frames++;
+                        continue;
+                    }
+
+                    if (!triedSink && !PreferJpeg)
+                    {
+                        triedSink = true;
+                        sink = OpenSink(w, h);
+                    }
+
+                    if (sink != null)
+                    {
+                        // The video keeps the size it started with (a resized window is skipped).
+                        if (
+                            w == sink.Width
+                            && h == sink.Height
+                            && sink.Add(grab.GetRawTextureData())
+                        )
+                        {
+                            frames++;
+                            timing
+                                .Append(frames)
+                                .Append(' ')
+                                .Append(
+                                    (now - startedAt).ToString(
+                                        "0.0000",
+                                        CultureInfo.InvariantCulture
+                                    )
+                                )
+                                .Append('\n');
+                        }
+
+                        continue;
+                    }
+
+                    byte[] jpg = grab.EncodeToJPG(Quality);
                     frames++;
                     string file = Path.Combine(
                         folder,
@@ -280,6 +379,33 @@ namespace FinanceOverhaul
                 {
                     Destroy(grab);
                 }
+            }
+        }
+
+        /// <summary>The ffmpeg stream for a recording this size, or null (no ffmpeg, or it would not start).</summary>
+        private FfmpegSink OpenSink(int w, int h)
+        {
+            string ffmpeg = FfmpegSink.Find();
+            if (ffmpeg == null)
+            {
+                ModLog.Info("record: no ffmpeg found; saving JPEGs");
+                return null;
+            }
+
+            try
+            {
+                int fps = Mathf.Clamp(
+                    Mathf.RoundToInt(1f / Mathf.Max(0.001f, Time.smoothDeltaTime)),
+                    5,
+                    60
+                );
+                string output = Path.Combine(folder, Path.GetFileName(folder) + ".mp4");
+                return new FfmpegSink(ffmpeg, output, w, h, fps);
+            }
+            catch (Exception ex)
+            {
+                ModLog.Warn("record: ffmpeg would not start (" + ex.Message + "); saving JPEGs");
+                return null;
             }
         }
 

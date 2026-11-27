@@ -246,6 +246,9 @@ namespace FinanceOverhaul
             IndustrySites.TestWorkers = null; // and their own workers
             InvestmentsOverview.TestOrders = null; // the Portfolio view's own orders
             FrameRecorder.Stop(); // a recording never outlives its scenario
+            FrameRecorder.PreferJpeg = false; // and the next one is a video again
+            FrameRecorder.CountOnly = false;
+            FrameRecorder.ProbeOnly = false;
             CompanyDesk.TestFindHomes(); // no building counts as lost
             CompanyDesk.RestoreCounts(); // and the city's own healthy-day counts
             if (ctx.BrightnessBefore.HasValue && Mod.Settings != null)

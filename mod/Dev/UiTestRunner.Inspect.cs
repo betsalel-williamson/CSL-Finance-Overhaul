@@ -258,6 +258,15 @@ namespace FinanceOverhaul
                     yield return null;
                     break;
                 }
+                case "record-format":
+                {
+                    // record-format video|jpeg|count|probe — how the next recording is saved (count:
+                    // frames counted, none read, for the game's own frame rate; probe: a 16 × 16 read only).
+                    FrameRecorder.PreferJpeg = a == "jpeg";
+                    FrameRecorder.CountOnly = a == "count";
+                    FrameRecorder.ProbeOnly = a == "probe";
+                    break;
+                }
                 case "record-stop":
                 {
                     FrameRecorder.Stop();
