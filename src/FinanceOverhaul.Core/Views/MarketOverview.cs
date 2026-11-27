@@ -340,24 +340,17 @@ namespace FinanceOverhaul.Core
             }
 
             double diff = last - first;
+            if (fund)
+            {
+                // As the ₡ pills; a range with no change reads "₡0.00" here, as it always has.
+                return diff == 0d ? "₡0.00" : MoneyText.Change(diff);
+            }
+
             string sign =
                 diff > 0 ? "+"
                 : diff < 0 ? "−"
                 : string.Empty;
             double size = Math.Abs(diff);
-            if (fund)
-            {
-                // As the ₡ pills: cents up to ₡9.99, whole ₡ from ₡10.
-                double cents = Math.Round(size, 2);
-                return sign
-                    + "₡"
-                    + (
-                        cents < 10.0
-                            ? cents.ToString("0.00", CultureInfo.InvariantCulture)
-                            : Math.Round(size).ToString("N0", CultureInfo.InvariantCulture)
-                    );
-            }
-
             return Strings.Format(
                 "overview.market.points",
                 sign + size.ToString("0.0", CultureInfo.InvariantCulture)

@@ -426,22 +426,7 @@ namespace FinanceOverhaul.Core
         /// <summary>"+₡12", "−₡0.40", "₡0": a change in ₡ as the ₡ pills show it.</summary>
         public static string MoneyChange(double amount)
         {
-            if (double.IsNaN(amount) || double.IsInfinity(amount))
-            {
-                return "--";
-            }
-
-            double cents = Math.Round(Math.Abs(amount), 2);
-            if (cents == 0d)
-            {
-                return "₡0";
-            }
-
-            string digits =
-                cents < 10.0
-                    ? cents.ToString("0.00", CultureInfo.InvariantCulture)
-                    : Math.Round(Math.Abs(amount)).ToString("N0", CultureInfo.InvariantCulture);
-            return (amount > 0 ? "+₡" : "−₡") + digits;
+            return MoneyText.Change(amount);
         }
 
         /// <summary>"Today's change", "Change over 7 days": the heading over the tiles.</summary>

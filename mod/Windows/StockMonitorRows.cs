@@ -291,9 +291,7 @@ namespace FinanceOverhaul
             r.Change.name = Prefix + "Change-" + q.Symbol;
             // One measure for both pill modes and the line: the game's change rate (as the
             // Economy panel and the LED show it); ₡ mode is the same change in ₡.
-            r.Change.text = Settings.ChangeAsCurrency
-                ? StockMonitor.ChangeAmountFromRate(q.Price, q.ChangeRate)
-                : StockMonitor.ChangeText(q.ChangeRate);
+            r.Change.text = StockMonitor.PillText(q.Price, q.ChangeRate, Settings.ChangeAsCurrency);
             Color32 colour = FoTheme.Change(StockMonitor.ChangeColour(q.ChangeRate));
             r.Change.color = colour;
 

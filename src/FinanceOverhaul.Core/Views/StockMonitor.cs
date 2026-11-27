@@ -335,19 +335,18 @@ namespace FinanceOverhaul.Core
                 return "--";
             }
 
-            if (amount == 0d)
-            {
-                return "₡0"; // the % pill shows 0.00%: same here
-            }
+            // 0 when the % pill shows 0.00% ("₡0"); otherwise at least a cent, so the two
+            // pills always agree on whether it moved.
+            return MoneyText.Change(amount, amount != 0d);
+        }
 
-            // Cents up to ₡9.99, whole ₡ from ₡10 — decided on the rounded value, so 9.996 shows
-            // "₡10", never "₡10.00".
-            double cents = Math.Max(0.01, Math.Round(Math.Abs(amount), 2));
-            string digits =
-                cents < 10.0
-                    ? cents.ToString("0.00", CultureInfo.InvariantCulture)
-                    : Math.Round(Math.Abs(amount)).ToString("N0", CultureInfo.InvariantCulture);
-            return (rate > 0 ? "+₡" : "−₡") + digits;
+        /// <summary>
+        /// A stock's change pill as it shows now: the game's rate in % ("+1.07%"), or with the
+        /// pills in points the same change in ₡ ("+₡12").
+        /// </summary>
+        public static string PillText(float price, float rate, bool points)
+        {
+            return points ? ChangeAmountFromRate(price, rate) : ChangeText(rate);
         }
 
         /// <summary>Opacity as the popover shows it, e.g. "35%".</summary>

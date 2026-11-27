@@ -229,9 +229,7 @@ namespace FinanceOverhaul
                 back.tooltip = q.Name;
                 price.text = StockMonitor.PriceText(q.Price);
                 price.relativePosition = new Vector3(width - 62f - 4f - 8f - price.width, 5f);
-                change.text = inPoints
-                    ? StockMonitor.ChangeAmountFromRate(q.Price, q.ChangeRate)
-                    : StockMonitor.ChangeText(q.ChangeRate);
+                change.text = StockMonitor.PillText(q.Price, q.ChangeRate, inPoints);
                 change.color = FoTheme.Change(StockMonitor.ChangeColour(q.ChangeRate));
             }
         }

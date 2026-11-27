@@ -1203,9 +1203,7 @@ namespace FinanceOverhaul
                     price.text = BondText.WholeMoney((long)Math.Round(q.Price * 100.0));
                     price.relativePosition = new Vector3(PriceRight - price.width, 3f);
                     // One measure in both units: the game's change rate, or that change in ₡.
-                    change.text = pillsInCurrency
-                        ? StockMonitor.ChangeAmountFromRate(q.Price, q.ChangeRate)
-                        : StockMonitor.ChangeText(q.ChangeRate);
+                    change.text = StockMonitor.PillText(q.Price, q.ChangeRate, pillsInCurrency);
                     change.color = colour;
                 }
 
