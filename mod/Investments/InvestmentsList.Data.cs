@@ -36,7 +36,8 @@ namespace FinanceOverhaul
 
             tabBar.Choose(Array.IndexOf(InvestmentList.Filters, filter));
 
-            sortLabel.text = StockMonitor.SortLabel(sort, InCurrency);
+            // The longest sort ("Sort: Value held") shrinks to fit rather than lose its start.
+            FoText.Shrink(sortLabel, StockMonitor.SortLabel(sort, InCurrency), 0.75f, 0.55f);
             groupButton.text = InvestmentList.GroupLabel(grouped);
             FoButton.SetSelected(groupButton, grouped);
             bool down = StockMonitor.IsDescending(sort, reversed);

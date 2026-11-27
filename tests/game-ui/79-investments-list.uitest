@@ -21,6 +21,15 @@ expect-hidden OwnedInvestmentsSummaryPanel
 expect-visible FinanceOverhaulInvestmentsList
 expect-text FinanceOverhaulInvestmentsTab-All All
 expect-text FinanceOverhaulInvestmentsSort Sort: Change %
+expect-text-fits FinanceOverhaulInvestmentsSort
+# the longest sort shrinks to fit its label instead of losing its start
+investments-sort ValueHeld
+wait 0.5
+expect-text FinanceOverhaulInvestmentsSort Sort: Value held
+expect-text-fits FinanceOverhaulInvestmentsSort
+capture investments-list-sort-value-held
+investments-sort Change
+wait 0.5
 capture investments-list-all
 # two columns: on the right a sub tab group picks the view (Market, Portfolio, Heatmap, City, Feed)
 expect-visible FinanceOverhaulInvestmentsOverview

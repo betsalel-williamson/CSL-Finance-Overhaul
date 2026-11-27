@@ -1,4 +1,4 @@
-using ColossalFramework.UI; // UIComponent, UILabel, UIVerticalAlignment
+using ColossalFramework.UI; // UIComponent, UIFontRenderer, UILabel, UIVerticalAlignment
 using FinanceOverhaul.Core; // LabelFit
 using UnityEngine; // Color32, Mathf, Vector2
 
@@ -43,6 +43,64 @@ namespace FinanceOverhaul
             label.useDropShadow = true;
             label.dropShadowColor = label.textColor;
             label.dropShadowOffset = new Vector2(0.6f, 0f);
+        }
+
+        /// <summary>
+        /// The width <paramref name="label"/>'s text takes at its scale, measured now with the
+        /// game's font renderer (an auto-sized label only measures itself when it next draws),
+        /// padding included. The label is not changed.
+        /// </summary>
+        public static float TextWidth(UILabel label)
+        {
+            if (label == null || label.font == null || string.IsNullOrEmpty(label.text))
+            {
+                return 0f;
+            }
+
+            UIFontRenderer renderer = label.font.ObtainRenderer();
+            try
+            {
+                renderer.wordWrap = false;
+                renderer.processMarkup = label.processMarkup;
+                renderer.textScale = label.textScale;
+                if (GameInternals.Ui.PixelsToUnits != null)
+                {
+                    renderer.pixelRatio = (float)GameInternals.Ui.PixelsToUnits.Invoke(label, null);
+                }
+
+                return renderer.MeasureString(label.text).x + label.padding.horizontal;
+            }
+            finally
+            {
+                renderer.Release();
+            }
+        }
+
+        /// <summary>
+        /// Gives a fixed-size label's text the largest scale from <paramref name="baseScale"/>
+        /// down to <paramref name="minScale"/> at which it fits the label's width, so it is never
+        /// cut off ("Sort: Value held" in a sort label sized for "Sort: Change %").
+        /// </summary>
+        public static void Shrink(UILabel label, string text, float baseScale, float minScale)
+        {
+            label.text = text;
+            float scale = baseScale;
+            label.textScale = scale;
+            float room = label.width - 2f;
+            float needed = TextWidth(label);
+            // The game's font comes in whole pixel sizes, so a scale only a little smaller can
+            // draw the same width: start from the proportional guess, then step down until the
+            // measured text fits (or the smallest scale allowed is reached).
+            if (needed > room && needed > 0f)
+            {
+                scale = Mathf.Max(minScale, baseScale * room / needed);
+                label.textScale = scale;
+                while (TextWidth(label) > room && scale > minScale)
+                {
+                    scale = Mathf.Max(minScale, scale - 0.02f);
+                    label.textScale = scale;
+                }
+            }
         }
 
         /// <summary>

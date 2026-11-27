@@ -375,6 +375,32 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "expect-text-fits":
+                {
+                    // expect-text-fits CONTROL — a label's text is not wider than the label.
+                    UILabel label = FindControl(a) as UILabel;
+                    if (label == null)
+                    {
+                        r.Error = a + " is not a shown label";
+                        break;
+                    }
+
+                    float needed = FoText.TextWidth(label);
+                    if (needed > label.width + 0.5f)
+                    {
+                        r.Error =
+                            a
+                            + " ("
+                            + label.text
+                            + ") needs "
+                            + needed.ToString("0.0", CultureInfo.InvariantCulture)
+                            + " but is "
+                            + label.width.ToString("0.0", CultureInfo.InvariantCulture)
+                            + " wide";
+                    }
+
+                    break;
+                }
                 case "expect-text-is":
                 {
                     UIComponent c = FindControl(a);

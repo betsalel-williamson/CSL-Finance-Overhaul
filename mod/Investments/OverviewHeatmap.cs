@@ -402,20 +402,29 @@ namespace FinanceOverhaul
             private static bool Scale(UILabel label, float scale, float room)
             {
                 SetScale(label, scale);
-                if (label.width > room)
+                float width = FoText.TextWidth(label);
+                if (width > room && width > 0f)
                 {
-                    SetScale(label, Mathf.Max(0.5f * scale, scale * room / label.width));
+                    // Whole pixel font sizes: step down from the proportional guess until it fits.
+                    float min = 0.5f * scale;
+                    float next = Mathf.Max(min, scale * room / width);
+                    SetScale(label, next);
+                    width = FoText.TextWidth(label);
+                    while (width > room && next > min)
+                    {
+                        next = Mathf.Max(min, next - 0.02f);
+                        SetScale(label, next);
+                        width = FoText.TextWidth(label);
+                    }
                 }
 
-                return label.width <= room + 0.5f;
+                return width <= room + 0.5f;
             }
 
-            /// <summary>Sets the text scale and has the label measure itself again at once.</summary>
+            /// <summary>Sets the text scale.</summary>
             private static void SetScale(UILabel label, float scale)
             {
-                label.autoSize = false;
                 label.textScale = scale;
-                label.autoSize = true;
             }
 
             public void Hide()
