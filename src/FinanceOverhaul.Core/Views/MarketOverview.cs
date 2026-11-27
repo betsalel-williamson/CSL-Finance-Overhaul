@@ -180,20 +180,9 @@ namespace FinanceOverhaul.Core
         /// <summary>The index's change over the range, in percent (0 when it has too few days).</summary>
         public static float RangeChange(float[] index)
         {
-            float first = float.NaN,
-                last = float.NaN;
-            foreach (float v in index ?? new float[0])
-            {
-                if (!float.IsNaN(v))
-                {
-                    if (float.IsNaN(first))
-                    {
-                        first = v;
-                    }
-
-                    last = v;
-                }
-            }
+            float first,
+                last;
+            StockDetail.Ends(index, out first, out last);
 
             return float.IsNaN(first) || first <= 0f ? 0f : (last / first - 1f) * 100f;
         }
@@ -314,20 +303,9 @@ namespace FinanceOverhaul.Core
         /// </summary>
         public static string RangePill(float[] index, bool fund, bool points)
         {
-            float first = float.NaN,
-                last = float.NaN;
-            foreach (float v in index ?? new float[0])
-            {
-                if (!float.IsNaN(v))
-                {
-                    if (float.IsNaN(first))
-                    {
-                        first = v;
-                    }
-
-                    last = v;
-                }
-            }
+            float first,
+                last;
+            StockDetail.Ends(index, out first, out last);
 
             if (float.IsNaN(first) || first <= 0f)
             {

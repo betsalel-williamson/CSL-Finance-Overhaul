@@ -115,26 +115,7 @@ namespace FinanceOverhaul.Core
 
         private static bool Ends(float[] range, out float first, out float last)
         {
-            first = float.NaN;
-            last = float.NaN;
-            int count = 0;
-            foreach (float v in range ?? new float[0])
-            {
-                if (float.IsNaN(v) || float.IsInfinity(v))
-                {
-                    continue;
-                }
-
-                if (count == 0)
-                {
-                    first = v;
-                }
-
-                last = v;
-                count++;
-            }
-
-            return count >= 2;
+            return StockDetail.Ends(range, out first, out last) >= 2;
         }
 
         /// <summary>The share of tiles the scale holds without clamping: one outlier does not wash the rest out.</summary>
@@ -464,15 +445,8 @@ namespace FinanceOverhaul.Core
         /// <summary>The city index fund when listed and on sale, else null.</summary>
         public static MonitorQuote IndexFund(IEnumerable<MonitorQuote> quotes)
         {
-            foreach (MonitorQuote q in quotes ?? new List<MonitorQuote>())
-            {
-                if (q != null && !q.Locked && CityIndexBasket.IsIndexName(q.Prefab))
-                {
-                    return q;
-                }
-            }
-
-            return null;
+            MonitorQuote fund = MarketOverview.IndexFund(quotes);
+            return fund != null && !fund.Locked ? fund : null;
         }
 
         /// <summary>"Today", "7D", "30D": the span tabs.</summary>

@@ -184,24 +184,10 @@ namespace FinanceOverhaul
             );
 
             float[] history = PortfolioOverview.WorthHistory(quotes, days);
-            float first = float.NaN,
-                last = float.NaN;
-            foreach (float v in history)
-            {
-                if (!float.IsNaN(v))
-                {
-                    if (float.IsNaN(first))
-                    {
-                        first = v;
-                    }
-
-                    last = v;
-                }
-            }
-
+            int trend = StockDetail.Trend(history);
             Color32 line =
-                last > first ? FoTheme.GamePositive
-                : last < first ? FoTheme.GameNegative
+                trend > 0 ? FoTheme.GamePositive
+                : trend < 0 ? FoTheme.GameNegative
                 : FoTheme.Accent;
             portfolioChart.Draw(
                 history,

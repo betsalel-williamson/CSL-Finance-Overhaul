@@ -44,6 +44,49 @@ namespace FinanceOverhaul.Core
         }
 
         /// <summary>
+        /// The first and last known values of a series (NaN and infinity skipped); how many
+        /// known values it has. Both NaN when it has none.
+        /// </summary>
+        public static int Ends(float[] series, out float first, out float last)
+        {
+            first = float.NaN;
+            last = float.NaN;
+            int count = 0;
+            foreach (float v in series ?? new float[0])
+            {
+                if (float.IsNaN(v) || float.IsInfinity(v))
+                {
+                    continue;
+                }
+
+                if (count == 0)
+                {
+                    first = v;
+                }
+
+                last = v;
+                count++;
+            }
+
+            return count;
+        }
+
+        /// <summary>+1 when a series ends above where it started, −1 below, 0 level or unknown.</summary>
+        public static int Trend(float[] series)
+        {
+            float first,
+                last;
+            if (Ends(series, out first, out last) == 0)
+            {
+                return 0;
+            }
+
+            return last > first ? 1
+                : last < first ? -1
+                : 0;
+        }
+
+        /// <summary>
         /// The detail header's change: the game's change rate — the same measure as the list's
         /// pills and line colour, the Economy panel and the LED — in ₡ and %, e.g.
         /// "+₡4.03 (+0.29%)".
