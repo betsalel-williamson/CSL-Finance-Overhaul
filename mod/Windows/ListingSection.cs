@@ -247,10 +247,7 @@ namespace FinanceOverhaul
             {
                 int sign = CompanyPanelText.GainSign(spent, worth);
                 gain.text = gained;
-                gain.textColor =
-                    sign > 0 ? FoTheme.GamePositive
-                    : sign < 0 ? FoTheme.GameNegative
-                    : FoTheme.GameValue;
+                gain.textColor = FoTheme.Trend(sign, FoTheme.GameValue);
                 gain.relativePosition = new Vector3(width - 8f - gain.width, 54f);
             }
 

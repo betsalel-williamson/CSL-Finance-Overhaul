@@ -115,16 +115,16 @@ namespace FinanceOverhaul
                 rule = FoText.Label(back, name + "Rule", "", 0.65f, FoTheme.TextLabel);
                 rule.relativePosition = new Vector3(8f, 35f);
                 rule.isInteractive = false;
-                change = FoPill.AddValue(back, new Vector2(62f, 17f), 0.7f, FoTheme.Header);
-                change.name = name + "Change";
+                change = FoPill.AddToggle(
+                    back,
+                    name + "Change",
+                    new Vector2(62f, 17f),
+                    0.7f,
+                    FoTheme.Header,
+                    Strings.Get("monitor.pill.tip"),
+                    toggle
+                );
                 change.relativePosition = new Vector3(width - 62f - 6f, 4f);
-                change.isInteractive = true;
-                change.tooltip = Strings.Get("monitor.pill.tip");
-                change.eventClick += (c, p) =>
-                {
-                    p.Use();
-                    toggle();
-                };
             }
 
             public void Show(CityRow row, float y, int days, bool inPoints)

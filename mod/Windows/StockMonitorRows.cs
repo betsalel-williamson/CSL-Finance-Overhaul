@@ -239,16 +239,17 @@ namespace FinanceOverhaul
             }
 
             // ...except the pill, which flips ₡ / % (Figma pin 6).
-            r.Change.isInteractive = true;
-            r.Change.tooltip = Strings.Get("monitor.pill.tip");
-            r.Change.eventClick += (c, p) =>
-            {
-                p.Use();
-                Settings.ChangeAsCurrency = !Settings.ChangeAsCurrency;
-                Mod.SaveSettings();
-                Refresh(true);
-                RefreshPopover();
-            };
+            FoPill.MakeToggle(
+                r.Change,
+                Strings.Get("monitor.pill.tip"),
+                () =>
+                {
+                    Settings.ChangeAsCurrency = !Settings.ChangeAsCurrency;
+                    Mod.SaveSettings();
+                    Refresh(true);
+                    RefreshPopover();
+                }
+            );
             return r;
         }
 

@@ -185,10 +185,7 @@ namespace FinanceOverhaul
 
             float[] history = PortfolioOverview.WorthHistory(quotes, days);
             int trend = StockDetail.Trend(history);
-            Color32 line =
-                trend > 0 ? FoTheme.GamePositive
-                : trend < 0 ? FoTheme.GameNegative
-                : FoTheme.Accent;
+            Color32 line = FoTheme.Trend(trend, FoTheme.Accent);
             portfolioChart.Draw(
                 history,
                 line,
@@ -269,10 +266,10 @@ namespace FinanceOverhaul
 
         private static Color32 Signed(double amount)
         {
-            long whole = (long)System.Math.Round(amount);
-            return whole > 0 ? FoTheme.GamePositive
-                : whole < 0 ? FoTheme.GameNegative
-                : FoTheme.GameValue;
+            return FoTheme.Trend(
+                System.Math.Sign((long)System.Math.Round(amount)),
+                FoTheme.GameValue
+            );
         }
 
         private string SymbolOf(TradeOrder order)

@@ -47,11 +47,15 @@ namespace FinanceOverhaul
             indexValue.relativePosition = new Vector3(Pad, Pad + 16f);
             indexValue.tooltip = Strings.Get("overview.market.indexTip");
             // As every pill: a click shows all of them in % or in points (₡).
-            indexChange = FoPill.AddValue(market, new Vector2(72f, 18f), 0.75f, FoTheme.Header);
-            indexChange.name = Name + "MarketChange";
-            indexChange.isInteractive = true;
-            indexChange.tooltip = Strings.Get("monitor.pill.tip");
-            indexChange.eventClick += (c, p) => togglePills();
+            indexChange = FoPill.AddToggle(
+                market,
+                Name + "MarketChange",
+                new Vector2(72f, 18f),
+                0.75f,
+                FoTheme.Header,
+                Strings.Get("monitor.pill.tip"),
+                togglePills
+            );
             indexDays = FoText.Label(market, Name + "MarketDays", "", 0.75f, FoTheme.TextMuted);
             marketRange = RangeTabs(market, Name + "MarketRange", market.width - Pad, Pad + 4f);
 
@@ -130,10 +134,7 @@ namespace FinanceOverhaul
                 pillY + 2f
             );
 
-            Color32 line =
-                sign > 0 ? FoTheme.GamePositive
-                : sign < 0 ? FoTheme.GameNegative
-                : FoTheme.Accent;
+            Color32 line = FoTheme.Trend(sign, FoTheme.Accent);
             marketChart.Draw(
                 index,
                 line,
@@ -203,17 +204,17 @@ namespace FinanceOverhaul
                 symbol.isInteractive = false;
                 price = FoText.Label(back, name + "Price", "", 0.8f, FoTheme.GameValue);
                 price.isInteractive = false;
-                change = FoPill.AddValue(back, new Vector2(62f, 17f), 0.7f, FoTheme.Header);
-                change.name = name + "Change";
-                change.relativePosition = new Vector3(width - 62f - 4f, 3f);
                 // A click on the pill flips every pill between % and ₡ (not the dialog).
-                change.isInteractive = true;
-                change.tooltip = Strings.Get("monitor.pill.tip");
-                change.eventClick += (c, p) =>
-                {
-                    p.Use();
-                    toggle();
-                };
+                change = FoPill.AddToggle(
+                    back,
+                    name + "Change",
+                    new Vector2(62f, 17f),
+                    0.7f,
+                    FoTheme.Header,
+                    Strings.Get("monitor.pill.tip"),
+                    toggle
+                );
+                change.relativePosition = new Vector3(width - 62f - 4f, 3f);
             }
 
             public void Show(MonitorQuote q, bool inPoints)

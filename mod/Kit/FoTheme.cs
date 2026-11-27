@@ -270,6 +270,17 @@ namespace FinanceOverhaul
         }
 
         /// <summary>
+        /// The game's colours for a direction: its gain green when <paramref name="sign"/> is
+        /// above 0, its loss orange below, else <paramref name="level"/> (each caller's neutral).
+        /// </summary>
+        public static Color32 Trend(int sign, Color32 level)
+        {
+            return sign > 0 ? GamePositive
+                : sign < 0 ? GameNegative
+                : level;
+        }
+
+        /// <summary>
         /// The parts of a chart with several (the holdings donut), in order: the accent, then
         /// the game's gain green, the offer gold, the bond blue and the loss orange.
         /// </summary>

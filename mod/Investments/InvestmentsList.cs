@@ -870,16 +870,18 @@ namespace FinanceOverhaul
                 detail = FoText.Label(back, "", "", 0.8f, FoTheme.GameValue);
 
                 price = FoText.Label(back, "", "", 1.0f, FoTheme.GameValue);
-                change = FoPill.AddValue(back, new Vector2(66f, 18f), 0.75f, FoTheme.Header);
+                // As in the Stock Monitor: a click on the pill shows every change in ₡ or %
+                // (not the line's own click, the dialog).
+                change = FoPill.AddToggle(
+                    back,
+                    null,
+                    new Vector2(66f, 18f),
+                    0.75f,
+                    FoTheme.Header,
+                    Strings.Get("monitor.pill.tip"),
+                    togglePills
+                );
                 change.relativePosition = new Vector3(PriceRight - 66f, 25f);
-                // As in the Stock Monitor: a click on the pill shows every change in ₡ or %.
-                change.isInteractive = true;
-                change.tooltip = Strings.Get("monitor.pill.tip");
-                change.eventClick += (c, p) =>
-                {
-                    p.Use(); // not the line's own click (the dialog)
-                    togglePills();
-                };
                 gain = FoText.Label(back, "", "", 0.72f, FoTheme.GamePositive);
 
                 lockLine = FoText.Label(back, "", "", 0.75f, FoTheme.GameText);
@@ -1215,10 +1217,7 @@ namespace FinanceOverhaul
                     holding.text = held;
                     gain.text = InvestmentList.Gain(q);
                     int sign = InvestmentList.GainSign(q);
-                    gain.textColor =
-                        sign > 0 ? FoTheme.GamePositive
-                        : sign < 0 ? FoTheme.GameNegative
-                        : FoTheme.GameValue;
+                    gain.textColor = FoTheme.Trend(sign, FoTheme.GameValue);
                     gain.relativePosition = new Vector3(PriceRight - gain.width, 45f);
                 }
             }

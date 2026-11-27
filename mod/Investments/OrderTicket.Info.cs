@@ -233,9 +233,7 @@ namespace FinanceOverhaul
                 0,
                 StockDetail.GainLossLabel(invested, owned, price),
                 StockDetail.GainLossText(invested, owned, price),
-                gain < 0 ? FoTheme.GameNegative
-                    : gain > 0 ? FoTheme.GamePositive
-                    : text
+                FoTheme.Trend(System.Math.Sign(gain), text)
             );
             infoGrid.Set(
                 2,
