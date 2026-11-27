@@ -355,6 +355,9 @@ namespace FinanceOverhaul
             list.autoLayout = false;
             list.scrollWheelDirection = UIOrientation.Vertical;
             list.scrollWheelAmount = 26;
+            // The game's scrolling list only takes the mouse wheel with this on; without it the
+            // wheel passed on to the Investments list and scrolled the stocks instead.
+            list.builtinKeyNavigation = true;
             list.verticalScrollbar = FoScrollbar.Add(
                 view,
                 name + "Scrollbar",

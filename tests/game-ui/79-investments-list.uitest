@@ -110,6 +110,18 @@ expect-no-overlap FinanceOverhaulInvestmentsOverviewCityRows FinanceOverhaulInve
 expect-visible FinanceOverhaulInvestmentsOverviewCityRowsScrollbar
 expect-no-overlap FinanceOverhaulInvestmentsOverviewCityRowsScrollbar FinanceOverhaulInvestmentsOverviewCityRows
 expect-no-overlap FinanceOverhaulInvestmentsOverviewCityRowsScrollbar FinanceOverhaulInvestmentsOverviewCityRow-0Change
+# the wheel scrolls the column under the cursor: over the City rows they move, the stocks stay
+investments-scroll -100000
+expect-scroll FinanceOverhaulInvestmentsView top
+expect-scroll FinanceOverhaulInvestmentsOverviewCityRows top
+wheel FinanceOverhaulInvestmentsOverviewCityRow-0Figure -2
+wait 0.5
+expect-scroll FinanceOverhaulInvestmentsOverviewCityRows moved
+expect-scroll FinanceOverhaulInvestmentsView top
+# and over the stocks the stocks move, the City rows stay where they are
+wheel FinanceOverhaulInvestmentsView -2
+wait 0.5
+expect-scroll FinanceOverhaulInvestmentsView moved
 capture investments-overview-city
 # the Feed view: what is coming up and what happened lately
 click FinanceOverhaulInvestmentsOverviewTab-Feed

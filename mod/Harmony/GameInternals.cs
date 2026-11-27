@@ -177,6 +177,12 @@ namespace FinanceOverhaul
         /// <summary>The game's UI toolkit (ColossalFramework.UI).</summary>
         internal static class Ui
         {
+            /// <summary>The mouse wheel as the game delivers it: to a control, then up its parents.</summary>
+            public static readonly MethodInfo MouseWheel = AccessTools.Method(
+                typeof(UIComponent),
+                "OnMouseWheelEvenIfInactive"
+            );
+
             public static readonly MethodInfo SliderUpdateValueIndicators = AccessTools.Method(
                 typeof(UISlider),
                 "UpdateValueIndicators",

@@ -112,8 +112,15 @@ namespace FinanceOverhaul
             view.relativePosition = new Vector3(0f, BarH);
             view.size = new Vector2(left, list.height - BarH);
             view.clipChildren = true;
-            list.eventMouseWheel += (c, p) =>
+            // The wheel scrolls the column under the cursor: the stocks only for a wheel over
+            // them (the overview's lists take their own).
+            view.eventMouseWheel += (c, p) =>
             {
+                if (p.used)
+                {
+                    return;
+                }
+
                 ScrollBy(-Mathf.Sign(p.wheelDelta) * InvestmentList.NotchPixels);
                 p.Use();
             };

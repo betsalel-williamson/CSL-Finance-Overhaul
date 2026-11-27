@@ -1,9 +1,11 @@
 using System; // ArgumentException, Enum, StringComparison
 using System.Collections; // IEnumerator
 using System.Globalization; // CultureInfo
-using ColossalFramework.UI; // UIComponent, UIScrollablePanel, UITextureSprite
+// ColossalFramework.UI: UIComponent, UIMouseButton, UIMouseEventParameter, UIScrollablePanel,
+//   UITextureSprite
+using ColossalFramework.UI;
 using FinanceOverhaul.Core; // InvestmentRow, MonitorSort, PortfolioOverview
-using UnityEngine; // Mathf, Time, Vector3, WaitForSeconds
+using UnityEngine; // Mathf, Ray, Time, Vector2, Vector3, WaitForSeconds
 
 namespace FinanceOverhaul
 {
@@ -216,6 +218,71 @@ namespace FinanceOverhaul
                     }
 
                     yield return null;
+                    break;
+                }
+                case "wheel":
+                {
+                    // wheel CONTROL NOTCHES — turns the mouse wheel over a control as the game
+                    // delivers it (to the control, then up its parents): negative is down.
+                    UIComponent target = FindControl(a);
+                    if (target == null)
+                    {
+                        r.Error = a + " is not shown";
+                        break;
+                    }
+
+                    var p = new UIMouseEventParameter(
+                        target,
+                        UIMouseButton.None,
+                        0,
+                        new Ray(),
+                        Vector2.zero,
+                        Vector2.zero,
+                        ParseFloat(b, -1f)
+                    );
+                    GameInternals.Ui.MouseWheel.Invoke(target, new object[] { p });
+                    yield return null;
+                    break;
+                }
+                case "expect-scroll":
+                {
+                    // expect-scroll LIST top|moved — a scrolling list (or the investments list,
+                    // FinanceOverhaulInvestmentsView) is at its top, or has moved from it.
+                    float at;
+                    if (a == InvestmentsList.Prefix + "View")
+                    {
+                        InvestmentsList shown = InvestmentsList.Current;
+                        if (shown == null)
+                        {
+                            r.Error = "the investments list is not shown";
+                            break;
+                        }
+
+                        at = shown.Offset;
+                    }
+                    else
+                    {
+                        UIScrollablePanel list = FindControl(a) as UIScrollablePanel;
+                        if (list == null)
+                        {
+                            r.Error = "no visible scrolling list " + a;
+                            break;
+                        }
+
+                        at = list.scrollPosition.y;
+                    }
+
+                    bool moved = at > 0.5f;
+                    if ((b == "moved") != moved)
+                    {
+                        r.Error =
+                            a
+                            + " is at "
+                            + at.ToString("0.0", CultureInfo.InvariantCulture)
+                            + ", expected "
+                            + b;
+                    }
+
                     break;
                 }
                 case "expect-wheel-step":
