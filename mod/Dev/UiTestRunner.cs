@@ -316,10 +316,14 @@ namespace FinanceOverhaul
             {
                 TradingSteps,
                 InspectSteps,
+                ExpectSteps,
+                InvestmentsSteps,
                 MonitorSteps,
                 TickerSteps,
                 BondsSteps,
                 CompanySteps,
+                IpoOptionSteps,
+                IpoSiteSteps,
                 StressSteps,
             };
             foreach (StepGroup group in groups)
