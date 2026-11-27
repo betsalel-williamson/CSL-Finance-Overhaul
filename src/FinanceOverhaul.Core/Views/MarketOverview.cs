@@ -119,7 +119,8 @@ namespace FinanceOverhaul.Core
             int longest = 0;
             foreach (MonitorQuote q in quotes ?? new List<MonitorQuote>())
             {
-                if (!Member(q))
+                // The fund's basket: share-priced stocks only (no coins such as ChirpCoin).
+                if (!Member(q) || q.Coin)
                 {
                     continue;
                 }
@@ -299,14 +300,68 @@ namespace FinanceOverhaul.Core
                 : Strings.Format("overview.market.indexFund", fund.Symbol);
         }
 
-        /// <summary>"+4.2% over 30 days".</summary>
-        public static string RangeChangeText(float percent, int days)
+        /// <summary>
+        /// The index's change over the range as its pill shows it: in percent ("−2.70%") or,
+        /// after a click on any pill, in points: ₡ for the fund ("−₡85"), index points for the
+        /// rebuilt level ("−2.7 pts"). "--" with fewer than two days.
+        /// </summary>
+        public static string RangePill(float[] index, bool fund, bool points)
+        {
+            float first = float.NaN,
+                last = float.NaN;
+            foreach (float v in index ?? new float[0])
+            {
+                if (!float.IsNaN(v))
+                {
+                    if (float.IsNaN(first))
+                    {
+                        first = v;
+                    }
+
+                    last = v;
+                }
+            }
+
+            if (float.IsNaN(first) || first <= 0f)
+            {
+                return "--";
+            }
+
+            if (!points)
+            {
+                return StockMonitor.ChangeText(RangeChange(index));
+            }
+
+            double diff = last - first;
+            string sign =
+                diff > 0 ? "+"
+                : diff < 0 ? "−"
+                : string.Empty;
+            double size = Math.Abs(diff);
+            if (fund)
+            {
+                // As the ₡ pills: cents up to ₡9.99, whole ₡ from ₡10.
+                double cents = Math.Round(size, 2);
+                return sign
+                    + "₡"
+                    + (
+                        cents < 10.0
+                            ? cents.ToString("0.00", CultureInfo.InvariantCulture)
+                            : Math.Round(size).ToString("N0", CultureInfo.InvariantCulture)
+                    );
+            }
+
+            return Strings.Format(
+                "overview.market.points",
+                sign + size.ToString("0.0", CultureInfo.InvariantCulture)
+            );
+        }
+
+        /// <summary>"over 30 days", beside the index's pill.</summary>
+        public static string OverDays(int days)
         {
             return Strings.Format(
-                "overview.market.rangeChange",
-                (percent >= 0f ? "+" : "−")
-                    + Math.Abs(percent).ToString("0.0", CultureInfo.InvariantCulture)
-                    + "%",
+                "overview.market.overDays",
                 days.ToString(CultureInfo.InvariantCulture)
             );
         }

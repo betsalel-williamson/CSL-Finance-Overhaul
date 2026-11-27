@@ -33,6 +33,16 @@ expect-no-overlap FinanceOverhaulInvestmentsTabs FinanceOverhaulInvestmentsGroup
 click FinanceOverhaulInvestmentsOverviewTab-Feed
 wait 0.5
 expect-visible FinanceOverhaulInvestmentsOverviewMarket
+# a click on the index's pill (or any pill) shows them all in points: ₡ for the fund
+expect-text FinanceOverhaulInvestmentsOverviewMarketChange %
+click FinanceOverhaulInvestmentsOverviewMarketChange
+wait 0.5
+expect-text FinanceOverhaulInvestmentsOverviewMarketGainer-0Change ₡
+capture investments-overview-market-points
+click FinanceOverhaulInvestmentsOverviewMarketGainer-0Change
+wait 0.5
+expect-text FinanceOverhaulInvestmentsOverviewMarketChange %
+expect-hidden BuySellInvestmentPanel
 click FinanceOverhaulInvestmentsOverviewMarketRange-7
 wait 0.5
 capture investments-overview-market-7d

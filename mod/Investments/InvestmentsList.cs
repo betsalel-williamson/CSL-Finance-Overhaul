@@ -642,7 +642,9 @@ namespace FinanceOverhaul
             overview = new InvestmentsOverview(
                 list,
                 new Vector3(left + ColumnGap, 0f),
-                new Vector2(list.width - left - ColumnGap, list.height)
+                new Vector2(list.width - left - ColumnGap, list.height),
+                () => pillsInCurrency,
+                TogglePills
             );
             Current = this;
             ModLog.Info(

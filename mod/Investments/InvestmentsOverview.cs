@@ -1,4 +1,4 @@
-using System; // Array, Math
+using System; // Action, Array, Func, Math
 using System.Collections.Generic; // List
 using System.Text; // StringBuilder
 using ColossalFramework.UI; // UIComponent, UILabel, UIPanel, UITextureSprite
@@ -40,6 +40,9 @@ namespace FinanceOverhaul
         private readonly UILabel indexKey;
         private readonly UILabel indexValue;
         private readonly UILabel indexChange;
+        private readonly UILabel indexDays;
+        private readonly Func<bool> pillsInPoints;
+        private readonly Action togglePills;
         private readonly FoToggleTabs range;
         private readonly UITextureSprite chart;
         private readonly Texture2D chartTexture;
@@ -93,8 +96,18 @@ namespace FinanceOverhaul
             }
         }
 
-        public InvestmentsOverview(UIComponent parent, Vector3 at, Vector2 size)
+        /// <param name="inPoints">The list's pills show ₡ (points), not % (one switch for all).</param>
+        /// <param name="toggle">A click on any pill: flips every pill, the list's too.</param>
+        public InvestmentsOverview(
+            UIComponent parent,
+            Vector3 at,
+            Vector2 size,
+            Func<bool> inPoints,
+            Action toggle
+        )
         {
+            pillsInPoints = inPoints;
+            togglePills = toggle;
             root = parent.AddUIComponent<UIPanel>();
             root.name = Name;
             root.relativePosition = at;
@@ -156,7 +169,13 @@ namespace FinanceOverhaul
             indexValue = FoText.Label(market, Name + "MarketIndex", "", 1.4f, FoTheme.GameText);
             indexValue.relativePosition = new Vector3(Pad, Pad + 16f);
             indexValue.tooltip = Strings.Get("overview.market.indexTip");
-            indexChange = FoText.Label(market, Name + "MarketChange", "", 0.8f, FoTheme.GameText);
+            // As every pill: a click shows all of them in % or in points (₡).
+            indexChange = FoPill.AddValue(market, new Vector2(72f, 18f), 0.75f, FoTheme.Header);
+            indexChange.name = Name + "MarketChange";
+            indexChange.isInteractive = true;
+            indexChange.tooltip = Strings.Get("monitor.pill.tip");
+            indexChange.eventClick += (c, p) => togglePills();
+            indexDays = FoText.Label(market, Name + "MarketDays", "", 0.75f, FoTheme.TextMuted);
 
             range = FoToggleTabs.Add(
                 market,
@@ -225,8 +244,15 @@ namespace FinanceOverhaul
             for (int i = 0; i < Movers; i++)
             {
                 float y = moversY + 20f + i * MoverH;
-                gainers[i] = new Mover(market, Name + "MarketGainer-" + i, Pad, y, half);
-                losers[i] = new Mover(market, Name + "MarketLoser-" + i, Pad + half + Pad, y, half);
+                gainers[i] = new Mover(market, Name + "MarketGainer-" + i, Pad, y, half, toggle);
+                losers[i] = new Mover(
+                    market,
+                    Name + "MarketLoser-" + i,
+                    Pad + half + Pad,
+                    y,
+                    half,
+                    toggle
+                );
             }
 
             noGainers = None(Name + "MarketNoGainers", Pad, moversY + 22f);
@@ -284,7 +310,13 @@ namespace FinanceOverhaul
             OverviewPage page = Page;
             int days = Days;
             var sig = new StringBuilder();
-            sig.Append(page).Append('|').Append(days).Append('|').Append(Strings.Language);
+            sig.Append(page)
+                .Append('|')
+                .Append(days)
+                .Append('|')
+                .Append(Strings.Language)
+                .Append('|')
+                .Append(pillsInPoints());
             foreach (MonitorQuote q in quotes)
             {
                 sig.Append('|')
@@ -328,15 +360,19 @@ namespace FinanceOverhaul
 
             indexValue.text = MarketOverview.IndexText(last, inMoney);
             float change = MarketOverview.RangeChange(index);
-            indexChange.text = MarketOverview.RangeChangeText(change, days);
             int sign = Math.Sign(Math.Round(change * 10f));
-            indexChange.textColor =
-                sign > 0 ? FoTheme.GamePositive
-                : sign < 0 ? FoTheme.GameNegative
-                : FoTheme.GameValue;
+            indexChange.text = MarketOverview.RangePill(index, inMoney, pillsInPoints());
+            indexChange.color = FoTheme.Change(StockMonitor.ChangeColour(change));
+            float pillY =
+                indexValue.relativePosition.y + indexValue.height - indexChange.height - 4f;
             indexChange.relativePosition = new Vector3(
                 indexValue.relativePosition.x + indexValue.width + 10f,
-                indexValue.relativePosition.y + indexValue.height - indexChange.height - 3f
+                pillY
+            );
+            indexDays.text = MarketOverview.OverDays(days);
+            indexDays.relativePosition = new Vector3(
+                indexChange.relativePosition.x + indexChange.width + 6f,
+                pillY + 2f
             );
 
             Color32 line =
@@ -359,8 +395,8 @@ namespace FinanceOverhaul
             List<MonitorQuote> down = MarketOverview.Movers(quotes, false, Movers);
             for (int i = 0; i < Movers; i++)
             {
-                gainers[i].Show(i < up.Count ? up[i] : null);
-                losers[i].Show(i < down.Count ? down[i] : null);
+                gainers[i].Show(i < up.Count ? up[i] : null, pillsInPoints());
+                losers[i].Show(i < down.Count ? down[i] : null, pillsInPoints());
             }
 
             noGainers.isVisible = up.Count == 0;
@@ -421,7 +457,14 @@ namespace FinanceOverhaul
             private readonly float width;
             private MonitorQuote quote;
 
-            public Mover(UIComponent parent, string name, float x, float y, float width)
+            public Mover(
+                UIComponent parent,
+                string name,
+                float x,
+                float y,
+                float width,
+                Action toggle
+            )
             {
                 this.width = width;
                 back = parent.AddUIComponent<UIPanel>();
@@ -441,10 +484,17 @@ namespace FinanceOverhaul
                 change = FoPill.AddValue(back, new Vector2(62f, 17f), 0.7f, FoTheme.Header);
                 change.name = name + "Change";
                 change.relativePosition = new Vector3(width - 62f - 4f, 3f);
-                change.isInteractive = false;
+                // A click on the pill flips every pill between % and ₡ (not the dialog).
+                change.isInteractive = true;
+                change.tooltip = Strings.Get("monitor.pill.tip");
+                change.eventClick += (c, p) =>
+                {
+                    p.Use();
+                    toggle();
+                };
             }
 
-            public void Show(MonitorQuote q)
+            public void Show(MonitorQuote q, bool inPoints)
             {
                 quote = q;
                 back.isVisible = q != null;
@@ -457,7 +507,9 @@ namespace FinanceOverhaul
                 back.tooltip = q.Name;
                 price.text = StockMonitor.PriceText(q.Price);
                 price.relativePosition = new Vector3(width - 62f - 4f - 8f - price.width, 5f);
-                change.text = StockMonitor.ChangeText(q.ChangeRate);
+                change.text = inPoints
+                    ? StockMonitor.ChangeAmountFromRate(q.Price, q.ChangeRate)
+                    : StockMonitor.ChangeText(q.ChangeRate);
                 change.color = FoTheme.Change(StockMonitor.ChangeColour(q.ChangeRate));
             }
         }

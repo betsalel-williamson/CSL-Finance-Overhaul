@@ -72,6 +72,7 @@ namespace FinanceOverhaul
                     Spent = buffer[i].m_playerSpentMoney,
                     Local = CompanyListing.IsCompany(ai, out company),
                     Locked = !available,
+                    Coin = ai.m_unit == InvestmentAI.Unit.Coin,
                 };
                 if (!available)
                 {

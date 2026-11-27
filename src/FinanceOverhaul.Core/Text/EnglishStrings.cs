@@ -59,7 +59,8 @@ namespace FinanceOverhaul.Core
                 "overview.market.indexTip",
                 "Every stock on sale, each counted equally, as the city index fund counts them: each day it moves by their average move."
             },
-            { "overview.market.rangeChange", "{0} over {1} days" },
+            { "overview.market.overDays", "over {0} days" },
+            { "overview.market.points", "{0} pts" },
             { "overview.market.gainers", "Top gainers today" },
             { "overview.market.losers", "Top losers today" },
             { "overview.market.noMovers", "None today" },

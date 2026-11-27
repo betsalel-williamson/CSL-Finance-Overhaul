@@ -159,7 +159,11 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
      members' prices starting at 100 (each day the geometric mean of their daily price ratios, each
      capped at a halving or a doubling: `CityIndexBasket.TryComputeChainedMark`). Also today's top
      three gainers and losers (a click opens the stock's dialog) and "6 up · 9 down · 0 flat"; IDX
-     itself is left out of the movers and the count.
+     itself is left out of the movers and the count. Every pill (the index's, the movers', the
+     list's) flips between % and points with one click: ₡ for IDX and the stocks, index points
+     ("+2.7 pts") for the rebuilt level. The rebuilt level counts the fund's basket, share-priced
+     stocks only (ChirpCoin is left out); dev `index-members` lists what the fund counts, the local
+     IPO companies included.
   2. Portfolio dashboard, 3. heatmap, 4. city and market, 5. market desk feed: designed, not built.
      Later, a click on a stock shows its trade in this column instead of the dialog.
 - **Hover:** over a stock's 30-day line the game's own stock tooltip opens with its large "Share

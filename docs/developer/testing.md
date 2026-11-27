@@ -105,17 +105,18 @@ game reports and the offering prices its businesses would list at — scenario 6
 such as `ParkAreaUnlockingPanel`, or show it for two seconds for a capture of its look),
 `expect-wheel-step LIST MIN` (pixels the mouse wheel moves a list a notch — scenario 69),
 `log-prices` (logs every listed stock's kept daily prices, up to 30 and newest first, with its price
-rule, for measuring how the game's stocks move), `local-ipos keep` and `ipo-list-now keep` (switch
-the flag on for good and leave the company listed: for trying the feature in a test city, not for
-scenarios), `ipo-view`, `expect-building-panel`, `expect-fireworks`, `expect-paused on|off`,
-`expect-company-moving DAYS` (the company's stock closed at a different price on each of its last
-DAYS days) and `expect-company-first` (scenario 70: View headquarters opens the building's info
-panel with the camera framed on it, fireworks go off, and the new company is the first card),
-`log-effects PATTERN` (the game's loaded effects by name), `dump building-panel` (the tree of the
-game's zoned building info panel; scenario 71 checks what the mod adds to it for a listed company;
-`dump (Library) UniqueFactoryWorldInfoPanel` takes any control name with a space in it),
-`ipo-area-panel` (opens the industry area's own panel for the scenario's newest company, an area;
-scenario 78), `investments-list on|off|restore` (the "Investments list and research" flag),
+rule, for measuring how the game's stocks move), `index-members` (logs every investment, its unit,
+whether it is on sale and whether the city index fund counts it), `local-ipos keep` and
+`ipo-list-now keep` (switch the flag on for good and leave the company listed: for trying the
+feature in a test city, not for scenarios), `ipo-view`, `expect-building-panel`, `expect-fireworks`,
+`expect-paused on|off`, `expect-company-moving DAYS` (the company's stock closed at a different
+price on each of its last DAYS days) and `expect-company-first` (scenario 70: View headquarters
+opens the building's info panel with the camera framed on it, fireworks go off, and the new company
+is the first card), `log-effects PATTERN` (the game's loaded effects by name), `dump building-panel`
+(the tree of the game's zoned building info panel; scenario 71 checks what the mod adds to it for a
+listed company; `dump (Library) UniqueFactoryWorldInfoPanel` takes any control name with a space in
+it), `ipo-area-panel` (opens the industry area's own panel for the scenario's newest company, an
+area; scenario 78), `investments-list on|off|restore` (the "Investments list and research" flag),
 `investments-sort sync on|off` or `investments-sort SORT [currency]` (the list's own sort settings,
 put back after), `investments-scroll PIXELS` (moves that list as the wheel would),
 `expect-investments SECTION SYMBOL` (the stock is in Portfolio, Local or All, or `none`; logs the

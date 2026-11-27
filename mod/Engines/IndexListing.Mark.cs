@@ -1,4 +1,5 @@
 using System; // Exception
+using System.Collections.Generic; // List
 // FinanceOverhaul.Core: CityIndexBasket, IndexDay, IndexMark, IndexMarkMode, IndexRebase, OrderDay
 using FinanceOverhaul.Core;
 
@@ -247,6 +248,38 @@ namespace FinanceOverhaul
                     IsSectorStock(info) && info.m_investmentAI.IsAvailable((byte)i, ref buffer[i])
                 );
             }
+        }
+
+        /// <summary>
+        /// Every created investment with what the basket sees of it (dev: index-members):
+        /// name, unit, on sale, member of the index.
+        /// </summary>
+        internal static List<string> MemberReport()
+        {
+            var lines = new List<string>();
+            Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                InvestmentInfo info = buffer[i].Info;
+                if ((buffer[i].m_flags & Investment.Flags.Created) == 0 || info == null)
+                {
+                    continue;
+                }
+
+                InvestmentAI ai = info.m_investmentAI;
+                bool available = ai != null && ai.IsAvailable((byte)i, ref buffer[i]);
+                lines.Add(
+                    info.m_name
+                        + " unit="
+                        + (ai == null ? "?" : ai.m_unit.ToString())
+                        + " available="
+                        + available
+                        + " member="
+                        + (IsSectorStock(info) && available)
+                );
+            }
+
+            return lines;
         }
 
         private static bool TryReadBasketMark(out float mark)

@@ -681,6 +681,17 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "index-members":
+                {
+                    // index-members — every investment, its unit, whether it is on sale and
+                    // whether the city index fund counts it.
+                    foreach (string member in IndexListing.MemberReport())
+                    {
+                        ModLog.Info("uitest: index-member|" + member);
+                    }
+
+                    break;
+                }
                 case "log-prices":
                 {
                     // log-prices — every listed stock's daily prices as the game keeps them

@@ -80,6 +80,25 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
+        public void TheIndexPillShowsPercentOrPoints()
+        {
+            float[] fund = { 3141.2f, 3100f, 3056f };
+            Assert.Equal("-2.71%", MarketOverview.RangePill(fund, true, false).Replace("−", "-"));
+            Assert.Equal("−₡85", MarketOverview.RangePill(fund, true, true));
+            Assert.Equal("+2.7 pts", MarketOverview.RangePill(new[] { 100f, 102.7f }, false, true));
+            Assert.Equal("--", MarketOverview.RangePill(new float[0], false, true));
+        }
+
+        [Fact]
+        public void CoinsAreLeftOutOfTheRebuiltIndexAsTheFundLeavesThemOut()
+        {
+            var coin = Q("CHC", 9f, new[] { 100f, 200f });
+            coin.Coin = true;
+            var quotes = new List<MonitorQuote> { Q("A", 0f, new[] { 10f, 10f }), coin };
+            Assert.Equal(new[] { 100f, 100f }, MarketOverview.Index(quotes, 30));
+        }
+
+        [Fact]
         public void TheRangeKeepsOnlyTheLastDays()
         {
             var quotes = new List<MonitorQuote> { Q("A", 0f, new[] { 1f, 2f, 4f, 8f }) };
@@ -120,7 +139,7 @@ namespace FinanceOverhaul.Core.Tests
             Assert.Equal(OverviewPage.Market, OverviewPages.Shown(OverviewPage.Feed));
             Assert.Equal("Market", OverviewPages.Tab(OverviewPage.Market));
             Assert.Equal("Feed", OverviewPages.Tab(OverviewPage.Feed));
-            Assert.Equal("+4.2% over 30 days", MarketOverview.RangeChangeText(4.2f, 30));
+            Assert.Equal("over 30 days", MarketOverview.OverDays(30));
         }
     }
 }
