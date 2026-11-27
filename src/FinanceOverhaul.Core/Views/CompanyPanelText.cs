@@ -14,8 +14,11 @@ namespace FinanceOverhaul.Core
         /// <summary>The section's height: the panel grows by this and the gap under it.</summary>
         public const float SectionHeight = 128f;
 
-        /// <summary>Space the section takes in the panel, with the gap below it.</summary>
-        public const float SectionSpace = SectionHeight + 8f;
+        /// <summary>
+        /// Space the section takes in the panel, with the gap below it: as wide as the panel's
+        /// side margins (12), so the section never meets the window's rounded bottom edge.
+        /// </summary>
+        public const float SectionSpace = SectionHeight + 12f;
 
         /// <summary>Still in its offering window: the price is the offering price.</summary>
         public static bool Offering(LocalCompany company, int today)

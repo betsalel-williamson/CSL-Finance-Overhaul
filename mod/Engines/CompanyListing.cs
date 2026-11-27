@@ -263,6 +263,18 @@ namespace FinanceOverhaul
         }
 
         /// <summary>The slot of a company's stock, or −1 (simulation thread).</summary>
+        /// <summary>
+        /// The company's ticker symbol from its listed stock type (the registry keeps none: the
+        /// symbol map is built over every stock type); empty while it has no listing.
+        /// </summary>
+        public static string SymbolOf(int companyId)
+        {
+            int slot = SlotOf(companyId);
+            InvestmentInfo info =
+                slot > 0 ? EconomyManager.instance.m_investments.m_buffer[slot].Info : null;
+            return info == null ? string.Empty : StockSymbols.For(info);
+        }
+
         public static int SlotOf(int companyId)
         {
             Investment[] buffer = EconomyManager.instance.m_investments.m_buffer;

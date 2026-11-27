@@ -588,6 +588,45 @@ namespace FinanceOverhaul
                     ctx.Fireworks = now;
                     break;
                 }
+                case "company-home":
+                {
+                    // company-home SYMBOL — opens a listed company's headquarters panel, as the
+                    // View headquarters button does (an area's main building, a factory, a shop).
+                    LocalCompany found = null;
+                    foreach (LocalCompany c in CompanyDesk.Companies())
+                    {
+                        string symbol = string.IsNullOrEmpty(c.Symbol)
+                            ? CompanyListing.SymbolOf(c.Id)
+                            : c.Symbol;
+                        if (string.Equals(symbol, a, System.StringComparison.OrdinalIgnoreCase))
+                        {
+                            found = c;
+                        }
+                    }
+
+                    if (found == null)
+                    {
+                        var listed = new List<string>();
+                        foreach (LocalCompany c in CompanyDesk.Companies())
+                        {
+                            listed.Add(CompanyListing.SymbolOf(c.Id));
+                        }
+
+                        r.Error =
+                            "no listed company "
+                            + a
+                            + " (listed: "
+                            + string.Join(", ", listed.ToArray())
+                            + ")";
+                    }
+                    else if (!CompanyHome.Show(found, false))
+                    {
+                        r.Error = a + " has no standing headquarters";
+                    }
+
+                    yield return new WaitForSeconds(1.5f);
+                    break;
+                }
                 case "ipo-dialog":
                     // ipo-dialog on|off|close — lets this scenario's listing open the IPO dialog
                     // (off by default in tests), or closes it like the × button.

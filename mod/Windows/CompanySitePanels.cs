@@ -26,6 +26,12 @@ namespace FinanceOverhaul
         private const string FactoryPanel = "(Library) UniqueFactoryWorldInfoPanel"; // not shown: a game control name
         private const float Pad = 12f;
 
+        /// <summary>
+        /// The service panel's background (InfoBubbleService) ends in its pointer tail: this much
+        /// more under the section leaves the same 12 visible above the panel's edge as at its sides.
+        /// </summary>
+        private const float StackedEdge = 16f;
+
         /// <summary>The factory panel's rows end this far above its bottom edge.</summary>
         private const float FactoryBottomInset = 17f;
 
@@ -299,7 +305,10 @@ namespace FinanceOverhaul
                     // One more row of the stack: the section and the gap under it.
                     holder = parent.AddUIComponent<UIPanel>();
                     holder.name = prefix + "Holder";
-                    holder.size = new Vector2(parent.width, CompanyPanelText.SectionSpace);
+                    holder.size = new Vector2(
+                        parent.width,
+                        CompanyPanelText.SectionSpace + StackedEdge
+                    );
                     holder.isVisible = false;
                     listing = new ListingSection(holder, prefix, width);
                     listing.Panel.relativePosition = new Vector3(Pad, 0f);

@@ -48,7 +48,34 @@ namespace FinanceOverhaul
         /// <summary>The companies the Feed reads (none while Local IPOs are off).</summary>
         private static List<LocalCompany> FeedCompanies()
         {
-            return CompanyDesk.Enabled ? CompanyDesk.Companies() : new List<LocalCompany>();
+            var shown = new List<LocalCompany>();
+            if (!CompanyDesk.Enabled)
+            {
+                return shown;
+            }
+
+            // Copies with their ticker filled in from the listing (the registry keeps none, and
+            // what it holds is saved: it is not written to).
+            foreach (LocalCompany c in CompanyDesk.Companies())
+            {
+                string symbol = string.IsNullOrEmpty(c.Symbol)
+                    ? CompanyListing.SymbolOf(c.Id)
+                    : c.Symbol;
+                shown.Add(
+                    new LocalCompany
+                    {
+                        Id = c.Id,
+                        Name = c.Name,
+                        Symbol = string.IsNullOrEmpty(symbol) ? c.Name : symbol,
+                        Kind = c.Kind,
+                        Status = c.Status,
+                        AnnouncedDay = c.AnnouncedDay,
+                        FirstTradingDay = c.FirstTradingDay,
+                    }
+                );
+            }
+
+            return shown;
         }
 
         private void BuildFeed()
