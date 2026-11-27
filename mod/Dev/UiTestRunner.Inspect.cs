@@ -6,7 +6,9 @@ using System.IO; // Path
 // ColossalFramework.UI: UIButton, UIComponent, UIFont, UIInput, UILabel, UIPanel,
 //   UIScrollablePanel, UISlider, UITextComponent, UIView
 using ColossalFramework.UI;
-using FinanceOverhaul.Core; // DuplicateCopies, InvestmentRow, MonitorSort, SliderThumb
+// FinanceOverhaul.Core: DuplicateCopies, InvestmentRow, MonitorSort, PortfolioOverview,
+//   SliderThumb
+using FinanceOverhaul.Core;
 using UnityEngine; // Application, GameObject, Mathf, Resources, Vector2, Vector3, WaitForSeconds
 
 // Game classes used without a using (global namespace, Assembly-CSharp): BuySellInvestmentPanel,
@@ -679,6 +681,16 @@ namespace FinanceOverhaul
                             a + " moves " + list.scrollWheelAmount + " a notch, expected " + b;
                     }
 
+                    break;
+                }
+                case "overview-orders":
+                {
+                    // overview-orders longest|off — the Portfolio view shows one order of each
+                    // kind with the longest numbers (and a wide symbol) instead of the city's.
+                    InvestmentsOverview.TestOrders =
+                        a == "longest"
+                            ? PortfolioOverview.LongestOrders("WWWWW", OrderDesk.Today) // not shown: a test symbol
+                            : null;
                     break;
                 }
                 case "index-members":

@@ -164,8 +164,22 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
      ("+2.7 pts") for the rebuilt level. The rebuilt level counts the fund's basket, share-priced
      stocks only (ChirpCoin is left out); dev `index-members` lists what the fund counts, the local
      IPO companies included.
-  2. Portfolio dashboard, 3. heatmap, 4. city and market, 5. market desk feed: designed, not built.
-     Later, a click on a stock shows its trade in this column instead of the dialog.
+  2. **Portfolio** (built): value held, today's change (each holding's shares × the ₡ change its
+     pill shows, so it agrees with the pills) and the gain since bought; a 7D | 30D chart of what
+     today's holdings were worth each day (the game keeps no record of earlier holdings); a donut of
+     the holdings by value (the four largest by name, the rest as Other; colours `FoTheme.Series`,
+     Kit `FoDonut`) with its legend; the open orders, each with its stock and Cancel, its side on
+     its own line and its terms wrapped, as many as fit, then "+N more in the list". Dev
+     `overview-orders longest` shows one order of each kind with the longest numbers (9,999,999
+     shares at ₡9,999,999, a year left) so scenario 79 checks they fit.
+  3. Heatmap, 4. city and market, 5. market desk feed: designed, not built. Later, a click on a
+     stock shows its trade in this column instead of the dialog.
+- **Movers in points (2026-11-27):** with the pills in ₡ the Market view ranks today's gainers and
+  losers by the ₡ change, as the list's Change sort does (`MarketOverview.Movers`).
+- **Scrolling (2026-11-27):** each stock has one 30-day line texture, drawn only when its prices or
+  colour change; a scroll hands a pooled line another stock's texture and never repaints. The hover
+  chart follows the stock under the pointer, not the pooled line, so it changes when the list
+  scrolls under a still pointer.
 - **Hover:** over a stock's 30-day line the game's own stock tooltip opens with its large "Share
   value" chart, beside the line (left of it near the screen edge), as over the game's cards; it
   closes when the pointer leaves. The list reads the mod's pointer each frame, so game UI tests can

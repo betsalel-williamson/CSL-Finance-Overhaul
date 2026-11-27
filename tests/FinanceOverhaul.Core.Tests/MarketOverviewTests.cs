@@ -132,6 +132,17 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
+        public void InPointsTheMoversAreRankedByTheChangeInMoney()
+        {
+            var cheap = Q("GEI", -7.24f, new[] { 200f, 187f });
+            var dear = Q("CHC", -3.4f, new[] { 22000f, 21291f });
+            var quotes = new List<MonitorQuote> { cheap, dear };
+            // By %: GEI (−7.24%) first; by ₡: CHC (about −₡750) before GEI (about −₡15).
+            Assert.Equal("GEI", MarketOverview.Movers(quotes, false, 3)[0].Symbol);
+            Assert.Equal("CHC", MarketOverview.Movers(quotes, false, 3, true)[0].Symbol);
+        }
+
+        [Fact]
         public void OnlyBuiltViewsAreShownAndEachHasATab()
         {
             Assert.Equal(5, OverviewPages.All.Length);

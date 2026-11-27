@@ -48,6 +48,32 @@ wait 0.5
 capture investments-overview-market-7d
 click FinanceOverhaulInvestmentsOverviewMarketRange-30
 wait 0.5
+# the Portfolio view: value, today and gain, the holdings' chart, the donut, the open orders
+click FinanceOverhaulInvestmentsOverviewTab-Portfolio
+wait 0.5
+expect-visible FinanceOverhaulInvestmentsOverviewPortfolio
+expect-hidden FinanceOverhaulInvestmentsOverviewMarket
+expect-text FinanceOverhaulInvestmentsOverviewPortfolioValue ₡
+expect-visible FinanceOverhaulInvestmentsOverviewPortfolioChart
+expect-no-overflow FinanceOverhaulInvestmentsOverviewPortfolio
+capture investments-overview-portfolio
+# the longest order text of each kind wraps inside its row; rows stop before the bottom edge
+overview-orders longest
+wait 0.5
+expect-visible FinanceOverhaulInvestmentsOverviewPortfolioOrder-0
+expect-no-overflow FinanceOverhaulInvestmentsOverviewPortfolio
+expect-no-overlap FinanceOverhaulInvestmentsOverviewPortfolioOrder-0Side FinanceOverhaulInvestmentsOverviewPortfolioOrder-0Text
+expect-no-overlap FinanceOverhaulInvestmentsOverviewPortfolioOrder-0Symbol FinanceOverhaulInvestmentsOverviewPortfolioOrder-0Cancel
+expect-no-overlap FinanceOverhaulInvestmentsOverviewPortfolioOrder-1Side FinanceOverhaulInvestmentsOverviewPortfolioOrder-1Text
+expect-no-overlap FinanceOverhaulInvestmentsOverviewPortfolioOrder-1Symbol FinanceOverhaulInvestmentsOverviewPortfolioOrder-1Cancel
+expect-no-overlap FinanceOverhaulInvestmentsOverviewPortfolioOrder-2Side FinanceOverhaulInvestmentsOverviewPortfolioOrder-2Text
+expect-no-overlap FinanceOverhaulInvestmentsOverviewPortfolioOrder-2Symbol FinanceOverhaulInvestmentsOverviewPortfolioOrder-2Cancel
+capture investments-overview-portfolio-longest-orders
+overview-orders off
+wait 0.5
+click FinanceOverhaulInvestmentsOverviewTab-Market
+wait 0.5
+expect-visible FinanceOverhaulInvestmentsOverviewMarket
 # separate: the Monitor in ₡ and sorted by symbol leaves the list as it was
 monitor-change currency
 monitor-sort Symbol
@@ -106,6 +132,7 @@ expect-visible OwnedInvestmentsPanel
 expect-visible OwnedInvestmentsSummaryPanel
 expect-hidden FinanceOverhaulInvestmentsList
 cleanup:
+overview-orders off
 monitor restore
 investments-list restore
 close-economy

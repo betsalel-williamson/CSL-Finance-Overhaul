@@ -42,7 +42,7 @@ namespace FinanceOverhaul.Core
         /// <summary>Whether a view is built (its tab can be picked).</summary>
         public static bool IsBuilt(OverviewPage page)
         {
-            return page == OverviewPage.Market;
+            return page == OverviewPage.Market || page == OverviewPage.Portfolio;
         }
 
         /// <summary>The view to show for a saved choice: it, or the first built one.</summary>
@@ -199,13 +199,16 @@ namespace FinanceOverhaul.Core
         }
 
         /// <summary>
-        /// Today's biggest movers one way: rising (<paramref name="rising"/>) or falling, by the
-        /// game's change rate, largest first, at most <paramref name="count"/>; ties A–Z.
+        /// Today's biggest movers one way: rising (<paramref name="rising"/>) or falling,
+        /// largest first, at most <paramref name="count"/>; ties A–Z. Ranked as the pills show
+        /// the change: by the game's change rate, or with the pills in points by that change in
+        /// ₡ (<paramref name="byAmount"/>), as the list's Change sort does.
         /// </summary>
         public static List<MonitorQuote> Movers(
             IEnumerable<MonitorQuote> quotes,
             bool rising,
-            int count
+            int count,
+            bool byAmount = false
         )
         {
             var movers = new List<MonitorQuote>();
@@ -225,9 +228,13 @@ namespace FinanceOverhaul.Core
             movers.Sort(
                 (a, b) =>
                 {
-                    int byRate = rising
-                        ? b.ChangeRate.CompareTo(a.ChangeRate)
-                        : a.ChangeRate.CompareTo(b.ChangeRate);
+                    double ka = byAmount
+                        ? StockMonitor.ChangeAmount(a.Price, a.ChangeRate)
+                        : a.ChangeRate;
+                    double kb = byAmount
+                        ? StockMonitor.ChangeAmount(b.Price, b.ChangeRate)
+                        : b.ChangeRate;
+                    int byRate = rising ? kb.CompareTo(ka) : ka.CompareTo(kb);
                     return byRate != 0
                         ? byRate
                         : string.Compare(a.Symbol, b.Symbol, StringComparison.Ordinal);

@@ -244,6 +244,7 @@ namespace FinanceOverhaul
             CompanyDesk.TestExchangeLevel = -1; // the city's own Stock Exchange
             IndustrySites.TestWeeklyProfitCents = null; // the areas' and factories' own profit
             IndustrySites.TestWorkers = null; // and their own workers
+            InvestmentsOverview.TestOrders = null; // the Portfolio view's own orders
             CompanyDesk.TestFindHomes(); // no building counts as lost
             CompanyDesk.RestoreCounts(); // and the city's own healthy-day counts
             if (ctx.BrightnessBefore.HasValue && Mod.Settings != null)

@@ -68,6 +68,26 @@ namespace FinanceOverhaul.Core
             { "overview.market.daysAgo", "{0} days ago" },
             { "overview.market.today", "Today" },
             { "overview.market.high", "H {0}" },
+            { "overview.portfolio.value", "Value held" },
+            { "overview.portfolio.today", "Today" },
+            { "overview.portfolio.gain", "Gain since bought" },
+            {
+                "overview.portfolio.chartTip",
+                "What the shares the city holds now were worth at each day's price."
+            },
+            { "overview.portfolio.holdings", "Holdings" },
+            { "overview.portfolio.orders", "Open orders" },
+            { "overview.portfolio.noOrders", "No open orders" },
+            { "overview.portfolio.moreOrders", "+{0} more in the list" },
+            {
+                "overview.portfolio.none",
+                "The city holds no shares yet. Click a stock to buy some."
+            },
+            { "overview.portfolio.other", "Other" },
+            { "overview.portfolio.side.limit", "BUY" },
+            { "overview.portfolio.side.stopLoss", "SELL (stop-loss)" },
+            { "overview.portfolio.side.takeProfit", "SELL (take-profit)" },
+            { "overview.portfolio.side.trailingStop", "SELL (trailing stop)" },
             { "overview.market.low", "L {0}" },
             { "investments.ungroup", "Ungroup" },
             { "investments.row.order", "{0} · {1}" },

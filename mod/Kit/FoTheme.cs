@@ -213,5 +213,21 @@ namespace FinanceOverhaul
                 : rate == LedText.Loss ? Loss
                 : TickerFlat;
         }
+
+        /// <summary>
+        /// The parts of a chart with several (the holdings donut), in order: the accent, then
+        /// the game's gain green, the offer gold, the bond blue and the loss orange.
+        /// </summary>
+        public static readonly Color32[] Series =
+        {
+            Accent,
+            GamePositive,
+            OfferGold,
+            BondCard,
+            GameNegative,
+        };
+
+        /// <summary>The "Other" part of such a chart.</summary>
+        public static readonly Color32 SeriesOther = TickerFlat;
     }
 }
