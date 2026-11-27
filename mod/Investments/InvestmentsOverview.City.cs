@@ -33,17 +33,27 @@ namespace FinanceOverhaul
             cityList = Scroller(city, Name + "CityRows", Pad + 30f);
         }
 
-        /// <summary>A list under a view's header that scrolls with the mouse wheel.</summary>
+        /// <summary>
+        /// A list under a view's header that scrolls with the mouse wheel and its scrollbar
+        /// (Kit <see cref="FoScrollbar"/>, shown only when the list is longer than the view).
+        /// </summary>
         private static UIScrollablePanel Scroller(UIPanel view, string name, float top)
         {
+            float height = view.height - top - Pad;
             UIScrollablePanel list = view.AddUIComponent<UIScrollablePanel>();
             list.name = name;
             list.relativePosition = new Vector3(Pad, top);
-            list.size = new Vector2(view.width - 2f * Pad, view.height - top - Pad);
+            list.size = new Vector2(view.width - 2f * Pad - FoScrollbar.Width - 4f, height);
             list.clipChildren = true;
             list.autoLayout = false;
             list.scrollWheelDirection = UIOrientation.Vertical;
             list.scrollWheelAmount = 26;
+            list.verticalScrollbar = FoScrollbar.Add(
+                view,
+                name + "Scrollbar",
+                new Vector3(view.width - Pad - FoScrollbar.Width, top),
+                height
+            );
             return list;
         }
 

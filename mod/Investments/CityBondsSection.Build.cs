@@ -1,7 +1,6 @@
 using System; // StringComparison
-// ColossalFramework.UI: LayoutDirection, UIButton, UIComponent, UIFillDirection,
-//   UIHorizontalAlignment, UILabel, UIOrientation, UIPanel, UIPivotPoint, UIScrollablePanel,
-//   UIScrollbar, UISlicedSprite, UITextField, UITextureSprite
+// ColossalFramework.UI: LayoutDirection, UIButton, UIComponent, UIHorizontalAlignment, UILabel,
+//   UIOrientation, UIPanel, UIScrollablePanel, UIScrollbar, UITextField, UITextureSprite
 using ColossalFramework.UI;
 using FinanceOverhaul.Core; // BondTerm, BondText, IssuedBond, ScrollFade, Strings
 // UnityEngine: Color32, Mathf, RectOffset, Texture2D, TextureFormat, TextureWrapMode, Vector2,
@@ -434,37 +433,10 @@ namespace FinanceOverhaul
             fadeBottom.BringToFront();
         }
 
-        /// <summary>
-        /// A vertical scrollbar in the game's style (track and thumb sprites); it hides itself
-        /// while everything fits.
-        /// </summary>
+        /// <summary>The owed list's scrollbar (Kit <see cref="FoScrollbar"/>).</summary>
         private static UIScrollbar Scrollbar(UIComponent parent, Vector3 at, float height)
         {
-            UIScrollbar bar = parent.AddUIComponent<UIScrollbar>();
-            bar.name = OwedScrollbarName;
-            bar.relativePosition = at;
-            bar.size = new Vector2(ScrollbarW, height);
-            bar.orientation = UIOrientation.Vertical;
-            bar.pivot = UIPivotPoint.TopLeft;
-            bar.minValue = 0f;
-            bar.value = 0f;
-            bar.incrementAmount = 50f;
-            bar.autoHide = true;
-            UISlicedSprite track = bar.AddUIComponent<UISlicedSprite>();
-            track.relativePosition = Vector3.zero;
-            track.autoSize = true;
-            track.size = bar.size;
-            track.fillDirection = UIFillDirection.Vertical;
-            track.spriteName = "ScrollbarTrack";
-            bar.trackObject = track;
-            UISlicedSprite thumb = track.AddUIComponent<UISlicedSprite>();
-            thumb.relativePosition = Vector3.zero;
-            thumb.fillDirection = UIFillDirection.Vertical;
-            thumb.autoSize = true;
-            thumb.width = ScrollbarW - 4f;
-            thumb.spriteName = "ScrollbarThumb";
-            bar.thumbObject = thumb;
-            return bar;
+            return FoScrollbar.Add(parent, OwedScrollbarName, at, height);
         }
 
         private UILabel Row(float left, ref float y, string label, string name)

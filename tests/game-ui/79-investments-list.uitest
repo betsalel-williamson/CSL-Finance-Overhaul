@@ -97,6 +97,10 @@ expect-no-overlap FinanceOverhaulInvestmentsOverviewCityRow-0Figure FinanceOverh
 expect-no-overlap FinanceOverhaulInvestmentsOverviewCityRow-0Driver FinanceOverhaulInvestmentsOverviewCityRow-0Change
 expect-no-overlap FinanceOverhaulInvestmentsOverviewCityRow-0Figure FinanceOverhaulInvestmentsOverviewCityRow-0Rule
 expect-no-overlap FinanceOverhaulInvestmentsOverviewCityRows FinanceOverhaulInvestmentsOverviewCityRange
+# a stock per row overflows the view: the scrollbar shows, beside the rows (not over the pills)
+expect-visible FinanceOverhaulInvestmentsOverviewCityRowsScrollbar
+expect-no-overlap FinanceOverhaulInvestmentsOverviewCityRowsScrollbar FinanceOverhaulInvestmentsOverviewCityRows
+expect-no-overlap FinanceOverhaulInvestmentsOverviewCityRowsScrollbar FinanceOverhaulInvestmentsOverviewCityRow-0Change
 capture investments-overview-city
 # the Feed view: what is coming up and what happened lately
 click FinanceOverhaulInvestmentsOverviewTab-Feed
