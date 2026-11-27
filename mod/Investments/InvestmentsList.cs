@@ -1,5 +1,5 @@
 using System; // Action, Array, Exception, Func, Math
-using System.Collections.Generic; // Dictionary, IList, KeyValuePair, List
+using System.Collections.Generic; // Dictionary, HashSet, IList, KeyValuePair, List
 // ColossalFramework.UI: UIButton, UIComponent, UIHorizontalAlignment, UILabel, UIOrientation,
 //   UIPanel, UIScrollbar, UISlicedSprite, UISprite, UITextureSprite, UIVerticalAlignment, UIView
 using ColossalFramework.UI;
@@ -308,6 +308,7 @@ namespace FinanceOverhaul
 
             sparks.Clear();
             sparksDrawn.Clear();
+            sparkSprites.Clear(); // children of the list: gone with it
             list = null;
             page = null;
             if (Current == this)
@@ -403,6 +404,31 @@ namespace FinanceOverhaul
         // only hands a pooled line another stock's texture, it never repaints (Figma band 20).
         private readonly Dictionary<string, Texture2D> sparks = new Dictionary<string, Texture2D>();
         private readonly Dictionary<string, string> sparksDrawn = new Dictionary<string, string>();
+
+        private readonly Dictionary<string, UITextureSprite> sparkSprites =
+            new Dictionary<string, UITextureSprite>();
+
+        /// <summary>
+        /// The stock's own 30-day line sprite in the list's view, with the stock's texture: a
+        /// pooled line moves it over itself. Named for the stock ("…Row-GGISpark").
+        /// </summary>
+        private UITextureSprite SparkSprite(MonitorQuote q)
+        {
+            UITextureSprite sprite;
+            if (!sparkSprites.TryGetValue(q.Symbol, out sprite) || sprite == null)
+            {
+                sprite = view.AddUIComponent<UITextureSprite>();
+                sprite.name = Prefix + "Row-" + q.Symbol + "Spark";
+                sprite.size = new Vector2(Row.SparkWidth, Row.SparkHeight);
+                // Over the line: the game's own stock tooltip with its large chart (the list
+                // checks the pointer each frame, see Hover).
+                sprite.isInteractive = false;
+                sparkSprites[q.Symbol] = sprite;
+            }
+
+            sprite.texture = SparkFor(q, FoTheme.Change(StockMonitor.ChangeColour(q.ChangeRate)));
+            return sprite;
+        }
 
         /// <summary>The stock's 30-day line, redrawn only when its prices or colour changed.</summary>
         private Texture2D SparkFor(MonitorQuote q, Color32 colour)
@@ -540,11 +566,25 @@ namespace FinanceOverhaul
         private void Fill()
         {
             int first = InvestmentList.FirstVisible(tops, offset);
+            var shown = new HashSet<UITextureSprite>();
             for (int i = 0; i < pool.Count; i++)
             {
                 int k = first + i;
                 bool inView = k < rows.Count && tops[k] - offset < view.height;
                 pool[i].Show(inView ? rows[k] : null, rows, inView ? tops[k] - offset : 0f);
+                if (pool[i].Spark != null)
+                {
+                    shown.Add(pool[i].Spark);
+                }
+            }
+
+            // A stock scrolled out of view (or filtered out) hides its line.
+            foreach (UITextureSprite sprite in sparkSprites.Values)
+            {
+                if (sprite != null && !shown.Contains(sprite))
+                {
+                    sprite.isVisible = false;
+                }
             }
         }
 
@@ -693,7 +733,7 @@ namespace FinanceOverhaul
             float rowWidth = view.width - 2f * Pad - 20f;
             for (int i = 0; i < Pool; i++)
             {
-                pool.Add(new Row(view, i, rowWidth, TogglePills, SparkFor));
+                pool.Add(new Row(view, i, rowWidth, TogglePills, SparkFor, SparkSprite));
             }
 
             overview = new InvestmentsOverview(
@@ -739,10 +779,17 @@ namespace FinanceOverhaul
             private readonly UILabel holding;
             private readonly UILabel heading;
             private readonly UILabel detail;
-            private readonly UITextureSprite spark;
+
+            // The 30-day line of the stock shown: that stock's own sprite (the list's), placed
+            // over this line; null for a heading, an order or a locked stock.
+            private UITextureSprite spark;
+            private readonly Func<MonitorQuote, UITextureSprite> sparkSprite;
             private readonly Func<MonitorQuote, Color32, Texture2D> sparkFor;
 
             /// <summary>The size of a stock's 30-day line texture, and its line's thickness.</summary>
+            public const float SparkWidth = SparkW,
+                SparkHeight = SparkH;
+
             public const int SparkTextureWidth = SparkW * SparkScale,
                 SparkTextureHeight = SparkH * SparkScale,
                 SparkThickness = SparkScale + 1;
@@ -772,11 +819,13 @@ namespace FinanceOverhaul
                 int index,
                 float width,
                 Action togglePills,
-                Func<MonitorQuote, Color32, Texture2D> sparkFor
+                Func<MonitorQuote, Color32, Texture2D> sparkFor,
+                Func<MonitorQuote, UITextureSprite> sparkSprite
             )
             {
                 this.width = width;
                 this.sparkFor = sparkFor;
+                this.sparkSprite = sparkSprite;
                 PriceRight = width - 12f;
                 SparkX = PriceRight - 90f - SparkW;
                 LockWidth = PriceRight - SparkX;
@@ -819,13 +868,6 @@ namespace FinanceOverhaul
                 heading = FoText.Label(back, "", "", 0.85f, FoTheme.GameText);
                 heading.relativePosition = new Vector3(12f, 6f);
                 detail = FoText.Label(back, "", "", 0.8f, FoTheme.GameValue);
-
-                spark = back.AddUIComponent<UITextureSprite>();
-                spark.size = new Vector2(SparkW, SparkH);
-                spark.relativePosition = new Vector3(SparkX, 9f);
-                // Over the line: the game's own stock tooltip with its large chart (the list
-                // checks the pointer each frame, see Hover).
-                spark.isInteractive = false;
 
                 price = FoText.Label(back, "", "", 1.0f, FoTheme.GameValue);
                 change = FoPill.AddValue(back, new Vector2(66f, 18f), 0.75f, FoTheme.Header);
@@ -879,8 +921,14 @@ namespace FinanceOverhaul
 
             public void Destroy()
             {
-                // The textures are the list's, one per stock (SparkFor).
-                spark.texture = null;
+                // The lines and their textures are the list's, one per stock.
+                spark = null;
+            }
+
+            /// <summary>The stock's line shown over this pooled line now, or null.</summary>
+            public UITextureSprite Spark
+            {
+                get { return back.isVisible ? spark : null; }
             }
 
             public string Key
@@ -891,7 +939,7 @@ namespace FinanceOverhaul
             /// <summary>The pointer is over this stock's 30-day line (inside the view).</summary>
             public bool OverLine(Vector2 at, UIComponent view)
             {
-                if (!back.isVisible || !spark.isVisible || slot <= 0 || locked)
+                if (!back.isVisible || spark == null || !spark.isVisible || slot <= 0 || locked)
                 {
                     return false;
                 }
@@ -982,7 +1030,7 @@ namespace FinanceOverhaul
                 UIComponent tip = Tooltip();
                 InvestmentTooltip shows =
                     tip == null ? null : tip.GetComponent<InvestmentTooltip>();
-                if (shows == null || slot <= 0 || locked)
+                if (shows == null || slot <= 0 || locked || spark == null)
                 {
                     return;
                 }
@@ -1048,6 +1096,14 @@ namespace FinanceOverhaul
                 MonitorQuote q = row.Stock;
                 slot = q == null ? 0 : q.Id;
                 locked = q != null && q.Locked;
+                // The stock's own line, moved over this line: a pooled line never shows another
+                // stock's line, whatever the game has drawn of it so far.
+                spark = isStock && !locked ? sparkSprite(q) : null;
+                if (spark != null)
+                {
+                    spark.relativePosition = back.relativePosition + new Vector3(SparkX, 9f);
+                    spark.isVisible = true;
+                }
                 available = q == null ? 0u : q.Available;
                 owned = q == null ? 0u : q.Owned;
                 if (!isStock)
@@ -1057,7 +1113,6 @@ namespace FinanceOverhaul
                         {
                             badge,
                             holding,
-                            spark,
                             price,
                             change,
                             gain,
@@ -1134,7 +1189,6 @@ namespace FinanceOverhaul
                 lockLine.isVisible = locked;
                 lockTrack.isVisible = locked;
                 lockFill.isVisible = locked;
-                spark.isVisible = !locked;
                 price.isVisible = !locked;
                 change.isVisible = !locked;
                 if (locked)
@@ -1145,7 +1199,7 @@ namespace FinanceOverhaul
                 else
                 {
                     Color32 colour = FoTheme.Change(StockMonitor.ChangeColour(q.ChangeRate));
-                    spark.texture = sparkFor(q, colour);
+                    sparkFor(q, colour);
                     price.text = BondText.WholeMoney((long)Math.Round(q.Price * 100.0));
                     price.relativePosition = new Vector3(PriceRight - price.width, 3f);
                     // One measure in both units: the game's change rate, or that change in ₡.
@@ -1184,7 +1238,6 @@ namespace FinanceOverhaul
                 holding.name = n + "Holding";
                 heading.name = n + "Title";
                 detail.name = n + "Detail";
-                spark.name = n + "Spark";
                 price.name = n + "Price";
                 change.name = n + "Change";
                 gain.name = n + "Gain";

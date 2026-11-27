@@ -115,8 +115,14 @@ wait 0.5
 expect-text FinanceOverhaulInvestmentsSort Sort: Symbol
 click FinanceOverhaulInvestmentsSortDirection
 wait 0.5
+expect-sparks-in-rows
+investments-scroll 37
+expect-sparks-in-rows
+investments-scroll 144
+expect-sparks-in-rows
 investments-scroll 400
 wait 0.5
+expect-sparks-in-rows
 capture investments-list-scrolled
 # closing and opening the panel keeps the list where it was
 close-economy

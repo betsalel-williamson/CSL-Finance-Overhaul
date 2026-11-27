@@ -4,7 +4,7 @@ using System.Collections.Generic; // List
 using System.Globalization; // CultureInfo
 using System.IO; // Path
 // ColossalFramework.UI: UIButton, UIComponent, UIFont, UIInput, UILabel, UIPanel,
-//   UIScrollablePanel, UISlider, UITextComponent, UIView
+//   UIScrollablePanel, UISlider, UITextComponent, UITextureSprite, UIView
 using ColossalFramework.UI;
 // FinanceOverhaul.Core: DuplicateCopies, InvestmentRow, MonitorSort, PortfolioOverview,
 //   SliderThumb
@@ -1010,6 +1010,72 @@ namespace FinanceOverhaul
                     if (!has)
                     {
                         r.Error = "the entry before " + a + " has no '" + b + "'";
+                    }
+
+                    break;
+                }
+                case "expect-sparks-in-rows":
+                {
+                    // Every 30-day line shown in the Investments list lies inside its own
+                    // stock's line (…Row-GGISpark inside …Row-GGI): no line shows on another.
+                    UIComponent view = FindControl(InvestmentsList.Prefix + "View");
+                    if (view == null)
+                    {
+                        r.Error = "the investments list is not shown";
+                        break;
+                    }
+
+                    int checkedLines = 0;
+                    foreach (UIComponent c in view.components)
+                    {
+                        if (
+                            !c.isVisibleSelf
+                            || !(c is UITextureSprite)
+                            || !c.name.StartsWith(InvestmentsList.Prefix + "Row-")
+                            || !c.name.EndsWith("Spark")
+                        )
+                        {
+                            continue;
+                        }
+
+                        string rowName = c.name.Substring(0, c.name.Length - "Spark".Length);
+                        UIComponent row = null;
+                        foreach (UIComponent other in view.components)
+                        {
+                            if (other.name == rowName && other.isVisibleSelf)
+                            {
+                                row = other;
+                            }
+                        }
+
+                        Vector3 sp = c.absolutePosition,
+                            rp = row == null ? Vector3.zero : row.absolutePosition;
+                        bool inside =
+                            row != null
+                            && sp.x >= rp.x
+                            && sp.x + c.width <= rp.x + row.width + 0.5f
+                            && sp.y >= rp.y
+                            && sp.y + c.height <= rp.y + row.height + 0.5f;
+                        if (!inside)
+                        {
+                            r.Error =
+                                c.name
+                                + " at "
+                                + sp
+                                + (
+                                    row == null
+                                        ? " has no visible line"
+                                        : " is outside " + row.name + " at " + rp
+                                );
+                            break;
+                        }
+
+                        checkedLines++;
+                    }
+
+                    if (r.Error == null && checkedLines == 0)
+                    {
+                        r.Error = "no 30-day lines shown";
                     }
 
                     break;

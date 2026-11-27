@@ -105,9 +105,10 @@ game reports and the offering prices its businesses would list at — scenario 6
 such as `ParkAreaUnlockingPanel`, or show it for two seconds for a capture of its look),
 `expect-wheel-step LIST MIN` (pixels the mouse wheel moves a list a notch — scenario 69),
 `log-prices` (logs every listed stock's kept daily prices, up to 30 and newest first, with its price
-rule, for measuring how the game's stocks move), `overview-orders longest|off` (the Portfolio view
-shows one order of each kind with the longest numbers instead of the city's), `index-members` (logs
-every investment, its unit, whether it is on sale and whether the city index fund counts it),
+rule, for measuring how the game's stocks move), `expect-sparks-in-rows` (every 30-day line shown in
+the Investments list lies inside its own stock's line), `overview-orders longest|off` (the Portfolio
+view shows one order of each kind with the longest numbers instead of the city's), `index-members`
+(logs every investment, its unit, whether it is on sale and whether the city index fund counts it),
 `local-ipos keep` and `ipo-list-now keep` (switch the flag on for good and leave the company listed:
 for trying the feature in a test city, not for scenarios), `ipo-view`, `expect-building-panel`,
 `expect-fireworks`, `expect-paused on|off`, `expect-company-moving DAYS` (the company's stock closed
