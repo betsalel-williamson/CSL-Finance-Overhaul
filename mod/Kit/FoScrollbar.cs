@@ -35,7 +35,7 @@ namespace FinanceOverhaul
             track.spriteName = "ScrollbarTrack"; // not shown: a game sprite name
             bar.trackObject = track;
             UISlicedSprite thumb = track.AddUIComponent<UISlicedSprite>();
-            thumb.relativePosition = Vector3.zero;
+            thumb.relativePosition = new Vector3(2f, 0f); // centred in the track, as the game's
             thumb.fillDirection = UIFillDirection.Vertical;
             thumb.autoSize = true;
             thumb.width = Width - 4f;

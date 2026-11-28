@@ -97,9 +97,9 @@ namespace FinanceOverhaul.Core
     public static class CityOverview
     {
         /// <summary>
-        /// The stocks in the Investments list's order: its sort and direction, with the pills'
-        /// unit for Change (<see cref="StockMonitor.Rows(IEnumerable{MonitorQuote}, MonitorFilter, MonitorSort, ICollection{string}, bool, bool)"/>);
-        /// the locked ones too, as their figure already applies.
+        /// The stocks in the Investments list's order (<see cref="InvestmentList.Ordered"/>): its
+        /// sort and direction, with the pills' unit for Change, and the locked ones last A–Z (their
+        /// figure already applies).
         /// </summary>
         public static List<CityRow> Rows(
             IEnumerable<MonitorQuote> quotes,
@@ -110,15 +110,17 @@ namespace FinanceOverhaul.Core
         )
         {
             var rows = new List<CityRow>();
+            var all = new List<MonitorQuote>();
+            foreach (MonitorQuote q in quotes ?? new List<MonitorQuote>())
+            {
+                if (q != null)
+                {
+                    all.Add(q);
+                }
+            }
+
             foreach (
-                MonitorQuote q in StockMonitor.Rows(
-                    quotes,
-                    MonitorFilter.All,
-                    sort,
-                    null,
-                    reversed,
-                    changeInCurrency
-                )
+                MonitorQuote q in InvestmentList.Ordered(all, sort, reversed, changeInCurrency)
             )
             {
                 rows.Add(Row(q, days));

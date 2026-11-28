@@ -78,6 +78,25 @@ namespace FinanceOverhaul.Core.Tests
             Assert.Equal("Follows 14 stocks equally", rows[1].Figure);
             Assert.Equal("No city figure", rows[4].Figure);
             Assert.Equal("Other", rows[4].Name);
+
+            // A locked stock goes last, as in the list, whatever its change.
+            quotes.Add(
+                new MonitorQuote
+                {
+                    Symbol = "AAA",
+                    Locked = true,
+                    ChangeRate = 50f,
+                }
+            );
+            List<CityRow> withLocked = CityOverview.Rows(
+                quotes,
+                7,
+                MonitorSort.Change,
+                false,
+                false
+            );
+            Assert.Equal("AAA", withLocked[withLocked.Count - 1].Quote.Symbol);
+            Assert.Equal("OIL", withLocked[0].Quote.Symbol);
         }
 
         [Fact]

@@ -34,6 +34,9 @@ capture investments-list-all
 # two columns: on the right a sub tab group picks the view (Market, Portfolio, Heatmap, City, Feed)
 expect-visible FinanceOverhaulInvestmentsOverview
 expect-visible FinanceOverhaulInvestmentsOverviewTab-Market
+# the overview opens on the view last picked: start from Market
+click FinanceOverhaulInvestmentsOverviewTab-Market
+wait 0.5
 expect-visible FinanceOverhaulInvestmentsOverviewMarketChart
 expect-visible FinanceOverhaulInvestmentsOverviewMarketBreadth
 expect-no-overlap FinanceOverhaulInvestmentsOverview FinanceOverhaulInvestmentsView

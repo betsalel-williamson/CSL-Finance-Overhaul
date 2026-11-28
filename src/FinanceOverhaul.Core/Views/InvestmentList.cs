@@ -476,8 +476,8 @@ namespace FinanceOverhaul.Core
                 : whole;
         }
 
-        /// <summary>The sort, with locked stocks (no price yet) last in A–Z order.</summary>
-        private static List<MonitorQuote> Ordered(
+        /// <summary>The sort, with locked stocks (no price yet) last in A–Z order (the City view's order too).</summary>
+        public static List<MonitorQuote> Ordered(
             List<MonitorQuote> quotes,
             MonitorSort sort,
             bool reversed,

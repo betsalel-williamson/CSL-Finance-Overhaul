@@ -1,6 +1,4 @@
-// ColossalFramework.UI: UIHorizontalAlignment, UIOrientation, UIPanel, UIScrollbar, UISlicedSprite,
-//   UITextureSprite, UIVerticalAlignment
-using ColossalFramework.UI;
+using ColossalFramework.UI; // UIHorizontalAlignment, UIPanel, UITextureSprite, UIVerticalAlignment
 using FinanceOverhaul.Core; // InvestmentFilter, InvestmentList, StockMonitor, Strings
 using UnityEngine; // Mathf, Vector2, Vector3
 
@@ -125,21 +123,16 @@ namespace FinanceOverhaul
                 p.Use();
             };
 
-            bar = view.AddUIComponent<UIScrollbar>();
-            bar.name = Prefix + "Scrollbar";
-            bar.orientation = UIOrientation.Vertical;
-            bar.size = new Vector2(12f, view.height - 2f * Pad);
-            bar.relativePosition = new Vector3(view.width - 16f, Pad);
+            // The Kit scrollbar, as the overview's lists have (one look for both columns); the
+            // list shows and hides it itself, as it scrolls its own pooled rows.
+            bar = FoScrollbar.Add(
+                view,
+                Prefix + "Scrollbar",
+                new Vector3(view.width - 4f - FoScrollbar.Width, Pad),
+                view.height - 2f * Pad
+            );
+            bar.autoHide = false;
             bar.incrementAmount = InvestmentList.RowHeight;
-            UISlicedSprite track = bar.AddUIComponent<UISlicedSprite>();
-            track.spriteName = "ScrollbarTrack";
-            track.size = bar.size;
-            track.relativePosition = Vector3.zero;
-            bar.trackObject = track;
-            UISlicedSprite thumb = track.AddUIComponent<UISlicedSprite>();
-            thumb.spriteName = "ScrollbarThumb";
-            thumb.width = bar.width;
-            bar.thumbObject = thumb;
             bar.eventValueChanged += (c, v) =>
             {
                 if (!settingBar)
