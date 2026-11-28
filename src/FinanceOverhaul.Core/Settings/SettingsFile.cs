@@ -21,7 +21,10 @@ namespace FinanceOverhaul.Core
         private const string LocalIposKey = "localIposEnabled";
         private const string InvestmentListKey = "investmentListEnabled";
         private const string IpoDialogKey = "ipoDialogEnabled";
-        private const string ListSortSyncedKey = "investmentListSortSynced";
+
+        // Linked by default since 2026-11-27: a new key, so the "false" every earlier build
+        // wrote (its default, never a choice) starts linked; the old key is ignored.
+        private const string ListSortSyncedKey = "investmentListLinked";
         private const string ListSortKey = "investmentListSort";
         private const string ListSortReversedKey = "investmentListSortReversed";
         private const string ListCurrencyKey = "investmentListChangeCurrency";

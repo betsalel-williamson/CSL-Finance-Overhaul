@@ -210,7 +210,7 @@ namespace FinanceOverhaul.Core.Tests
         [Fact]
         public void FollowingThePillsDrawsPercentOrPoints()
         {
-            var s = new ModSettings();
+            var s = new ModSettings { InvestmentListSortSynced = false };
             Assert.Equal(TickerDisplay.ChangePercent, s.TickerShowsNow());
             s.InvestmentListChangeAsCurrency = true;
             Assert.Equal(TickerDisplay.PriceAndChange, s.TickerShowsNow());

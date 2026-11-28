@@ -832,10 +832,13 @@ namespace FinanceOverhaul.Core
             { "options.ticker.brightness.bright", "Bright" },
             { "options.ticker.brightness.brightest", "Brightest (daylight)" },
             { "options.orders.lifetime", "Orders stay open for (new orders)" },
-            { "options.investmentList.syncSort", "Investments list sorts like the Stock Monitor" },
+            {
+                "options.investmentList.syncSort",
+                "Link the Investments list and the Stock Monitor (sort and ₡ / %)"
+            },
             {
                 "options.investmentList.syncSort.tip",
-                "On: the Investments list uses the Stock Monitor's sort and ₡ / % (changing one changes both). Off: each window keeps its own."
+                "On (default): one sort and one ₡ / % for both windows and the Stock Exchange boards; changing one changes all. Off: the Investments list keeps its own."
             },
             { "options.notices", "Order and bond notices in Chirper" },
             { "options.notices.coupons", "Also chirp every bond coupon" },

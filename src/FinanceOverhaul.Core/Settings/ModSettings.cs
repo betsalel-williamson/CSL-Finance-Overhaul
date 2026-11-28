@@ -80,9 +80,10 @@ namespace FinanceOverhaul.Core
 
         /// <summary>
         /// Preference: the Investments list uses the Stock Monitor's sort, direction and ₡ / %
-        /// pills instead of its own. Off by default: each window keeps its own.
+        /// pills instead of its own. On by default (one sort and one ₡ / % for both, the LED
+        /// boards too); Options unlinks them.
         /// </summary>
-        public bool InvestmentListSortSynced { get; set; }
+        public bool InvestmentListSortSynced { get; set; } = true;
 
         /// <summary>The Investments list's own sort (when not synced with the Stock Monitor).</summary>
         public MonitorSort InvestmentListSort { get; set; } = MonitorSort.Change;

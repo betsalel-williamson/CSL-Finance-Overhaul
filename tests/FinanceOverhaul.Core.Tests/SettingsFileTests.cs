@@ -14,21 +14,26 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
-        public void RoundTrip_InvestmentListKeepsItsOwnSortUnlessSynced()
+        public void RoundTrip_InvestmentListIsLinkedUnlessUnlinked()
         {
             ModSettings fresh = SettingsFile.Parse("");
-            Assert.False(fresh.InvestmentListSortSynced); // each window its own by default
+            Assert.True(fresh.InvestmentListSortSynced); // linked with the Stock Monitor by default
+            // The key earlier builds always wrote (their default) no longer unlinks.
+            Assert.True(
+                SettingsFile.Parse("investmentListSortSynced=false").InvestmentListSortSynced
+            );
+            Assert.False(SettingsFile.Parse("investmentListLinked=false").InvestmentListSortSynced);
             Assert.Equal(MonitorSort.Change, fresh.InvestmentListSort);
 
             var original = new ModSettings
             {
-                InvestmentListSortSynced = true,
+                InvestmentListSortSynced = false,
                 InvestmentListSort = MonitorSort.ValueHeld,
                 InvestmentListSortReversed = true,
                 InvestmentListChangeAsCurrency = true,
             };
             ModSettings parsed = SettingsFile.Parse(SettingsFile.Format(original));
-            Assert.True(parsed.InvestmentListSortSynced);
+            Assert.False(parsed.InvestmentListSortSynced);
             Assert.Equal(MonitorSort.ValueHeld, parsed.InvestmentListSort);
             Assert.True(parsed.InvestmentListSortReversed);
             Assert.True(parsed.InvestmentListChangeAsCurrency);

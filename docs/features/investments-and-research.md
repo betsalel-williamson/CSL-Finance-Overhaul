@@ -132,10 +132,12 @@ appear only when asked for. Rows follow Figma band 18, "Condensed B".
 - **Sort and pills, as in the Stock Monitor (2026-11-25):** the sort is the Monitor's kind of
   control (a muted "Sort: Change %" to click through Change, Symbol, Price, Value held, then ▲/▼),
   and a click on any change pill shows every change in ₡ or %, with Sort: Change then sorting by the
-  ₡ amount ("Sort: Change ₡"), as there. The list keeps its **own** saved sort, direction and unit
-  (`investmentList*` settings), separate from the Monitor's; Options → "Investments list: sort and ₡
-  / % follow the Stock Monitor" (off by default) makes it use and change the Monitor's instead.
-  Scenarios 79 and 80 set and restore both windows' settings.
+  ₡ amount ("Sort: Change ₡"), as there. By default (2026-11-27) the list and the Monitor are
+  **linked**: one sort, one direction and one ₡ / % for both, and for the Stock Exchange boards
+  (settings key `investmentListLinked`, new so that the `false` earlier builds always wrote starts
+  linked). Options → "Link the Investments list and the Stock Monitor" unlinks them: the list then
+  keeps its own saved sort, direction and unit (`investmentList*` settings). Scenarios 79 and 80 set
+  and restore both windows' settings.
 - **Rows (Condensed B):** coin, symbol (LOCAL badge for a local company) and name; for a holding a
   third line "500 shares · avg ₡6,616"; the 30-day line; price above the change pill, and for a
   holding the gain under it (no buttons since the two columns). A locked stock shows "Locked · 30 /
