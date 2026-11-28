@@ -21,11 +21,13 @@ export default defineConfig({
         { label: "Welcome", link: "/" },
         {
           label: "Getting started",
-          items: ["about-this-guide", "install-and-first-run"],
+          items: ["whats-new", "about-this-guide", "install-and-first-run"],
         },
         {
           label: "Features",
           items: [
+            "investments-tab",
+            "local-ipos",
             "trading-and-orders",
             "stock-monitor",
             "led-ticker",

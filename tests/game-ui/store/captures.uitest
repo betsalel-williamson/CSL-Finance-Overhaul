@@ -1,0 +1,33 @@
+# The Workshop images' captures (scripts/workshop-images.sh): the Investments tab on Market over
+# 30 days, the heatmap, and Oil's Chirps tab with two order-fill chirps in the notices' own wording
+# (taken out at the end). Uses Oil, so it sits outside the regular run: pass it by path.
+name store captures: the Investments tab, the heatmap, and an Invest dialog's Chirps tab (uses Oil)
+monitor remember
+monitor close
+close-economy
+investments-list on
+show-economy
+wait 1.5
+click FinanceOverhaulInvestmentsOverviewTab-Market
+wait 0.5
+click FinanceOverhaulInvestmentsOverviewMarketRange-30
+wait 1
+capture store-investments-market
+click FinanceOverhaulInvestmentsOverviewTab-Heatmap
+wait 1
+capture store-heatmap
+click FinanceOverhaulInvestmentsOverviewTab-Market
+wait 0.5
+feed-notice Oil Limit buy filled: bought 500 Oil at ₡298 (limit ₡300) for ₡149,000.
+feed-notice Oil Take-profit filled: sold 250 Oil at ₡318 (target ₡315) for ₡79,500.
+show-buy Oil
+wait 1
+click FinanceOverhaulOrderTab-SideChirps
+wait 1
+capture store-chirps
+close-dialog
+cleanup:
+close-dialog
+monitor restore
+investments-list restore
+close-economy

@@ -12,9 +12,12 @@
 ## First run
 
 1. Load a city. You need a Stock Exchange to trade, as in the base game.
-2. Open **Options → Finance Overhaul** and check the title shows the version (0.1.0).
-3. Open **Economy → Investments**. The game's stocks are all there, plus **Index**.
+2. Open **Options → Finance Overhaul** and check the title shows the version (0.2.0).
+3. Open **Economy → Investments**: one list of every stock (the game's, plus **Index**), with the
+   market overview beside it (see [The Investments tab](./investments-tab.md)).
 4. Click the round **Stock Monitor** button in the top-left row of mod buttons.
+
+Updating from 0.1.0? See [What's new](./whats-new.md).
 
 ## One copy at a time
 

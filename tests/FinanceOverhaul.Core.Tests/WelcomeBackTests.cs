@@ -269,6 +269,7 @@ namespace FinanceOverhaul.Core.Tests
             Assert.True(s.TakeProfitEnabled && s.TrailingStopEnabled);
             Assert.True(s.Monitor.Enabled && s.ShareChartsEnabled);
             Assert.True(s.IndexStockEnabled && s.CityBondsEnabled);
+            Assert.True(s.LocalIposEnabled && s.InvestmentListEnabled); // shipped in 0.2
             Assert.False(s.DevTestStockEnabled);
 
             Assert.False(s.LiveTickerEnabled);

@@ -25,9 +25,9 @@ namespace FinanceOverhaul.Core
             IndexStockEnabled = true;
             CityBondsEnabled = true;
 
-            // Not ready for players: still being built.
-            LocalIposEnabled = false;
-            InvestmentListEnabled = false;
+            // Shipped in 0.2 (confirmed with the player-facing owner, 2026-11-27): on.
+            LocalIposEnabled = true;
+            InvestmentListEnabled = true;
 
             // Dev only.
             DevTestStockEnabled = false;

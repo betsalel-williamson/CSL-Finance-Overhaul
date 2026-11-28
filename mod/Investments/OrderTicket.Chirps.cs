@@ -30,8 +30,7 @@ namespace FinanceOverhaul
             chirps = dark.AddUIComponent<UIPanel>();
             chirps.name = ChirpsName;
             chirps.size = new Vector2(dark.width, 160f);
-            chirps.isVisible = false;
-            chirps.tooltip = Strings.Get("chirps.tip");
+            chirps.isVisible = false; // its tab says what it is (a tooltip here covered the chirps)
             chirpList = chirps.AddUIComponent<UIScrollablePanel>();
             chirpList.name = ChirpsName + "List";
             chirpList.relativePosition = new Vector3(26f, 6f);
