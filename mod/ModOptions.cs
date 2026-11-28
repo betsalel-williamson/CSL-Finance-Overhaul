@@ -31,10 +31,13 @@ namespace FinanceOverhaul
                     Strings.Get("options.ticker.shows"),
                     new[]
                     {
+                        Strings.Get("options.ticker.shows.pills"),
                         Strings.Get("options.ticker.shows.percent"),
                         Strings.Get("options.ticker.shows.price"),
                     },
-                    Settings.TickerShows == TickerDisplay.PriceAndChange ? 1 : 0,
+                    Settings.TickerShows == TickerDisplay.PriceAndChange ? 2
+                        : Settings.TickerShows == TickerDisplay.ChangePercent ? 1
+                        : 0,
                     OnTickerShowsChanged
                 ) as ColossalFramework.UI.UIDropDown;
             if (shows != null)
@@ -302,7 +305,9 @@ namespace FinanceOverhaul
         {
             ModSettings Settings = Mod.EnsureSettings();
             Settings.TickerShows =
-                index == 1 ? TickerDisplay.PriceAndChange : TickerDisplay.ChangePercent;
+                index == 2 ? TickerDisplay.PriceAndChange
+                : index == 1 ? TickerDisplay.ChangePercent
+                : TickerDisplay.FollowPills;
             Mod.SaveSettings();
             ModLog.Info("ticker: shows " + Settings.TickerShows);
         }

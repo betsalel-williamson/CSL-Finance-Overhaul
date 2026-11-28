@@ -66,10 +66,11 @@ namespace FinanceOverhaul
                 }
                 case "expect-ticker-style":
                 {
-                    // expect-ticker-style — the boards' screens are drawn in the Options style.
+                    // expect-ticker-style — the boards' screens are drawn in the style Options
+                    // gives now (with Follow the pills, % or price and ₡ as the pills show).
                     TickerDisplay want =
                         Mod.Settings != null
-                            ? Mod.Settings.TickerShows
+                            ? Mod.Settings.TickerShowsNow()
                             : TickerDisplay.ChangePercent;
                     if (TickerOverlay.DrawnStyle != want)
                     {
@@ -283,7 +284,9 @@ namespace FinanceOverhaul
                     }
 
                     Mod.Settings.TickerShows =
-                        a == "price" ? TickerDisplay.PriceAndChange : TickerDisplay.ChangePercent;
+                        a == "price" ? TickerDisplay.PriceAndChange
+                        : a == "pills" ? TickerDisplay.FollowPills
+                        : TickerDisplay.ChangePercent;
                     TickerSnapshot snap = TickerFeed.Current;
                     var sb = new System.Text.StringBuilder();
                     for (int i = 0; snap != null && i < snap.Count; i++)
@@ -293,13 +296,13 @@ namespace FinanceOverhaul
                                 LedText.ChangePart(
                                     i < snap.Prices.Length ? snap.Prices[i] : float.NaN,
                                     snap.Rates[i],
-                                    Mod.Settings.TickerShows
+                                    Mod.Settings.TickerShowsNow()
                                 )
                             )
                             .Append("  ");
                     }
 
-                    ModLog.Info("uitest: ticker " + Mod.Settings.TickerShows + ": " + sb);
+                    ModLog.Info("uitest: ticker " + Mod.Settings.TickerShowsNow() + ": " + sb);
                     break;
                 }
                 default:

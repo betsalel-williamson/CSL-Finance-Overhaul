@@ -13,6 +13,12 @@ namespace FinanceOverhaul.Core
 
         /// <summary>"DS ₡951 +₡30": price and the same change in ₡, like an exchange tape.</summary>
         PriceAndChange = 1,
+
+        /// <summary>
+        /// As the change pills show it (default): % while they show %, price and ₡ change
+        /// after a click on any pill flips them to points (<see cref="ModSettings.TickerShowsNow"/>).
+        /// </summary>
+        FollowPills = 2,
     }
 
     /// <summary>

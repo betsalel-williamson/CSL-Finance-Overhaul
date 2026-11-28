@@ -1,7 +1,9 @@
 # Options → "Stock Exchange ticker shows". Switches the LED boards to price and ₡ change, then
-# to change %, logging today's entries in each mode and capturing the screen (point the camera
-# at the Stock Exchange to see the boards). The player's choice is put back at the end.
-name ticker shows: change % with a % sign, or price and ₡ change, with + / − signs
+# to change %, then to following the change pills (the default): a click on any pill turns the
+# boards between % and price and ₡ change too. Logs today's entries in each mode and captures
+# the screen (point the camera at the Stock Exchange to see the boards). The player's choice
+# and the list's pills are put back at the end.
+name ticker shows: change %, price and ₡ change, or as the change pills show it
 live-ticker on
 ticker-shows price
 expect-log ticker PriceAndChange: 
@@ -16,5 +18,19 @@ wait 1
 expect-ticker-style
 wait 25
 capture ticker-percent
+# following the pills: % while they show %, price and ₡ once they show points
+investments-sort sync off
+investments-sort Change
+ticker-shows pills
+expect-log ticker ChangePercent: 
+wait 1
+expect-ticker-style
+investments-sort Change currency
+ticker-shows pills
+expect-log ticker PriceAndChange: 
+wait 1
+expect-ticker-style
+wait 25
+capture ticker-pills-points
 cleanup:
 ticker-shows restore

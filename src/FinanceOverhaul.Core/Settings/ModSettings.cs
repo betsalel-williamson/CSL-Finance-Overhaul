@@ -119,7 +119,35 @@ namespace FinanceOverhaul.Core
         public List<IpoUserPreset> IpoUserPresets { get; set; } = new List<IpoUserPreset>();
 
         /// <summary>How the Stock Exchange LED ticker shows the change (visual only).</summary>
-        public TickerDisplay TickerShows { get; set; }
+        public TickerDisplay TickerShows { get; set; } = TickerDisplay.FollowPills;
+
+        /// <summary>
+        /// Whether the Investments list's change pills show ₡ (points): the Stock Monitor's when
+        /// the list follows it (Options), else the list's own.
+        /// </summary>
+        public bool PillsInCurrency
+        {
+            get
+            {
+                return InvestmentListSortSynced
+                    ? Monitor.ChangeAsCurrency
+                    : InvestmentListChangeAsCurrency;
+            }
+        }
+
+        /// <summary>
+        /// The style the ticker draws now: the chosen one, or with Follow the pills, % while the
+        /// pills show % and price and ₡ change while they show points.
+        /// </summary>
+        public TickerDisplay TickerShowsNow()
+        {
+            if (TickerShows != TickerDisplay.FollowPills)
+            {
+                return TickerShows;
+            }
+
+            return PillsInCurrency ? TickerDisplay.PriceAndChange : TickerDisplay.ChangePercent;
+        }
 
         /// <summary>LED board brightness (visual only); Bright by default for daylight.</summary>
         public LedBrightness TickerBrightness { get; set; } = LedBrightness.Bright;

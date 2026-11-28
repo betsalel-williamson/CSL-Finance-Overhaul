@@ -25,7 +25,7 @@ builds under **Feature flags (dev builds only)**; release builds hide them and u
 | Field id            | Label                                                    | Control  | Default                       |
 | ------------------- | -------------------------------------------------------- | -------- | ----------------------------- |
 | `live-ticker`       | Live Stock Exchange ticker (visual only)                 | Checkbox | on                            |
-| `ticker-shows`      | Stock Exchange ticker shows                              | Dropdown | Change %                      |
+| `ticker-shows`      | Stock Exchange ticker shows                              | Dropdown | As the change pills show it   |
 | `ticker-info-views` | Show the LED ticker in info views (traffic, population…) | Checkbox | on                            |
 | `ticker-brightness` | LED ticker brightness                                    | Dropdown | Bright                        |
 | `orders-lifetime`   | Orders stay open for (new orders)                        | Dropdown | 90 days                       |

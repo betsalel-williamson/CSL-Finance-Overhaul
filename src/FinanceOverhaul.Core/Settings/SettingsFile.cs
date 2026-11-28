@@ -31,7 +31,9 @@ namespace FinanceOverhaul.Core
         private const string NoticesKey = "noticesEnabled";
         private const string NoticesCouponsKey = "noticesBondCoupons";
         private const string TickerPercent = "changePercent";
+        private const string TickerPercentOnly = "changePercentOnly";
         private const string TickerPrice = "priceAndChange";
+        private const string TickerPills = "followPills";
         private const string OrderLifetimeKey = "ordersLifetimeDays";
         private const string IpoPresetKey = "ipoPreset";
 
@@ -126,10 +128,19 @@ namespace FinanceOverhaul.Core
                         settings.TickerShows = TickerDisplay.PriceAndChange;
                     }
                     else if (
-                        string.Equals(value, TickerPercent, StringComparison.OrdinalIgnoreCase)
+                        string.Equals(value, TickerPercentOnly, StringComparison.OrdinalIgnoreCase)
                     )
                     {
                         settings.TickerShows = TickerDisplay.ChangePercent;
+                    }
+                    else if (
+                        string.Equals(value, TickerPills, StringComparison.OrdinalIgnoreCase)
+                        // Older builds always wrote "changePercent" (their default): it reads as
+                        // Follow the pills, which looks the same until a pill is flipped.
+                        || string.Equals(value, TickerPercent, StringComparison.OrdinalIgnoreCase)
+                    )
+                    {
+                        settings.TickerShows = TickerDisplay.FollowPills;
                     }
 
                     continue;
@@ -302,9 +313,9 @@ namespace FinanceOverhaul.Core
             sb.Append(TickerShowsKey)
                 .Append('=')
                 .Append(
-                    settings.TickerShows == TickerDisplay.PriceAndChange
-                        ? TickerPrice
-                        : TickerPercent
+                    settings.TickerShows == TickerDisplay.PriceAndChange ? TickerPrice
+                    : settings.TickerShows == TickerDisplay.ChangePercent ? TickerPercentOnly
+                    : TickerPills
                 )
                 .Append('\n');
             sb.Append(CityBondsKey)

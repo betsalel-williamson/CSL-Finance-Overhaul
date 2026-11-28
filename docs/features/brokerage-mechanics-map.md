@@ -98,8 +98,13 @@ building every frame, so a moved or turned Stock Exchange keeps them on its faca
 **Step 4b (shipped): what each entry shows.** Options → **Stock Exchange ticker shows**
 (`TickerDisplay`, settings key `tickerShows`, visual only):
 
-- **Change % (default):** `DS +3.22%`, the game's change rate with a % sign, the same text as the
-  Stock Monitor's % pill.
+- **As the change pills show it (default, 2026-11-27):** `DS +3.22%` while the pills show %,
+  `DS ₡951 +₡30` once a click on any change pill flips them to points (the Investments list's pills,
+  the Stock Monitor's while the list follows it; `ModSettings.TickerShowsNow`). Settings written by
+  older builds (`changePercent`, their default) read as this, which looks the same until a pill is
+  flipped; a fixed % is now `changePercentOnly`.
+- **Change %:** `DS +3.22%`, the game's change rate with a % sign, the same text as the Stock
+  Monitor's % pill.
 - **Price and ₡ change:** `DS ₡951 +₡30`, like an exchange tape. The ₡ change is the same rate in ₡
   (`price × r / (1 + r)`), the Monitor's ₡ pill.
 

@@ -179,18 +179,49 @@ namespace FinanceOverhaul.Core.Tests
         }
 
         [Fact]
-        public void SettingRoundTripsAndDefaultsToPercent()
+        public void SettingRoundTripsAndDefaultsToFollowingThePills()
         {
-            Assert.Equal(TickerDisplay.ChangePercent, SettingsFile.Parse("").TickerShows);
-            var s = new ModSettings { TickerShows = TickerDisplay.PriceAndChange };
+            Assert.Equal(TickerDisplay.FollowPills, SettingsFile.Parse("").TickerShows);
+            foreach (
+                TickerDisplay d in new[]
+                {
+                    TickerDisplay.PriceAndChange,
+                    TickerDisplay.ChangePercent,
+                    TickerDisplay.FollowPills,
+                }
+            )
+            {
+                var s = new ModSettings { TickerShows = d };
+                Assert.Equal(d, SettingsFile.Parse(SettingsFile.Format(s)).TickerShows);
+            }
+
+            // Older builds always wrote "changePercent": it follows the pills now (the same look
+            // until a pill is flipped).
             Assert.Equal(
-                TickerDisplay.PriceAndChange,
-                SettingsFile.Parse(SettingsFile.Format(s)).TickerShows
+                TickerDisplay.FollowPills,
+                SettingsFile.Parse("tickerShows=changePercent\n").TickerShows
             );
             Assert.Equal(
-                TickerDisplay.ChangePercent,
+                TickerDisplay.FollowPills,
                 SettingsFile.Parse("tickerShows=somethingNew\n").TickerShows
             );
+        }
+
+        [Fact]
+        public void FollowingThePillsDrawsPercentOrPoints()
+        {
+            var s = new ModSettings();
+            Assert.Equal(TickerDisplay.ChangePercent, s.TickerShowsNow());
+            s.InvestmentListChangeAsCurrency = true;
+            Assert.Equal(TickerDisplay.PriceAndChange, s.TickerShowsNow());
+            // Synced with the Stock Monitor: its pills decide.
+            s.InvestmentListSortSynced = true;
+            Assert.Equal(TickerDisplay.ChangePercent, s.TickerShowsNow());
+            s.Monitor.ChangeAsCurrency = true;
+            Assert.Equal(TickerDisplay.PriceAndChange, s.TickerShowsNow());
+            // A fixed choice stays as chosen.
+            s.TickerShows = TickerDisplay.ChangePercent;
+            Assert.Equal(TickerDisplay.ChangePercent, s.TickerShowsNow());
         }
 
         private static int Lit(LedStrip s)

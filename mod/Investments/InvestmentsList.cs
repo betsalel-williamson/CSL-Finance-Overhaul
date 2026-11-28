@@ -143,12 +143,7 @@ namespace FinanceOverhaul
 
         private bool InCurrency
         {
-            get
-            {
-                return Mod.Settings == null ? localCurrency
-                    : Synced ? Monitor.ChangeAsCurrency
-                    : Mod.Settings.InvestmentListChangeAsCurrency;
-            }
+            get { return Mod.Settings == null ? localCurrency : Mod.Settings.PillsInCurrency; }
             set
             {
                 localCurrency = value;

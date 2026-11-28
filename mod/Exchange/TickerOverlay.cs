@@ -425,7 +425,10 @@ namespace FinanceOverhaul
         /// </summary>
         private static TickerDisplay DisplayNow()
         {
-            return Mod.Settings != null ? Mod.Settings.TickerShows : TickerDisplay.ChangePercent;
+            // With Follow the pills (default) a click on any change pill turns the boards too.
+            return Mod.Settings != null
+                ? Mod.Settings.TickerShowsNow()
+                : TickerDisplay.ChangePercent;
         }
 
         private void RestartAll()

@@ -820,6 +820,7 @@ namespace FinanceOverhaul.Core
             },
             { "options.ticker.live", "Live Stock Exchange ticker (visual only)" },
             { "options.ticker.shows", "Stock Exchange ticker shows" },
+            { "options.ticker.shows.pills", "As the change pills show it (% or ₡)" },
             { "options.ticker.shows.percent", "Change % (+3.22%)" },
             { "options.ticker.shows.price", "Price and ₡ change (₡951 +₡30)" },
             {
