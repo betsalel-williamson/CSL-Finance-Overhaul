@@ -118,6 +118,14 @@ wheel FinanceOverhaulInvestmentsOverviewCityRow-0Figure -2
 wait 0.5
 expect-scroll FinanceOverhaulInvestmentsOverviewCityRows moved
 expect-scroll FinanceOverhaulInvestmentsView top
+# a redraw (here the range) keeps the rows where the scroll has them, so they never drift away
+expect-scroll-consistent FinanceOverhaulInvestmentsOverviewCityRows
+click FinanceOverhaulInvestmentsOverviewCityRange-7
+wait 0.5
+expect-scroll-consistent FinanceOverhaulInvestmentsOverviewCityRows
+click FinanceOverhaulInvestmentsOverviewCityRange-30
+wait 0.5
+expect-scroll-consistent FinanceOverhaulInvestmentsOverviewCityRows
 # and over the stocks the stocks move, the City rows stay where they are
 wheel FinanceOverhaulInvestmentsView -2
 wait 0.5

@@ -368,6 +368,39 @@ namespace FinanceOverhaul
 
                     break;
                 }
+                case "expect-scroll-consistent":
+                {
+                    // expect-scroll-consistent LIST — the list's rows sit where its scroll says:
+                    // the topmost shown row is scrollPosition above the view's top (a redraw that
+                    // laid rows out as if unscrolled lets them drift out of view).
+                    UIScrollablePanel list = FindControl(a) as UIScrollablePanel;
+                    if (list == null)
+                    {
+                        r.Error = "no visible scrolling list " + a;
+                        break;
+                    }
+
+                    float top = float.MaxValue;
+                    foreach (UIComponent c in list.components)
+                    {
+                        if (c.isVisible)
+                        {
+                            top = Mathf.Min(top, c.relativePosition.y);
+                        }
+                    }
+
+                    if (top != float.MaxValue && Mathf.Abs(top + list.scrollPosition.y) > 1f)
+                    {
+                        r.Error =
+                            a
+                            + "'s top row is at "
+                            + top.ToString("0.0", CultureInfo.InvariantCulture)
+                            + " with the list scrolled "
+                            + list.scrollPosition.y.ToString("0.0", CultureInfo.InvariantCulture);
+                    }
+
+                    break;
+                }
                 case "expect-wheel-step":
                 {
                     // expect-wheel-step LIST MIN — the pixels the mouse wheel moves a scrolling

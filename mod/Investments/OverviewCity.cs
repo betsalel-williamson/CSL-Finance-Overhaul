@@ -80,11 +80,14 @@ namespace FinanceOverhaul
                 cityRows.Add(new CityRowView(cityList, cityRows.Count, host.TogglePills));
             }
 
+            // A scrolled list keeps its offset in its rows' places: lay them out from it, or a
+            // redraw (every new price) would put them back unscrolled and they drift away.
+            float top = -cityList.scrollPosition.y;
             for (int i = 0; i < cityRows.Count; i++)
             {
                 if (i < rows.Count)
                 {
-                    cityRows[i].Show(rows[i], i * CityRowH, days, inPoints);
+                    cityRows[i].Show(rows[i], top + i * CityRowH, days, inPoints);
                 }
                 else
                 {

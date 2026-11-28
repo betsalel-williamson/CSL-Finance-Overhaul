@@ -107,6 +107,9 @@ namespace FinanceOverhaul
                 UnityEngine.Object.Destroy(old.gameObject);
             }
 
+            // Laid out from the top again: back to it, so the rows and the scroll agree.
+            chirpList.scrollPosition = Vector2.zero;
+
             byte id = owner == null ? (byte)0 : (byte)IdField.GetValue(owner);
             Investment data = EconomyManager.instance.m_investments.m_buffer[id];
             string symbol = data.Info == null ? null : StockSymbols.For(data.Info);

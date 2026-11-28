@@ -134,7 +134,8 @@ namespace FinanceOverhaul
 
             float width = feedList.width;
             int used = 0;
-            float y = 0f;
+            // From the list's scroll offset, as its rows already are (see the City view).
+            float y = -feedList.scrollPosition.y;
             // "Coming up" only when something is: an offering, an order near its trigger or
             // its end, a stock about to unlock. Otherwise the feed starts at "Lately".
             bool anyUpcoming = upcoming.Count > 0;
