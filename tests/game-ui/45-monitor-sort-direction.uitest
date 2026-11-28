@@ -27,6 +27,12 @@ monitor-change currency
 expect-text FinanceOverhaulStockMonitorSort Sort: Change ₡
 expect-monitor-pills-desc
 capture monitor-sort-change-currency
+# the scrolling-list rule: rows fade at an edge with more past it (at the top: none above yet)
+expect-fade FinanceOverhaulStockMonitorRows
+wheel FinanceOverhaulStockMonitorRows -2
+wait 0.5
+expect-fade FinanceOverhaulStockMonitorRows
+capture monitor-fade-scrolled
 cleanup:
 monitor close
 monitor restore

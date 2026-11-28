@@ -5,7 +5,7 @@ using System.Globalization; // CultureInfo
 //   UIScrollablePanel, UITextureSprite, UIView
 using ColossalFramework.UI;
 // FinanceOverhaul.Core: InvestmentRow, MonitorSort, Notice, NoticeKind, NoticeText,
-//   PortfolioOverview
+//   PortfolioOverview, ScrollFade
 using FinanceOverhaul.Core;
 using UnityEngine; // Mathf, Ray, Time, Vector2, Vector3, WaitForSeconds
 
@@ -364,6 +364,67 @@ namespace FinanceOverhaul
                     if (!holds)
                     {
                         r.Error = "the Chirper does not hold '" + text + "'";
+                    }
+
+                    break;
+                }
+                case "expect-fade":
+                {
+                    // expect-fade LIST — the scrolling-list rule: the row at an edge is faded when
+                    // there are more rows past that edge, and whole when there are none.
+                    UIScrollablePanel list = FindControl(a) as UIScrollablePanel;
+                    if (list == null)
+                    {
+                        r.Error = "no visible scrolling list " + a;
+                        break;
+                    }
+
+                    // The rows at the view's edges (rows scrolled out of view do not count).
+                    UIComponent first = null,
+                        last = null;
+                    foreach (UIComponent c in list.components)
+                    {
+                        float y = c.relativePosition.y;
+                        if (!c.isVisible || y + c.height <= 0.5f || y >= list.height - 0.5f)
+                        {
+                            continue;
+                        }
+
+                        if (first == null || y < first.relativePosition.y)
+                        {
+                            first = c;
+                        }
+
+                        if (last == null || y > last.relativePosition.y)
+                        {
+                            last = c;
+                        }
+                    }
+
+                    float content = list.CalculateViewSize().y;
+                    bool moreAbove = list.scrollPosition.y > (ScrollFade.DeadZone + 0.5f);
+                    bool moreBelow =
+                        content - list.height - list.scrollPosition.y
+                        > (ScrollFade.DeadZone + 0.5f);
+                    string wrong = null;
+                    if (first != null && moreAbove == (first.opacity >= 0.999f))
+                    {
+                        wrong =
+                            "top row opacity "
+                            + first.opacity
+                            + (moreAbove ? " with more above" : " with nothing above");
+                    }
+                    else if (last != null && moreBelow == (last.opacity >= 0.999f))
+                    {
+                        wrong =
+                            "bottom row opacity "
+                            + last.opacity
+                            + (moreBelow ? " with more below" : " with nothing below");
+                    }
+
+                    if (wrong != null)
+                    {
+                        r.Error = a + ": " + wrong;
                     }
 
                     break;

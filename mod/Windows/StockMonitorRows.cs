@@ -98,6 +98,7 @@ namespace FinanceOverhaul
             footer.text = StockMonitor.Footer(SimulationManager.instance.m_currentGameTime);
             empty.text = shown.Count == 0 ? StockMonitor.EmptyText(Settings.Filter) : "";
             empty.isVisible = shown.Count == 0;
+            FoScrollFade.Rows(list);
             sortLabel.text = ordersTab
                 ? MonitorOrders.SortLabel(Settings.OrdersSort)
                 : StockMonitor.SortLabel(Settings.Sort, Settings.ChangeAsCurrency);

@@ -15,6 +15,21 @@ namespace FinanceOverhaul.Core.Tests
         private const float L = ScrollFade.DefaultLength;
 
         [Fact]
+        public void RowsFadeOnlyAtAnEdgeWithMorePastIt()
+        {
+            // A row well inside the view is whole.
+            Assert.Equal(1f, ScrollFade.RowOpacity(100f, 30f, 300f, 1f, 1f, L));
+            // Its middle at the top edge with more above: gone; with nothing above: whole.
+            Assert.Equal(0f, ScrollFade.RowOpacity(-15f, 30f, 300f, 1f, 1f, L), 3);
+            Assert.Equal(1f, ScrollFade.RowOpacity(-15f, 30f, 300f, 0f, 1f, L), 3);
+            // Half way into the fade at the bottom: half.
+            Assert.Equal(0.5f, ScrollFade.RowOpacity(300f - 15f - L / 2f, 30f, 300f, 1f, 1f, L), 3);
+            // An edge only half faded in (just started scrolling) fades its row half as much.
+            Assert.Equal(0.5f, ScrollFade.RowOpacity(-15f, 30f, 300f, 0.5f, 1f, L), 3);
+            Assert.Equal(1f, ScrollFade.RowOpacity(0f, 30f, 0f, 1f, 1f, L));
+        }
+
+        [Fact]
         public void Examples()
         {
             float top,

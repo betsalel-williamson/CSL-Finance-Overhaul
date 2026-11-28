@@ -169,6 +169,8 @@ namespace FinanceOverhaul
             {
                 feedRows[i].Hide();
             }
+
+            FoScrollFade.Rows(feedList);
         }
 
         private float Items(List<FeedItem> items, float y, float width, ref int used)

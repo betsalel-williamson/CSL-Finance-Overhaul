@@ -138,8 +138,9 @@ hover), `share-charts on|off` (the share chart flag, for before/after captures) 
 as View headquarters does), `feed-notice SYMBOL TEXT` (a test notice in the Feed, taken out after),
 `feed-click TEXT` (clicks the Feed item that reads it), `expect-chirper TEXT` (the Chirper is open
 and holds it), `chirper close`, `wheel CONTROL NOTCHES` (the mouse wheel over a control as the game
-delivers it; negative is down), `expect-scroll LIST top|moved`, `expect-scroll-consistent LIST` (the
-rows sit where the list's scroll says, after a redraw) (a scrolling list, or
+delivers it; negative is down), `expect-scroll LIST top|moved`, `expect-fade LIST` (the rows at the
+view's edges fade only where there is more past them), `expect-scroll-consistent LIST` (the rows sit
+where the list's scroll says, after a redraw) (a scrolling list, or
 `FinanceOverhaulInvestmentsView`, is at its top or has moved), `expect-text-fits CONTROL` (a label's
 text is no wider than the label, measured with the game's font), `expect-slider CONTROL [max]` (the
 slider's thumb is drawn where its value is; with `max`, the value is the maximum),

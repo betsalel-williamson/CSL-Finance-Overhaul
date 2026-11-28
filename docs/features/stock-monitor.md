@@ -33,6 +33,15 @@ a phone stocks app, styled like the City Vitals window players already know.
   grey for 0.00, black text.
 - Up to 10 rows show at once; the list scrolls with the mouse wheel. Footer: "Daily close · date".
 
+## Edge fades (2026-11-27)
+
+The list follows the scrolling-list rule (Figma band 12 option A): at an edge with more rows past
+it, the rows dissolve as they reach it, so a cut-off row says there is more. The window is
+see-through, so the rows fade themselves (Kit `FoScrollFade`, each row's opacity from
+`ScrollFade.RowOpacity`, over a row's height) rather than a band in the panel's colour as the bonds
+list has. The Investments overview's City and Feed lists fade the same way. Scenario 45
+`expect-fade` checks the top and bottom rows at the top and after a scroll.
+
 ## Orders tab (shipped)
 
 The Orders tab lists the orders themselves, grouped by stock (Figma band 10, pins 13 to 20). The tab
@@ -122,9 +131,9 @@ All of it is kept per player in the settings file (`monitor.compact`, `monitor.s
 ## Share value charts (shipped)
 
 The game's own "Share value" charts — in the Invest dialog and in the Economy panel's hover tooltip
-— are drawn in the same style as the Monitor (`ShareChartView`): line and shaded area coloured
-by the change rate, dashed line at yesterday's price, ₡ grid on the right, "30 days ago … today",
-and the same hover (crosshair, dot, "Oil · 8 days ago · ₡925").
+— are drawn in the same style as the Monitor (`ShareChartView`): line and shaded area coloured by
+the change rate, dashed line at yesterday's price, ₡ grid on the right, "30 days ago … today", and
+the same hover (crosshair, dot, "Oil · 8 days ago · ₡925").
 
 - **Fit:** the vanilla `UIGraph` stays in place (layouts do not move), and so does the game's dark
   chart panel. Its `GraphParent` sliced sprite draws about 9 UI units wider than the graph on each
@@ -144,9 +153,9 @@ and the Invest dialog / tooltip charts — follow **one measure: the game's chan
 the Economy panel shows as "Change rate" and the LED board shows (`CalculateChangeRate(…, 5)`, a
 short trend over the last few days, not just since yesterday). 0.00 is grey, as on the LED. The
 dashed line marks yesterday's price as a reference only. **One ₡-change rule everywhere:** every ₡
-change (Monitor pills, the dialog's change, the LED "price and ₡ change" mode, the ₡ sort) comes from
-`StockMonitor.ChangeAmount` = price × r / (1 + r), shown with cents up to ₡9.99 and whole ₡ from ₡10
-(decided on the rounded value, so never "₡10.00"); proved over 5,000 quotes in
+change (Monitor pills, the dialog's change, the LED "price and ₡ change" mode, the ₡ sort) comes
+from `StockMonitor.ChangeAmount` = price × r / (1 + r), shown with cents up to ₡9.99 and whole ₡
+from ₡10 (decided on the rounded value, so never "₡10.00"); proved over 5,000 quotes in
 `OneCurrencyChangeRuleTests`. The dashed line is drawn as thick as the price line (dash and gap 3×
 that thickness), stays on top of the shaded area and of the grid lines, so it survives the chart
 being scaled down in every view (sparklines, share charts; `SparklineTests`).

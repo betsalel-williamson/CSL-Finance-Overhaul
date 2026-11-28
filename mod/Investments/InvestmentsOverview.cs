@@ -377,6 +377,7 @@ namespace FinanceOverhaul
             // The game's scrolling list only takes the mouse wheel with this on; without it the
             // wheel passed on to the Investments list and scrolled the stocks instead.
             list.builtinKeyNavigation = true;
+            FoScrollFade.Attach(list);
             list.verticalScrollbar = FoScrollbar.Add(
                 view,
                 name + "Scrollbar",

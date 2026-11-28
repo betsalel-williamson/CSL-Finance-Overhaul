@@ -55,6 +55,35 @@ namespace FinanceOverhaul.Core
             bottom = Clamp01((max - s - DeadZone) / fadeLength);
         }
 
+        /// <summary>
+        /// A row's opacity for a list whose rows fade themselves (a see-through window, where a
+        /// band in the panel's colour would show): 1 away from the edges, falling toward 0 as the
+        /// row's middle reaches an edge that has more rows past it, as strongly as that edge's
+        /// fade (<see cref="Alphas"/>).
+        /// </summary>
+        /// <param name="rowTop">The row's top in the view (0 = the view's top; negative above it).</param>
+        public static float RowOpacity(
+            float rowTop,
+            float rowHeight,
+            float view,
+            float topAlpha,
+            float bottomAlpha,
+            float fadeLength
+        )
+        {
+            if (fadeLength <= 0f || view <= 0f)
+            {
+                return 1f;
+            }
+
+            float middle = rowTop + rowHeight / 2f;
+            float fromTop = Clamp01(middle / fadeLength);
+            float fromBottom = Clamp01((view - middle) / fadeLength);
+            float top = 1f - topAlpha * (1f - fromTop);
+            float bottom = 1f - bottomAlpha * (1f - fromBottom);
+            return Math.Min(top, bottom);
+        }
+
         private static float Clamp01(float v)
         {
             return v < 0f ? 0f

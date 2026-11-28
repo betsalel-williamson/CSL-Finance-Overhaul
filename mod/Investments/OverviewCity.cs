@@ -94,6 +94,8 @@ namespace FinanceOverhaul
                     cityRows[i].Hide();
                 }
             }
+
+            FoScrollFade.Rows(cityList);
         }
 
         /// <summary>One stock: symbol and what drives it, the figure, the rule, its change.</summary>

@@ -369,6 +369,9 @@ namespace FinanceOverhaul
             list.autoLayoutDirection = LayoutDirection.Vertical;
             list.scrollWheelDirection = UIOrientation.Vertical;
             list.builtinKeyNavigation = true;
+            // Rows fade at an edge with more past it (the window is see-through, so the rows
+            // themselves fade rather than a band in the panel's colour).
+            FoScrollFade.Attach(list);
 
             empty = FoText.Label(window, Prefix + "Empty", "", 0.85f, Muted);
             empty.relativePosition = new Vector3(14f, TitleHeight + BarHeight + 12f);
